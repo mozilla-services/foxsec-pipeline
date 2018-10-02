@@ -13,7 +13,7 @@ public class SimpleStateInterface implements StateInterface {
     public void saveObject(String s, String v) {
         state.put(s, v);
     }
-    
+
     public void done() {
     }
 

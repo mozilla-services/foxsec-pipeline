@@ -61,7 +61,7 @@ public class GLB extends Payload implements Serializable {
     public String getUserAgent() {
         return userAgent;
     }
-    
+
     public String getRequestMethod() {
         return requestMethod;
     }
