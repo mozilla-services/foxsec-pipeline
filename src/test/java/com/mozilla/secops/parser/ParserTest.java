@@ -23,6 +23,25 @@ public class ParserTest {
     }
 
     @Test
+    public void testParserReuse() throws Exception {
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse("test");
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
+        Raw r = e.getPayload();
+        assertNotNull(r);
+        assertEquals("test", r.getRaw());
+
+        e = p.parse("test2");
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
+        r = e.getPayload();
+        assertNotNull(r);
+        assertEquals("test2", r.getRaw());
+    }
+
+    @Test
     public void testStackdriverRaw() throws Exception {
         String buf = "{\"insertId\":\"f8p4mz1a3ldcos1xz\",\"labels\":{\"compute.googleapis.com/resource" +
             "_name\":\"emit-bastion\"},\"logName\":\"projects/sandbox-00/logs/syslog\",\"receiveTimestamp\"" +

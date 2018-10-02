@@ -14,7 +14,7 @@ public abstract class Payload<T extends Payload> {
     public Payload() {
     }
 
-    public Payload(String input) {
+    public Payload(String input, Event e) {
         type = PayloadType.UNKNOWN;
     }
 

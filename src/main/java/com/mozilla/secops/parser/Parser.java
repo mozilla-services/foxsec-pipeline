@@ -12,28 +12,31 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 public class Parser {
-    private List<Payload> payloads;
+    private final List<Payload> payloads;
+    private final JacksonFactory jf;
 
-    private String stripStackdriverEncapsulation(Event e, String input) throws IOException {
-        JacksonFactory jf = new JacksonFactory();
-        JsonParser jp = jf.createJsonParser(input);
-        LogEntry entry = jp.parse(LogEntry.class);
-        String ret = entry.getTextPayload();
-        if (ret != null && !ret.isEmpty()) {
-            return ret;
-        }
-        Map<String,Object> jret = entry.getJsonPayload();
-        if (jret != null) {
-            return entry.toString();
+    private String stripStackdriverEncapsulation(Event e, String input) {
+        try {
+            JsonParser jp = jf.createJsonParser(input);
+            LogEntry entry = jp.parse(LogEntry.class);
+            String ret = entry.getTextPayload();
+            if (ret != null && !ret.isEmpty()) {
+                return ret;
+            }
+            Map<String,Object> jret = entry.getJsonPayload();
+            if (jret != null) {
+                /* XXX This should be modified to avoid unnecessary serialization/deserialization
+                 * and just return the required object */
+                return entry.toString();
+            }
+        } catch (IOException exc) {
+            // pass
         }
         return input;
     }
 
     private String stripEncapsulation(Event e, String input) {
-        try {
-            input = stripStackdriverEncapsulation(e, input);
-        } catch (java.io.IOException exc) { }
-        return input;
+        return stripStackdriverEncapsulation(e, input);
     }
 
     @SuppressWarnings("unchecked")
@@ -49,9 +52,14 @@ public class Parser {
             try {
                 e.setPayload((Payload)cls.getConstructor(String.class, Event.class).newInstance(input, e));
             } catch (NoSuchMethodException exc) {
+                // pass
             } catch (InstantiationException exc) {
+                // pass
             } catch (IllegalAccessException exc) {
-            } catch (InvocationTargetException exc) { }
+                // pass
+            } catch (InvocationTargetException exc) {
+                // pass
+            }
             break;
         }
 
@@ -59,6 +67,7 @@ public class Parser {
     }
 
     public Parser() {
+        jf = new JacksonFactory();
         payloads = new ArrayList<Payload>() {{
             add(new GLB());
             add(new OpenSSH());
