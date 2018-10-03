@@ -27,7 +27,7 @@ public class MemcachedStateInterface implements StateInterface {
         memclient = new MemcachedClient(new InetSocketAddress(memcachedHost, 11211));
     }
 
-    public MemcachedStateInterface(String host) throws IOException {
+    public MemcachedStateInterface(String host) {
         memcachedHost = host;
     }
 }
