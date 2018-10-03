@@ -7,11 +7,11 @@ import com.google.api.services.logging.v2.model.HttpRequest;
 
 import java.io.Serializable;
 import java.io.IOException;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.util.Map;
 
 public class GLB extends Payload implements Serializable {
+    private final JacksonFactory jf;
+
     private String requestMethod;
     private String userAgent;
     private String requestUrl;
@@ -20,7 +20,6 @@ public class GLB extends Payload implements Serializable {
     @Override
     public Boolean matcher(String input) {
         try {
-            JacksonFactory jf = new JacksonFactory();
             JsonParser jp = jf.createJsonParser(input);
             LogEntry entry = jp.parse(LogEntry.class);
             Map<String,Object> m = entry.getJsonPayload();
@@ -28,17 +27,20 @@ public class GLB extends Payload implements Serializable {
             if (eType.equals("type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry")) {
                 return true;
             }
-        } catch (IOException exc) { }
+        } catch (IOException exc) {
+            // pass
+        }
         return false;
     }
 
     public GLB() {
+        jf = new JacksonFactory();
     }
 
     public GLB(String input, Event e) {
         setType(Payload.PayloadType.GLB);
 
-        JacksonFactory jf = new JacksonFactory();
+        jf = new JacksonFactory();
         LogEntry entry;
         try {
             JsonParser jp = jf.createJsonParser(input);
@@ -47,6 +49,9 @@ public class GLB extends Payload implements Serializable {
             return;
         }
         HttpRequest h = entry.getHttpRequest();
+        if (h == null) {
+            return;
+        }
 
         sourceAddress = h.getRemoteIp();
         requestUrl = h.getRequestUrl();

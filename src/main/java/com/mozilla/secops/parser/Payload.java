@@ -4,8 +4,7 @@ public abstract class Payload<T extends Payload> {
     public enum PayloadType {
         GLB,
         OPENSSH,
-        RAW,
-        UNKNOWN
+        RAW
     }
 
     private T data;
@@ -15,7 +14,6 @@ public abstract class Payload<T extends Payload> {
     }
 
     public Payload(String input, Event e) {
-        type = PayloadType.UNKNOWN;
     }
 
     public Boolean matcher(String input) {
