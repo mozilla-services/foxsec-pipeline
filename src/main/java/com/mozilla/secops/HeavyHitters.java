@@ -85,7 +85,7 @@ public class HeavyHitters implements Serializable {
         }
     }
 
-    private static class ParseFn extends DoFn<String, String> {
+    public static class ParseFn extends DoFn<String, String> {
         private Parser ep;
 
         @Setup
