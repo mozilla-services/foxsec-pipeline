@@ -3,14 +3,20 @@ package com.mozilla.secops.state;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 public class State {
     private ObjectMapper mapper;
     private StateInterface si;
+    private final Logger log;
 
     public State(StateInterface in) {
         si = in;
+
+        log = LoggerFactory.getLogger(State.class);
 
         mapper = new ObjectMapper();
         mapper.registerModule(new JodaModule());
@@ -19,6 +25,7 @@ public class State {
     }
 
     public void initialize() throws IOException {
+        log.info("Initializing new state interface using {}", si.getClass().getName());
         si.initialize();
     }
 
