@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.io.IOException;
 
 public class MemcachedStateInterface implements StateInterface {
+    private String memcachedHost;
     private MemcachedClient memclient;
 
     public String getObject(String s) {
@@ -22,7 +23,11 @@ public class MemcachedStateInterface implements StateInterface {
         memclient.shutdown();
     }
 
+    public void initialize() throws IOException {
+        memclient = new MemcachedClient(new InetSocketAddress(memcachedHost, 11211));
+    }
+
     public MemcachedStateInterface(String host) throws IOException {
-        memclient = new MemcachedClient(new InetSocketAddress(host, 11211));
+        memcachedHost = host;
     }
 }

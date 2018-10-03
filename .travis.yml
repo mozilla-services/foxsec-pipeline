@@ -7,5 +7,6 @@ before_install:
   - docker pull maven
 
 script:
+  - docker build -t foxsec-pipeline:latest .
   - bin/m compile
   - bin/m test

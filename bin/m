@@ -15,5 +15,5 @@ docker run -it --rm \
     -v $PWD/.m2:/root/.m2 \
     -v $PWD:/root/project \
     -w /root/project \
-    maven \
-mvn "$@"
+    foxsec-pipeline:latest \
+    mvn "$@"

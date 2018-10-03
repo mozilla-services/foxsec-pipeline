@@ -5,20 +5,20 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import org.junit.Test;
 
-public class StateTest {
-    public StateTest() {
+public class StateMemcachedTest {
+    public StateMemcachedTest() {
     }
 
     @Test
     public void testStateConstruct() throws Exception {
-        State s = new State(new SimpleStateInterface());
+        State s = new State(new MemcachedStateInterface("127.0.0.1"));
         assertNotNull(s);
         s.initialize();
     }
 
     @Test
     public void testSimpleStateSetGet() throws Exception {
-        State s = new State(new SimpleStateInterface());
+        State s = new State(new MemcachedStateInterface("127.0.0.1"));
         assertNotNull(s);
         s.initialize();
         StateTestClass t = new StateTestClass();
@@ -32,7 +32,7 @@ public class StateTest {
 
     @Test
     public void testSimpleStateSetGetNoExist() throws Exception {
-        State s = new State(new SimpleStateInterface());
+        State s = new State(new MemcachedStateInterface("127.0.0.1"));
         assertNotNull(s);
         s.initialize();
         StateTestClass t = new StateTestClass();

@@ -4,18 +4,16 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.KeyFactory;
 import com.google.cloud.datastore.Key;
-import com.google.cloud.datastore.IncompleteKey;
 import com.google.cloud.datastore.Entity;
-import com.google.cloud.datastore.FullEntity;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.datastore.DatastoreException;
+import com.google.cloud.NoCredentials;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 
 public class DatastoreStateInterface implements StateInterface {
     private Datastore datastore;
     private KeyFactory keyFactory;
+    private String kind;
 
     public String getObject(String s) {
         Key nk = keyFactory.newKey(s);
@@ -46,15 +44,23 @@ public class DatastoreStateInterface implements StateInterface {
     public void done() {
     }
 
-    public DatastoreStateInterface(String kind) {
-        datastore = DatastoreOptions.getDefaultInstance().getService();
+    public void initialize() throws IOException {
+        String emulatorHost = System.getenv("DATASTORE_HOST");
+        String emulatorProject = System.getenv("DATASTORE_PROJECT_ID");
+
+        if (emulatorHost != null && emulatorProject != null) {
+            DatastoreOptions.Builder b = DatastoreOptions.newBuilder();
+            b.setHost(emulatorHost);
+            b.setProjectId(emulatorProject);
+            b.setCredentials(NoCredentials.getInstance());
+            datastore = b.build().getService();
+        } else {
+            datastore = DatastoreOptions.getDefaultInstance().getService();
+        }
         keyFactory = datastore.newKeyFactory().setKind(kind);
     }
 
-    public DatastoreStateInterface(String kind, String sfpath) throws IOException {
-        datastore = DatastoreOptions.newBuilder().setCredentials(
-                ServiceAccountCredentials.fromStream(new FileInputStream(sfpath)))
-            .build().getService();
-        keyFactory = datastore.newKeyFactory().setKind(kind);
+    public DatastoreStateInterface(String kind) {
+        this.kind = kind;
     }
 }
