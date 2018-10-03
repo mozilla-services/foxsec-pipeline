@@ -30,6 +30,7 @@ public class State {
     }
 
     public <T> T get(String s, Class<T> cls) throws IOException {
+        log.info("Requesting state for {}", s);
         String lv = si.getObject(s);
         if (lv == null) {
             return null;
@@ -38,10 +39,12 @@ public class State {
     }
 
     public void set(String s, Object o) throws IOException {
+        log.info("Writing state for {}", s);
         si.saveObject(s, mapper.writeValueAsString(o));
     }
 
     public void done() {
+        log.info("Closing state interface {}", si.getClass().getName());
         si.done();
     }
 }
