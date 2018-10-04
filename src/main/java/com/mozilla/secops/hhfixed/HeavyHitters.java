@@ -1,4 +1,4 @@
-package com.mozilla.secops;
+package com.mozilla.secops.hhfixed;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;

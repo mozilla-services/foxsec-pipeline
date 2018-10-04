@@ -1,4 +1,4 @@
-package com.mozilla.secops;
+package com.mozilla.secops.hhfixed;
 
 import org.junit.Test;
 import org.junit.Rule;
@@ -34,7 +34,7 @@ public class HeavyHittersTest {
         expected.add(KV.of("127.0.0.2", 10L));
 
         ArrayList<String> a = new ArrayList<String>();
-        InputStream in = getClass().getResourceAsStream("/testdata/heavyhitters1.txt");
+        InputStream in = getClass().getResourceAsStream("/testdata/hhfixed-simple1.txt");
         Scanner s = new Scanner(in);
         while (s.hasNext()) {
             a.add(s.next());

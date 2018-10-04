@@ -1,4 +1,4 @@
-package com.mozilla.secops;
+package com.mozilla.secops.authprofile;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
