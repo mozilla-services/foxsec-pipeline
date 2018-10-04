@@ -159,7 +159,7 @@ class AnalyzeFn extends DoFn<KV<String,Iterable<Event>>,String> {
         if (memcachedHost.isAccessible() && memcachedHost.get() != null) {
             String mch = memcachedHost.get();
             log.info("Initializing memcached state connection to {}", mch);
-            state = new State(new MemcachedStateInterface(mch));
+            state = new State(new MemcachedStateInterface(mch, 11211));
         } else if (datastoreKind.isAccessible() && datastoreKind.get() != null) {
             System.out.println("CONFIGURE DATASTORE");
             String dsk = datastoreKind.get();
