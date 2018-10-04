@@ -24,8 +24,13 @@ public class DatastoreStateInterface implements StateInterface {
         return e.getString("state");
     }
 
-    public void saveObject(String s, String v) {
-        Key nk = keyFactory.newKey(s);
+    public void saveObject(String s, String v) throws StateException {
+        Key nk;
+        try {
+            nk = keyFactory.newKey(s);
+        } catch (IllegalArgumentException exc) {
+            throw new StateException(exc.getMessage());
+        }
         Entity.Builder eb = Entity.newBuilder(nk);
         eb.set("state", v);
         Entity e = eb.build();
@@ -44,7 +49,7 @@ public class DatastoreStateInterface implements StateInterface {
     public void done() {
     }
 
-    public void initialize() throws IOException {
+    public void initialize() throws StateException {
         String emulatorHost = System.getenv("DATASTORE_HOST");
         String emulatorProject = System.getenv("DATASTORE_PROJECT_ID");
 

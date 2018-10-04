@@ -38,6 +38,7 @@ import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.parser.OpenSSH;
 import com.mozilla.secops.parser.Parser;
 import com.mozilla.secops.state.State;
+import com.mozilla.secops.state.StateException;
 import com.mozilla.secops.state.MemcachedStateInterface;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.userspec.UserSpec;
@@ -175,7 +176,7 @@ class AnalyzeFn extends DoFn<KV<String,Iterable<Event>>,String> {
     }
 
     @ProcessElement
-    public void processElement(ProcessContext c) throws IOException {
+    public void processElement(ProcessContext c) throws IOException, StateException {
         System.out.println(c.element());
         Iterable<Event> events = c.element().getValue();
         String u = c.element().getKey();

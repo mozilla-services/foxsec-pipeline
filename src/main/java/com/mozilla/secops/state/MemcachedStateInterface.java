@@ -11,20 +11,28 @@ public class MemcachedStateInterface implements StateInterface {
     private String memcachedHost;
     private MemcachedClient memclient;
 
-    public String getObject(String s) {
+    public String getObject(String s) throws StateException {
         return (String)memclient.get(s);
     }
 
-    public void saveObject(String s, String v) {
-        memclient.set(s, 0, v);
+    public void saveObject(String s, String v) throws StateException {
+        try {
+            memclient.set(s, 0, v);
+        } catch (IllegalArgumentException exc) {
+            throw new StateException(exc.getMessage());
+        }
     }
 
     public void done() {
         memclient.shutdown();
     }
 
-    public void initialize() throws IOException {
-        memclient = new MemcachedClient(new InetSocketAddress(memcachedHost, 11211));
+    public void initialize() throws StateException {
+        try {
+            memclient = new MemcachedClient(new InetSocketAddress(memcachedHost, 11211));
+        } catch (IOException exc) {
+            throw new StateException(exc.getMessage());
+        }
     }
 
     public MemcachedStateInterface(String host) {

@@ -80,4 +80,25 @@ public class StateTest {
 
         assertNull(s.get("nonexist", StateTestClass.class));
     }
+
+    @Test(expected = StateException.class)
+    public void testStateSetZeroLengthKey() throws Exception {
+        testEnv();
+        State s = new State(si);
+        assertNotNull(s);
+        s.initialize();
+        StateTestClass t = new StateTestClass();
+        assertNotNull(t);
+        t.str = "test";
+        s.set("", t);
+    }
+
+    @Test(expected = StateException.class)
+    public void testStateGetZeroLengthKey() throws Exception {
+        testEnv();
+        State s = new State(si);
+        assertNotNull(s);
+        s.initialize();
+        s.get("", StateTestClass.class);
+    }
 }

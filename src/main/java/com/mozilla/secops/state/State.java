@@ -2,6 +2,7 @@ package com.mozilla.secops.state;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,23 +25,46 @@ public class State {
             false);
     }
 
-    public void initialize() throws IOException {
+    private static Boolean validKey(String k) {
+        if (k.isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
+    public void initialize() throws StateException {
         log.info("Initializing new state interface using {}", si.getClass().getName());
         si.initialize();
     }
 
-    public <T> T get(String s, Class<T> cls) throws IOException {
+    public <T> T get(String s, Class<T> cls) throws StateException {
+        if (!validKey(s)) {
+            throw new StateException("invalid key name");
+        }
         log.info("Requesting state for {}", s);
         String lv = si.getObject(s);
         if (lv == null) {
             return null;
         }
-        return mapper.readValue(lv, cls);
+
+        try {
+            return mapper.readValue(lv, cls);
+        } catch (IOException exc) {
+            throw new StateException(exc.getMessage());
+        }
     }
 
-    public void set(String s, Object o) throws IOException {
+    public void set(String s, Object o) throws StateException {
+        if (!validKey(s)) {
+            throw new StateException("invalid key name");
+        }
         log.info("Writing state for {}", s);
-        si.saveObject(s, mapper.writeValueAsString(o));
+
+        try {
+            si.saveObject(s, mapper.writeValueAsString(o));
+        } catch (JsonProcessingException exc) {
+            throw new StateException(exc.getMessage());
+        }
     }
 
     public void done() {
