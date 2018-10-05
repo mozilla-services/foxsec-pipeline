@@ -33,6 +33,19 @@ public class ParserTest {
     }
 
     @Test
+    public void testParseBadJson() throws Exception {
+        String buf = "{\"testdata\": \"testing\", ";
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(p);
+        assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
+        Raw r = e.getPayload();
+        assertNotNull(r);
+        assertEquals(buf, r.getRaw());
+    }
+
+    @Test
     public void testParseRaw() throws Exception {
         Parser p = new Parser();
         assertNotNull(p);
