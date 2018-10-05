@@ -9,7 +9,7 @@ import java.util.UUID;
 public class Event implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Payload<? extends Payload<?>> payload;
+    private Payload<? extends PayloadBase> payload;
     private final UUID eventId;
     private DateTime timestamp;
     private Normalized normalized;
@@ -33,13 +33,13 @@ public class Event implements Serializable {
         return eventId.hashCode();
     }
 
-    public void setPayload(Payload<?> p) {
-        payload = p;
+    public <T extends PayloadBase> void setPayload(T p) {
+        payload = new Payload<T>(p);
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Payload<T>> T getPayload() {
-        return (T)payload;
+    public <T extends PayloadBase> T getPayload() {
+        return (T)payload.getData();
     }
 
     public Payload.PayloadType getPayloadType() {

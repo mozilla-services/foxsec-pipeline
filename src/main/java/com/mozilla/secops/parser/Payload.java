@@ -1,6 +1,6 @@
 package com.mozilla.secops.parser;
 
-public abstract class Payload<T extends Payload<T>> {
+public class Payload<T extends PayloadBase> {
     public enum PayloadType {
         GLB,
         OPENSSH,
@@ -8,22 +8,18 @@ public abstract class Payload<T extends Payload<T>> {
     }
 
     private PayloadType type;
+    private T data;
 
-    public Payload() {
+    public Payload(T d) {
+        data = d;
+        type = d.getType();
     }
 
-    public Payload(String input, Event e) {
-    }
-
-    public Boolean matcher(String input) {
-        return false;
+    public T getData() {
+        return data;
     }
 
     public PayloadType getType() {
-        return type;
-    }
-
-    protected void setType(PayloadType t) {
-        type = t;
+        return data.getType();
     }
 }

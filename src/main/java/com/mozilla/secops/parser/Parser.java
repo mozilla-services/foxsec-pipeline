@@ -22,7 +22,7 @@ import java.lang.ReflectiveOperationException;
 public class Parser {
     private static final long serialVersionUID = 1L;
 
-    private final List<Payload<?>> payloads;
+    private final List<PayloadBase> payloads;
     private final JacksonFactory jf;
     private final Logger log;
 
@@ -69,13 +69,13 @@ public class Parser {
         Event e = new Event();
         input = stripEncapsulation(e, input);
 
-        for (Payload<?> p : payloads) {
+        for (PayloadBase p : payloads) {
             if (!p.matcher(input)) {
                 continue;
             }
             Class<?> cls = p.getClass();
             try {
-                e.setPayload((Payload)cls.getConstructor(String.class, Event.class).newInstance(input, e));
+                e.setPayload((PayloadBase)cls.getConstructor(String.class, Event.class).newInstance(input, e));
             } catch (ReflectiveOperationException exc) {
                 log.warn(exc.getMessage());
             }
@@ -88,7 +88,7 @@ public class Parser {
     public Parser() {
         log = LoggerFactory.getLogger(Parser.class);
         jf = new JacksonFactory();
-        payloads = new ArrayList<Payload<?>>();
+        payloads = new ArrayList<PayloadBase>();
         payloads.add(new GLB());
         payloads.add(new OpenSSH());
         payloads.add(new Raw());

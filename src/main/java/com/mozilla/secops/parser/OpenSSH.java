@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-public class OpenSSH extends Payload<OpenSSH> implements Serializable {
+public class OpenSSH extends PayloadBase implements Serializable {
     private final static long serialVersionUID = 1L;
 
     private final String matchRe = "^\\S{3} \\d{2} [\\d:]+ \\S+ \\S*sshd\\[\\d+\\]: .+";
@@ -27,13 +27,16 @@ public class OpenSSH extends Payload<OpenSSH> implements Serializable {
         return false;
     }
 
+    @Override
+    public Payload.PayloadType getType() {
+        return Payload.PayloadType.OPENSSH;
+    }
+
     public OpenSSH() {
         pattRe = Pattern.compile(matchRe);
     }
 
     public OpenSSH(String input, Event e) {
-        setType(Payload.PayloadType.OPENSSH);
-
         pattAuthAcceptedRe = Pattern.compile(authAcceptedRe);
         Matcher mat = pattAuthAcceptedRe.matcher(input);
         if (mat.matches()) {

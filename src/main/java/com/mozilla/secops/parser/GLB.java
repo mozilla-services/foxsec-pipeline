@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.io.IOException;
 import java.util.Map;
 
-public class GLB extends Payload<GLB> implements Serializable {
+public class GLB extends PayloadBase implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final JacksonFactory jf;
@@ -37,13 +37,16 @@ public class GLB extends Payload<GLB> implements Serializable {
         return false;
     }
 
+    @Override
+    public Payload.PayloadType getType() {
+        return Payload.PayloadType.GLB;
+    }
+
     public GLB() {
         jf = new JacksonFactory();
     }
 
     public GLB(String input, Event e) {
-        setType(Payload.PayloadType.GLB);
-
         jf = new JacksonFactory();
         LogEntry entry;
         try {
