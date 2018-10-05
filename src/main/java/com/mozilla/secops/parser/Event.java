@@ -47,6 +47,10 @@ public class Event implements Serializable {
         return timestamp;
     }
 
+    public void setTimestamp(DateTime t) {
+        timestamp = t;
+    }
+
     public Normalized getNormalized() {
         return normalized;
     }

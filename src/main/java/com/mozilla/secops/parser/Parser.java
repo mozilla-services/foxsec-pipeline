@@ -4,6 +4,11 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 
+import org.joda.time.DateTime;
+
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -14,6 +19,18 @@ import java.lang.reflect.InvocationTargetException;
 public class Parser {
     private final List<Payload> payloads;
     private final JacksonFactory jf;
+
+    public static DateTime parseISO8601(String in) {
+        java.time.format.DateTimeFormatter fmt = DateTimeFormatter
+            .ofPattern("yyyy-MM-dd'T'HH:mm:ss.nnnnnnnnnX");
+        ZonedDateTime z;
+        try {
+            z = ZonedDateTime.parse(in, fmt);
+        } catch (DateTimeParseException exc) {
+            return null;
+        }
+        return new DateTime(z.toInstant().toEpochMilli());
+    }
 
     private String stripStackdriverEncapsulation(Event e, String input) {
         try {

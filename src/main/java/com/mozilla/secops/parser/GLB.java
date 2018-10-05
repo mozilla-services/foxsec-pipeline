@@ -5,6 +5,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.logging.v2.model.HttpRequest;
 
+import org.joda.time.DateTime;
+
 import java.io.Serializable;
 import java.io.IOException;
 import java.util.Map;
@@ -51,6 +53,14 @@ public class GLB extends Payload implements Serializable {
         HttpRequest h = entry.getHttpRequest();
         if (h == null) {
             return;
+        }
+
+        String ets = entry.getTimestamp();
+        if (ets != null) {
+            DateTime d = Parser.parseISO8601(ets);
+            if (d != null) {
+                e.setTimestamp(d);
+            }
         }
 
         sourceAddress = h.getRemoteIp();
