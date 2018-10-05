@@ -6,6 +6,9 @@ import com.google.api.services.logging.v2.model.LogEntry;
 
 import org.joda.time.DateTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.ZonedDateTime;
@@ -14,12 +17,14 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.io.IOException;
 
-import java.lang.reflect.InvocationTargetException;
+import java.lang.ReflectiveOperationException;
 
 public class Parser {
     private static final long serialVersionUID = 1L;
+
     private final List<Payload<?>> payloads;
     private final JacksonFactory jf;
+    private final Logger log;
 
     public static DateTime parseISO8601(String in) {
         java.time.format.DateTimeFormatter fmt = DateTimeFormatter
@@ -43,13 +48,16 @@ public class Parser {
             }
             Map<String,Object> jret = entry.getJsonPayload();
             if (jret != null) {
-                /* XXX This should be modified to avoid unnecessary serialization/deserialization
-                 * and just return the required object */
+                // XXX Serialize the Stackdriver JSON data and emit a string for use in the
+                // matchers. This is inefficient and we could probably look at changing this
+                // to return a different type to avoid having to deserialize the data twice.
                 return entry.toString();
             }
         } catch (IOException exc) {
             // pass
         }
+        // If the input data could not be converted into a Stackdriver LogEntry just return
+        // it as is.
         return input;
     }
 
@@ -57,7 +65,6 @@ public class Parser {
         return stripStackdriverEncapsulation(e, input);
     }
 
-    @SuppressWarnings("unchecked")
     public Event parse(String input) {
         Event e = new Event();
         input = stripEncapsulation(e, input);
@@ -69,14 +76,8 @@ public class Parser {
             Class<?> cls = p.getClass();
             try {
                 e.setPayload((Payload)cls.getConstructor(String.class, Event.class).newInstance(input, e));
-            } catch (NoSuchMethodException exc) {
-                // pass
-            } catch (InstantiationException exc) {
-                // pass
-            } catch (IllegalAccessException exc) {
-                // pass
-            } catch (InvocationTargetException exc) {
-                // pass
+            } catch (ReflectiveOperationException exc) {
+                log.warn(exc.getMessage());
             }
             break;
         }
@@ -85,6 +86,7 @@ public class Parser {
     }
 
     public Parser() {
+        log = LoggerFactory.getLogger(Parser.class);
         jf = new JacksonFactory();
         payloads = new ArrayList<Payload<?>>();
         payloads.add(new GLB());

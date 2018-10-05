@@ -7,7 +7,6 @@ public abstract class Payload<T extends Payload<T>> {
         RAW
     }
 
-    private T data;
     private PayloadType type;
 
     public Payload() {

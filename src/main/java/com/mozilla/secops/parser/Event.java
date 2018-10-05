@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public class Event implements Serializable {
     private static final long serialVersionUID = 1L;
+
     private Payload<? extends Payload<?>> payload;
     private final UUID eventId;
     private DateTime timestamp;
