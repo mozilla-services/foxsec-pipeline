@@ -55,6 +55,8 @@ public class Parser {
             }
         } catch (IOException exc) {
             // pass
+        } catch (IllegalArgumentException exc) {
+            // pass
         }
         // If the input data could not be converted into a Stackdriver LogEntry just return
         // it as is.

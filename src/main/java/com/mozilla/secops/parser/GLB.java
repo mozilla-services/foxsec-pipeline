@@ -33,6 +33,8 @@ public class GLB extends PayloadBase implements Serializable {
             }
         } catch (IOException exc) {
             // pass
+        } catch (IllegalArgumentException exc) {
+            // pass
         }
         return false;
     }
