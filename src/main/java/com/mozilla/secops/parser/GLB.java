@@ -11,7 +11,8 @@ import java.io.Serializable;
 import java.io.IOException;
 import java.util.Map;
 
-public class GLB extends Payload implements Serializable {
+public class GLB extends Payload<GLB> implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final JacksonFactory jf;
 
     private String requestMethod;

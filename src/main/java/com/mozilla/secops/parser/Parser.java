@@ -17,7 +17,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 public class Parser {
-    private final List<Payload> payloads;
+    private static final long serialVersionUID = 1L;
+    private final List<Payload<?>> payloads;
     private final JacksonFactory jf;
 
     public static DateTime parseISO8601(String in) {
@@ -61,11 +62,11 @@ public class Parser {
         Event e = new Event();
         input = stripEncapsulation(e, input);
 
-        for (Payload p : payloads) {
+        for (Payload<?> p : payloads) {
             if (!p.matcher(input)) {
                 continue;
             }
-            Class cls = p.getClass();
+            Class<?> cls = p.getClass();
             try {
                 e.setPayload((Payload)cls.getConstructor(String.class, Event.class).newInstance(input, e));
             } catch (NoSuchMethodException exc) {
@@ -85,10 +86,9 @@ public class Parser {
 
     public Parser() {
         jf = new JacksonFactory();
-        payloads = new ArrayList<Payload>() {{
-            add(new GLB());
-            add(new OpenSSH());
-            add(new Raw());
-        }};
+        payloads = new ArrayList<Payload<?>>();
+        payloads.add(new GLB());
+        payloads.add(new OpenSSH());
+        payloads.add(new Raw());
     }
 }

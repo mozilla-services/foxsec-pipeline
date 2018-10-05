@@ -4,7 +4,8 @@ import java.io.Serializable;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-public class OpenSSH extends Payload implements Serializable {
+public class OpenSSH extends Payload<OpenSSH> implements Serializable {
+    private final static long serialVersionUID = 1L;
     private final String matchRe = "^\\S{3} \\d{2} [\\d:]+ \\S+ \\S*sshd\\[\\d+\\]: .+";
     private Pattern pattRe;
 

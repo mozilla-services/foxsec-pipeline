@@ -48,13 +48,17 @@ import java.util.UUID;
 
 
 public class HeavyHitters implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private static class Result implements Serializable {
+        private static final long serialVersionUID = 1L;
         private final String addr;
         private final Long count;
         private final String timestamp;
         private final Double meanValue;
         private final Double thresholdMod;
         private final String id;
+        private final int idHash;
 
         Result(String addr, Long count, Double mv, Double thresholdMod) {
             this.addr = addr;
@@ -62,7 +66,9 @@ public class HeavyHitters implements Serializable {
             this.meanValue = mv;
             this.thresholdMod = thresholdMod;
 
-            id = UUID.randomUUID().toString();
+            UUID u = UUID.randomUUID();
+            id = u.toString();
+            idHash = u.hashCode();
 
             // XXX Just set the current timestamp here for now
             DateTimeFormatter f = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss");
@@ -79,6 +85,11 @@ public class HeavyHitters implements Serializable {
             return getResultId().equals(t.getResultId());
         }
 
+        @Override
+        public int hashCode() {
+            return idHash;
+        }
+
         static Result fromKV(KV<String, Long> e, Double mv, Double thresholdMod) {
             Result ret = new Result(e.getKey(), e.getValue(), mv, thresholdMod);
             return ret;
@@ -86,6 +97,7 @@ public class HeavyHitters implements Serializable {
     }
 
     public static class ParseFn extends DoFn<String, String> {
+        private static final long serialVersionUID = 1L;
         private Parser ep;
 
         @Setup
@@ -107,6 +119,7 @@ public class HeavyHitters implements Serializable {
     }
 
     static class AnalyzeFn extends PTransform<PCollection<KV<String, Long>>, PCollection<Result>> {
+        private static final long serialVersionUID = 1L;
         private Double thresholdMod;
 
         AnalyzeFn(Double thresholdMod) {
@@ -119,6 +132,7 @@ public class HeavyHitters implements Serializable {
             // across the window, this gets used as a side input
             PCollection<Long> counts = col.apply("Get request counts", ParDo.of(
                         new DoFn<KV<String, Long>, Long>() {
+                            private static final long serialVersionUID = 1L;
                             @ProcessElement
                             public void processElement(ProcessContext c) {
                                 c.output(c.element().getValue());
@@ -132,6 +146,7 @@ public class HeavyHitters implements Serializable {
             // applied
             PCollection<Result> ret = col.apply("Analyze", ParDo.of(
                         new DoFn<KV<String, Long>, Result>() {
+                            private static final long serialVersionUID = 1L;
                             @ProcessElement
                             public void processElement(ProcessContext c) {
                                 Double mv = c.sideInput(meanVal);
@@ -147,6 +162,7 @@ public class HeavyHitters implements Serializable {
     }
 
     static class FileTransformFn extends DoFn<Result, String> {
+        private static final long serialVersionUID = 1L;
         @ProcessElement
         public void processElement(ProcessContext c) {
             c.output(new Gson().toJson(c.element()));
@@ -154,6 +170,7 @@ public class HeavyHitters implements Serializable {
     }
 
     static class RowTransformFn extends DoFn<Result, TableRow> {
+        private static final long serialVersionUID = 1L;
         @ProcessElement
         public void processElement(ProcessContext c) {
             Gson g = new Gson();

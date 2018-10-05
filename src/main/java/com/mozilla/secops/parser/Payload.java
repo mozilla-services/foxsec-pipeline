@@ -1,6 +1,6 @@
 package com.mozilla.secops.parser;
 
-public abstract class Payload<T extends Payload> {
+public abstract class Payload<T extends Payload<T>> {
     public enum PayloadType {
         GLB,
         OPENSSH,

@@ -86,9 +86,9 @@ class StateModel {
     }
 
     private void pruneOldEntries() {
-        Iterator it = entries.entrySet().iterator();
+        Iterator<?> it = entries.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry p = (Map.Entry)it.next();
+            Map.Entry<?,?> p = (Map.Entry)it.next();
             ModelEntry me = (ModelEntry)p.getValue();
             long mts = me.getTimestamp().getMillis() / 1000;
             if ((DateTimeUtils.currentTimeMillis() / 1000) - mts > pruneAge) {
@@ -117,6 +117,7 @@ class StateModel {
 }
 
 class ParseFn extends DoFn<String,KV<String,Event>> {
+    private static final long serialVersionUID = 1L;
     private Parser ep;
 
     ParseFn() {
@@ -141,6 +142,7 @@ class ParseFn extends DoFn<String,KV<String,Event>> {
 }
 
 class AnalyzeFn extends DoFn<KV<String,Iterable<Event>>,String> {
+    private static final long serialVersionUID = 1L;
     private final Logger log;
     private State state;
     private Boolean initialized;
