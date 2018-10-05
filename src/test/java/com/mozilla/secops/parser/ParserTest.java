@@ -21,6 +21,18 @@ public class ParserTest {
     }
 
     @Test
+    public void testParseNull() throws Exception {
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(null);
+        assertNotNull(p);
+        assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
+        Raw r = e.getPayload();
+        assertNotNull(r);
+        assertEquals("", r.getRaw());
+    }
+
+    @Test
     public void testParseRaw() throws Exception {
         Parser p = new Parser();
         assertNotNull(p);

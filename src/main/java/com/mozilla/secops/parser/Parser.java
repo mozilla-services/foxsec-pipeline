@@ -68,6 +68,10 @@ public class Parser {
     }
 
     public Event parse(String input) {
+        if (input == null) {
+            input = "";
+        }
+
         Event e = new Event();
         input = stripEncapsulation(e, input);
 
