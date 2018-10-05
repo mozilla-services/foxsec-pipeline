@@ -7,12 +7,10 @@ public class Payload<T extends PayloadBase> {
         RAW
     }
 
-    private PayloadType type;
     private T data;
 
     public Payload(T d) {
         data = d;
-        type = d.getType();
     }
 
     public T getData() {
