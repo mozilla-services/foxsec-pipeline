@@ -14,7 +14,7 @@ import java.util.Map;
 public class GLB extends PayloadBase implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final JacksonFactory jf;
+    private final JacksonFactory jfmatcher;
 
     private String requestMethod;
     private String userAgent;
@@ -24,7 +24,7 @@ public class GLB extends PayloadBase implements Serializable {
     @Override
     public Boolean matcher(String input) {
         try {
-            JsonParser jp = jf.createJsonParser(input);
+            JsonParser jp = jfmatcher.createJsonParser(input);
             LogEntry entry = jp.parse(LogEntry.class);
             Map<String,Object> m = entry.getJsonPayload();
             String eType = (String)m.get("@type");
@@ -45,11 +45,14 @@ public class GLB extends PayloadBase implements Serializable {
     }
 
     public GLB() {
-        jf = new JacksonFactory();
+        jfmatcher = new JacksonFactory();
     }
 
     public GLB(String input, Event e) {
-        jf = new JacksonFactory();
+        jfmatcher = null;
+        // Use method local JacksonFactory as the object is not serializable, and this event
+        // may be passed around
+        JacksonFactory jf = new JacksonFactory();
         LogEntry entry;
         try {
             JsonParser jp = jf.createJsonParser(input);

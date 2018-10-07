@@ -4,6 +4,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 
+import org.joda.time.DateTime;
+
 public class ParserTest {
     public ParserTest() {
     }
@@ -202,5 +204,24 @@ public class ParserTest {
         assertEquals("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3)", g.getUserAgent());
         assertEquals("https://send.firefox.com/public/locales/en-US/send.js", g.getRequestUrl());
         assertNotNull(e.getTimestamp()); // Should have default timestamp
+    }
+
+    @Test
+    public void testParseISO8601() throws Exception {
+        String[] datelist = {
+            "2018-09-28T18:55:12.469",
+            "2018-09-28T18:55:12.469Z",
+            "2018-09-28T18:55:12.469+00:00",
+            "2018-09-28T18:55:12.469373944Z",
+            "2018-09-28T18:55:12.469373944+00:00"
+        };
+        Long m = 1538160912469L;
+
+        for (String t : datelist) {
+            Long d = Parser.parseISO8601(t).getMillis();
+            assertEquals(m, d);
+        }
+        assertEquals(1000L, Parser.parseISO8601("1970-01-01T00:00:01+00:00").getMillis());
+        assertEquals(1000L, Parser.parseISO8601("1970-01-01T00:00:01").getMillis());
     }
 }

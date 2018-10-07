@@ -5,13 +5,12 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -27,15 +26,8 @@ public class Parser {
     private final Logger log;
 
     public static DateTime parseISO8601(String in) {
-        java.time.format.DateTimeFormatter fmt = DateTimeFormatter
-            .ofPattern("yyyy-MM-dd'T'HH:mm:ss.nnnnnnnnnX");
-        ZonedDateTime z;
-        try {
-            z = ZonedDateTime.parse(in, fmt);
-        } catch (DateTimeParseException exc) {
-            return null;
-        }
-        return new DateTime(z.toInstant().toEpochMilli());
+        DateTimeFormatter fmt = ISODateTimeFormat.dateTimeParser();
+        return fmt.parseDateTime(in);
     }
 
     private String stripStackdriverEncapsulation(Event e, String input) {

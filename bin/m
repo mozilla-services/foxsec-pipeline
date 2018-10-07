@@ -8,12 +8,17 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+CACHEFLAGS=''
+if [[ `uname` == 'Darwin' ]]; then
+	CACHEFLAGS=':cached'
+fi
+
 # Create dir to cache maven dependencies if it doesn't already exist.
 mkdir -p .m2
 
 docker run -it --rm \
-    -v $PWD/.m2:/root/.m2 \
-    -v $PWD:/root/project \
+    -v $PWD/.m2:/root/.m2${CACHEFLAGS} \
+    -v $PWD:/root/project${CACHEFLAGS} \
     -w /root/project \
     foxsec-pipeline:latest \
     mvn "$@"
