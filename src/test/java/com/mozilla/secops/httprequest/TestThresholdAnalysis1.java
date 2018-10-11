@@ -20,8 +20,8 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 
-public class HTTPRequestTest {
-    public HTTPRequestTest() {
+public class TestThresholdAnalysis1 {
+    public TestThresholdAnalysis1() {
     }
 
     @Rule public final transient TestPipeline p = TestPipeline.create();
