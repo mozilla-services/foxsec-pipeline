@@ -16,12 +16,25 @@ import org.joda.time.Instant;
 
 import com.mozilla.secops.parser.Event;
 
+import java.io.IOException;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 
 public class TestThresholdAnalysis1 {
     public TestThresholdAnalysis1() {
+    }
+
+    private PCollection<String> getInput() throws IOException {
+        ArrayList<String> inputData = new ArrayList<String>();
+        GZIPInputStream in = new GZIPInputStream(getClass()
+                .getResourceAsStream("/testdata/httpreq_thresholdanalysis1.txt.gz"));
+        Scanner scanner = new Scanner(in);
+        while (scanner.hasNextLine()) {
+            inputData.add(scanner.nextLine());
+        }
+        scanner.close();
+        return p.apply(Create.of(inputData));
     }
 
     @Rule public final transient TestPipeline p = TestPipeline.create();
@@ -33,15 +46,7 @@ public class TestThresholdAnalysis1 {
 
     @Test
     public void countRequestsTest() throws Exception {
-        ArrayList<String> inputData = new ArrayList<String>();
-        GZIPInputStream in = new GZIPInputStream(getClass()
-                .getResourceAsStream("/testdata/heavyhitters1.txt.gz"));
-        Scanner scanner = new Scanner(in);
-        while (scanner.hasNextLine()) {
-            inputData.add(scanner.nextLine());
-        }
-        scanner.close();
-        PCollection<String> input = p.apply(Create.of(inputData));
+        PCollection<String> input = getInput();
 
         PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow());
         PCollection<Long> count = events.apply(Combine.globally(Count.<Event>combineFn())
