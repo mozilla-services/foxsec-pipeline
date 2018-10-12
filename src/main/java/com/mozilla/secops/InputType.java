@@ -15,7 +15,7 @@ public enum InputType {
 
     pubsub {
         public PTransform<PBegin, PCollection<String>> read(InputOptions options) {
-            return TextIO.read().from(options.getInput());
+            return PubsubIO.readStrings().fromTopic(options.getInput());
         }
     };
 
