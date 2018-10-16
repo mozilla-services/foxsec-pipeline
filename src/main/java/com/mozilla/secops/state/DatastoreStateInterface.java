@@ -41,12 +41,21 @@ public class DatastoreStateInterface implements StateInterface {
         try {
             datastore.update(e);
         } catch (DatastoreException exc) {
-            tryAdd = true;
+            // https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
+            // GRPC NOT_FOUND
+            if (exc.getCode() != 5) {
+                throw exc;
+            } else {
+                tryAdd = true;
+            }
         }
-        if (!tryAdd) {
-            return;
+        if (tryAdd) {
+            try {
+                datastore.add(e);
+            } catch (DatastoreException exc) {
+                throw new StateException(exc.getMessage());
+            }
         }
-        datastore.add(e);
     }
 
     public void done() {
