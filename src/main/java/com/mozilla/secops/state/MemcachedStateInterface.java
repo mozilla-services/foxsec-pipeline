@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.HashMap;
 import java.io.IOException;
 
+/**
+ * Utilize a memcached instance for centralized state storage
+ */
 public class MemcachedStateInterface implements StateInterface {
     private String memcachedHost;
     private int memcachedPort;
@@ -41,6 +44,12 @@ public class MemcachedStateInterface implements StateInterface {
         }
     }
 
+    /**
+     * Initialize a memcached state interface
+     *
+     * @param host Hostname of memcached instance
+     * @param port Port of memcached instance
+     */
     public MemcachedStateInterface(String host, int port) {
         memcachedHost = host;
         memcachedPort = port;

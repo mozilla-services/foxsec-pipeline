@@ -10,6 +10,9 @@ import com.google.cloud.NoCredentials;
 
 import java.io.IOException;
 
+/**
+ * Utilize GCP Datastore for centralized state storage
+ */
 public class DatastoreStateInterface implements StateInterface {
     private Datastore datastore;
     private KeyFactory keyFactory;
@@ -65,6 +68,11 @@ public class DatastoreStateInterface implements StateInterface {
         keyFactory = datastore.newKeyFactory().setKind(kind);
     }
 
+    /**
+     * Initialize a Datastore state interface
+     *
+     * @param kind kind value to use for stored objects
+     */
     public DatastoreStateInterface(String kind) {
         this.kind = kind;
     }
