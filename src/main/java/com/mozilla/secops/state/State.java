@@ -56,7 +56,7 @@ public class State {
      * Get a state value
      *
      * @param s State key to fetch state for
-     * @param cls Class to deserialized state data into
+     * @param cls Class to deserialize state data into
      * @return Returns an object containing state data for key, null if not found
      */
     public <T> T get(String s, Class<T> cls) throws StateException {
