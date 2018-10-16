@@ -16,7 +16,7 @@ import java.io.IOException;
 public class DatastoreStateInterface implements StateInterface {
     private Datastore datastore;
     private KeyFactory keyFactory;
-    private String kind;
+    private final String kind;
 
     public String getObject(String s) {
         Key nk = keyFactory.newKey(s);
