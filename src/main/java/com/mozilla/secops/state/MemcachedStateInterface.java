@@ -12,8 +12,8 @@ import java.io.IOException;
  * Utilize a memcached instance for centralized state storage
  */
 public class MemcachedStateInterface implements StateInterface {
-    private String memcachedHost;
-    private int memcachedPort;
+    private final String memcachedHost;
+    private final int memcachedPort;
     private MemcachedClient memclient;
 
     public String getObject(String s) throws StateException {
