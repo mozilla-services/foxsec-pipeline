@@ -78,7 +78,7 @@ public class Event implements Serializable {
     /**
      * Get unique event ID.
      *
-     * #@return {@link UUID} associated with event.
+     * @return {@link UUID} associated with event.
      */
     public UUID getEventId() {
         return eventId;
