@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+/**
+ * Payload parser for OpenSSH log data
+ */
 public class OpenSSH extends PayloadBase implements Serializable {
     private final static long serialVersionUID = 1L;
 
@@ -32,10 +35,19 @@ public class OpenSSH extends PayloadBase implements Serializable {
         return Payload.PayloadType.OPENSSH;
     }
 
+    /**
+     * Construct matcher object.
+     */
     public OpenSSH() {
         pattRe = Pattern.compile(matchRe);
     }
 
+    /**
+     * Construct parser object.
+     *
+     * @param input Input string.
+     * @param e Parent {@link Event}.
+     */
     public OpenSSH(String input, Event e) {
         pattAuthAcceptedRe = Pattern.compile(authAcceptedRe);
         Matcher mat = pattAuthAcceptedRe.matcher(input);
@@ -50,14 +62,29 @@ public class OpenSSH extends PayloadBase implements Serializable {
         }
     }
 
+    /**
+     * Get username
+     *
+     * @return Username
+     */
     public String getUser() {
         return user;
     }
 
+    /**
+     * Get authentication method
+     *
+     * @return Authentication method
+     */
     public String getAuthMethod() {
         return authMethod;
     }
 
+    /**
+     * Get source address
+     *
+     * @return Source address
+     */
     public String getSourceAddress() {
         return sourceAddress;
     }

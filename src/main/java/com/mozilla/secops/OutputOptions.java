@@ -6,6 +6,10 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.PDone;
 import org.apache.beam.sdk.values.PCollection;
 
+/**
+ * Standard output options for pipelines, intended for use with the
+ * {@link CompositeOutput} transform.
+ */
 public interface OutputOptions extends PipelineOptions {
     @Description("Write output to file; file path")
     String getOutputFile();

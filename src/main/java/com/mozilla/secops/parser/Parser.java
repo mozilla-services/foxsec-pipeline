@@ -18,6 +18,11 @@ import java.io.IOException;
 
 import java.lang.ReflectiveOperationException;
 
+/**
+ * Event parser
+ *
+ * {@link Parser} can be used to parse incoming events and generate {@link Event} objects.
+ */
 public class Parser {
     private static final long serialVersionUID = 1L;
 
@@ -25,6 +30,12 @@ public class Parser {
     private final JacksonFactory jf;
     private final Logger log;
 
+    /**
+     * Parse an ISO8601 date string and return a {@link DateTime} object.
+     *
+     * @param in Input string
+     * @return Parsed {@link DateTime}, null if string could not be parsed
+     */
     public static DateTime parseISO8601(String in) {
         DateTimeFormatter fmt = ISODateTimeFormat.dateTimeParser();
         return fmt.parseDateTime(in);
@@ -59,6 +70,12 @@ public class Parser {
         return stripStackdriverEncapsulation(e, input);
     }
 
+    /**
+     * Parse an event
+     *
+     * @param input Input string
+     * @return {@link Event}
+     */
     public Event parse(String input) {
         if (input == null) {
             input = "";
@@ -83,6 +100,9 @@ public class Parser {
         return e;
     }
 
+    /**
+     * Create new parser instance
+     */
     public Parser() {
         log = LoggerFactory.getLogger(Parser.class);
         jf = new JacksonFactory();

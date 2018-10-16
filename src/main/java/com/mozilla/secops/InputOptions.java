@@ -7,6 +7,9 @@ import org.apache.beam.sdk.options.Validation;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions;
 import org.apache.beam.sdk.extensions.gcp.options.GcpOptions;
 
+/**
+ * Standard input options for pipelines.
+ */
 public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions {
     @Description("Type of --input; must be one of [pubsub, file]")
     @Default.Enum("file")

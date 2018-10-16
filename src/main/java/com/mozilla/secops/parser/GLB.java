@@ -11,6 +11,9 @@ import java.io.Serializable;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * Payload parser for Google Load Balancer log data.
+ */
 public class GLB extends PayloadBase implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -44,10 +47,19 @@ public class GLB extends PayloadBase implements Serializable {
         return Payload.PayloadType.GLB;
     }
 
+    /**
+     * Construct matcher object.
+     */
     public GLB() {
         jfmatcher = new JacksonFactory();
     }
 
+    /**
+     * Construct parser object.
+     *
+     * @param input Input string.
+     * @param e Parent {@link Event}.
+     */
     public GLB(String input, Event e) {
         jfmatcher = null;
         // Use method local JacksonFactory as the object is not serializable, and this event
@@ -79,18 +91,38 @@ public class GLB extends PayloadBase implements Serializable {
         requestMethod = h.getRequestMethod();
     }
 
+    /**
+     * Get request URL.
+     *
+     * @return Request URL string.
+     */
     public String getRequestUrl() {
         return requestUrl;
     }
 
+    /**
+     * Get user agent.
+     *
+     * @return User agent string.
+     */
     public String getUserAgent() {
         return userAgent;
     }
 
+    /**
+     * Get request method.
+     *
+     * @return Request method string.
+     */
     public String getRequestMethod() {
         return requestMethod;
     }
 
+    /**
+     * Get source address.
+     *
+     * @return Source address string.
+     */
     public String getSourceAddress() {
         return sourceAddress;
     }
