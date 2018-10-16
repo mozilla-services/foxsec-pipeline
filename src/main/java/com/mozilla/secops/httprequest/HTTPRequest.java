@@ -92,7 +92,13 @@ public class HTTPRequest implements Serializable {
                             }
                         } else {
                             parseCount++;
-                            c.outputWithTimestamp(e, e.getTimestamp().toInstant());
+                            // XXX Should the events be emitted with the processed timestamp here?
+                            // This currently results in an issue with events being emitted behind
+                            // the watermark.
+                            //
+                            // See also withTimestampAttribute in PubsubIO.Read which may be the correct
+                            // way to handle this.
+                            c.output(e);
                         }
                     }
                 }
