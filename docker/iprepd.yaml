@@ -1,0 +1,24 @@
+---
+listen: 0.0.0.0:8080
+redis:
+  addr: 127.0.0.1:6379
+  readtimeout: 50
+  writetimeout: 50
+  dialtimeout: 100
+auth:
+  hawk:
+    root: toor
+  apikey:
+    testuser: test
+  disableauth: true
+violations:
+  - name: test
+    penalty: 50
+    decreaselimit: 50
+  - name: test2
+    penalty: 5
+    decreaselimit: 25
+decay:
+  points: 0
+  interval: 1s
+versionresponse: ./version.json
