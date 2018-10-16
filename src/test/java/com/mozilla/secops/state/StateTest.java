@@ -29,7 +29,6 @@ public class StateTest {
     @Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-            { new SimpleStateInterface() },
             { new MemcachedStateInterface("127.0.0.1", 11211) },
             { new DatastoreStateInterface("test") }
         });
