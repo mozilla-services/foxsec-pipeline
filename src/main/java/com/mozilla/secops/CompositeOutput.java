@@ -32,15 +32,18 @@ public abstract class CompositeOutput {
      * @return Configured {@link PTransform}
      */
     public static PTransform<PCollection<String>, PDone> withOptions(OutputOptions options) {
+        final String outputFile = options.getOutputFile();
+        final String outputBigQuery = options.getOutputBigQuery();
+
         return new PTransform<PCollection<String>, PDone>() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public PDone expand(PCollection<String> input) {
-                if (options.getOutputFile() != null) {
-                    input.apply(TextIO.write().to(options.getOutputFile()));
+                if (outputFile != null) {
+                    input.apply(TextIO.write().to(outputFile));
                 }
-                if (options.getOutputBigQuery() != null) {
+                if (outputBigQuery != null) {
                     PCollection<TableRow> bqdata = input.apply(ParDo.of(
                         new DoFn<String, TableRow>() {
                             private static final long serialVersionUID = 1L;
@@ -54,7 +57,7 @@ public abstract class CompositeOutput {
                         }
                     ));
                     bqdata.apply(BigQueryIO.writeTableRows()
-                        .to(options.getOutputBigQuery())
+                        .to(outputBigQuery)
                         .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER)
                         .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
                 }
