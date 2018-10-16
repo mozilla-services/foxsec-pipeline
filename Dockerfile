@@ -12,7 +12,10 @@ RUN curl -OL https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz && \
 	tar -C /usr/local -zxf go1.11.1.linux-amd64.tar.gz && \
 	mkdir -p /root/go && \
 	env GOPATH=/root/go /usr/local/go/bin/go get -u go.mozilla.org/iprepd && \
-	env GOPATH=/root/go /usr/local/go/bin/go install go.mozilla.org/iprepd/cmd/iprepd
+	env GOPATH=/root/go /usr/local/go/bin/go install go.mozilla.org/iprepd/cmd/iprepd && \
+	mkdir -p /etc/iprepd
+
+COPY docker/iprepd.yaml /etc/iprepd/iprepd.yaml
 
 COPY docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
