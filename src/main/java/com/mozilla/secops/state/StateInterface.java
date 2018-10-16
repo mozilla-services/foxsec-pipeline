@@ -13,6 +13,7 @@ public interface StateInterface {
      * @return Stored state JSON
      */
     public String getObject(String s) throws StateException;
+
     /**
      * Save object to state
      *
@@ -20,10 +21,12 @@ public interface StateInterface {
      * @param v State JSON
      */
     public void saveObject(String s, String v) throws StateException;
+
     /**
      * Notify state implementation no further processing will occur
      */
     public void done();
+
     /**
      * Perform and setup required to read and write state
      */
