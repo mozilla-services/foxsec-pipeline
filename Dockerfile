@@ -6,7 +6,7 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-stretch" && \
     apt-get update -y && apt-get install google-cloud-sdk -y
 
 RUN apt-get install google-cloud-sdk-datastore-emulator memcached \
-	net-tools netcat -y
+	net-tools netcat google-cloud-sdk-pubsub-emulator -y
 
 COPY docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
