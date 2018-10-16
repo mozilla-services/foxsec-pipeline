@@ -52,6 +52,12 @@ public class HTTPRequest implements Serializable {
            PCollection<Event>> {
         private static final long serialVersionUID = 1L;
 
+        private final Boolean emitEventTimestamps;
+
+        public ParseAndWindow(Boolean emitEventTimestamps) {
+            this.emitEventTimestamps = emitEventTimestamps;
+        }
+
         @Override
         public PCollection<Event> expand(PCollection<String> col) {
             class Parse extends DoFn<String, Event> {
@@ -92,13 +98,16 @@ public class HTTPRequest implements Serializable {
                             }
                         } else {
                             parseCount++;
-                            // XXX Should the events be emitted with the processed timestamp here?
-                            // This currently results in an issue with events being emitted behind
-                            // the watermark.
-                            //
-                            // See also withTimestampAttribute in PubsubIO.Read which may be the correct
-                            // way to handle this.
-                            c.output(e);
+                            if (emitEventTimestamps) {
+                                // XXX Should we always emit an event with a timestamp here? With
+                                // PubsubIO the currently results in events being slightly behind the
+                                // watermark and an error.
+                                //
+                                // Using withTimestampAttribute might be the correct way to handle this.
+                                c.outputWithTimestamp(e, e.getTimestamp().toInstant());
+                            } else {
+                                c.output(e);
+                            }
                         }
                     }
                 }
@@ -217,7 +226,7 @@ public class HTTPRequest implements Serializable {
         Pipeline p = Pipeline.create(options);
 
         PCollection<String> results = p.apply("input", options.getInputType().read(options))
-            .apply("parse and window", new ParseAndWindow())
+            .apply("parse and window", new ParseAndWindow(false))
             .apply("count in window", new CountInWindow())
             .apply("threshold analysis", new ThresholdAnalysis(options.getAnalysisThresholdModifier()))
             .apply("output format", ParDo.of(new OutputFormat()));

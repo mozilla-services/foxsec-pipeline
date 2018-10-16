@@ -53,7 +53,7 @@ public class TestThresholdAnalysis1 {
     public void countRequestsTest() throws Exception {
         PCollection<String> input = getInput();
 
-        PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow());
+        PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
         PCollection<Long> count = events.apply(Combine.globally(Count.<Event>combineFn())
                 .withoutDefaults());
 
@@ -85,7 +85,7 @@ public class TestThresholdAnalysis1 {
             ));
         PCollection<String> input = getInput();
 
-        PCollection<KV<String, Long>> counts = input.apply(new HTTPRequest.ParseAndWindow())
+        PCollection<KV<String, Long>> counts = input.apply(new HTTPRequest.ParseAndWindow(true))
             .apply(new HTTPRequest.CountInWindow());
 
         PAssert.that(counts)
@@ -99,7 +99,7 @@ public class TestThresholdAnalysis1 {
     public void thresholdAnalysisTest() throws Exception {
         PCollection<String> input = getInput();
 
-        PCollection<Result> results = input.apply(new HTTPRequest.ParseAndWindow())
+        PCollection<Result> results = input.apply(new HTTPRequest.ParseAndWindow(true))
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(1.0));
 
