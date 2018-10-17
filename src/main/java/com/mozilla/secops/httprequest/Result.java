@@ -9,8 +9,11 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import com.mozilla.secops.Violation;
+
 import java.util.UUID;
 import java.io.Serializable;
+import java.io.IOException;
 
 /**
  * A {@link Result} describes a result as returned by analysis functions in
@@ -19,14 +22,14 @@ import java.io.Serializable;
 public class Result implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final String sourceAddress;
-    private final Long count;
+    private String sourceAddress;
+    private Long count;
 
     private Double meanValue;
     private Double thresholdModifier;
     private DateTime windowTimestamp;
 
-    private final UUID resultId;
+    private UUID resultId;
 
     /**
      * Constructor for {@link Result}.
@@ -42,6 +45,14 @@ public class Result implements Serializable {
     }
 
     /**
+     * Default constructor for {@link Result}
+     *
+     * <p>Create empty result object
+     */
+    public Result() {
+    }
+
+    /**
      * Returns unique result ID for this result.
      *
      * @return {@link UUID} associated with result.
@@ -49,6 +60,15 @@ public class Result implements Serializable {
     @JsonProperty("id")
     public UUID getResultId() {
         return resultId;
+    }
+
+    /**
+     * Set id in {@link Result}.
+     *
+     * @param resultId Result id
+     */
+    public void setResultId(UUID resultId) {
+        this.resultId = resultId;
     }
 
     @Override
@@ -165,5 +185,40 @@ public class Result implements Serializable {
         } catch (JsonProcessingException exc) {
             return null;
         }
+    }
+
+    /**
+     * Return {@link Result} from JSON string
+     *
+     * @param input Result in JSON
+     * @return {@link Result} object or null if deserialization fails.
+     */
+    public static Result fromJSON(String input) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JodaModule());
+        mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
+                false);
+        try {
+            return mapper.readValue(input, Result.class);
+        } catch (IOException exc) {
+            System.out.println(exc);
+            return null;
+        }
+    }
+
+    /**
+     * Return {@link Violation} object given {@link Result}
+     *
+     * <p>This function, given values in the result data set will emit a violation notice
+     * applicable to the result type.
+     *
+     * @return {@link Violation} object, or null if no violation was applicable for result
+     */
+    public Violation toViolation() {
+        if (count > (thresholdModifier * meanValue)) {
+            return new Violation(sourceAddress,
+                Violation.ViolationType.REQUEST_THRESHOLD_VIOLATION.toString());
+        }
+        return null;
     }
 }

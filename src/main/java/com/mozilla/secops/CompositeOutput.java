@@ -34,6 +34,7 @@ public abstract class CompositeOutput {
     public static PTransform<PCollection<String>, PDone> withOptions(OutputOptions options) {
         final String outputFile = options.getOutputFile();
         final String outputBigQuery = options.getOutputBigQuery();
+        final String outputIprepd = options.getOutputIprepd();
 
         return new PTransform<PCollection<String>, PDone>() {
             private static final long serialVersionUID = 1L;
@@ -60,6 +61,9 @@ public abstract class CompositeOutput {
                         .to(outputBigQuery)
                         .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER)
                         .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
+                }
+                if (outputIprepd != null) {
+                    input.apply(IprepdIO.write(outputIprepd));
                 }
                 return PDone.in(input.getPipeline());
             }
