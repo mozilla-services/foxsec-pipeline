@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.mozilla.secops.httprequest.Result;
 
 import java.util.StringJoiner;
+import java.io.IOException;
 
 /**
  * {@link IprepdIO} provides an IO transform for writing violation messages to iprepd
@@ -80,7 +81,7 @@ public class IprepdIO {
         }
 
         @ProcessElement
-        public void processElement(ProcessContext c) throws Exception {
+        public void processElement(ProcessContext c) {
             String el = c.element();
 
             Result result = Result.fromJSON(el);
@@ -99,18 +100,22 @@ public class IprepdIO {
                 return;
             }
 
-            String reqPath = new StringJoiner("/").add(wTransform.getURL())
-                .add("violations").add(sourceAddress).toString();
-            StringEntity body = new StringEntity(violationJSON);
+            try {
+                String reqPath = new StringJoiner("/").add(wTransform.getURL())
+                    .add("violations").add(sourceAddress).toString();
+                StringEntity body = new StringEntity(violationJSON);
 
-            log.info("notify iprepd client {} violation {}", sourceAddress, v.getViolation());
-            HttpPut put = new HttpPut(reqPath);
-            put.addHeader("Content-Type", "application/json");
-            put.setEntity(body);
-            HttpResponse resp = httpClient.execute(put);
-            log.info("PUT to iprepd for {} returned with status code {}", sourceAddress,
-                resp.getStatusLine().getStatusCode());
-            put.reset();
+                log.info("notify iprepd client {} violation {}", sourceAddress, v.getViolation());
+                HttpPut put = new HttpPut(reqPath);
+                put.addHeader("Content-Type", "application/json");
+                put.setEntity(body);
+                HttpResponse resp = httpClient.execute(put);
+                log.info("PUT to iprepd for {} returned with status code {}", sourceAddress,
+                    resp.getStatusLine().getStatusCode());
+                put.reset();
+            } catch (IOException exc) {
+                log.warn(exc.getMessage());
+            }
         }
     }
 }
