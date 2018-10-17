@@ -9,9 +9,16 @@ import org.apache.beam.sdk.values.PDone;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.HttpResponse;
+import org.apache.http.entity.StringEntity;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mozilla.secops.httprequest.Result;
+
+import java.util.StringJoiner;
 
 /**
  * {@link IprepdIO} provides an IO transform for writing violation messages to iprepd
@@ -58,6 +65,7 @@ public class IprepdIO {
         private static final long serialVersionUID = 1L;
 
         private final Write wTransform;
+        private Logger log;
         private HttpClient httpClient;
 
         public WriteFn(Write wTransform) {
@@ -66,6 +74,8 @@ public class IprepdIO {
 
         @Setup
         public void setup() {
+            log = LoggerFactory.getLogger(WriteFn.class);
+            log.info("creating new HTTP client for iprepd submission");
             httpClient = HttpClientBuilder.create().build();
         }
 
@@ -89,9 +99,18 @@ public class IprepdIO {
                 return;
             }
 
-            HttpPost post = new HttpPost(wTransform.getURL());
-            httpClient.execute(post);
-            post.reset();
+            String reqPath = new StringJoiner("/").add(wTransform.getURL())
+                .add("violations").add(sourceAddress).toString();
+            StringEntity body = new StringEntity(violationJSON);
+
+            log.info("notify iprepd client {} violation {}", sourceAddress, v.getViolation());
+            HttpPut put = new HttpPut(reqPath);
+            put.addHeader("Content-Type", "application/json");
+            put.setEntity(body);
+            HttpResponse resp = httpClient.execute(put);
+            log.info("PUT to iprepd for {} returned with status code {}", sourceAddress,
+                resp.getStatusLine().getStatusCode());
+            put.reset();
         }
     }
 }
