@@ -89,6 +89,34 @@ public class RuntimeSecrets {
     }
 
     /**
+     * Interpret a runtime secret as specified in pipeline options.
+     *
+     * <p>This function currently handles two formats. A string prefixed with cloudkms:// is
+     * interpreted as an encrypted string which will be decrypted via CloudKMS. The project
+     * should be set to the correct GCP project name. The key ring and key name will always be
+     * looked for as "dataflow".
+     *
+     * <p>With no prefix, the input is simply returned as is and treated as an unencrypted string.
+     *
+     * @param input Input string
+     * @param project GCP project name, can be null if unapplicable
+     * @return Transformed runtime secret
+     */
+    public static String interpretSecret(String input, String project) throws IOException {
+        String ret = input;
+        if (input.startsWith("cloudkms://")) {
+            RuntimeSecrets r = new RuntimeSecrets(project, "dataflow", "dataflow");
+            ret = r.decrypt(input.replace("cloudkms://", ""));
+            try {
+                r.done();
+            } catch (InterruptedException exc) {
+                throw new IOException(exc.getMessage());
+            }
+        }
+        return ret;
+    }
+
+    /**
      * main routine can be used to encrypt or decrypt data on the command line
      */
     public static void main(String[] args) throws Exception {

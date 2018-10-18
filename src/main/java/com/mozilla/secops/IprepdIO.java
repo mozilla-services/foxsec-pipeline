@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mozilla.secops.httprequest.Result;
+import com.mozilla.secops.crypto.RuntimeSecrets;
 
 import java.util.StringJoiner;
 import java.io.IOException;
@@ -29,10 +30,12 @@ public class IprepdIO {
      * Return {@link PTransform} to emit violations to iprepd
      *
      * @param url URL for iprepd service
+     * @param apiKey API key as specified in pipeline options
+     * @param project GCP project name, only required if decrypting apiKey via cloudkms
      * @return IO transform
      */
-    public static Write write(String url) {
-        return new Write(url);
+    public static Write write(String url, String apiKey, String project) {
+        return new Write(url, apiKey, project);
     }
 
     /**
@@ -46,13 +49,47 @@ public class IprepdIO {
     public static class Write extends PTransform<PCollection<String>, PDone> {
         private static final long serialVersionUID = 1L;
         private final String url;
+        private final String apiKey;
+        private final String project;
 
-        public Write(String url) {
+        /**
+         * Create new iprepd write transform
+         *
+         * @param url URL for iprepd daemon (e.g., http://iprepd.example.host)
+         * @param apiKey Use API key for auth, should be formatted for {@link RuntimeSecrets}
+         * @param project GCP project name, can be null if no cloudkms is required for secrets
+         */
+        public Write(String url, String apiKey, String project) {
             this.url = url;
+            this.apiKey = apiKey;
+            this.project = project;
         }
 
+        /**
+         * Get configured URL
+         *
+         * @return URL string
+         */
         public String getURL() {
             return url;
+        }
+
+        /**
+         * Get configured API key
+         *
+         * @return API key as specified in pipeline options
+         */
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        /**
+         * Get project
+         *
+         * @return Project string
+         */
+        public String getProject() {
+            return project;
         }
 
         @Override
@@ -68,16 +105,25 @@ public class IprepdIO {
         private final Write wTransform;
         private Logger log;
         private HttpClient httpClient;
+        private String apiKey;
+        private String project;
 
         public WriteFn(Write wTransform) {
             this.wTransform = wTransform;
         }
 
         @Setup
-        public void setup() {
+        public void setup() throws IOException {
             log = LoggerFactory.getLogger(WriteFn.class);
             log.info("creating new HTTP client for iprepd submission");
             httpClient = HttpClientBuilder.create().build();
+
+            project = wTransform.getProject();
+            apiKey = wTransform.getApiKey();
+            if (apiKey != null) {
+                log.info("using iprepd apikey authentication");
+                apiKey = RuntimeSecrets.interpretSecret(apiKey, project);
+            }
         }
 
         @ProcessElement
@@ -109,6 +155,11 @@ public class IprepdIO {
                 HttpPut put = new HttpPut(reqPath);
                 put.addHeader("Content-Type", "application/json");
                 put.setEntity(body);
+
+                if (apiKey != null) {
+                    put.addHeader("Authorization", "APIKey " + apiKey);
+                }
+
                 HttpResponse resp = httpClient.execute(put);
                 log.info("PUT to iprepd for {} returned with status code {}", sourceAddress,
                     resp.getStatusLine().getStatusCode());
