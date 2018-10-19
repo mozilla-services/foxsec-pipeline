@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import com.mozilla.secops.Violation;
@@ -28,18 +29,20 @@ public class Result implements Serializable {
      */
     public enum ResultType {
         /** Threshold analysis result */
-        THRESHOLD_ANALYSIS {
-            @Override
-            public String toString() {
-                return "thresholdanalysis";
-            }
-        },
-        /** Client error rate result */
-        CLIENT_ERROR {
-            @Override
-            public String toString() {
-                return "clienterror";
-            }
+        THRESHOLD_ANALYSIS(1, "thresholdanalysis"),
+        CLIENT_ERROR(2, "clienterror");
+
+        private Integer id;
+        private String stringValue;
+
+        private ResultType(Integer id, String stringValue) {
+            this.id = id;
+            this.stringValue = stringValue;
+        }
+
+        @JsonValue
+        public String toValue() {
+            return stringValue;
         }
     }
 
@@ -60,8 +63,7 @@ public class Result implements Serializable {
     /**
      * Constructor for {@link Result}.
      *
-     * @param sourceAddress Source address associated with result.
-     * @param count Count of requests for sourceAddress within window.
+     * @param resultType Type of result to create
      */
     public Result(ResultType resultType) {
         resultId = UUID.randomUUID();
@@ -101,8 +103,17 @@ public class Result implements Serializable {
      * @return Type of {@link Result}
      */
     @JsonProperty("type")
-    public String getResultType() {
-        return resultType.toString();
+    public ResultType getResultType() {
+        return resultType;
+    }
+
+    /**
+     * Set result type
+     *
+     * @param resultType Type of result
+     */
+    public void setResultType(ResultType resultType) {
+        this.resultType = resultType;
     }
 
     @Override
@@ -295,9 +306,12 @@ public class Result implements Serializable {
      * @return {@link Violation} object, or null if no violation was applicable for result
      */
     public Violation toViolation() {
-        if (count > (thresholdModifier * meanValue)) {
+        if (resultType == ResultType.THRESHOLD_ANALYSIS) {
             return new Violation(sourceAddress,
                 Violation.ViolationType.REQUEST_THRESHOLD_VIOLATION.toString());
+        } else if (resultType == ResultType.CLIENT_ERROR) {
+            return new Violation(sourceAddress,
+                Violation.ViolationType.CLIENT_ERROR_RATE_VIOLATION.toString());
         }
         return null;
     }

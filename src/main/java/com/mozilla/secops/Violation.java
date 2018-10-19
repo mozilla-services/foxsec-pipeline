@@ -23,6 +23,12 @@ public class Violation {
             public String toString() {
                 return "request_threshold_violation";
             }
+        },
+        CLIENT_ERROR_RATE_VIOLATION {
+            @Override
+            public String toString() {
+                return "client_error_rate_violation";
+            }
         }
     }
 

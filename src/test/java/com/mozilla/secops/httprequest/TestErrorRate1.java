@@ -106,6 +106,7 @@ public class TestErrorRate1 {
                 i -> {
                     for (Result r : i) {
                         assertThat(r.getSourceAddress(), anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
+                        assertEquals(Result.ResultType.CLIENT_ERROR, r.getResultType());
                         assertEquals(60L, (long)r.getClientErrorCount());
                         assertEquals(30L, (long)r.getMaxClientErrorRate());
                         assertEquals(359999L, r.getWindowTimestamp().getMillis());
