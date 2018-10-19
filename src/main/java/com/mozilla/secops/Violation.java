@@ -36,7 +36,7 @@ public class Violation {
      * Create new {@link Violation}
      *
      * @param sourceAddress Source address as string
-     * @param violation ViolationType
+     * @param violation ViolationType as string
      */
     public Violation(String sourceAddress, String violation) {
         this.sourceAddress = sourceAddress;
