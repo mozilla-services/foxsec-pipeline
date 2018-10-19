@@ -172,6 +172,7 @@ public class ParserTest {
         assertEquals("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3)", g.getUserAgent());
         assertEquals("https://send.firefox.com/public/locales/en-US/send.js", g.getRequestUrl());
         assertEquals("2018-09-28T18:55:12.469Z", e.getTimestamp().toString());
+        assertEquals(200, (int)g.getStatus());
     }
 
     @Test

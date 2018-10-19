@@ -164,6 +164,9 @@ public class HTTPRequest implements Serializable {
                 public void processElement(ProcessContext c) {
                     GLB g = c.element().getPayload();
                     Integer status = g.getStatus();
+                    if (status == null) {
+                        return;
+                    }
                     if (status >= 400 && status < 500) {
                         c.output(g.getSourceAddress());
                     }
