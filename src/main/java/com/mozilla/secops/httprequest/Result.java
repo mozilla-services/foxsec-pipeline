@@ -29,21 +29,11 @@ public class Result implements Serializable {
      */
     public enum ResultType {
         /** Threshold analysis result */
-        THRESHOLD_ANALYSIS(1, "thresholdanalysis"),
-        CLIENT_ERROR(2, "clienterror");
-
-        private Integer id;
-        private String stringValue;
-
-        private ResultType(Integer id, String stringValue) {
-            this.id = id;
-            this.stringValue = stringValue;
-        }
-
-        @JsonValue
-        public String toValue() {
-            return stringValue;
-        }
+        @JsonProperty("thresholdanalysis")
+        THRESHOLD_ANALYSIS,
+        /** Client error rate result */
+        @JsonProperty("clienterror")
+        CLIENT_ERROR
     }
 
     private String sourceAddress;
@@ -292,7 +282,6 @@ public class Result implements Serializable {
         try {
             return mapper.readValue(input, Result.class);
         } catch (IOException exc) {
-            System.out.println(exc);
             return null;
         }
     }
