@@ -176,7 +176,7 @@ public class HTTPRequest implements Serializable {
     }
 
     /**
-     * {@link DoFn} to analysis key value pairs of source address and error count and emit
+     * {@link DoFn} to analyze key value pairs of source address and error count and emit
      * a {@Result} for each address that exceeds the maximum client error rate
      */
     public static class ErrorRateAnalysis extends DoFn<KV<String, Long>, Result> {
@@ -194,7 +194,7 @@ public class HTTPRequest implements Serializable {
 
         @ProcessElement
         public void processElement(ProcessContext c, BoundedWindow w) {
-            if (c.element().getValue() < maxErrorRate) {
+            if (c.element().getValue() <= maxErrorRate) {
                 return;
             }
             Result r = new Result(Result.ResultType.CLIENT_ERROR);
