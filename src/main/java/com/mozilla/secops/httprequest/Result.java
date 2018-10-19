@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import com.mozilla.secops.Violation;
 
@@ -22,14 +23,39 @@ import java.io.IOException;
 public class Result implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String sourceAddress;
-    private Long count;
+    /**
+     * Valid {@link Result} types
+     */
+    public enum ResultType {
+        /** Threshold analysis result */
+        THRESHOLD_ANALYSIS {
+            @Override
+            public String toString() {
+                return "thresholdanalysis";
+            }
+        },
+        /** Client error rate result */
+        CLIENT_ERROR {
+            @Override
+            public String toString() {
+                return "clienterror";
+            }
+        }
+    }
 
+    private String sourceAddress;
+    private DateTime windowTimestamp;
+    private UUID resultId;
+    private ResultType resultType;
+
+    // Used in THRESHOLD_ANALYSIS results
+    private Long count;
     private Double meanValue;
     private Double thresholdModifier;
-    private DateTime windowTimestamp;
 
-    private UUID resultId;
+    // Used in CLIENT_ERROR results
+    private Long clientErrorCount;
+    private Long maxClientErrorRate;
 
     /**
      * Constructor for {@link Result}.
@@ -37,11 +63,9 @@ public class Result implements Serializable {
      * @param sourceAddress Source address associated with result.
      * @param count Count of requests for sourceAddress within window.
      */
-    public Result(String sourceAddress, Long count) {
-        this.sourceAddress = sourceAddress;
-        this.count = count;
-
+    public Result(ResultType resultType) {
         resultId = UUID.randomUUID();
+        this.resultType = resultType;
     }
 
     /**
@@ -71,6 +95,16 @@ public class Result implements Serializable {
         this.resultId = resultId;
     }
 
+    /**
+     * Get result type
+     *
+     * @return Type of {@link Result}
+     */
+    @JsonProperty("type")
+    public String getResultType() {
+        return resultType.toString();
+    }
+
     @Override
     public boolean equals(Object o) {
         Result t = (Result)o;
@@ -80,6 +114,15 @@ public class Result implements Serializable {
     @Override
     public int hashCode() {
         return resultId.hashCode();
+    }
+
+    /**
+     * Set source address value in {@link Result}
+     *
+     * @param sourceAddress Source address string
+     */
+    public void setSourceAddress(String sourceAddress) {
+        this.sourceAddress = sourceAddress;
     }
 
     /**
@@ -93,6 +136,15 @@ public class Result implements Serializable {
     }
 
     /**
+     * Set count value in {@link Result}
+     *
+     * @param count Request count
+     */
+    public void setCount(Long count) {
+        this.count = count;
+    }
+
+    /**
      * Get count value in {@link Result}.
      *
      * @return Count value.
@@ -103,14 +155,22 @@ public class Result implements Serializable {
     }
 
     /**
-     * Return a new {@link Result} based on a {@link KV}, where the key is used
-     * as the sourceAddress and the value is used as the count.
+     * Set client error count value in {@link Result}
      *
-     * @param element KV element.
-     * @return {@link Result} constructed from KV.
+     * @param clientErrorCount Error count
      */
-    public static Result fromKV(KV<String, Long> element) {
-        return new Result(element.getKey(), element.getValue());
+    public void setClientErrorCount(Long clientErrorCount) {
+        this.clientErrorCount = clientErrorCount;
+    }
+
+    /**
+     * Get client error count value in {@link Result}
+     *
+     * @return Client error count value.
+     */
+    @JsonProperty("client_error_count")
+    public Long getClientErrorCount() {
+        return clientErrorCount;
     }
 
     /**
@@ -152,6 +212,25 @@ public class Result implements Serializable {
     }
 
     /**
+     * Set maximum error rate value in {@Result}
+     *
+     * @param maxClientErrorRate Maximum client error rate for result
+     */
+    public void setMaxClientErrorRate(Long maxClientErrorRate) {
+        this.maxClientErrorRate = maxClientErrorRate;
+    }
+
+    /**
+     * Get maximum error rate for result
+     *
+     * @return Maximum error rate
+     */
+    @JsonProperty("max_client_errors")
+    public Long getMaxClientErrorRate() {
+        return maxClientErrorRate;
+    }
+
+    /**
      * Set timestamp associated with analysis window in {@link Result}.
      *
      * @param windowTimestamp Timestamp describing analysis window.
@@ -180,6 +259,7 @@ public class Result implements Serializable {
         mapper.registerModule(new JodaModule());
         mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
                 false);
+        mapper.setSerializationInclusion(Include.NON_NULL);
         try {
             return mapper.writeValueAsString(this);
         } catch (JsonProcessingException exc) {

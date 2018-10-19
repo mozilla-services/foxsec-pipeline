@@ -22,6 +22,7 @@ class WebLogClient:
 
     def __init__(self, ip):
         self._emitnumber = 1
+        self._status = 200
         self._ip = ip
         self._output = self.OUTPUT_STACKDRIVER
 
@@ -29,9 +30,14 @@ class WebLogClient:
         self._emitnumber = x
         return self
 
+    def set_statuscode(self, x):
+        self._status = x
+        return self
+
     def emit_stackdriver(self, ts):
         buf = json.loads(self.STACKDRIVERTEMPLATE)
         buf['httpRequest']['remoteIp'] = self._ip
+        buf['httpRequest']['status'] = self._status
         buf['timestamp'] = ts.isoformat()
         for x in range(self._emitnumber):
             sys.stdout.write(json.dumps(buf) + '\n')

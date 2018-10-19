@@ -23,6 +23,7 @@ public class GLB extends PayloadBase implements Serializable {
     private String userAgent;
     private String requestUrl;
     private String sourceAddress;
+    private Integer status;
 
     @Override
     public Boolean matcher(String input) {
@@ -89,6 +90,7 @@ public class GLB extends PayloadBase implements Serializable {
         requestUrl = h.getRequestUrl();
         userAgent = h.getUserAgent();
         requestMethod = h.getRequestMethod();
+        status = h.getStatus();
     }
 
     /**
@@ -125,5 +127,14 @@ public class GLB extends PayloadBase implements Serializable {
      */
     public String getSourceAddress() {
         return sourceAddress;
+    }
+
+    /**
+     * Get status.
+     *
+     * @return status integer.
+     */
+    public Integer getStatus() {
+        return status;
     }
 }
