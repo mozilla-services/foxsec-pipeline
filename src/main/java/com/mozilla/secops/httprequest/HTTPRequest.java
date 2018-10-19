@@ -295,7 +295,7 @@ public class HTTPRequest implements Serializable {
         Pipeline p = Pipeline.create(options);
 
         PCollection<Event> events = p.apply("input", options.getInputType().read(options))
-            .apply("parse and window", new ParseAndWindow(true));
+            .apply("parse and window", new ParseAndWindow(false));
 
         PCollection<String> threshResults = events.apply("per-client", new CountInWindow())
             .apply("threshold analysis", new ThresholdAnalysis(options.getAnalysisThresholdModifier()))
