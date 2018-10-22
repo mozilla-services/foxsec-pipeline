@@ -114,6 +114,7 @@ public class ParserTest {
         assertEquals(Normalized.Type.AUTH, n.getType());
         assertEquals("riker", n.getSubjectUser());
         assertEquals("127.0.0.1", n.getSourceAddress());
+        assertEquals("emit-bastion", n.getObject());
     }
 
     @Test

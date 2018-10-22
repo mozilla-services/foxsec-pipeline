@@ -17,6 +17,7 @@ public class DatastoreStateInterface implements StateInterface {
     private Datastore datastore;
     private KeyFactory keyFactory;
     private final String kind;
+    private final String namespace;
 
     public String getObject(String s) {
         Key nk = keyFactory.newKey(s);
@@ -74,15 +75,17 @@ public class DatastoreStateInterface implements StateInterface {
         } else {
             datastore = DatastoreOptions.getDefaultInstance().getService();
         }
-        keyFactory = datastore.newKeyFactory().setKind(kind);
+        keyFactory = datastore.newKeyFactory().setNamespace(namespace).setKind(kind);
     }
 
     /**
      * Initialize a Datastore state interface
      *
      * @param kind kind value to use for stored objects
+     * @param namespace Datastore namespace
      */
-    public DatastoreStateInterface(String kind) {
+    public DatastoreStateInterface(String kind, String namespace) {
         this.kind = kind;
+        this.namespace = namespace;
     }
 }

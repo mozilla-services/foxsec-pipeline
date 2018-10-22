@@ -13,13 +13,14 @@ public class OpenSSH extends PayloadBase implements Serializable {
     private final String matchRe = "^\\S{3} \\d{2} [\\d:]+ \\S+ \\S*sshd\\[\\d+\\]: .+";
     private Pattern pattRe;
 
-    private final String authAcceptedRe = "^.*sshd\\[\\d+\\]: Accepted (\\S+) for (\\S+) from (\\S+) " +
+    private final String authAcceptedRe = "^.* (\\S+) sshd\\[\\d+\\]: Accepted (\\S+) for (\\S+) from (\\S+) " +
         "port (\\d+).*";
     private Pattern pattAuthAcceptedRe;
 
     private String user;
     private String authMethod;
     private String sourceAddress;
+    private String hostname;
 
     @Override
     public Boolean matcher(String input) {
@@ -52,13 +53,15 @@ public class OpenSSH extends PayloadBase implements Serializable {
         pattAuthAcceptedRe = Pattern.compile(authAcceptedRe);
         Matcher mat = pattAuthAcceptedRe.matcher(input);
         if (mat.matches()) {
-            authMethod = mat.group(1);
-            user = mat.group(2);
-            sourceAddress = mat.group(3);
+            hostname = mat.group(1);
+            authMethod = mat.group(2);
+            user = mat.group(3);
+            sourceAddress = mat.group(4);
             Normalized n = e.getNormalized();
             n.setType(Normalized.Type.AUTH);
             n.setSubjectUser(user);
             n.setSourceAddress(sourceAddress);
+            n.setObject(hostname);
         }
     }
 

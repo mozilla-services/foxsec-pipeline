@@ -20,6 +20,7 @@ public class Normalized implements Serializable {
 
     private String subjectUser;
     private String sourceAddress;
+    private String object;
 
     Normalized() {
     }
@@ -61,6 +62,15 @@ public class Normalized implements Serializable {
     }
 
     /**
+     * Set object field
+     *
+     * @param object Object being authenticated to
+     */
+    public void setObject(String object) {
+        this.object = object;
+    }
+
+    /**
      * Get subject user field
      *
      * @return Username
@@ -76,5 +86,14 @@ public class Normalized implements Serializable {
      */
     public String getSourceAddress() {
         return sourceAddress;
+    }
+
+    /**
+     * Get object field
+     *
+     * @return Object string
+     */
+    public String getObject() {
+        return object;
     }
 }
