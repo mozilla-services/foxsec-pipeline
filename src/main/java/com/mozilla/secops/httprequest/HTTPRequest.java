@@ -180,7 +180,7 @@ public class HTTPRequest implements Serializable {
 
     /**
      * {@link DoFn} to analyze key value pairs of source address and error count and emit
-     * a {@Result} for each address that exceeds the maximum client error rate
+     * a {@link Result} for each address that exceeds the maximum client error rate
      */
     public static class ErrorRateAnalysis extends DoFn<KV<String, Long>, Result> {
         private static final long serialVersionUID = 1L;

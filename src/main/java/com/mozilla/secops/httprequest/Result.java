@@ -213,7 +213,7 @@ public class Result implements Serializable {
     }
 
     /**
-     * Set maximum error rate value in {@Result}
+     * Set maximum error rate value in {@link Result}
      *
      * @param maxClientErrorRate Maximum client error rate for result
      */
