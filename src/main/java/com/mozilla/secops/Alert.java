@@ -1,6 +1,11 @@
 package com.mozilla.secops;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -58,5 +63,23 @@ public class Alert implements Serializable {
     @Override
     public int hashCode() {
         return alertId.hashCode();
+    }
+
+    /**
+     * Return JSON string representation.
+     *
+     * @return String or null if serialization fails.
+     */
+    public String toJSON() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JodaModule());
+        mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
+                false);
+        mapper.setSerializationInclusion(Include.NON_NULL);
+        try {
+            return mapper.writeValueAsString(this);
+        } catch (JsonProcessingException exc) {
+            return null;
+        }
     }
 }

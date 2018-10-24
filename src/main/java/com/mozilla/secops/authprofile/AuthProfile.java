@@ -187,6 +187,19 @@ public class AuthProfile implements Serializable {
     }
 
     /**
+     * {@link DoFn} to transform any generated {@link Alert} objects into JSON for
+     * consumption by output transforms.
+     */
+    public static class OutputFormat extends DoFn<Alert, String> {
+        private static final long serialVersionUID = 1L;
+
+        @ProcessElement
+        public void processElement(ProcessContext c) {
+            c.output(c.element().toJSON());
+        }
+    }
+
+    /**
      * Runtime options for {@link AuthProfile} pipeline.
      */
     public interface AuthProfileOptions extends PipelineOptions, InputOptions, OutputOptions {
@@ -214,7 +227,10 @@ public class AuthProfile implements Serializable {
         PCollection<KV<String, Iterable<Event>>> events = p.apply("input", options.getInputType().read(options))
             .apply("parse and window", new ParseAndWindow());
 
-        PCollection<Alert> alerts = events.apply(ParDo.of(new Analyze(options)));
+        PCollection<String> alerts = events.apply(ParDo.of(new Analyze(options)))
+            .apply("output format", ParDo.of(new OutputFormat()));
+
+        alerts.apply("output", OutputOptions.compositeOutput(options));
 
         p.run();
     }
