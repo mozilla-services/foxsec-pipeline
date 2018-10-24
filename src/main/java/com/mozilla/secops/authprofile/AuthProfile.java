@@ -183,6 +183,10 @@ public class AuthProfile implements Serializable {
                 alert.setSummary(summary);
                 alert.setCategory("authprofile");
 
+                alert.addMetadata("object", destination);
+                alert.addMetadata("sourceaddress", address);
+                alert.addMetadata("username", username);
+
                 sm.set(state);
                 c.output(alert);
             }
