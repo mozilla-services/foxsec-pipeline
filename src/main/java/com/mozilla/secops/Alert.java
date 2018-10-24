@@ -21,12 +21,25 @@ import java.util.ArrayList;
 public class Alert implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    public enum AlertSeverity {
+        /** Informational */
+        @JsonProperty("info")
+        INFORMATIONAL,
+        /** Warning */
+        @JsonProperty("warn")
+        WARNING,
+        /** Critical */
+        @JsonProperty("critical")
+        CRITICAL
+    }
+
     private UUID alertId;
     private String summary;
     private String category;
     private ArrayList<String> payload;
     private DateTime timestamp;
     private ArrayList<AlertMeta> metadata;
+    private AlertSeverity severity;
 
     /**
      * Construct new alert object
@@ -36,6 +49,7 @@ public class Alert implements Serializable {
         timestamp = new DateTime(DateTimeZone.UTC);
         payload = new ArrayList<String>();
         metadata = new ArrayList<AlertMeta>();
+        severity = AlertSeverity.INFORMATIONAL;
     }
 
     /**
@@ -55,6 +69,24 @@ public class Alert implements Serializable {
     @JsonProperty("summary")
     public String getSummary() {
         return summary;
+    }
+
+    /**
+     * Set alert severity
+     *
+     * @param severity Severity
+     */
+    public void setSeverity(AlertSeverity severity) {
+        this.severity = severity;
+    }
+
+    /**
+     * Get alert severity
+     *
+     * @return Severity
+     */
+    public AlertSeverity getSeverity() {
+        return severity;
     }
 
     /**

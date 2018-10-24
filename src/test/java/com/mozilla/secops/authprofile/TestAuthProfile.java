@@ -115,6 +115,7 @@ public class TestAuthProfile {
                 long newCnt = 0;
                 long infoCnt = 0;
                 for (Alert a : results) {
+                    assertEquals("authprofile", a.getCategory());
                     String actualSummary = a.getSummary();
                     if (actualSummary.equals("riker authenticated to emit-bastion")) {
                         infoCnt++;

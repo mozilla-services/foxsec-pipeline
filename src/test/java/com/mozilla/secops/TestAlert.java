@@ -22,7 +22,8 @@ public class TestAlert {
 
     @Test
     public void alertToJsonTest() throws Exception {
-        String expect = "{\"id\":\"d14277bb-8d69-4cd8-b83d-3ccdaf17c7b9\",\"summary\":\"test alert\"" +
+        String expect = "{\"severity\":\"info\",\"id\":\"d14277bb-8d69-4cd8-b83d-3ccdaf17c7b9\"," +
+            "\"summary\":\"test alert\"" +
             ",\"category\":\"test\",\"payload\":\"first line\\n\\nsecond line\"," +
             "\"timestamp\":\"1970-01-01T00:00:00.000Z\"}";
 
@@ -44,7 +45,8 @@ public class TestAlert {
 
     @Test
     public void alertToJsonMetadataTest() throws Exception {
-        String expect = "{\"id\":\"d14277bb-8d69-4cd8-b83d-3ccdaf17c7b9\",\"summary\":\"test alert\"," +
+        String expect = "{\"severity\":\"critical\",\"id\":\"d14277bb-8d69-4cd8-b83d-3ccdaf17c7b9\"," +
+            "\"summary\":\"test alert\"," +
             "\"timestamp\":\"1970-01-01T00:00:00.000Z\",\"metadata\":[{\"key\":\"key\"," +
             "\"value\":\"value\"},{\"key\":\"key1\",\"value\":\"another value\"}]}";
         Alert a = new Alert();
@@ -54,6 +56,7 @@ public class TestAlert {
         a.setAlertId(u);
         a.setTimestamp(new DateTime(0L));
         a.setSummary("test alert");
+        a.setSeverity(Alert.AlertSeverity.CRITICAL);
         a.addMetadata("key", "value");
         a.addMetadata("key1", "another value");
 
