@@ -1,0 +1,11 @@
+{
+    "identities": {
+        "testuser@mozilla.com": {
+            "aliases": [ "testuser" ]
+        },
+
+        "wcrusher@mozilla.com": {
+            "aliases": [ "wesley" ]
+        }
+    }
+}
