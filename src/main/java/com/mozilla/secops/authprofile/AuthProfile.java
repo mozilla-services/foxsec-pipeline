@@ -174,9 +174,11 @@ public class AuthProfile implements Serializable {
                     // Address was new
                     log.info("{}: escalating alert criteria for new source: {}", username, address);
                     summary = summary + " from new source";
+                    alert.setSeverity(Alert.AlertSeverity.WARNING);
                 } else {
                     // Known source
                     log.info("{}: access from known source: {}", username, address);
+                    alert.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
                 }
                 alert.setSummary(summary);
                 alert.setCategory("authprofile");

@@ -119,8 +119,10 @@ public class TestAuthProfile {
                     String actualSummary = a.getSummary();
                     if (actualSummary.equals("riker authenticated to emit-bastion")) {
                         infoCnt++;
+                        assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                     } else if (actualSummary.equals("riker authenticated to emit-bastion from new source")) {
                         newCnt++;
+                        assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     }
                 }
                 assertEquals(1L, newCnt);
