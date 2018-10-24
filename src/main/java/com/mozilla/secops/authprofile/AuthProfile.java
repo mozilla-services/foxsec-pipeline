@@ -179,6 +179,7 @@ public class AuthProfile implements Serializable {
                     log.info("{}: access from known source: {}", username, address);
                 }
                 alert.setSummary(summary);
+                alert.setCategory("authprofile");
 
                 sm.set(state);
                 c.output(alert);
