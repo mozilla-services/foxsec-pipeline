@@ -9,14 +9,15 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.transforms.Count;
 
-public class TestInputTypeFile {
-    public TestInputTypeFile() {
+public class TestInputTypeFileMulti {
+    public TestInputTypeFileMulti() {
     }
 
     private static InputOptions getInputOptions() {
         InputOptions o = PipelineOptionsFactory.as(InputOptions.class);
         o.setInputType(InputType.file);
-        o.setInput(new String[]{"./target/test-classes/testdata/inputtype_buffer1.txt"});
+        o.setInput(new String[]{"./target/test-classes/testdata/inputtype_buffer1.txt",
+            "./target/test-classes/testdata/inputtype_buffer2.txt"});
         return o;
     }
 
@@ -34,7 +35,7 @@ public class TestInputTypeFile {
         PCollection<String> results = pipeline.apply(o.getInputType().read(pipeline, o));
         PCollection<Long> count = results.apply(Count.globally());
 
-        PAssert.that(count).containsInAnyOrder(10L);
+        PAssert.that(count).containsInAnyOrder(30L);
 
         pipeline.run().waitUntilFinish();
     }

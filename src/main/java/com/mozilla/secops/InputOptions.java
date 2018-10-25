@@ -16,8 +16,8 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
     InputType getInputType();
     void setInputType(InputType value);
 
-    @Description("Input to read from; file path, Pubsub topic")
+    @Description("Input to read from (multiple allowed); file path, Pubsub topic")
     @Validation.Required
-    String getInput();
-    void setInput(String value);
+    String[] getInput();
+    void setInput(String[] value);
 }
