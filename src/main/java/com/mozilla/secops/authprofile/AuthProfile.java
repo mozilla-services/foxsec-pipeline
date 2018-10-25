@@ -138,7 +138,7 @@ public class AuthProfile implements Serializable {
         }
 
         @Setup
-        public void Setup() throws StateException {
+        public void setup() throws StateException {
             log = LoggerFactory.getLogger(Analyze.class);
 
             if (memcachedHost != null && memcachedPort != null) {
@@ -151,6 +151,11 @@ public class AuthProfile implements Serializable {
                 throw new IllegalArgumentException("could not find valid state parameters in options");
             }
             state.initialize();
+        }
+
+        @Teardown
+        public void teardown() {
+            state.done();
         }
 
         @ProcessElement

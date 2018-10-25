@@ -24,9 +24,17 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
     String getOutputIprepd();
     void setOutputIprepd(String value);
 
-    @Description("With iprepd output; use API key for authentication")
+    @Description("With iprepd output; use API key for authentication (supports RuntimeSecrets)")
     String getOutputIprepdApikey();
     void setOutputIprepdApikey(String value);
+
+    @Description("With alert email output; AWS credentials format id:secret (supports RuntimeSecrets)")
+    String getOutputAlertSesCredentials();
+    void setOutputAlertSesCredentials(String value);
+
+    @Description("Global email catch-all; e-mail address to receive copy of alerts")
+    String getOutputAlertEmailCatchall();
+    void setOutputAlertEmailCatchall(String value);
 
     public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
         return CompositeOutput.withOptions(o);

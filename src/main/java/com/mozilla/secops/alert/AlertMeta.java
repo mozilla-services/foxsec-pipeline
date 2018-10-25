@@ -1,6 +1,7 @@
 package com.mozilla.secops.alert;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 import java.io.Serializable;
 
@@ -39,7 +40,8 @@ public class AlertMeta implements Serializable {
      * @param key Metadata key
      * @param value Metadata value
      */
-    public AlertMeta(String key, String value) {
+    @JsonCreator
+    public AlertMeta(@JsonProperty("key") String key, @JsonProperty("value") String value) {
         this.key = key;
         this.value = value;
     }

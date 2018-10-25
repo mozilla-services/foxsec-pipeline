@@ -16,6 +16,9 @@ import org.apache.beam.sdk.values.PCollection;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.gson.Gson;
 
+import com.mozilla.secops.alert.AlertIO;
+import com.mozilla.secops.alert.AlertConfiguration;
+
 /**
  * {@link CompositeOutput} provides a standardized composite output transform for use in
  * pipelines.
@@ -37,6 +40,10 @@ public abstract class CompositeOutput {
         final String outputIprepd = options.getOutputIprepd();
         final String outputIprepdApikey = options.getOutputIprepdApikey();
         final String project = options.getProject();
+
+        AlertConfiguration alertcfg = new AlertConfiguration();
+        alertcfg.setSesCredentials(options.getOutputAlertSesCredentials());
+        alertcfg.setEmailCatchall(options.getOutputAlertEmailCatchall());
 
         return new PTransform<PCollection<String>, PDone>() {
             private static final long serialVersionUID = 1L;
@@ -66,6 +73,9 @@ public abstract class CompositeOutput {
                 }
                 if (outputIprepd != null) {
                     input.apply(IprepdIO.write(outputIprepd, outputIprepdApikey, project));
+                }
+                if (alertcfg.isConfigured()) {
+                    input.apply(AlertIO.write(alertcfg));
                 }
                 return PDone.in(input.getPipeline());
             }

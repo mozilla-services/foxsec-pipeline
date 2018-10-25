@@ -12,6 +12,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.io.Serializable;
+import java.io.IOException;
 import java.util.UUID;
 import java.util.ArrayList;
 
@@ -201,6 +202,25 @@ public class Alert implements Serializable {
     @Override
     public int hashCode() {
         return alertId.hashCode();
+    }
+
+    /**
+     * Return {@link Alert} from JSON string
+     *
+     * @param input Alert in JSON
+     * @return {@link Alert} object or null if deserialization fails.
+     */
+    public static Alert fromJSON(String input) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JodaModule());
+        mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
+                false);
+        try {
+            return mapper.readValue(input, Alert.class);
+        } catch (IOException exc) {
+            System.out.println(exc);
+            return null;
+        }
     }
 
     /**
