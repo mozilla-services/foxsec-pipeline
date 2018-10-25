@@ -1,4 +1,4 @@
-package com.mozilla.secops;
+package com.mozilla.secops.alert;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

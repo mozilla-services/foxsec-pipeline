@@ -24,7 +24,7 @@ import org.joda.time.Duration;
 
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
-import com.mozilla.secops.Alert;
+import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.Parser;

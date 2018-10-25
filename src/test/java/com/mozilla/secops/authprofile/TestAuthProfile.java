@@ -23,7 +23,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 
 import org.joda.time.Instant;
 
-import com.mozilla.secops.Alert;
+import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 

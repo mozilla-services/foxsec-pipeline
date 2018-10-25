@@ -1,4 +1,4 @@
-package com.mozilla.secops;
+package com.mozilla.secops.alert;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;

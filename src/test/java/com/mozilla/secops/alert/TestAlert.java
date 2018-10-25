@@ -1,4 +1,4 @@
-package com.mozilla.secops;
+package com.mozilla.secops.alert;
 
 import org.junit.Test;
 import org.junit.Rule;
