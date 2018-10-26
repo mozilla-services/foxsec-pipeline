@@ -32,6 +32,10 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
     String getOutputAlertSesCredentials();
     void setOutputAlertSesCredentials(String value);
 
+    @Description("Email from address; FROM address for email alerting")
+    String getOutputAlertEmailFrom();
+    void setOutputAlertEmailFrom(String value);
+
     @Description("Global email catch-all; e-mail address to receive copy of alerts")
     String getOutputAlertEmailCatchall();
     void setOutputAlertEmailCatchall(String value);

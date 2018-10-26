@@ -8,8 +8,10 @@ import java.io.Serializable;
 public class AlertConfiguration implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String sesCredentials;
+    private String smtpCredentials;
     private String emailCatchall;
+    private String emailFrom;
+    private String gcpProject;
 
     /**
      * Determine if {@link AlertIO} should be established in composite transform
@@ -21,21 +23,21 @@ public class AlertConfiguration implements Serializable {
     }
 
     /**
-     * Get SES credentials
+     * Get SMTP credentials
      *
-     * @return SES credential string
+     * @return SMTP credential string
      */
-    public String getSesCredentials() {
-        return sesCredentials;
+    public String getSmtpCredentials() {
+        return smtpCredentials;
     }
 
     /**
-     * Set SES credentials
+     * Set SMTP credentials
      *
-     * @param sesCredentials SES credential string
+     * @param smtpCredentials SMTP credential string
      */
-    public void setSesCredentials(String sesCredentials) {
-        this.sesCredentials = sesCredentials;
+    public void setSmtpCredentials(String smtpCredentials) {
+        this.smtpCredentials = smtpCredentials;
     }
 
     /**
@@ -54,6 +56,42 @@ public class AlertConfiguration implements Serializable {
      */
     public void setEmailCatchall(String emailCatchall) {
         this.emailCatchall = emailCatchall;
+    }
+
+    /**
+     * Get email from address
+     *
+     * @return From address string
+     */
+    public String getEmailFrom() {
+        return emailFrom;
+    }
+
+    /**
+     * Set email from address
+     *
+     * @param emailFrom From address string
+     */
+    public void setEmailFrom(String emailFrom) {
+        this.emailFrom = emailFrom;
+    }
+
+    /**
+     * Get GCP project name
+     *
+     * @return Project name string
+     */
+    public String getGcpProject() {
+        return gcpProject;
+    }
+
+    /**
+     * Set GCP project name
+     *
+     * @param gcpProject Project name string
+     */
+    public void setGcpProject(String gcpProject) {
+        this.gcpProject = gcpProject;
     }
 
     /**
