@@ -9,6 +9,7 @@ public class AlertConfiguration implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String smtpCredentials;
+    private String smtpRelay;
     private String emailCatchall;
     private String emailFrom;
     private String gcpProject;
@@ -19,7 +20,7 @@ public class AlertConfiguration implements Serializable {
      * @return True if configuration indicates {@link AlertIO} should run
      */
     public Boolean isConfigured() {
-        return (sesCredentials != null);
+        return (smtpCredentials != null);
     }
 
     /**
@@ -38,6 +39,24 @@ public class AlertConfiguration implements Serializable {
      */
     public void setSmtpCredentials(String smtpCredentials) {
         this.smtpCredentials = smtpCredentials;
+    }
+
+    /**
+     * Get SMTP relay
+     *
+     * @return SMTP relay string
+     */
+    public String getSmtpRelay() {
+        return smtpRelay;
+    }
+
+    /**
+     * Set SMTP relay
+     *
+     * @param smtpRelay SMTP relay string
+     */
+    public void setSmtpRelay(String smtpRelay) {
+        this.smtpRelay = smtpRelay;
     }
 
     /**

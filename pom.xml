@@ -204,9 +204,9 @@
 	    <version>1.7.25</version>
         </dependency>
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-ses</artifactId>
-	    <version>1.11.436</version>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+	    <version>1.6.2</version>
         </dependency>
     </dependencies>
 

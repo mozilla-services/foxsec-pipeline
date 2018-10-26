@@ -37,7 +37,7 @@ public class Alert implements Serializable {
     private UUID alertId;
     private String summary;
     private String category;
-    private ArrayList<String> payload;
+    private String payload;
     private DateTime timestamp;
     private ArrayList<AlertMeta> metadata;
     private AlertSeverity severity;
@@ -48,7 +48,6 @@ public class Alert implements Serializable {
     public Alert() {
         alertId = UUID.randomUUID();
         timestamp = new DateTime(DateTimeZone.UTC);
-        payload = new ArrayList<String>();
         metadata = new ArrayList<AlertMeta>();
         severity = AlertSeverity.INFORMATIONAL;
     }
@@ -96,7 +95,11 @@ public class Alert implements Serializable {
      * @param line Line to append to existing payload buffer
      */
     public void addToPayload(String line) {
-        payload.add(line);
+        if (payload == null) {
+            payload = line;
+        } else {
+            payload = payload + "\n" + line;
+        }
     }
 
     /**
@@ -106,10 +109,7 @@ public class Alert implements Serializable {
      */
     @JsonProperty("payload")
     public String getPayload() {
-        if (payload.size() == 0) {
-            return null;
-        }
-        return String.join("\n", payload);
+        return payload;
     }
 
     /**

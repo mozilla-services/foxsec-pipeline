@@ -79,7 +79,7 @@ public class AlertIO {
             log = LoggerFactory.getLogger(WriteFn.class);
             log.info("creating new alert output handler");
 
-            if (cfg.getSesCredentials() != null) {
+            if (cfg.getSmtpCredentials() != null) {
                 log.info("configuration requires AlertMailer");
                 mailer = new AlertMailer(cfg);
             }

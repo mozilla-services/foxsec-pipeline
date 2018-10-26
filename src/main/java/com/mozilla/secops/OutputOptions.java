@@ -28,9 +28,13 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
     String getOutputIprepdApikey();
     void setOutputIprepdApikey(String value);
 
-    @Description("With alert email output; AWS credentials format id:secret (supports RuntimeSecrets)")
-    String getOutputAlertSesCredentials();
-    void setOutputAlertSesCredentials(String value);
+    @Description("With alert email output; SMTP credentials format id:secret (supports RuntimeSecrets)")
+    String getOutputAlertSmtpCredentials();
+    void setOutputAlertSmtpCredentials(String value);
+
+    @Description("SMTP relay for email output; relay hostname")
+    String getOutputAlertSmtpRelay();
+    void setOutputAlertSmtpRelay(String value);
 
     @Description("Email from address; FROM address for email alerting")
     String getOutputAlertEmailFrom();

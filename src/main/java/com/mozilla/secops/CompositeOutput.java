@@ -42,7 +42,8 @@ public abstract class CompositeOutput {
         final String project = options.getProject();
 
         AlertConfiguration alertcfg = new AlertConfiguration();
-        alertcfg.setSesCredentials(options.getOutputAlertSesCredentials());
+        alertcfg.setSmtpCredentials(options.getOutputAlertSmtpCredentials());
+        alertcfg.setSmtpRelay(options.getOutputAlertSmtpRelay());
         alertcfg.setEmailCatchall(options.getOutputAlertEmailCatchall());
         alertcfg.setEmailFrom(options.getOutputAlertEmailFrom());
         alertcfg.setGcpProject(project);
