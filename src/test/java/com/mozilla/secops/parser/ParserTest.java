@@ -226,4 +226,89 @@ public class ParserTest {
         assertEquals(1000L, Parser.parseISO8601("1970-01-01T00:00:01+00:00").getMillis());
         assertEquals(1000L, Parser.parseISO8601("1970-01-01T00:00:01").getMillis());
     }
+
+    @Test
+    public void testCloudtrailAction() throws Exception {
+        String buf = "{\"eventVersion\": \"1.02\",\"userIdentity\": {\"type\": " +
+          "\"IAMUser\",\"principalId\": \"XXXXXXXXXXXXXXXXXXXXX\",\"arn\": " +
+          "\"arn:aws:iam::XXXXXXXXXXXX:user/uhura\",\"accountId\": \"XXXXXXXXXXXX\"," +
+          "\"accessKeyId\": \"XXXXXXXXXXXX\",\"userName\": \"uhura\",\"sessionContext\": " +
+          "{\"attributes\": {\"mfaAuthenticated\": \"true\",\"creationDate\": " +
+          "\"2018-07-02T18:14:11Z\"}},\"invokedBy\": \"signin.amazonaws.com\"},\"eventTime\": " +
+          "\"2018-07-02T18:20:04Z\",\"eventSource\": \"iam.amazonaws.com\",\"eventName\": " +
+          "\"CreateAccessKey\",\"awsRegion\": \"us-east-1\",\"sourceIPAddress\": \"127.0.0.1\"," +
+          "\"userAgent\": \"signin.amazonaws.com\",\"requestParameters\": {\"userName\": \"guinan\"}," +
+          "\"responseElements\": {\"accessKey\": {\"accessKeyId\": \"XXXXXXXXXXXXXXX\"," +
+          "\"status\": \"Active\",\"userName\": \"guinan\",\"createDate\": " +
+          "\"Jul 2, 2018 6:20:04 PM\"}},\"requestID\": \"8abc0444-7e24-11e8-f2fa-9d71c95ef006\"," +
+          "\"eventID\": \"55555343-132e-43bb-8d5d-23d0ef81178e\",\"eventType\": " +
+          "\"AwsApiCall\",\"recipientAccountId\": \"1234567890\"}";
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+        Cloudtrail ct = e.getPayload();
+        assertNotNull(ct);
+        assertEquals("uhura", ct.getUser());
+        assertEquals("127.0.0.1", ct.getSourceAddress());
+    }
+
+    @Test
+    public void testCloudtrailConsoleAuth() throws Exception {
+        String buf = "{\"awsRegion\":\"us-west-2\",\"eventID\": " +
+          "\"00000000-0000-0000-0000-000000000000\",\"eventName\":\"ConsoleLogin\", " +
+          "\"eventSource\":\"signin.amazonaws.com\",\"eventTime\":\"2018-06-26T06:00:13Z\", " +
+          "\"eventType\":\"AwsConsoleSignIn\",\"eventVersion\":\"1.05\", " +
+          "\"recipientAccountId\":\"999999999999\",\"responseElements\": " +
+          "{\"ConsoleLogin\":\"Success\"},\"sourceIPAddress\":\"127.0.0.1\",\"userAgent\": " +
+          "\"Mozilla/5.0(Macintosh;IntelMacOSX10.13;rv:62.0)Gecko/20100101Firefox/62.0\", " +
+          "\"userIdentity\":{\"accountId\":\"999999999999\",\"arn\": " +
+          "\"arn:aws:iam::999999999999:user/riker\",\"principalId\":\"XXXXXXXXXXXXXXXXXXXXX\", " +
+          "\"type\":\"IAMUser\",\"userName\":\"riker\",\"sessionContext\": {\"attributes\": " +
+          "{\"mfaAuthenticated\": \"true\",\"creationDate\": \"2018-07-02T18:14:11Z\"}}}}";
+
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+        Cloudtrail ct = e.getPayload();
+        assertNotNull(ct);
+        assertEquals("riker", ct.getUser());
+        assertEquals("127.0.0.1", ct.getSourceAddress());
+        Normalized n = e.getNormalized();
+        assertNotNull(n);
+        assertEquals(Normalized.Type.AUTH, n.getType());
+        assertEquals("riker", n.getSubjectUser());
+        assertEquals("127.0.0.1", n.getSourceAddress());
+    }
+
+    @Test
+    public void testCloudtrailAssumeRole() throws Exception {
+        String buf = "{\"eventVersion\": \"1.05\",\"userIdentity\": {\"type\": \"IAMUser\"," +
+          "\"principalId\": \"XXXXXXXXXXXX\",\"arn\": \"arn:aws:iam::XXXXXXXXXX:user/riker\"," +
+          "\"accountId\": \"XXXXXXXXXXXXX\",\"accessKeyId\": \"XXXXXXXXX\",\"userName\": " +
+          "\"riker\",\"sessionContext\": {\"attributes\": {\"mfaAuthenticated\": \"true\"," +
+          "\"creationDate\": \"2018-08-14T23:22:18Z\"}},\"invokedBy\": \"signin.amazonaws.com\"}," +
+          "\"eventTime\": \"2018-10-25T01:23:46Z\",\"eventSource\": \"sts.amazonaws.com\"," +
+          "\"eventName\": \"AssumeRole\",\"awsRegion\": \"us-east-1\",\"sourceIPAddress\": " +
+          "\"127.0.0.1\",\"userAgent\": \"signin.amazonaws.com\",\"eventID\": " +
+          "\"000000000-000000\",\"eventType\": \"AwsApiCall\",\"recipientAccountId\": \"XXXXXXXX\"}";
+
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+        Cloudtrail ct = e.getPayload();
+        assertNotNull(ct);
+        assertEquals("riker", ct.getUser());
+        assertEquals("127.0.0.1", ct.getSourceAddress());
+        Normalized n = e.getNormalized();
+        assertNotNull(n);
+        assertEquals(Normalized.Type.AUTH, n.getType());
+        assertEquals("riker", n.getSubjectUser());
+        assertEquals("127.0.0.1", n.getSourceAddress());
+    }
 }

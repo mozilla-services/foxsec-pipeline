@@ -39,6 +39,10 @@ public class GLB extends PayloadBase implements Serializable {
             // pass
         } catch (IllegalArgumentException exc) {
             // pass
+        } catch (NullPointerException exc) {
+            // TODO: Cloudtrail test gets to `(String)m.get("@type")`
+            //       and causes a null pointer exception.
+            // pass
         }
         return false;
     }

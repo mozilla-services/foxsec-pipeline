@@ -14,6 +14,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     public enum PayloadType {
         /** Google load balancer */
         GLB,
+        /** AWS CloudTrail */
+        CLOUDTRAIL,
         /** OpenSSH */
         OPENSSH,
         /** Raw */
