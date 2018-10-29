@@ -25,6 +25,9 @@ public class IdentityManager {
      */
     public static IdentityManager loadFromResource(String resourcePath) throws IOException {
         InputStream in = IdentityManager.class.getResourceAsStream(resourcePath);
+        if (in == null) {
+            throw new IOException("identity manager resource not found");
+        }
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(in, IdentityManager.class);
     }

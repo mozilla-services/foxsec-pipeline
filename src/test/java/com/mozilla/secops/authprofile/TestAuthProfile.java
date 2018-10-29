@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -65,6 +66,7 @@ public class TestAuthProfile {
             PipelineOptionsFactory.as(AuthProfile.AuthProfileOptions.class);
         ret.setDatastoreNamespace("testauthprofileanalyze");
         ret.setDatastoreKind("authprofile");
+        ret.setIdentityManagerPath("/testdata/identitymanager.json");
         return ret;
     }
 
@@ -120,10 +122,14 @@ public class TestAuthProfile {
                     if (actualSummary.equals("riker authenticated to emit-bastion from Milton/US")) {
                         infoCnt++;
                         assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                        assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                        assertNull(a.getMetadataValue("notify_email_direct"));
                     } else if (actualSummary.equals("riker authenticated to emit-bastion from new source" +
                             ", Milton/US")) {
                         newCnt++;
                         assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                        assertEquals("wriker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                        assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                     }
                 }
                 assertEquals(1L, newCnt);

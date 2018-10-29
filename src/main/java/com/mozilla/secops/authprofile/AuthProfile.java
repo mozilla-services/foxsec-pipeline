@@ -32,6 +32,8 @@ import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateException;
 import com.mozilla.secops.state.MemcachedStateInterface;
 import com.mozilla.secops.state.DatastoreStateInterface;
+import com.mozilla.secops.identity.IdentityManager;
+import com.mozilla.secops.identity.Identity;
 
 import java.io.IOException;
 import java.lang.IllegalArgumentException;
@@ -122,6 +124,8 @@ public class AuthProfile implements Serializable {
         private final Integer memcachedPort;
         private final String datastoreNamespace;
         private final String datastoreKind;
+        private final String idmanagerPath;
+        private IdentityManager idmanager;
         private Logger log;
         private State state;
 
@@ -135,11 +139,14 @@ public class AuthProfile implements Serializable {
             memcachedPort = options.getMemcachedPort();
             datastoreNamespace = options.getDatastoreNamespace();
             datastoreKind = options.getDatastoreKind();
+            idmanagerPath = options.getIdentityManagerPath();
         }
 
         @Setup
-        public void setup() throws StateException {
+        public void setup() throws StateException, IOException {
             log = LoggerFactory.getLogger(Analyze.class);
+
+            idmanager = IdentityManager.loadFromResource(idmanagerPath);
 
             if (memcachedHost != null && memcachedPort != null) {
                 log.info("using memcached for state management");
@@ -163,10 +170,20 @@ public class AuthProfile implements Serializable {
             Iterable<Event> events = c.element().getValue();
             String username = c.element().getKey();
 
+            Identity identity;
+            String identityKey = idmanager.lookupAlias(username);
+            if (identityKey != null) {
+                log.info("{}: resolved identity to {}", username, identityKey);
+                identity = idmanager.getIdentity(identityKey);
+            } else {
+                log.warn("{}: username does not map to any known identity or alias", username);
+            }
+
             for (Event e : events) {
                 Normalized n = e.getNormalized();
                 String address = n.getSourceAddress();
                 String destination = n.getObject();
+                Boolean isUnknown = false;
 
                 StateModel sm = StateModel.get(username, state);
                 if (sm == null) {
@@ -184,6 +201,7 @@ public class AuthProfile implements Serializable {
                 String summary = String.format("%s authenticated to %s", username, destination);
                 if (sm.updateEntry(address)) {
                     // Address was new
+                    isUnknown = true;
                     log.info("{}: escalating alert criteria for new source: {}", username, address);
                     summary = summary + " from new source, " + summaryIndicator;
                     alert.setSeverity(Alert.AlertSeverity.WARNING);
@@ -205,6 +223,15 @@ public class AuthProfile implements Serializable {
                 alert.addMetadata("object", destination);
                 alert.addMetadata("sourceaddress", address);
                 alert.addMetadata("username", username);
+                if (identityKey != null) {
+                    alert.addMetadata("identity_key", identityKey);
+                    // If new, set direct notification in the metadata so the alert is also forwarded
+                    // to the user.
+                    if (isUnknown) {
+                        log.info("{}: adding direct email notification metadata for {}", username, identityKey);
+                        alert.addMetadata("notify_email_direct", identityKey);
+                    }
+                }
                 if (city != null) {
                     alert.addMetadata("sourceaddress_city", city);
                 }
@@ -251,6 +278,11 @@ public class AuthProfile implements Serializable {
         @Description("Use Datastore state; kind for entities")
         String getDatastoreKind();
         void setDatastoreKind(String value);
+
+        @Description("Identity manager configuration; resource path")
+        @Default.String("/identitymanager.json")
+        String getIdentityManagerPath();
+        void setIdentityManagerPath(String value);
     }
 
     private static void runAuthProfile(AuthProfileOptions options) throws IllegalArgumentException {

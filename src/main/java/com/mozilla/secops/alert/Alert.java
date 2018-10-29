@@ -133,6 +133,21 @@ public class Alert implements Serializable {
     }
 
     /**
+     * Return a specific metadata value
+     *
+     * @param key Key to return data for
+     * @return Value string, null if not found
+     */
+    public String getMetadataValue(String key) {
+        for (AlertMeta m : metadata) {
+            if (m.getKey().equals(key)) {
+                return m.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
      * Get alert metadata
      *
      * @return Alert metadata
