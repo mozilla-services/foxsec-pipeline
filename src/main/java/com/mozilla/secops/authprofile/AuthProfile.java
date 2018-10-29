@@ -180,10 +180,16 @@ public class AuthProfile implements Serializable {
                     log.info("{}: escalating alert criteria for new source: {}", username, address);
                     summary = summary + " from new source";
                     alert.setSeverity(Alert.AlertSeverity.WARNING);
+
+                    alert.addToPayload(String.format("An authentication event for user %s was detected " +
+                        "to access %s, and this event occurred from a source address unknown to the system.",
+                        username, destination));
                 } else {
                     // Known source
                     log.info("{}: access from known source: {}", username, address);
                     alert.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
+                    alert.addToPayload(String.format("An authentication event for user %s was detected " +
+                        "to access %s. This occurred from a known source address.", username, destination));
                 }
                 alert.setSummary(summary);
                 alert.setCategory("authprofile");
@@ -191,8 +197,6 @@ public class AuthProfile implements Serializable {
                 alert.addMetadata("object", destination);
                 alert.addMetadata("sourceaddress", address);
                 alert.addMetadata("username", username);
-
-                alert.addToPayload("invocation test");
 
                 sm.set(state);
                 c.output(alert);
