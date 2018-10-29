@@ -60,8 +60,9 @@ public class GLB extends PayloadBase implements Serializable {
      *
      * @param input Input string.
      * @param e Parent {@link Event}.
+     * @param p Parser instance.
      */
-    public GLB(String input, Event e) {
+    public GLB(String input, Event e, Parser p) {
         jfmatcher = null;
         // Use method local JacksonFactory as the object is not serializable, and this event
         // may be passed around

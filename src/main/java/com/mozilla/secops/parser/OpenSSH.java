@@ -48,8 +48,9 @@ public class OpenSSH extends PayloadBase implements Serializable {
      *
      * @param input Input string.
      * @param e Parent {@link Event}.
+     * @param p Parser instance
      */
-    public OpenSSH(String input, Event e) {
+    public OpenSSH(String input, Event e, Parser p) {
         pattAuthAcceptedRe = Pattern.compile(authAcceptedRe);
         Matcher mat = pattAuthAcceptedRe.matcher(input);
         if (mat.matches()) {

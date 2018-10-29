@@ -4,6 +4,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 
+import com.maxmind.geoip2.model.CityResponse;
+
 import org.joda.time.DateTime;
 
 public class ParserTest {
@@ -225,5 +227,15 @@ public class ParserTest {
         }
         assertEquals(1000L, Parser.parseISO8601("1970-01-01T00:00:01+00:00").getMillis());
         assertEquals(1000L, Parser.parseISO8601("1970-01-01T00:00:01").getMillis());
+    }
+
+    @Test
+    public void testGeoIp() throws Exception {
+        Parser p = new Parser(true);
+        assertNotNull(p);
+        CityResponse resp = p.geoIp("216.160.83.56");
+        assertNotNull(resp);
+        assertEquals("US", resp.getCountry().getIsoCode());
+        assertEquals("Milton", resp.getCity().getName());
     }
 }
