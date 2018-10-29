@@ -4,6 +4,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.maxmind.geoip2.model.CityResponse;
 
@@ -129,7 +130,7 @@ public class ParserTest {
             "textPayload\":\"Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from 12" +
             "7.0.0.1 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"timestamp" +
             "\":\"2018-09-18T22:15:38Z\"}";
-        Parser p = new Parser(true);
+        Parser p = new Parser();
         assertNotNull(p);
         Event e = p.parse(buf);
         assertNotNull(e);
@@ -157,8 +158,9 @@ public class ParserTest {
             "textPayload\":\"Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from " +
             "216.160.83.56 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"timestamp" +
             "\":\"2018-09-18T22:15:38Z\"}";
-        Parser p = new Parser(true);
+        Parser p = new Parser();
         assertNotNull(p);
+        assertTrue(p.geoIpUsingTest());
         Event e = p.parse(buf);
         assertNotNull(e);
         assertEquals(Payload.PayloadType.OPENSSH, e.getPayloadType());
@@ -264,8 +266,9 @@ public class ParserTest {
 
     @Test
     public void testGeoIp() throws Exception {
-        Parser p = new Parser(true);
+        Parser p = new Parser();
         assertNotNull(p);
+        assertTrue(p.geoIpUsingTest());
         CityResponse resp = p.geoIp("216.160.83.56");
         assertNotNull(resp);
         assertEquals("US", resp.getCountry().getIsoCode());

@@ -92,7 +92,7 @@ public class TestAuthProfile {
                 Normalized n = e[0].getNormalized();
                 assertNotNull(n);
                 assertEquals(Normalized.Type.AUTH, n.getType());
-                assertEquals("127.0.0.1", n.getSourceAddress());
+                assertEquals("216.160.83.56", n.getSourceAddress());
                 assertEquals("riker", n.getSubjectUser());
 
                 return null;
@@ -117,11 +117,11 @@ public class TestAuthProfile {
                 for (Alert a : results) {
                     assertEquals("authprofile", a.getCategory());
                     String actualSummary = a.getSummary();
-                    if (actualSummary.equals("riker authenticated to emit-bastion from 127.0.0.1")) {
+                    if (actualSummary.equals("riker authenticated to emit-bastion from Milton/US")) {
                         infoCnt++;
                         assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                     } else if (actualSummary.equals("riker authenticated to emit-bastion from new source" +
-                            ", 127.0.0.1")) {
+                            ", Milton/US")) {
                         newCnt++;
                         assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     }

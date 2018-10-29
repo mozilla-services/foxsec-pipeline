@@ -10,6 +10,16 @@ import java.io.IOException;
 
 /**
  * GeoIP resolution
+ *
+ * <p>Upon initialization, a {@link GeoIP} object will attempt to load database files from specific
+ * resource paths in the following order.
+ *
+ * <p><ul>
+ * <li>/GeoLite2-City.mmdb
+ * <li>/testdata/GeoIP2-City-Test.mmdb
+ * </ul>
+ *
+ * <p>If the test database is used, the usingTest function will return true.
  */
 public class GeoIP {
     private final String GEOIP_TESTDBPATH = "/testdata/GeoIP2-City-Test.mmdb";
@@ -51,20 +61,17 @@ public class GeoIP {
 
     /**
      * Initialize new {@link GeoIP}
-     *
-     * @param useTest True to use testing database
      */
-    public GeoIP(Boolean useTest) {
+    public GeoIP() {
         InputStream in;
 
-        if (useTest) {
-            in = GeoIP.class.getResourceAsStream(GEOIP_TESTDBPATH);
-            initializingWithTest = true;
-        } else {
-            in = GeoIP.class.getResourceAsStream(GEOIP_DBPATH);
-        }
+        in = GeoIP.class.getResourceAsStream(GEOIP_DBPATH);
         if (in == null) {
-            return;
+            initializingWithTest = true;
+            in = GeoIP.class.getResourceAsStream(GEOIP_TESTDBPATH);
+            if (in == null) {
+                return;
+            }
         }
 
         try {

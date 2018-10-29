@@ -23,7 +23,11 @@ import java.lang.ReflectiveOperationException;
 /**
  * Event parser
  *
- * {@link Parser} can be used to parse incoming events and generate {@link Event} objects.
+ * <p>{@link Parser} can be used to parse incoming events and generate {@link Event} objects.
+ *
+ * <p>On initialization the parser will also attempt to initialize the GeoIP parser that some
+ * individual event parsers can utilize. See documentation for {@link GeoIP} on dependencies
+ * for GeoIP lookup support.
  */
 public class Parser {
     private static final long serialVersionUID = 1L;
@@ -84,6 +88,15 @@ public class Parser {
     }
 
     /**
+     * Determine if GeoIP test database is being used
+     *
+     * @return True if test database is loaded by GeoIP submodule
+     */
+    public Boolean geoIpUsingTest() {
+        return geoip.usingTest();
+    }
+
+    /**
      * Parse an event
      *
      * @param input Input string
@@ -116,23 +129,14 @@ public class Parser {
 
     /**
      * Create new parser instance
-     *
-     * @param testHooks Enable testing hooks in parser
      */
-    public Parser(Boolean testHooks) {
+    public Parser() {
         log = LoggerFactory.getLogger(Parser.class);
-        geoip = new GeoIP(testHooks);
+        geoip = new GeoIP();
         jf = new JacksonFactory();
         payloads = new ArrayList<PayloadBase>();
         payloads.add(new GLB());
         payloads.add(new OpenSSH());
         payloads.add(new Raw());
-    }
-
-    /**
-     * Create new parser instance
-     */
-    public Parser() {
-        this(false);
     }
 }
