@@ -11,5 +11,7 @@
         "wriker@mozilla.com": {
             "aliases": [ "numberone", "riker" ]
         }
-    }
+    },
+    "default_direct_email": true,
+    "default_direct_email_format": "%s-test@mozilla.com"
 }

@@ -16,6 +16,8 @@ import java.util.Iterator;
  */
 public class IdentityManager {
     private Map<String, Identity> identities;
+    private Boolean defaultDirectEmail;
+    private String defaultDirectEmailFormat;
 
     /**
      * Load identity manager configuration from a resource file
@@ -40,6 +42,26 @@ public class IdentityManager {
     @JsonProperty("identities")
     public Map<String, Identity> getIdentities() {
         return identities;
+    }
+
+    /**
+     * Set default direct email flag
+     *
+     * @param flag Boolean to enable/disable
+     */
+    @JsonProperty("default_direct_email")
+    public void setDefaultDirectEmail(Boolean flag) {
+        defaultDirectEmail = flag;
+    }
+
+    /**
+     * Set default direct email format string
+     *
+     * @param defaultDirectEmailFormat Format string
+     */
+    @JsonProperty("default_direct_email_format")
+    public void setDefaultDirectEmailFormat(String defaultDirectEmailFormat) {
+        this.defaultDirectEmailFormat = defaultDirectEmailFormat;
     }
 
     /**
