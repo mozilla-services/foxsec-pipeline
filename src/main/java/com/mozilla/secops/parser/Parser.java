@@ -32,7 +32,6 @@ public class Parser {
     private final JacksonFactory jf;
     private final Logger log;
     private final GeoIP geoip;
-    private Boolean useGeoIpTestDb;
 
     /**
      * Parse an ISO8601 date string and return a {@link DateTime} object.

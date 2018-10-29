@@ -16,8 +16,8 @@ public class GeoIP {
     private final String GEOIP_DBPATH = "/GeoLite2-City.mmdb";
 
     private DatabaseReader geoipDb;
-    private Boolean initialized;
-    private Boolean initializingWithTest;
+    private Boolean initialized = false;
+    private Boolean initializingWithTest = false;
 
     /**
      * Lookup city/country from IP address string

@@ -1,5 +1,7 @@
 package com.mozilla.secops.parser;
 
+import com.maxmind.geoip2.model.CityResponse;
+
 import java.io.Serializable;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -20,6 +22,8 @@ public class OpenSSH extends PayloadBase implements Serializable {
     private String user;
     private String authMethod;
     private String sourceAddress;
+    private String sourceAddressCity;
+    private String sourceAddressCountry;
     private String hostname;
 
     @Override
@@ -63,6 +67,16 @@ public class OpenSSH extends PayloadBase implements Serializable {
             n.setSubjectUser(user);
             n.setSourceAddress(sourceAddress);
             n.setObject(hostname);
+
+            if (sourceAddress != null) {
+                CityResponse cr = p.geoIp(sourceAddress);
+                if (cr != null) {
+                    sourceAddressCity = cr.getCity().getName();
+                    sourceAddressCountry = cr.getCountry().getIsoCode();
+                    n.setSourceAddressCity(sourceAddressCity);
+                    n.setSourceAddressCountry(sourceAddressCountry);
+                }
+            }
         }
     }
 
@@ -91,5 +105,23 @@ public class OpenSSH extends PayloadBase implements Serializable {
      */
     public String getSourceAddress() {
         return sourceAddress;
+    }
+
+    /**
+     * Get source address city
+     *
+     * @return Source address city
+     */
+    public String getSourceAddressCity() {
+        return sourceAddressCity;
+    }
+
+    /**
+     * Get source address country
+     *
+     * @return Source address country
+     */
+    public String getSourceAddressCountry() {
+        return sourceAddressCountry;
     }
 }
