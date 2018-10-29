@@ -117,10 +117,11 @@ public class TestAuthProfile {
                 for (Alert a : results) {
                     assertEquals("authprofile", a.getCategory());
                     String actualSummary = a.getSummary();
-                    if (actualSummary.equals("riker authenticated to emit-bastion")) {
+                    if (actualSummary.equals("riker authenticated to emit-bastion from 127.0.0.1")) {
                         infoCnt++;
                         assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                    } else if (actualSummary.equals("riker authenticated to emit-bastion from new source")) {
+                    } else if (actualSummary.equals("riker authenticated to emit-bastion from new source" +
+                            ", 127.0.0.1")) {
                         newCnt++;
                         assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     }

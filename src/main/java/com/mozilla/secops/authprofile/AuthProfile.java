@@ -173,12 +173,19 @@ public class AuthProfile implements Serializable {
                     sm = new StateModel(username);
                 }
 
+                String city = n.getSourceAddressCity();
+                String country = n.getSourceAddressCountry();
+                String summaryIndicator = address;
+                if (city != null && country != null) {
+                    summaryIndicator = String.format("%s/%s", city, country);
+                }
+
                 Alert alert = new Alert();
                 String summary = String.format("%s authenticated to %s", username, destination);
                 if (sm.updateEntry(address)) {
                     // Address was new
                     log.info("{}: escalating alert criteria for new source: {}", username, address);
-                    summary = summary + " from new source";
+                    summary = summary + " from new source, " + summaryIndicator;
                     alert.setSeverity(Alert.AlertSeverity.WARNING);
 
                     alert.addToPayload(String.format("An authentication event for user %s was detected " +
@@ -187,6 +194,7 @@ public class AuthProfile implements Serializable {
                 } else {
                     // Known source
                     log.info("{}: access from known source: {}", username, address);
+                    summary = summary + " from " + summaryIndicator;
                     alert.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
                     alert.addToPayload(String.format("An authentication event for user %s was detected " +
                         "to access %s. This occurred from a known source address.", username, destination));
@@ -197,6 +205,12 @@ public class AuthProfile implements Serializable {
                 alert.addMetadata("object", destination);
                 alert.addMetadata("sourceaddress", address);
                 alert.addMetadata("username", username);
+                if (city != null) {
+                    alert.addMetadata("sourceaddress_city", city);
+                }
+                if (country != null) {
+                    alert.addMetadata("sourceaddress_country", country);
+                }
 
                 sm.set(state);
                 c.output(alert);
