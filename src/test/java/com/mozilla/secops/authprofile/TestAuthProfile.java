@@ -128,7 +128,7 @@ public class TestAuthProfile {
                             ", Milton/US")) {
                         newCnt++;
                         assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                        assertEquals("wriker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                        assertEquals("holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                         assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                     }
                 }

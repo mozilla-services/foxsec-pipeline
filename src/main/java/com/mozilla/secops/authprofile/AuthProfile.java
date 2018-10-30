@@ -170,7 +170,7 @@ public class AuthProfile implements Serializable {
             Iterable<Event> events = c.element().getValue();
             String username = c.element().getKey();
 
-            Identity identity;
+            Identity identity = null;
             String identityKey = idmanager.lookupAlias(username);
             if (identityKey != null) {
                 log.info("{}: resolved identity to {}", username, identityKey);
@@ -228,8 +228,12 @@ public class AuthProfile implements Serializable {
                     // If new, set direct notification in the metadata so the alert is also forwarded
                     // to the user.
                     if (isUnknown) {
-                        log.info("{}: adding direct email notification metadata for {}", username, identityKey);
-                        alert.addMetadata("notify_email_direct", identityKey);
+                        String dnot = identity.getEmailNotifyDirect(idmanager.getDefaultNotification());
+                        if (dnot != null) {
+                            log.info("{}: adding direct email notification metadata route to {}",
+                                identityKey, dnot);
+                            alert.addMetadata("notify_email_direct", dnot);
+                        }
                     }
                 }
                 if (city != null) {
