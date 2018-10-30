@@ -26,6 +26,25 @@ public class AlertMailer {
     private final AlertConfiguration cfg;
     private final Logger log;
 
+    /**
+     * Send email alert to specified address
+     *
+     * @param a Alert
+     * @param address Recipient address
+     */
+    public void sendToAddress(Alert a, String address) {
+        log.info("generating mail for {}", address);
+
+        ArrayList<String> r = new ArrayList<String>();
+        r.add(address);
+        sendMail(r, a.getSummary(), a.assemblePayload());
+    }
+
+    /**
+     * Send email alert to configured catchall address
+     *
+     * @param a Alert
+     */
     public void sendToCatchall(Alert a) {
         String dest = cfg.getEmailCatchall();
         if (dest == null) {

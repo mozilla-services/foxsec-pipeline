@@ -100,6 +100,11 @@ public class AlertIO {
                     mailer.sendToCatchall(a);
                 }
             }
+
+            String sd = a.getMetadataValue("notify_email_direct");
+            if (sd != null) {
+                mailer.sendToAddress(a, sd);
+            }
         }
     }
 }
