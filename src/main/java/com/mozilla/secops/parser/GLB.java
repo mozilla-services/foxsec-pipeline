@@ -32,8 +32,10 @@ public class GLB extends PayloadBase implements Serializable {
             LogEntry entry = jp.parse(LogEntry.class);
             Map<String,Object> m = entry.getJsonPayload();
             String eType = (String)m.get("@type");
-            if (eType.equals("type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry")) {
-                return true;
+            if (eType != null) {
+                if (eType.equals("type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry")) {
+                    return true;
+                }
             }
         } catch (IOException exc) {
             // pass
