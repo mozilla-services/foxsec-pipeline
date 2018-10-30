@@ -5,13 +5,20 @@
         },
 
         "wcrusher@mozilla.com": {
-            "aliases": [ "wesley" ]
+            "aliases": [ "wesley" ],
+            "fragment": "wcrusher"
         },
 
         "wriker@mozilla.com": {
-            "aliases": [ "numberone", "riker" ]
+            "aliases": [ "numberone", "riker" ],
+            "fragment": "riker",
+            "notify": {
+                "direct_email_notify_format": "holodeck-%s@mozilla.com"
+            }
         }
     },
-    "default_direct_email": true,
-    "default_direct_email_format": "%s-test@mozilla.com"
+    "default_notify": {
+        "direct_email_notify": true,
+        "direct_email_notify_format": "testing-%s@mozilla.com"
+    }
 }
