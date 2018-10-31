@@ -1,4 +1,4 @@
-package com.mozilla.secops.models;
+package com.mozilla.secops.parser.models.cloudtrail;
 
 public class UserIdentity {
   public String accessKeyId;

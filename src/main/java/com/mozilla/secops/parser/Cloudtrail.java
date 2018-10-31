@@ -6,7 +6,7 @@ import java.io.Serializable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 
-import com.mozilla.secops.models.CloudtrailEvent;
+import com.mozilla.secops.parser.models.cloudtrail.CloudtrailEvent;
 
 public class Cloudtrail extends PayloadBase implements Serializable {
     private static final long serialVersionUID = 1L;
