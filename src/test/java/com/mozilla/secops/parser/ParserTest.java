@@ -324,7 +324,7 @@ public class ParserTest {
           "\"00000000-0000-0000-0000-000000000000\",\"eventName\":\"ConsoleLogin\", " +
           "\"eventSource\":\"signin.amazonaws.com\",\"eventTime\":\"2018-06-26T06:00:13Z\", " +
           "\"eventType\":\"AwsConsoleSignIn\",\"eventVersion\":\"1.05\", " +
-          "\"recipientAccountId\":\"999999999999\",\"responseElements\": " +
+          "\"recipientAccountID\":\"999999999999\",\"responseElements\": " +
           "{\"ConsoleLogin\":\"Success\"},\"sourceIPAddress\":\"127.0.0.1\",\"userAgent\": " +
           "\"Mozilla/5.0(Macintosh;IntelMacOSX10.13;rv:62.0)Gecko/20100101Firefox/62.0\", " +
           "\"userIdentity\":{\"accountId\":\"999999999999\",\"arn\": " +
@@ -346,6 +346,7 @@ public class ParserTest {
         assertEquals(Normalized.Type.AUTH, n.getType());
         assertEquals("riker", n.getSubjectUser());
         assertEquals("127.0.0.1", n.getSourceAddress());
+        assertEquals("999999999999", n.getObject());
     }
 
     @Test
@@ -358,7 +359,7 @@ public class ParserTest {
           "\"eventTime\": \"2018-10-25T01:23:46Z\",\"eventSource\": \"sts.amazonaws.com\"," +
           "\"eventName\": \"AssumeRole\",\"awsRegion\": \"us-east-1\",\"sourceIPAddress\": " +
           "\"127.0.0.1\",\"userAgent\": \"signin.amazonaws.com\",\"eventID\": " +
-          "\"000000000-000000\",\"eventType\": \"AwsApiCall\",\"recipientAccountId\": \"XXXXXXXX\"}";
+          "\"000000000-000000\",\"eventType\": \"AwsApiCall\",\"recipientAccountID\": \"XXXXXXXX\"}";
 
         Parser p = new Parser();
         assertNotNull(p);
@@ -374,6 +375,7 @@ public class ParserTest {
         assertEquals(Normalized.Type.AUTH, n.getType());
         assertEquals("riker", n.getSubjectUser());
         assertEquals("127.0.0.1", n.getSourceAddress());
+        assertEquals("XXXXXXXX", n.getObject());
     }
 
     @Test

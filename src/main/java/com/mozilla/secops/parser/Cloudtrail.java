@@ -56,7 +56,8 @@ public class Cloudtrail extends PayloadBase implements Serializable {
               n.setSubjectUser(getUser());
               n.setSourceAddress(getSourceAddress());
               //TODO
-              //n.setObject();
+              //n.setObject(getAWSAccountName());
+              n.setObject(event.getRecipientAccountID());
             }
         } catch (IOException exc) {
           return;
