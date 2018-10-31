@@ -292,7 +292,7 @@ public class ParserTest {
     }
 
     @Test
-    public void testCloudtrailAction() throws Exception {
+    public void testCloudtrailRawAction() throws Exception {
         String buf = "{\"eventVersion\": \"1.02\",\"userIdentity\": {\"type\": " +
           "\"IAMUser\",\"principalId\": \"XXXXXXXXXXXXXXXXXXXXX\",\"arn\": " +
           "\"arn:aws:iam::XXXXXXXXXXXX:user/uhura\",\"accountId\": \"XXXXXXXXXXXX\"," +
@@ -319,7 +319,7 @@ public class ParserTest {
     }
 
     @Test
-    public void testCloudtrailConsoleAuth() throws Exception {
+    public void testCloudtrailRawConsoleAuth() throws Exception {
         String buf = "{\"awsRegion\":\"us-west-2\",\"eventID\": " +
           "\"00000000-0000-0000-0000-000000000000\",\"eventName\":\"ConsoleLogin\", " +
           "\"eventSource\":\"signin.amazonaws.com\",\"eventTime\":\"2018-06-26T06:00:13Z\", " +
@@ -349,7 +349,7 @@ public class ParserTest {
     }
 
     @Test
-    public void testCloudtrailAssumeRole() throws Exception {
+    public void testCloudtrailRawAssumeRole() throws Exception {
         String buf = "{\"eventVersion\": \"1.05\",\"userIdentity\": {\"type\": \"IAMUser\"," +
           "\"principalId\": \"XXXXXXXXXXXX\",\"arn\": \"arn:aws:iam::XXXXXXXXXX:user/riker\"," +
           "\"accountId\": \"XXXXXXXXXXXXX\",\"accessKeyId\": \"XXXXXXXXX\",\"userName\": " +
