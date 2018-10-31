@@ -16,6 +16,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
         GLB,
         /** OpenSSH */
         OPENSSH,
+        /** Duo */
+        DUO,
         /** Raw */
         RAW
     }

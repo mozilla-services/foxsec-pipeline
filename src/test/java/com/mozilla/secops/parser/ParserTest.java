@@ -100,6 +100,27 @@ public class ParserTest {
     }
 
     @Test
+    public void testMozlogRaw() throws Exception {
+        String buf = "{\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Fields\": {\"numeric\": 3600, " +
+            "\"string\": \"testing\"}, \"Hostname\": \"test\", \"Pid\": 62312, " +
+            "\"Time\": \"2018-07-04T15:49:46Z\", \"Logger\": \"duopull\", \"Type\": \"app.log\", " +
+            "\"Timestamp\": 1530719386349480000}";
+        String expect = "{\"numeric\":3600,\"string\":\"testing\"}";
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
+        Raw r = e.getPayload();
+        assertNotNull(r);
+        assertEquals(expect, r.getRaw());
+        Mozlog m = e.getMozlog();
+        assertNotNull(m);
+        assertEquals("test", m.getHostname());
+        assertEquals("duopull", m.getLogger());
+    }
+
+    @Test
     public void testOpenSSHRaw() throws Exception {
         String buf = "Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from 12" +
             "7.0.0.1 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
@@ -270,6 +291,24 @@ public class ParserTest {
         assertEquals("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3)", g.getUserAgent());
         assertEquals("https://send.firefox.com/public/locales/en-US/send.js", g.getRequestUrl());
         assertNotNull(e.getTimestamp()); // Should have default timestamp
+    }
+
+    @Test
+    public void testParseDuoBypass() {
+        String buf = "{\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Fields\": " +
+            "{\"event_description_valid_secs\": 3600, \"event_description_count\": 1, " +
+            "\"event_description_user_id\": \"ZZZZZZZZZZZZZZZZZZZZ\", \"event_object\": \"worf\", " +
+            "\"event_timestamp\": 1530282703, \"event_username\": \"First Last\", " +
+            "\"event_description_bypass_code_ids\": [\"XXXXXXXXXXXXXXXXXXXX\"], " +
+            "\"event_description_bypass\": \"\", \"path\": \"/admin/v1/logs/administrator\", " +
+            "\"msg\": \"duopull event\", \"event_action\": \"bypass_create\", " +
+            "\"event_description_auto_generated\": true, \"event_description_remaining_uses\": 1}, " +
+            "\"Hostname\": \"test\", \"Pid\": 62312, \"Time\": \"2018-07-04T15:49:46Z\", " +
+            "\"Logger\": \"duopull\", \"Type\": \"app.log\", \"Timestamp\": 1530719386349480000}";
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
     }
 
     @Test
