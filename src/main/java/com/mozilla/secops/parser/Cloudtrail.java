@@ -45,8 +45,9 @@ public class Cloudtrail extends PayloadBase implements Serializable {
      *
      * @param input Input string.
      * @param e Parent {@link Event}.
+     * @param p Parser instance.
      */
-    public Cloudtrail(String input, Event e) {
+    public Cloudtrail(String input, Event e, Parser p) {
         try {
             event = mapper.readValue(input, CloudtrailEvent.class);
             if (isAuthEvent()) {
