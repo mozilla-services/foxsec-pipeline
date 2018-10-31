@@ -20,6 +20,8 @@ public class Normalized implements Serializable {
 
     private String subjectUser;
     private String sourceAddress;
+    private String sourceAddressCity;
+    private String sourceAddressCountry;
     private String object;
 
     Normalized() {
@@ -95,5 +97,41 @@ public class Normalized implements Serializable {
      */
     public String getObject() {
         return object;
+    }
+
+    /**
+     * Set source address city field
+     *
+     * @param sourceAddressCity City string value
+     */
+    public void setSourceAddressCity(String sourceAddressCity) {
+        this.sourceAddressCity = sourceAddressCity;
+    }
+
+    /**
+     * Get source address city field
+     *
+     * @return Source address city string
+     */
+    public String getSourceAddressCity() {
+        return sourceAddressCity;
+    }
+
+    /**
+     * Get source address country field
+     *
+     * @return Source address country string
+     */
+    public String getSourceAddressCountry() {
+        return sourceAddressCountry;
+    }
+
+    /**
+     * Set source address country field
+     *
+     * @param sourceAddressCountry Country string value
+     */
+    public void setSourceAddressCountry(String sourceAddressCountry) {
+        this.sourceAddressCountry = sourceAddressCountry;
     }
 }

@@ -53,6 +53,26 @@ public class Alert implements Serializable {
     }
 
     /**
+     * Assemble a complete payload buffer that contains alert metadata information
+     * in addition to the alert payload.
+     *
+     * @return Assembled payload string
+     */
+    public String assemblePayload() {
+        String ret = getPayload();
+        ArrayList<AlertMeta> meta = getMetadata();
+
+        if (meta != null) {
+            ret = ret + "\n\nAlert metadata:\n";
+            for (AlertMeta m : meta) {
+                ret = ret + String.format("%s = %s\n", m.getKey(), m.getValue());
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * Set alert summary
      *
      * @param summary Alert summary string
@@ -110,6 +130,21 @@ public class Alert implements Serializable {
     @JsonProperty("payload")
     public String getPayload() {
         return payload;
+    }
+
+    /**
+     * Return a specific metadata value
+     *
+     * @param key Key to return data for
+     * @return Value string, null if not found
+     */
+    public String getMetadataValue(String key) {
+        for (AlertMeta m : metadata) {
+            if (m.getKey().equals(key)) {
+                return m.getValue();
+            }
+        }
+        return null;
     }
 
     /**

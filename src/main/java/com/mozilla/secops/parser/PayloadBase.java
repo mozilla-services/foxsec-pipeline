@@ -15,8 +15,9 @@ public abstract class PayloadBase {
      *
      * @param input Input string.
      * @param e Parent {@link Event}.
+     * @param p Parser instance.
      */
-    public PayloadBase(String input, Event e) {
+    public PayloadBase(String input, Event e, Parser p) {
     }
 
     /**

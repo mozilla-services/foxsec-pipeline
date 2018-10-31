@@ -16,6 +16,7 @@ import java.util.Iterator;
  */
 public class IdentityManager {
     private Map<String, Identity> identities;
+    private Notify defaultNotification;
 
     /**
      * Load identity manager configuration from a resource file
@@ -25,6 +26,9 @@ public class IdentityManager {
      */
     public static IdentityManager loadFromResource(String resourcePath) throws IOException {
         InputStream in = IdentityManager.class.getResourceAsStream(resourcePath);
+        if (in == null) {
+            throw new IOException("identity manager resource not found");
+        }
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(in, IdentityManager.class);
     }
@@ -37,6 +41,16 @@ public class IdentityManager {
     @JsonProperty("identities")
     public Map<String, Identity> getIdentities() {
         return identities;
+    }
+
+    /**
+     * Get default notification configuration
+     *
+     * @return Default notification configuration as {@link Notify}
+     */
+    @JsonProperty("default_notify")
+    public Notify getDefaultNotification() {
+        return defaultNotification;
     }
 
     /**

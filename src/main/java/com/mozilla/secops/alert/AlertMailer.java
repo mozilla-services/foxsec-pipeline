@@ -11,6 +11,7 @@ import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.mail.MessagingException;
 import javax.mail.Transport;
+import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -25,6 +26,25 @@ public class AlertMailer {
     private final AlertConfiguration cfg;
     private final Logger log;
 
+    /**
+     * Send email alert to specified address
+     *
+     * @param a Alert
+     * @param address Recipient address
+     */
+    public void sendToAddress(Alert a, String address) {
+        log.info("generating mail for {}", address);
+
+        ArrayList<String> r = new ArrayList<String>();
+        r.add(address);
+        sendMail(r, a.getSummary(), a.assemblePayload());
+    }
+
+    /**
+     * Send email alert to configured catchall address
+     *
+     * @param a Alert
+     */
     public void sendToCatchall(Alert a) {
         String dest = cfg.getEmailCatchall();
         if (dest == null) {
@@ -34,7 +54,7 @@ public class AlertMailer {
 
         ArrayList<String> r = new ArrayList<String>();
         r.add(dest);
-        sendMail(r, a.getSummary(), a.getPayload());
+        sendMail(r, a.getSummary(), a.assemblePayload());
     }
 
     private void sendMail(ArrayList<String> recipients, String subject, String body) {
@@ -66,10 +86,15 @@ public class AlertMailer {
         );
 
         try {
+            int asize = recipients.size();
+            Address[] recips = new Address[asize];
+            for (int i = 0; i < asize; i++) {
+                recips[i] = new InternetAddress(recipients.get(i));
+            }
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(cfg.getEmailFrom(), true));
-            message.setRecipient(Message.RecipientType.TO,
-                new InternetAddress(cfg.getEmailCatchall()));
+            message.setRecipients(Message.RecipientType.TO,
+                    recips);
             message.setSubject(subject);
             message.setText(body);
             Transport.send(message);

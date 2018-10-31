@@ -4,6 +4,8 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 
+import com.maxmind.geoip2.model.CityResponse;
+
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -21,7 +23,11 @@ import java.lang.ReflectiveOperationException;
 /**
  * Event parser
  *
- * {@link Parser} can be used to parse incoming events and generate {@link Event} objects.
+ * <p>{@link Parser} can be used to parse incoming events and generate {@link Event} objects.
+ *
+ * <p>On initialization the parser will also attempt to initialize the GeoIP parser that some
+ * individual event parsers can utilize. See documentation for {@link GeoIP} on dependencies
+ * for GeoIP lookup support.
  */
 public class Parser {
     private static final long serialVersionUID = 1L;
@@ -29,6 +35,7 @@ public class Parser {
     private final List<PayloadBase> payloads;
     private final JacksonFactory jf;
     private final Logger log;
+    private final GeoIP geoip;
 
     /**
      * Parse an ISO8601 date string and return a {@link DateTime} object.
@@ -71,6 +78,25 @@ public class Parser {
     }
 
     /**
+     * Resolve GeoIP information from IP address string
+     *
+     * @param ip IP address string
+     * @return MaxmindDB {@link CityResponse}, or null if lookup fails
+     */
+    public CityResponse geoIp(String ip) {
+        return geoip.lookup(ip);
+    }
+
+    /**
+     * Determine if GeoIP test database is being used
+     *
+     * @return True if test database is loaded by GeoIP submodule
+     */
+    public Boolean geoIpUsingTest() {
+        return geoip.usingTest();
+    }
+
+    /**
      * Parse an event
      *
      * @param input Input string
@@ -90,7 +116,8 @@ public class Parser {
             }
             Class<?> cls = p.getClass();
             try {
-                e.setPayload((PayloadBase)cls.getConstructor(String.class, Event.class).newInstance(input, e));
+                e.setPayload((PayloadBase)cls.getConstructor(String.class, Event.class, Parser.class)
+                    .newInstance(input, e, this));
             } catch (ReflectiveOperationException exc) {
                 log.warn(exc.getMessage());
             }
@@ -105,6 +132,7 @@ public class Parser {
      */
     public Parser() {
         log = LoggerFactory.getLogger(Parser.class);
+        geoip = new GeoIP();
         jf = new JacksonFactory();
         payloads = new ArrayList<PayloadBase>();
         payloads.add(new GLB());

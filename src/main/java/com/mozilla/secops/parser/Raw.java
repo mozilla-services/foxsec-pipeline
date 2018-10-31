@@ -34,8 +34,9 @@ public class Raw extends PayloadBase implements Serializable {
      *
      * @param input Input string.
      * @param e Parent {@link Event}.
+     * @param p Parser instance.
      */
-    public Raw(String input, Event e) {
+    public Raw(String input, Event e, Parser p) {
         raw = input;
     }
 
