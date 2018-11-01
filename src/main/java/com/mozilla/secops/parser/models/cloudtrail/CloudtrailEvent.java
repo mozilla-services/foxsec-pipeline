@@ -1,5 +1,7 @@
 package com.mozilla.secops.parser.models.cloudtrail;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+
 import java.util.HashMap;
 
 /**
@@ -22,13 +24,13 @@ public class CloudtrailEvent {
     private String sourceIPAddress;
     private String userAgent;
 
-    public UserIdentity userIdentity;
+    private UserIdentity userIdentity;
 
-    public HashMap<String, Object> responseElements;
-    public HashMap<String, Object> requestParameters;
+    private HashMap<String, Object> responseElements;
+    private HashMap<String, Object> requestParameters;
 
     public String getAccessKeyID() {
-        return this.accessKeyID;
+        return accessKeyID;
     }
 
     public String getAwsRegion() {
@@ -88,24 +90,45 @@ public class CloudtrailEvent {
     }
 
     public String getUserType() {
-        return userIdentity.type;
+        return userIdentity.getType();
     }
 
+    @JsonSetter("userIdentity")
+    public void setUserIdentity(UserIdentity userIdentity) {
+        this.userIdentity = userIdentity;
+    }
+
+    @JsonSetter("responseElements")
+    public void setResponseElements(HashMap<String, Object> responseElements) {
+        this.responseElements = responseElements;
+    }
+
+    @JsonSetter("requestParameters")
+    public void setRequestParameters(HashMap<String, Object> requestParameters) {
+        this.requestParameters = requestParameters;
+    }
+
+
+    /**
+     * Get the identity name depending on the user type
+     *
+     * @return String Identity Name
+     **/
     public String getIdentityName() {
         if (getUserType().equals("IAMUser")) {
-            return userIdentity.userName;
+            return userIdentity.getUserName();
         } else if (getUserType().equals("AssumedRole")) {
             return userIdentity.getSessionIssuerValue("userName");
         } else if (getUserType().equals("AWSService")) {
-            return userIdentity.invokedBy;
+            return userIdentity.getInvokedBy();
         } else if (getUserType().equals("AWSAccount")) {
-            return userIdentity.accountId;
+            return userIdentity.getAccountId();
         }
 
         return null;
     }
 
-    public Object getResponseElements(String key) {
+    public Object getResponseElementsValue(String key) {
         if (responseElements == null) {
             return null;
         }

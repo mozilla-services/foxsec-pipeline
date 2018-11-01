@@ -1,35 +1,72 @@
 package com.mozilla.secops.parser.models.cloudtrail;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+
 /**
  * Model for userIdentity element in Cloudtrail Events
  */
 public class UserIdentity {
-    public String accessKeyId;
-    public String accountId;
-    public String arn;
-    public String invokedBy;
-    public String principalId;
-    public String type;
-    public String userName;
-    public SessionContext sessionContext;
+    private String accessKeyId;
+    private String accountId;
+    private String arn;
+    private String invokedBy;
+    private String principalId;
+    private String type;
+    private String userName;
+
+    private SessionContext sessionContext;
+
+    public String getAccessKeyId() {
+        return accessKeyId;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public String getArn() {
+        return arn;
+    }
+
+    public String getInvokedBy() {
+        return invokedBy;
+    }
+
+    public String getPrincipalId() {
+        return principalId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
 
     public String getSessionIssuerValue(String key) {
         if (sessionContext == null) {
             return null;
         }
-        if (sessionContext.sessionIssuer == null) {
+        if (sessionContext.getSessionIssuer() == null) {
             return null;
         }
-        return sessionContext.sessionIssuer.get(key);
+        return sessionContext.getSessionIssuer().get(key);
     }
 
     public String getSessionAttributesValue(String key) {
         if (sessionContext == null) {
             return null;
         }
-        if (sessionContext.attributes == null) {
+        if (sessionContext.getAttributes() == null) {
             return null;
         }
-        return sessionContext.attributes.get(key);
+        return sessionContext.getAttributes().get(key);
+    }
+
+    @JsonSetter("sessionContext")
+    public void setSessionContext(SessionContext sessionContext) {
+        this.sessionContext = sessionContext;
     }
 }

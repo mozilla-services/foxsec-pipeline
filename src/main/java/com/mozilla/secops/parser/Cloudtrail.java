@@ -133,7 +133,8 @@ public class Cloudtrail extends PayloadBase implements Serializable {
     private Boolean isAuthEvent() {
         if (event.getEventName().equals("ConsoleLogin")) {
             if (event.getEventType().equals("AwsConsoleSignIn") &&
-                event.responseElements.get("ConsoleLogin").equals("Success")) {
+                event.getResponseElementsValue("ConsoleLogin") != null &&
+                event.getResponseElementsValue("ConsoleLogin").equals("Success")) {
                 return true;
             }
         }
