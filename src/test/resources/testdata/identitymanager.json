@@ -20,5 +20,8 @@
     "default_notify": {
         "direct_email_notify": true,
         "direct_email_notify_format": "testing-%s@mozilla.com"
+    },
+    "aws_account_map": {
+        "123456789": "riker-vacationing-on-risa"
     }
 }
