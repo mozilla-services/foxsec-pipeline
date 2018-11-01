@@ -20,6 +20,8 @@ import java.util.HashMap;
 
 /*
  * Payload parser for Duopull audit trail log data
+ *
+ * <p>See also https://github.com/mozilla-services/duopull-lambda
  */
 public class Duopull extends PayloadBase implements Serializable {
     private static final long serialVersionUID = 1L;
