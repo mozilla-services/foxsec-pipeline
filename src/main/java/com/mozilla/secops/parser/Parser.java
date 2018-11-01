@@ -73,8 +73,19 @@ public class Parser {
         return input;
     }
 
+    private String stripMozlog(Event e, String input) {
+        Mozlog m = Mozlog.fromJSON(input);
+        if (m != null) {
+            e.setMozlog(m);
+            return m.getFieldsAsJson();
+        }
+        return input;
+    }
+
     private String stripEncapsulation(Event e, String input) {
-        return stripStackdriverEncapsulation(e, input);
+        input = stripStackdriverEncapsulation(e, input);
+        input = stripMozlog(e, input);
+        return input;
     }
 
     /**
@@ -138,6 +149,7 @@ public class Parser {
         payloads.add(new GLB());
         payloads.add(new Cloudtrail());
         payloads.add(new OpenSSH());
+        payloads.add(new Duopull());
         payloads.add(new Raw());
     }
 }

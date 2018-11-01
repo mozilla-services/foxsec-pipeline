@@ -22,6 +22,7 @@ public class Event implements Serializable {
     private final UUID eventId;
     private DateTime timestamp;
     private Normalized normalized;
+    private Mozlog mozlog;
 
     /**
      * Create a new {@link Event} object.
@@ -82,6 +83,24 @@ public class Event implements Serializable {
      */
     public UUID getEventId() {
         return eventId;
+    }
+
+    /**
+     * Get mozlog value
+     *
+     * @return {@link Mozlog} value or null if not available
+     */
+    public Mozlog getMozlog() {
+        return mozlog;
+    }
+
+    /**
+     * Set mozlog value
+     *
+     * @param mozlog Mozlog values for event
+     */
+    public void setMozlog(Mozlog mozlog) {
+        this.mozlog = mozlog;
     }
 
     /**

@@ -18,6 +18,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
         CLOUDTRAIL,
         /** OpenSSH */
         OPENSSH,
+        /** Duopull */
+        DUOPULL,
         /** Raw */
         RAW
     }
