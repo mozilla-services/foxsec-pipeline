@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.HashMap;
 
-/*
+/**
  * Payload parser for Duopull audit trail log data
  *
  * <p>See also https://github.com/mozilla-services/duopull-lambda
