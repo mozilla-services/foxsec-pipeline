@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 
+import java.util.Map;
+
 public class TestIdentityManager {
     public TestIdentityManager() {
     }
@@ -49,5 +51,17 @@ public class TestIdentityManager {
         assertEquals("holodeck-riker@mozilla.com",
             id.getEmailNotifyDirect(mgr.getDefaultNotification()));
         assertEquals("riker", id.getFragment());
+    }
+
+    @Test
+    public void identityManagerAwsAccountMapLookupTest() throws Exception {
+        IdentityManager mgr = IdentityManager.loadFromResource("/testdata/identitymanager.json");
+        assertNotNull(mgr);
+
+        Map<String, String> m = mgr.getAwsAccountMap();
+        assertNull(m.get("000000000"));
+        String ret = m.get("123456789");
+        assertNotNull(ret);
+        assertEquals("riker-vacationing-on-risa", ret);
     }
 }

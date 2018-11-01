@@ -12,10 +12,14 @@ import java.util.Iterator;
 
 /**
  * {@link IdentityManager} supports translations from values such as user names
- * to a global identifier for a user
+ * to a global identifier
+ *
+ * <p>In addition to username identity translation, this class can also handle translations
+ * from values such as AWS account IDs to a more description account name.
  */
 public class IdentityManager {
     private Map<String, Identity> identities;
+    private Map<String, String> awsAccountMap;
     private Notify defaultNotification;
 
     /**
@@ -31,6 +35,16 @@ public class IdentityManager {
         }
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(in, IdentityManager.class);
+    }
+
+    /**
+     * Get AWS account map
+     *
+     * @return Map of AWS account identifiers to descriptive names
+     */
+    @JsonProperty("aws_account_map")
+    public Map<String, String> getAwsAccountMap() {
+        return awsAccountMap;
     }
 
     /**
@@ -86,5 +100,6 @@ public class IdentityManager {
      */
     public IdentityManager() {
         identities = new HashMap<String, Identity>();
+        awsAccountMap = new HashMap<String, String>();
     }
 }

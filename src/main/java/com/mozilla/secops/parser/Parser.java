@@ -13,6 +13,8 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mozilla.secops.identity.IdentityManager;
+
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -36,6 +38,8 @@ public class Parser {
     private final JacksonFactory jf;
     private final Logger log;
     private final GeoIP geoip;
+
+    private IdentityManager idmanager;
 
     /**
      * Parse an ISO8601 date string and return a {@link DateTime} object.
@@ -105,6 +109,24 @@ public class Parser {
      */
     public Boolean geoIpUsingTest() {
         return geoip.usingTest();
+    }
+
+    /**
+     * Set an identity manager in the parser that can be used for lookups
+     *
+     * @param idmanager Initialized {@link IdentityManager}
+     */
+    public void setIdentityManager(IdentityManager idmanager) {
+        this.idmanager = idmanager;
+    }
+
+    /**
+     * Get any configured identity manager from the parser
+     *
+     * @return {@link IdentityManager} or null if no manager has been set in the parser
+     */
+    public IdentityManager getIdentityManager() {
+        return idmanager;
     }
 
     /**
