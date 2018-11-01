@@ -294,7 +294,7 @@ public class ParserTest {
     }
 
     @Test
-    public void testParseDuoBypass() {
+    public void testParseMozlogDuopullBypass() {
         String buf = "{\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Fields\": " +
             "{\"event_description_valid_secs\": 3600, \"event_description_count\": 1, " +
             "\"event_description_user_id\": \"ZZZZZZZZZZZZZZZZZZZZ\", \"event_object\": \"worf\", " +
@@ -309,6 +309,68 @@ public class ParserTest {
         assertNotNull(p);
         Event e = p.parse(buf);
         assertNotNull(e);
+        assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+        Duopull d = e.getPayload();
+        assertNotNull(d);
+        com.mozilla.secops.parser.models.duopull.Duopull data =
+            d.getDuopullData();
+        assertEquals("duopull event", data.getMsg());
+        assertEquals("bypass_create", data.getEventAction());
+        assertEquals("/admin/v1/logs/administrator", data.getPath());
+    }
+
+    @Test
+    public void testParseDuopullBypass() {
+        String buf = "{\"event_description_valid_secs\": 3600, \"event_description_count\": 1, " +
+            "\"event_description_user_id\": \"ZZZZZZZZZZZZZZZZZZZZ\", \"event_object\": \"worf\", " +
+            "\"event_timestamp\": 1530282703, \"event_username\": \"First Last\", " +
+            "\"event_description_bypass_code_ids\": [\"XXXXXXXXXXXXXXXXXXXX\"], " +
+            "\"event_description_bypass\": \"\", \"path\": \"/admin/v1/logs/administrator\", " +
+            "\"msg\": \"duopull event\", \"event_action\": \"bypass_create\", " +
+            "\"event_description_auto_generated\": true, \"event_description_remaining_uses\": 1}";
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+        Duopull d = e.getPayload();
+        assertNotNull(d);
+        com.mozilla.secops.parser.models.duopull.Duopull data =
+            d.getDuopullData();
+        assertEquals("duopull event", data.getMsg());
+        assertEquals("bypass_create", data.getEventAction());
+        assertEquals("/admin/v1/logs/administrator", data.getPath());
+    }
+
+    @Test
+    public void testParseStackdriverTextDuopullBypass() {
+        String buf = "{\"insertId\":\"f8p4mz1a3ldcos1xz\",\"labels\":{\"compute.googleapis.com/resource_" +
+            "name\":\"emit-bastion\"},\"logName\":\"projects/sandbox-00/logs/syslog\",\"receiveTimestamp" +
+            "\":\"2018-09-20T18:43:38.318580313Z\",\"resource\":{\"labels\":{\"instance_id\":\"999999999" +
+            "9999999999\",\"project_id\":\"sandbox-00\",\"zone\":\"us-east1-b\"},\"type\":\"gce_instance" +
+            "\"},\"textPayload\":\"{\\\"EnvVersion\\\": \\\"2.0\\\", \\\"Severity\\\": 6, \\\"Fields\\\"" +
+            ": {\\\"event_description_valid_secs\\\": 3600, \\\"event_description_count\\\": 1, \\\"even" +
+            "t_description_user_id\\\": \\\"ZZZZZZZZZZZZZZZZZZZZ\\\", \\\"event_object\\\": \\\"worf\\\"" +
+            ", \\\"event_timestamp\\\": 1530282703, \\\"event_username\\\": \\\"First Last\\\", \\\"even" +
+            "t_description_bypass_code_ids\\\": [\\\"XXXXXXXXXXXXXXXXXXXX\\\"], \\\"event_description_by" +
+            "pass\\\": \\\"\\\", \\\"path\\\": \\\"/admin/v1/logs/administrator\\\", \\\"msg\\\": \\\"du" +
+            "opull event\\\", \\\"event_action\\\": \\\"bypass_create\\\", \\\"event_description_auto_ge" +
+            "nerated\\\": true, \\\"event_description_remaining_uses\\\": 1}, \\\"Hostname\\\": \\\"test" +
+            "\\\", \\\"Pid\\\": 62312, \\\"Time\\\": \\\"2018-07-04T15:49:46Z\\\", \\\"Logger\\\": \\\"d" +
+            "uopull\\\", \\\"Type\\\": \\\"app.log\\\", \\\"Timestamp\\\": 1530719386349480000}\",\"time" +
+            "stamp\":\"2018-09-18T22:15:38Z\"}";
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+        Duopull d = e.getPayload();
+        assertNotNull(d);
+        com.mozilla.secops.parser.models.duopull.Duopull data =
+            d.getDuopullData();
+        assertEquals("duopull event", data.getMsg());
+        assertEquals("bypass_create", data.getEventAction());
+        assertEquals("/admin/v1/logs/administrator", data.getPath());
     }
 
     @Test

@@ -148,6 +148,7 @@ public class Parser {
         payloads = new ArrayList<PayloadBase>();
         payloads.add(new GLB());
         payloads.add(new OpenSSH());
+        payloads.add(new Duopull());
         payloads.add(new Raw());
     }
 }
