@@ -24,6 +24,10 @@ public class Normalized implements Serializable {
     private String sourceAddressCountry;
     private String object;
 
+    /* Following can typically only be set if the parser has been configured
+     * to use an identity manager for lookups */
+    private String subjectUserIdentity;
+
     Normalized() {
     }
 
@@ -79,6 +83,24 @@ public class Normalized implements Serializable {
      */
     public String getSubjectUser() {
         return subjectUser;
+    }
+
+    /**
+     * Get subject user identity field
+     *
+     * @return Subject user identity
+     */
+    public String getSubjectUserIdentity() {
+        return subjectUserIdentity;
+    }
+
+    /**
+     * Set subject user identity field
+     *
+     * @param subjectUserIdentity Resolved identity value
+     */
+    public void setSubjectUserIdentity(String subjectUserIdentity) {
+        this.subjectUserIdentity = subjectUserIdentity;
     }
 
     /**

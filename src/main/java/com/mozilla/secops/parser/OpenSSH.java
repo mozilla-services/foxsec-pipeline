@@ -2,6 +2,8 @@ package com.mozilla.secops.parser;
 
 import com.maxmind.geoip2.model.CityResponse;
 
+import com.mozilla.secops.identity.IdentityManager;
+
 import java.io.Serializable;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -67,6 +69,16 @@ public class OpenSSH extends PayloadBase implements Serializable {
             n.setSubjectUser(user);
             n.setSourceAddress(sourceAddress);
             n.setObject(hostname);
+
+            // If we have an instance of IdentityManager in the parser, see if we can
+            // also set the resolved subject identity
+            IdentityManager mgr = p.getIdentityManager();
+            if (mgr != null) {
+                String resId = mgr.lookupAlias(user);
+                if (resId != null) {
+                    n.setSubjectUserIdentity(resId);
+                }
+            }
 
             if (sourceAddress != null) {
                 CityResponse cr = p.geoIp(sourceAddress);
