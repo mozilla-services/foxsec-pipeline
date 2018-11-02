@@ -1,6 +1,7 @@
 package com.mozilla.secops.parser;
 
 import java.io.Serializable;
+import java.util.EnumSet;
 
 /**
  * Normalized event data
@@ -16,7 +17,7 @@ public class Normalized implements Serializable {
         AUTH
     }
 
-    private Type type;
+    private EnumSet<Type> types;
 
     private String subjectUser;
     private String sourceAddress;
@@ -29,15 +30,26 @@ public class Normalized implements Serializable {
     private String subjectUserIdentity;
 
     Normalized() {
+        types = EnumSet.noneOf(Type.class);
     }
 
     /**
-     * Get normalized data type
+     * Test if normalized event is of a given type
      *
-     * @return {@link Normalized.Type}
+     * @param t {@link Normalized.Type}
+     * @return True if type is set in normalized data fields
      */
-    public Type getType() {
-        return type;
+    public Boolean isOfType(Type t) {
+        return types.contains(t);
+    }
+
+    /**
+     * Add a type flag to normalized type
+     *
+     * @param t {@link Normalized.Type}
+     */
+    public void addType(Type t) {
+        types.add(t);
     }
 
     /**
@@ -46,7 +58,7 @@ public class Normalized implements Serializable {
      * @param t {@link Normalized.Type}
      */
     public void setType(Type t) {
-        type = t;
+        types = EnumSet.of(t);
     }
 
     /**

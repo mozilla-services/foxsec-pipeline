@@ -65,7 +65,7 @@ public class OpenSSH extends PayloadBase implements Serializable {
             user = mat.group(3);
             sourceAddress = mat.group(4);
             Normalized n = e.getNormalized();
-            n.setType(Normalized.Type.AUTH);
+            n.addType(Normalized.Type.AUTH);
             n.setSubjectUser(user);
             n.setSourceAddress(sourceAddress);
             n.setObject(hostname);
