@@ -95,7 +95,7 @@ public class AuthProfile implements Serializable {
                 public void processElement(ProcessContext c) {
                     Event e = ep.parse(c.element());
                     Normalized n = e.getNormalized();
-                    if (n.getType() == Normalized.Type.AUTH) {
+                    if (n.isOfType(Normalized.Type.AUTH)) {
                         parseCount++;
                         c.output(KV.of(n.getSubjectUser(), e));
                     }
