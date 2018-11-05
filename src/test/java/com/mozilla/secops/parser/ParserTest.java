@@ -444,7 +444,7 @@ public class ParserTest {
         assertEquals("127.0.0.1", ct.getSourceAddress());
         Normalized n = e.getNormalized();
         assertNotNull(n);
-        assertEquals(Normalized.Type.AUTH, n.getType());
+        assertTrue(n.isOfType(Normalized.Type.AUTH));
         assertEquals("riker", n.getSubjectUser());
         assertEquals("127.0.0.1", n.getSourceAddress());
         assertEquals("999999999999", n.getObject());
@@ -473,7 +473,7 @@ public class ParserTest {
         assertEquals("127.0.0.1", ct.getSourceAddress());
         Normalized n = e.getNormalized();
         assertNotNull(n);
-        assertEquals(Normalized.Type.AUTH, n.getType());
+        assertTrue(n.isOfType(Normalized.Type.AUTH));
         assertEquals("riker", n.getSubjectUser());
         assertEquals("127.0.0.1", n.getSourceAddress());
         assertEquals("XXXXXXXX", n.getObject());
