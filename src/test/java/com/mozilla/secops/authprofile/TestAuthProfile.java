@@ -93,7 +93,7 @@ public class TestAuthProfile {
 
                 Normalized n = e[0].getNormalized();
                 assertNotNull(n);
-                assertEquals(Normalized.Type.AUTH, n.getType());
+                assertTrue(n.isOfType(Normalized.Type.AUTH));
                 assertEquals("216.160.83.56", n.getSourceAddress());
                 assertEquals("riker", n.getSubjectUser());
 

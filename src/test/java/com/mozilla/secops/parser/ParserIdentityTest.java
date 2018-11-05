@@ -41,7 +41,7 @@ public class ParserIdentityTest {
         assertNull(o.getSourceAddressCountry());
         Normalized n = e.getNormalized();
         assertNotNull(n);
-        assertEquals(Normalized.Type.AUTH, n.getType());
+        assertTrue(n.isOfType(Normalized.Type.AUTH));
         assertEquals("riker", n.getSubjectUser());
         assertEquals("wriker@mozilla.com", n.getSubjectUserIdentity());
         assertEquals("127.0.0.1", n.getSourceAddress());

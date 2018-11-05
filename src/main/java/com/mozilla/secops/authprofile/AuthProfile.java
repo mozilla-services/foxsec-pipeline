@@ -95,7 +95,7 @@ public class AuthProfile implements Serializable {
                 public void processElement(ProcessContext c) {
                     Event e = ep.parse(c.element());
                     Normalized n = e.getNormalized();
-                    if (n.getType() == Normalized.Type.AUTH) {
+                    if (n.isOfType(Normalized.Type.AUTH)) {
                         parseCount++;
                         c.output(KV.of(n.getSubjectUser(), e));
                     }
@@ -172,9 +172,13 @@ public class AuthProfile implements Serializable {
 
             Identity identity = null;
             String identityKey = idmanager.lookupAlias(username);
+            String stateKey = username;
             if (identityKey != null) {
                 log.info("{}: resolved identity to {}", username, identityKey);
                 identity = idmanager.getIdentity(identityKey);
+                // If we were able to resolve an identity, use that for the state key instead of the
+                // event username
+                stateKey = identityKey;
             } else {
                 log.warn("{}: username does not map to any known identity or alias", username);
             }
@@ -185,9 +189,9 @@ public class AuthProfile implements Serializable {
                 String destination = n.getObject();
                 Boolean isUnknown = false;
 
-                StateModel sm = StateModel.get(username, state);
+                StateModel sm = StateModel.get(stateKey, state);
                 if (sm == null) {
-                    sm = new StateModel(username);
+                    sm = new StateModel(stateKey);
                 }
 
                 String city = n.getSourceAddressCity();
