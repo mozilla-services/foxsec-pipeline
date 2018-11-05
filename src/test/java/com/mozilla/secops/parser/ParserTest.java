@@ -480,6 +480,37 @@ public class ParserTest {
     }
 
     @Test
+    public void testCloudtrailStackdriverAction() throws Exception {
+        String buf = "{\"insertId\": \"1culjbag27h3ns1\",\"jsonPayload\": {\"eventVersion\": " +
+          "\"1.02\",\"userIdentity\": {\"type\": " +
+          "\"IAMUser\",\"principalId\": \"XXXXXXXXXXXXXXXXXXXXX\",\"arn\": " +
+          "\"arn:aws:iam::XXXXXXXXXXXX:user/uhura\",\"accountId\": \"XXXXXXXXXXXX\"," +
+          "\"accessKeyId\": \"XXXXXXXXXXXX\",\"userName\": \"uhura\",\"sessionContext\": " +
+          "{\"attributes\": {\"mfaAuthenticated\": \"true\",\"creationDate\": " +
+          "\"2018-07-02T18:14:11Z\"}},\"invokedBy\": \"signin.amazonaws.com\"},\"eventTime\": " +
+          "\"2018-07-02T18:20:04Z\",\"eventSource\": \"iam.amazonaws.com\",\"eventName\": " +
+          "\"CreateAccessKey\",\"awsRegion\": \"us-east-1\",\"sourceIPAddress\": \"127.0.0.1\"," +
+          "\"userAgent\": \"signin.amazonaws.com\",\"requestParameters\": {\"userName\": \"guinan\"}," +
+          "\"responseElements\": {\"accessKey\": {\"accessKeyId\": \"XXXXXXXXXXXXXXX\"," +
+          "\"status\": \"Active\",\"userName\": \"guinan\",\"createDate\": " +
+          "\"Jul 2, 2018 6:20:04 PM\"}},\"requestID\": \"8abc0444-7e24-11e8-f2fa-9d71c95ef006\"," +
+          "\"eventID\": \"55555343-132e-43bb-8d5d-23d0ef81178e\",\"eventType\": " +
+          "\"AwsApiCall\",\"recipientAccountId\": \"1234567890\"}, \"resource\": { \"type\": " +
+          "\"project\", \"labels\": {\"project_id\": \"sandbox\"}}, \"timestamp\": " +
+          "\"2018-10-11T18:41:09.542038318Z\", \"logName\": \"projects/sandbox/logs/ctstreamer\", " +
+          "\"receiveTimestamp\": \"2018-10-11T18:41:12.665161934Z\"}";
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+        Cloudtrail ct = e.getPayload();
+        assertNotNull(ct);
+        assertEquals("uhura", ct.getUser());
+        assertEquals("127.0.0.1", ct.getSourceAddress());
+    }
+
+    @Test
     public void testGeoIp() throws Exception {
         Parser p = new Parser();
         assertNotNull(p);

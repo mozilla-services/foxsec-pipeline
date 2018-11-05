@@ -1,5 +1,9 @@
 package com.mozilla.secops.parser;
 
+import com.google.api.client.json.JsonParser;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.logging.v2.model.LogEntry;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 
@@ -8,6 +12,7 @@ import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.parser.models.cloudtrail.CloudtrailEvent;
 import com.mozilla.secops.identity.IdentityManager;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
@@ -17,6 +22,8 @@ import java.util.Map;
  */
 public class Cloudtrail extends PayloadBase implements Serializable {
     private static final long serialVersionUID = 1L;
+
+    private final JacksonFactory jfmatcher;
 
     private ObjectMapper mapper;
 
@@ -28,11 +35,8 @@ public class Cloudtrail extends PayloadBase implements Serializable {
     @Override
     public Boolean matcher(String input) {
         try {
-            event = mapper.readValue(input, CloudtrailEvent.class);
-            if (event.getEventVersion() == null) {
-                return false;
-            }
-            if (Double.parseDouble(event.getEventVersion()) > 1.00) {
+            parseInput(input);
+            if (event != null) {
                 return true;
             }
         } catch (IOException exc) {
@@ -51,6 +55,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
      */
     public Cloudtrail() {
         mapper = getObjectMapper();
+        jfmatcher = new JacksonFactory();
     }
 
     /**
@@ -62,8 +67,9 @@ public class Cloudtrail extends PayloadBase implements Serializable {
      */
     public Cloudtrail(String input, Event e, Parser p) {
         mapper = getObjectMapper();
+        jfmatcher = new JacksonFactory();
         try {
-            event = mapper.readValue(input, CloudtrailEvent.class);
+            parseInput(input);
             if (isAuthEvent()) {
                 Normalized n = e.getNormalized();
                 n.setType(Normalized.Type.AUTH);
@@ -102,6 +108,36 @@ public class Cloudtrail extends PayloadBase implements Serializable {
             }
         } catch (IOException exc) {
             return;
+        }
+    }
+
+    private void parseInput(String input) throws IOException {
+        try {
+            JsonParser jp = jfmatcher.createJsonParser(input);
+            LogEntry entry = jp.parse(LogEntry.class);
+            Map<String,Object> m = entry.getJsonPayload();
+            if (m != null) {
+                // XXX Unwrap the json payload within the log entry into a string
+                // that can then be parsed by ObjectMapper into CloudtrailEvent. This
+                // should probably be done within Parser.
+                ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                mapper.writeValue(buf, m);
+                input = buf.toString();
+            }
+        } catch (IOException exc) {
+            // pass
+        } catch (IllegalArgumentException exc) {
+            // pass
+        }
+
+        try {
+            event = mapper.readValue(input, CloudtrailEvent.class);
+            if (event.getEventVersion() == null) {
+                event = null;
+            }
+        } catch (IOException exc) {
+            event = null;
+            throw exc;
         }
     }
 
