@@ -165,6 +165,24 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         return event.getSourceIPAddress();
     }
 
+    /**
+     * Get source address city field
+     *
+     * @return Source address city string
+     */
+    public String getSourceAddressCity() {
+        return sourceAddressCity;
+    }
+
+    /**
+     * Get source address country field
+     *
+     * @return Source address country string
+     */
+    public String getSourceAddressCountry() {
+        return sourceAddressCountry;
+    }
+
 
     private Boolean isAuthEvent() {
         if (event.getEventName().equals("ConsoleLogin")) {
