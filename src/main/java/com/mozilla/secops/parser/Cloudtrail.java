@@ -87,12 +87,11 @@ public class Cloudtrail extends PayloadBase implements Serializable {
                     if (resId != null) {
                         n.setSubjectUserIdentity(resId);
                     }
+
                     Map<String, String> m = mgr.getAwsAccountMap();
                     String accountName = m.get(event.getRecipientAccountID());
                     if (accountName != null) {
                         n.setObject(accountName);
-                    } else {
-                        n.setObject(event.getRecipientAccountID());
                     }
                 }
 
