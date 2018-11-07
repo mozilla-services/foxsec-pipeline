@@ -35,8 +35,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
     @Override
     public Boolean matcher(String input) {
         try {
-            parseInput(input);
-            if (event != null) {
+            if (parseInput(input) != null) {
                 return true;
             }
         } catch (IOException exc) {
@@ -69,7 +68,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         mapper = getObjectMapper();
         jfmatcher = new JacksonFactory();
         try {
-            parseInput(input);
+            event = parseInput(input);
             if (isAuthEvent()) {
                 Normalized n = e.getNormalized();
                 n.setType(Normalized.Type.AUTH);
@@ -110,7 +109,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         }
     }
 
-    private void parseInput(String input) throws IOException {
+    private CloudtrailEvent parseInput(String input) throws IOException {
         try {
             JsonParser jp = jfmatcher.createJsonParser(input);
             LogEntry entry = jp.parse(LogEntry.class);
@@ -130,14 +129,15 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         }
 
         try {
-            event = mapper.readValue(input, CloudtrailEvent.class);
-            if (event.getEventVersion() == null) {
-                event = null;
+            CloudtrailEvent _event = mapper.readValue(input, CloudtrailEvent.class);
+            if (_event.getEventVersion() != null) {
+                return _event;
             }
         } catch (IOException exc) {
-            event = null;
             throw exc;
         }
+
+        return null;
     }
 
     private ObjectMapper getObjectMapper() {
@@ -182,17 +182,24 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         return sourceAddressCountry;
     }
 
-
     private Boolean isAuthEvent() {
+        if (event.getEventName() == null) {
+            return false;
+        }
+
         if (event.getEventName().equals("ConsoleLogin")) {
-            if (event.getEventType().equals("AwsConsoleSignIn") &&
-                event.getResponseElementsValue("ConsoleLogin") != null &&
-                event.getResponseElementsValue("ConsoleLogin").equals("Success")) {
+            if (event.getEventType() != null &&
+                    event.getEventType().equals("AwsConsoleSignIn") &&
+                    event.getResponseElementsValue("ConsoleLogin") != null &&
+                    event.getResponseElementsValue("ConsoleLogin").equals("Success")) {
                 return true;
             }
         }
+
         if (event.getEventName().equals("AssumeRole")) {
-            if (event.getUserType().equals("IAMUser") && event.getErrorCode() == null) {
+            if (event.getUserType() != null &&
+                    event.getUserType().equals("IAMUser") &&
+                    event.getErrorCode() == null) {
                 return true;
             }
         }
