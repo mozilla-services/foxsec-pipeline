@@ -169,6 +169,7 @@ public class Parser {
         jf = new JacksonFactory();
         payloads = new ArrayList<PayloadBase>();
         payloads.add(new GLB());
+        payloads.add(new SecEvent());
         payloads.add(new Cloudtrail());
         payloads.add(new OpenSSH());
         payloads.add(new Duopull());

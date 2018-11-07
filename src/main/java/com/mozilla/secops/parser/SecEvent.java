@@ -1,0 +1,82 @@
+package com.mozilla.secops.parser;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import org.joda.time.DateTime;
+
+import java.io.Serializable;
+import java.io.IOException;
+import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * Payload parser for SecEvent log data
+ */
+public class SecEvent extends PayloadBase implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private com.mozilla.secops.parser.models.secevent.SecEvent secEventData;
+
+    @Override
+    public Boolean matcher(String input) {
+        ObjectMapper mapper = new ObjectMapper();
+        com.mozilla.secops.parser.models.secevent.SecEvent d;
+        try {
+            d = mapper.readValue(input,
+                com.mozilla.secops.parser.models.secevent.SecEvent.class);
+        } catch (IOException exc) {
+            return false;
+        }
+        String msg = d.getSecEventVersion();
+        if (msg != null && msg.equals("secevent.model.1")) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Payload.PayloadType getType() {
+        return Payload.PayloadType.SECEVENT;
+    }
+
+    /**
+     * Fetch parsed secevent data
+     *
+     * @return SecEvent data
+     */
+    public com.mozilla.secops.parser.models.secevent.SecEvent getSecEventData() {
+        return secEventData;
+    }
+
+    /**
+     * Construct matcher object.
+     */
+    public SecEvent() {
+    }
+
+    /**
+     * Construct parser object.
+     *
+     * @param input Input string.
+     * @param e Parent {@link Event}.
+     * @param p Parser instance.
+     */
+    public SecEvent(String input, Event e, Parser p) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            secEventData = mapper.readValue(input,
+                com.mozilla.secops.parser.models.secevent.SecEvent.class);
+        } catch (IOException exc) {
+            return;
+        }
+    }
+}
