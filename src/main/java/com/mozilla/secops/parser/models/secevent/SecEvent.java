@@ -3,6 +3,8 @@ package com.mozilla.secops.parser.models.secevent;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import org.joda.time.DateTime;
+
 import java.io.Serializable;
 
 /**
@@ -23,6 +25,8 @@ public class SecEvent implements Serializable {
     private String emailRecipient;
     private String smsRecipient;
     private String destinationAccountId;
+
+    private DateTime timestamp;
 
     /**
      * Get SecEvent version string
@@ -82,6 +86,16 @@ public class SecEvent implements Serializable {
     @JsonProperty("sms_recipient")
     public String getSmsRecipient() {
         return smsRecipient;
+    }
+
+    /**
+     * Get timestamp
+     *
+     * @return Timestamp
+     */
+    @JsonProperty("timestamp")
+    public DateTime getTimestamp() {
+        return timestamp;
     }
 
     /**

@@ -29,6 +29,10 @@ public class SecEvent extends PayloadBase implements Serializable {
     @Override
     public Boolean matcher(String input) {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JodaModule());
+        mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
+            false);
+        mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
         com.mozilla.secops.parser.models.secevent.SecEvent d;
         try {
             d = mapper.readValue(input,
@@ -72,11 +76,24 @@ public class SecEvent extends PayloadBase implements Serializable {
      */
     public SecEvent(String input, Event e, Parser p) {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JodaModule());
+        mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
+            false);
+        mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
         try {
             secEventData = mapper.readValue(input,
                 com.mozilla.secops.parser.models.secevent.SecEvent.class);
+            if (secEventData == null) {
+                return;
+            }
         } catch (IOException exc) {
             return;
+        }
+
+        // If a timestamp value is set in the event body, use that for the event timestamp
+        DateTime ts = secEventData.getTimestamp();
+        if (ts != null) {
+            e.setTimestamp(ts);
         }
     }
 }
