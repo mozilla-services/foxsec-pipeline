@@ -77,7 +77,7 @@ public class TestCustoms {
         PCollection<String> input = getInput("/testdata/customs_rl_badlogin_simple1.txt");
 
         PCollection<Alert> alerts = input.apply(ParDo.of(new Customs.Parse(true)))
-            .apply(new Customs.RlLoginFailureSourceAddress(3L, 15L));
+            .apply(new Customs.RlLoginFailureSourceAddress(3L, 900L));
 
         ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();
         windows.add(new IntervalWindow(new Instant(1800000L), new Instant(2700000L)));

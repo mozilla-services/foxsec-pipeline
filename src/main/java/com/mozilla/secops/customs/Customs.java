@@ -68,12 +68,12 @@ public class Customs implements Serializable {
             return col.apply(ParDo.of(new ActionFilter("loginFailure")))
                 .apply(ParDo.of(new ElementExtractor(ElementExtractor.ExtractElement.SOURCEADDRESS)))
                 .apply("Sliding window", Window.<KV<String, Event>>into(
-                    SlidingWindows.of(Duration.standardMinutes(15))
+                    SlidingWindows.of(Duration.standardSeconds(windowLength))
                     .every(Duration.standardSeconds(5)))
                 )
                 .apply("GBK event", GroupByKey.<String, Event>create())
                 .apply(ParDo.of(new LimitCriterion(Alert.AlertSeverity.INFORMATIONAL,
-                    "rl_login_failure_source_address", 3L)))
+                    "rl_login_failure_source_address", threshold)))
                 .apply("Fixed window",
                     Window.<KV<String, Alert>>into(FixedWindows.of(Duration.standardMinutes(15)))
                         .triggering(Repeatedly.forever(
