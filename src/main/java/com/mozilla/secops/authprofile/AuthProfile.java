@@ -25,6 +25,7 @@ import org.joda.time.Duration;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.Parser;
@@ -254,19 +255,6 @@ public class AuthProfile implements Serializable {
     }
 
     /**
-     * {@link DoFn} to transform any generated {@link Alert} objects into JSON for
-     * consumption by output transforms.
-     */
-    public static class OutputFormat extends DoFn<Alert, String> {
-        private static final long serialVersionUID = 1L;
-
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-            c.output(c.element().toJSON());
-        }
-    }
-
-    /**
      * Runtime options for {@link AuthProfile} pipeline.
      */
     public interface AuthProfileOptions extends PipelineOptions, InputOptions, OutputOptions {
@@ -300,7 +288,7 @@ public class AuthProfile implements Serializable {
             .apply("parse and window", new ParseAndWindow());
 
         PCollection<String> alerts = events.apply(ParDo.of(new Analyze(options)))
-            .apply("output format", ParDo.of(new OutputFormat()));
+            .apply("output format", ParDo.of(new AlertFormatter()));
 
         alerts.apply("output", OutputOptions.compositeOutput(options));
 
