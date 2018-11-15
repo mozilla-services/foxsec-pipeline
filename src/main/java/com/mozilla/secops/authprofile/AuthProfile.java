@@ -27,6 +27,8 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.Parser;
 import com.mozilla.secops.state.State;
@@ -67,7 +69,7 @@ public class AuthProfile implements Serializable {
 
         @Override
         public PCollection<KV<String, Iterable<Event>>> expand(PCollection<String> col) {
-            class Parse extends DoFn<String, KV<String, Event>> {
+            class Parse extends DoFn<String, Event> {
                 private static final long serialVersionUID = 1L;
 
                 private Logger log;
@@ -95,15 +97,32 @@ public class AuthProfile implements Serializable {
                 @ProcessElement
                 public void processElement(ProcessContext c) {
                     Event e = ep.parse(c.element());
-                    Normalized n = e.getNormalized();
-                    if (n.isOfType(Normalized.Type.AUTH)) {
+                    if (e != null) {
                         parseCount++;
+                        c.output(e);
+                    }
+                }
+            }
+
+            class ExtractSubjectUser extends DoFn<Event, KV<String, Event>> {
+                private static final long serialVersionUID = 1L;
+
+                @ProcessElement
+                public void processElement(ProcessContext c) {
+                    Event e = c.element();
+                    Normalized n = e.getNormalized();
+                    if (n != null && n.getSubjectUser() != null) {
                         c.output(KV.of(n.getSubjectUser(), e));
                     }
                 }
             }
 
+            EventFilter filter = new EventFilter();
+            filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
+
             return col.apply(ParDo.of(new Parse()))
+                .apply(EventFilter.getTransform(filter))
+                .apply(ParDo.of(new ExtractSubjectUser()))
                 .apply(Window.<KV<String, Event>>into(new GlobalWindows())
                     .triggering(Repeatedly.forever(AfterProcessingTime
                         .pastFirstElementInPane()

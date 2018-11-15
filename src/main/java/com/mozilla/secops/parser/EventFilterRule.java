@@ -15,6 +15,7 @@ public class EventFilterRule implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Payload.PayloadType wantSubtype;
+    private Normalized.Type wantNormalizedType;
     private ArrayList<EventFilterPayload> payloadFilters;
 
     /**
@@ -26,6 +27,11 @@ public class EventFilterRule implements Serializable {
     public Boolean matches(Event e) {
         if (wantSubtype != null) {
             if (e.getPayloadType() != wantSubtype) {
+                return false;
+            }
+        }
+        if (wantNormalizedType != null) {
+            if (!(e.getNormalized().isOfType(wantNormalizedType))) {
                 return false;
             }
         }
@@ -56,6 +62,11 @@ public class EventFilterRule implements Serializable {
      */
     public EventFilterRule wantSubtype(Payload.PayloadType p) {
         wantSubtype = p;
+        return this;
+    }
+
+    public EventFilterRule wantNormalizedType(Normalized.Type n) {
+        wantNormalizedType = n;
         return this;
     }
 

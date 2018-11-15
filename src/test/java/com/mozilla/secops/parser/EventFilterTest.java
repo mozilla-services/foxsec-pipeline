@@ -66,4 +66,24 @@ public class EventFilterTest {
         assertFalse(nFilter.matches(e));
         assertFalse(icFilter.matches(e));
     }
+
+    @Test
+    public void testEventFilterNormalized() throws Exception {
+        String buf = "Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from 12" +
+            "7.0.0.1 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
+        assertEquals(Payload.PayloadType.OPENSSH, e.getPayloadType());
+        Normalized n = e.getNormalized();
+        assertNotNull(n);
+        assertTrue(n.isOfType(Normalized.Type.AUTH));
+
+        EventFilter filter = new EventFilter();
+        assertNotNull(filter);
+        filter.addRule(new EventFilterRule()
+            .wantNormalizedType(Normalized.Type.AUTH));
+        assertTrue(filter.matches(e));
+    }
 }
