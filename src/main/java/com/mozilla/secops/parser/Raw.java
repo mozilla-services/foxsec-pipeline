@@ -50,4 +50,16 @@ public class Raw extends PayloadBase implements Serializable {
     public String getRaw() {
         return raw;
     }
+
+    @Override
+    public Boolean eventStringFilter(EventFilterPayload.StringProperty property, String s) {
+        switch (property) {
+            case RAW_RAW:
+                if (raw != null && raw.equals(s)) {
+                    return true;
+                }
+                break;
+        }
+        return false;
+    }
 }

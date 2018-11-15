@@ -14,7 +14,10 @@ import java.io.Serializable;
 public class EventFilter implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private ArrayList<Payload.PayloadType> wantSubtypes;
+    private ArrayList<EventFilterRule> rules;
+
+    private Boolean wantUTC;
+    private Boolean outputWithTimestamp;
 
     /**
      * Get composite transform to apply filter to event stream
@@ -36,7 +39,19 @@ public class EventFilter implements Serializable {
                         public void processElement(ProcessContext c) {
                             Event e = c.element();
                             if (filter.matches(e)) {
-                                c.output(e);
+                                // If wantUTC is set, drop any event that has a timestamp with a
+                                // non-UTC timezone
+                                if (filter.getWantUTC()) {
+                                    if (!e.getTimestamp().getZone().getID().equals("Etc/UTC")) {
+                                        return;
+                                    }
+                                }
+
+                                if (filter.getOutputWithTimestamp()) {
+                                    c.outputWithTimestamp(e, e.getTimestamp().toInstant());
+                                } else {
+                                    c.output(e);
+                                }
                             }
                         }
                     }
@@ -52,36 +67,69 @@ public class EventFilter implements Serializable {
      * @return True if filter matches
      */
     public Boolean matches(Event e) {
-        if (!wantSubtypes.isEmpty()) {
-            Boolean haveMatch = false;
-            for (Payload.PayloadType p : wantSubtypes) {
-                if (e.getPayloadType() == p) {
-                    haveMatch = true;
-                    break;
-                }
-            }
-            if (!haveMatch) {
-                return false;
+        for (EventFilterRule r : rules) {
+            if (r.matches(e)) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     /**
-     * Add a match rule for a payload subtype
+     * Add new rule to filter
      *
-     * @param p Payload type
+     * @param rule New rule to add
+     */
+    public void addRule(EventFilterRule rule) {
+        rules.add(rule);
+    }
+
+    /**
+     * Set timestamp handling for event output
+     *
+     * @param flag If true use event timestamp on output
      * @return EventFilter for chaining
      */
-    public EventFilter wantSubtype(Payload.PayloadType p) {
-        wantSubtypes.add(p);
+    public EventFilter setOutputWithTimestamp(Boolean flag) {
+        outputWithTimestamp = flag;
         return this;
+    }
+
+    /**
+     * Get timestamp handling for event output
+     *
+     * @return True if events should be emitted with timestamp
+     */
+    public Boolean getOutputWithTimestamp() {
+        return outputWithTimestamp;
+    }
+
+    /**
+     * Choose to ignore non-UTC timezone events
+     *
+     * @param flag If true, drop events with parsed timezones that are not UTC
+     * @return EventFilter for chaining
+     */
+    public EventFilter setWantUTC(Boolean flag) {
+        wantUTC = flag;
+        return this;
+    }
+
+    /**
+     * Get UTC handling parameter
+     *
+     * @return True if non-UTC events should be dropped in filter
+     */
+    public Boolean getWantUTC() {
+        return wantUTC;
     }
 
     /**
      * Create new {@link EventFilter}
      */
     public EventFilter() {
-        wantSubtypes = new ArrayList<Payload.PayloadType>();
+        rules = new ArrayList<EventFilterRule>();
+        wantUTC = false;
+        outputWithTimestamp = false;
     }
 }

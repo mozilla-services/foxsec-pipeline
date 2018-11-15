@@ -33,11 +33,46 @@ public class EventFilterTransformTest {
 
         EventFilter pFilter = new EventFilter();
         assertNotNull(pFilter);
-        pFilter.wantSubtype(Payload.PayloadType.RAW);
+        pFilter.addRule(new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.RAW));
 
         EventFilter nFilter = new EventFilter();
         assertNotNull(nFilter);
-        nFilter.wantSubtype(Payload.PayloadType.GLB);
+        nFilter.addRule(new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB));
+
+        PCollection<Event> pfiltered = input.apply("positive", EventFilter.getTransform(pFilter));
+        PCollection<Event> nfiltered = input.apply("negative", EventFilter.getTransform(nFilter));
+
+        PCollection<Long> pcount = pfiltered.apply("pcount", Count.globally());
+        PAssert.that(pcount).containsInAnyOrder(1L);
+
+        PCollection<Long> ncount = nfiltered.apply("ncount", Count.globally());
+        PAssert.that(ncount).containsInAnyOrder(0L);
+
+        pipeline.run().waitUntilFinish();
+    }
+
+    @Test
+    public void testTransformPayloadMatchRaw() throws Exception {
+        Parser p = new Parser();
+        Event e = p.parse("picard");
+        assertNotNull(e);
+        PCollection<Event> input = pipeline.apply(Create.of(e));
+
+        EventFilter pFilter = new EventFilter();
+        assertNotNull(pFilter);
+        pFilter.addRule(new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.RAW)
+            .addPayloadFilter(new EventFilterPayload(Raw.class)
+                .withStringMatch(EventFilterPayload.StringProperty.RAW_RAW, "picard")));
+
+        EventFilter nFilter = new EventFilter();
+        assertNotNull(nFilter);
+        nFilter.addRule(new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.RAW)
+            .addPayloadFilter(new EventFilterPayload(Raw.class)
+                .withStringMatch(EventFilterPayload.StringProperty.RAW_RAW, "jean-luc")));
 
         PCollection<Event> pfiltered = input.apply("positive", EventFilter.getTransform(pFilter));
         PCollection<Event> nfiltered = input.apply("negative", EventFilter.getTransform(nFilter));
