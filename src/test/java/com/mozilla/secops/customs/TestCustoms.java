@@ -29,6 +29,7 @@ import org.joda.time.Instant;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
+import com.mozilla.secops.parser.ParserDoFn;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,7 +64,7 @@ public class TestCustoms {
     public void parseTest() throws Exception {
         PCollection<String> input = getInput("/testdata/customs_rl_badlogin_simple1.txt");
 
-        PCollection<Long> count = input.apply(ParDo.of(new Customs.Parse()))
+        PCollection<Long> count = input.apply(ParDo.of(new ParserDoFn()))
             .apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
         PAssert.that(count)
@@ -76,7 +77,7 @@ public class TestCustoms {
     public void rlLoginFailureSourceAddressTest() throws Exception {
         PCollection<String> input = getInput("/testdata/customs_rl_badlogin_simple1.txt");
 
-        PCollection<Alert> alerts = input.apply(ParDo.of(new Customs.Parse()))
+        PCollection<Alert> alerts = input.apply(ParDo.of(new ParserDoFn()))
             .apply(new Customs.RlLoginFailureSourceAddress(true, 3L, 900L));
 
         ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();

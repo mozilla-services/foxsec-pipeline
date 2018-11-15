@@ -31,6 +31,7 @@ import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.Parser;
+import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateException;
 import com.mozilla.secops.state.MemcachedStateInterface;
@@ -69,41 +70,6 @@ public class AuthProfile implements Serializable {
 
         @Override
         public PCollection<KV<String, Iterable<Event>>> expand(PCollection<String> col) {
-            class Parse extends DoFn<String, Event> {
-                private static final long serialVersionUID = 1L;
-
-                private Logger log;
-                private Parser ep;
-                private Long parseCount;
-
-                @Setup
-                public void Setup() {
-                    ep = new Parser();
-                    log = LoggerFactory.getLogger(Parse.class);
-                    log.info("initialized new parser");
-                }
-
-                @StartBundle
-                public void StartBundle() {
-                    log.info("processing new bundle");
-                    parseCount = 0L;
-                }
-
-                @FinishBundle
-                public void FinishBundle() {
-                    log.info("{} events processed in bundle", parseCount);
-                }
-
-                @ProcessElement
-                public void processElement(ProcessContext c) {
-                    Event e = ep.parse(c.element());
-                    if (e != null) {
-                        parseCount++;
-                        c.output(e);
-                    }
-                }
-            }
-
             class ExtractSubjectUser extends DoFn<Event, KV<String, Event>> {
                 private static final long serialVersionUID = 1L;
 
@@ -120,7 +86,7 @@ public class AuthProfile implements Serializable {
             EventFilter filter = new EventFilter();
             filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
 
-            return col.apply(ParDo.of(new Parse()))
+            return col.apply(ParDo.of(new ParserDoFn()))
                 .apply(EventFilter.getTransform(filter))
                 .apply(ParDo.of(new ExtractSubjectUser()))
                 .apply(Window.<KV<String, Event>>into(new GlobalWindows())

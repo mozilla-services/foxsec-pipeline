@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.EventFilterPayload;
@@ -283,44 +284,6 @@ public class Customs implements Serializable {
     }
 
     /**
-     * Parse input event strings, returning any parsed SECEVENT
-     */
-    public static class Parse extends DoFn<String, Event> {
-        private static final long serialVersionUID = 1L;
-
-        private Logger log;
-        private Parser ep;
-        private Long parseCount;
-
-        @Setup
-        public void setup() {
-            ep = new Parser();
-            log = LoggerFactory.getLogger(Parse.class);
-            log.info("initialized new parser");
-        }
-
-        @StartBundle
-        public void StartBundle() {
-            log.info("processing new bundle");
-            parseCount = 0L;
-        }
-
-        @FinishBundle
-        public void FinishBundle() {
-            log.info("{} events processed in bundle", parseCount);
-        }
-
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-            Event e = ep.parse(c.element());
-            if (e != null) {
-                parseCount++;
-                c.output(e);
-            }
-        }
-    }
-
-    /**
      * Runtime options for {@link Customs} pipeline.
      */
     public interface CustomsOptions extends PipelineOptions, InputOptions, OutputOptions {
@@ -339,7 +302,7 @@ public class Customs implements Serializable {
         Pipeline p = Pipeline.create(options);
 
         PCollection<Alert> rlalerts = p.apply("input", options.getInputType().read(p, options))
-            .apply("parse", ParDo.of(new Parse()))
+            .apply("parse", ParDo.of(new ParserDoFn()))
             .apply(new RlLoginFailureSourceAddress(
                 false,
                 options.getLoginFailureBySourceAddressLimitThreshold(),
