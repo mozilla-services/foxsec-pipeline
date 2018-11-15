@@ -52,6 +52,21 @@ public class SecEvent extends PayloadBase implements Serializable {
         return Payload.PayloadType.SECEVENT;
     }
 
+    @Override
+    public Boolean eventStringFilter(EventFilterPayload.StringProperty property, String s) {
+        if (secEventData == null) {
+            return false;
+        }
+        switch (property) {
+            case SECEVENT_ACTION:
+                if (secEventData.getAction() != null && secEventData.getAction().equals(s)) {
+                    return true;
+                }
+                break;
+        }
+        return false;
+    }
+
     /**
      * Fetch parsed secevent data
      *

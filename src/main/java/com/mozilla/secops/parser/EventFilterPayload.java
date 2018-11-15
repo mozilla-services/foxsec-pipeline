@@ -20,6 +20,8 @@ public class EventFilterPayload implements Serializable {
      * Properties match strings from various payload event types
      */
     public enum StringProperty {
+        SECEVENT_ACTION,
+
         RAW_RAW
     }
 

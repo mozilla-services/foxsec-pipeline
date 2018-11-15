@@ -30,6 +30,9 @@ import org.slf4j.LoggerFactory;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.EventFilterRule;
+import com.mozilla.secops.parser.EventFilterPayload;
 import com.mozilla.secops.parser.Parser;
 import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.parser.SecEvent;
@@ -57,15 +60,24 @@ public class Customs implements Serializable {
 
         private final Long threshold;
         private final Long windowLength;
+        private final Boolean emitTimestamps;
 
-        public RlLoginFailureSourceAddress(Long threshold, Long windowLength) {
+        public RlLoginFailureSourceAddress(Boolean emitTimestamps, Long threshold, Long windowLength) {
             this.threshold = threshold;
             this.windowLength = windowLength;
+            this.emitTimestamps = emitTimestamps;
         }
 
         @Override
         public PCollection<Alert> expand(PCollection<Event> col) {
-            return col.apply(ParDo.of(new ActionFilter("loginFailure")))
+            EventFilter filter = new EventFilter()
+                .setOutputWithTimestamp(emitTimestamps);
+            filter.addRule(new EventFilterRule()
+                .wantSubtype(Payload.PayloadType.SECEVENT)
+                .addPayloadFilter(new EventFilterPayload(SecEvent.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.SECEVENT_ACTION, "loginFailure")));
+
+            return col.apply(EventFilter.getTransform(filter))
                 .apply(ParDo.of(new ElementExtractor(ElementExtractor.ExtractElement.SOURCEADDRESS)))
                 .apply("Sliding window", Window.<KV<String, Event>>into(
                     SlidingWindows.of(Duration.standardSeconds(windowLength))
@@ -280,12 +292,6 @@ public class Customs implements Serializable {
         private Parser ep;
         private Long parseCount;
 
-        private final Boolean emitEventTimestamps;
-
-        public Parse(Boolean emitEventTimestamps) {
-            this.emitEventTimestamps = emitEventTimestamps;
-        }
-
         @Setup
         public void setup() {
             ep = new Parser();
@@ -307,13 +313,9 @@ public class Customs implements Serializable {
         @ProcessElement
         public void processElement(ProcessContext c) {
             Event e = ep.parse(c.element());
-            if (e != null && e.getPayloadType() == Payload.PayloadType.SECEVENT) {
+            if (e != null) {
                 parseCount++;
-                if (emitEventTimestamps) {
-                    c.outputWithTimestamp(e, e.getTimestamp().toInstant());
-                } else {
-                    c.output(e);
-                }
+                c.output(e);
             }
         }
     }
@@ -337,8 +339,9 @@ public class Customs implements Serializable {
         Pipeline p = Pipeline.create(options);
 
         PCollection<Alert> rlalerts = p.apply("input", options.getInputType().read(p, options))
-            .apply("parse", ParDo.of(new Parse(false)))
+            .apply("parse", ParDo.of(new Parse()))
             .apply(new RlLoginFailureSourceAddress(
+                false,
                 options.getLoginFailureBySourceAddressLimitThreshold(),
                 options.getLoginFailureBySourceAddressLimitWindowLength()
             ));
