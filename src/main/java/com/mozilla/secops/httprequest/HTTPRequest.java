@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Parser;
 import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.parser.GLB;
@@ -67,7 +69,6 @@ public class HTTPRequest implements Serializable {
 
                 private Logger log;
                 private Parser ep;
-                private Boolean noteIgnoringTZ = false;
                 private Long parseCount;
 
                 @Setup
@@ -91,31 +92,20 @@ public class HTTPRequest implements Serializable {
                 @ProcessElement
                 public void processElement(ProcessContext c) {
                     Event e = ep.parse(c.element());
-                    if (e != null && e.getPayloadType() == Payload.PayloadType.GLB) {
-                        GLB g = e.getPayload();
-                        if (!e.getTimestamp().getZone().getID().equals("Etc/UTC")) {
-                            if (!noteIgnoringTZ) {
-                                log.warn("ignoring events with non-UTC timestamp");
-                                noteIgnoringTZ = true;
-                            }
-                        } else {
-                            parseCount++;
-                            if (emitEventTimestamps) {
-                                // XXX Should we always emit an event with a timestamp here? With
-                                // PubsubIO the currently results in events being slightly behind the
-                                // watermark and an error.
-                                //
-                                // Using withTimestampAttribute might be the correct way to handle this.
-                                c.outputWithTimestamp(e, e.getTimestamp().toInstant());
-                            } else {
-                                c.output(e);
-                            }
-                        }
+                    if (e != null) {
+                        parseCount++;
+                        c.output(e);
                     }
                 }
             }
 
+            EventFilter filter = new EventFilter()
+                .setWantUTC(true)
+                .setOutputWithTimestamp(emitEventTimestamps);
+            filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.GLB));
+
             return col.apply(ParDo.of(new Parse()))
+                .apply(EventFilter.getTransform(filter))
                 .apply(Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1))));
         }
     }
