@@ -16,8 +16,10 @@ import java.io.Serializable;
 public class EventFilterPayload implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Properties match strings from various payload event types
+     */
     public enum StringProperty {
-        /** RAW event, RAW field */
         RAW_RAW
     }
 
