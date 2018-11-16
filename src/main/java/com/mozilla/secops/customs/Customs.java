@@ -79,14 +79,19 @@ public class Customs implements Serializable {
                     .withStringMatch(EventFilterPayload.StringProperty.SECEVENT_ACTION, "loginFailure")));
 
             return col.apply(EventFilter.getTransform(filter))
+                // Filter the events down to login failure events, key them based on the source address
+                // in each event, and window into a sliding window.
                 .apply(ParDo.of(new ElementExtractor(ElementExtractor.ExtractElement.SOURCEADDRESS)))
                 .apply("Sliding window", Window.<KV<String, Event>>into(
                     SlidingWindows.of(Duration.standardSeconds(windowLength))
                     .every(Duration.standardSeconds(5)))
                 )
                 .apply("GBK event", GroupByKey.<String, Event>create())
+                // Now that we have a count per source address, apply limit criteria
                 .apply(ParDo.of(new LimitCriterion(Alert.AlertSeverity.INFORMATIONAL,
                     "rl_login_failure_source_address", threshold)))
+                // Window the alerts into a fixed window so we can use pipeline state to suppress duplicate
+                // alerts per-window.
                 .apply("Fixed window",
                     Window.<KV<String, Alert>>into(FixedWindows.of(Duration.standardMinutes(15)))
                         .triggering(Repeatedly.forever(
@@ -292,7 +297,7 @@ public class Customs implements Serializable {
         Long getLoginFailureBySourceAddressLimitThreshold();
         void setLoginFailureBySourceAddressLimitThreshold(Long value);
 
-        @Description("login failure by source address; analysis window length")
+        @Description("login failure by source address; analysis window length in seconds")
         @Default.Long(900L)
         Long getLoginFailureBySourceAddressLimitWindowLength();
         void setLoginFailureBySourceAddressLimitWindowLength(Long value);

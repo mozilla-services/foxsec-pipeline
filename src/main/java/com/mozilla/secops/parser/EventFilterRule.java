@@ -65,6 +65,12 @@ public class EventFilterRule implements Serializable {
         return this;
     }
 
+    /**
+     * Add match criteria for a normalized event type
+     *
+     * @param n Normalized event type
+     * @return EventFilterRule for chaining
+     */
     public EventFilterRule wantNormalizedType(Normalized.Type n) {
         wantNormalizedType = n;
         return this;

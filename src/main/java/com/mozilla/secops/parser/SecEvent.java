@@ -26,13 +26,18 @@ public class SecEvent extends PayloadBase implements Serializable {
 
     private com.mozilla.secops.parser.models.secevent.SecEvent secEventData;
 
-    @Override
-    public Boolean matcher(String input) {
+    private ObjectMapper getObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JodaModule());
         mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
             false);
         mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+        return mapper;
+    }
+
+    @Override
+    public Boolean matcher(String input) {
+        ObjectMapper mapper = getObjectMapper();
         com.mozilla.secops.parser.models.secevent.SecEvent d;
         try {
             d = mapper.readValue(input,
@@ -90,11 +95,7 @@ public class SecEvent extends PayloadBase implements Serializable {
      * @param p Parser instance.
      */
     public SecEvent(String input, Event e, Parser p) {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JodaModule());
-        mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
-            false);
-        mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+        ObjectMapper mapper = getObjectMapper();
         try {
             secEventData = mapper.readValue(input,
                 com.mozilla.secops.parser.models.secevent.SecEvent.class);
