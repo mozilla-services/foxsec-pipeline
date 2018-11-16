@@ -48,7 +48,7 @@ public class EventFilterPayload implements Serializable {
     /**
      * Add a new simple string match to the payload filter
      *
-     * @param property {@link EventFilterPayload#StringProperty}
+     * @param property {@link EventFilterPayload.StringProperty}
      * @param s String to match against
      * @return EventFilterPayload for chaining
      */

@@ -42,7 +42,7 @@ public abstract class PayloadBase {
     /**
      * Test if string filter matches event payload
      *
-     * @param property {@link EventFilterPayload#StringProperty}
+     * @param property {@link EventFilterPayload.StringProperty}
      * @param s Match string
      * @return True if match is found
      */
