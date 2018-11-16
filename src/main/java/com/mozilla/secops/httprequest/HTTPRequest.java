@@ -26,7 +26,10 @@ import org.slf4j.LoggerFactory;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Parser;
+import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.parser.GLB;
 
@@ -62,60 +65,13 @@ public class HTTPRequest implements Serializable {
 
         @Override
         public PCollection<Event> expand(PCollection<String> col) {
-            class Parse extends DoFn<String, Event> {
-                private static final long serialVersionUID = 1L;
+            EventFilter filter = new EventFilter()
+                .setWantUTC(true)
+                .setOutputWithTimestamp(emitEventTimestamps);
+            filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.GLB));
 
-                private Logger log;
-                private Parser ep;
-                private Boolean noteIgnoringTZ = false;
-                private Long parseCount;
-
-                @Setup
-                public void Setup() {
-                    ep = new Parser();
-                    log = LoggerFactory.getLogger(Parse.class);
-                    log.info("initialized new parser");
-                }
-
-                @StartBundle
-                public void StartBundle() {
-                    log.info("processing new bundle");
-                    parseCount = 0L;
-                }
-
-                @FinishBundle
-                public void FinishBundle() {
-                    log.info("{} events processed in bundle", parseCount);
-                }
-
-                @ProcessElement
-                public void processElement(ProcessContext c) {
-                    Event e = ep.parse(c.element());
-                    if (e != null && e.getPayloadType() == Payload.PayloadType.GLB) {
-                        GLB g = e.getPayload();
-                        if (!e.getTimestamp().getZone().getID().equals("Etc/UTC")) {
-                            if (!noteIgnoringTZ) {
-                                log.warn("ignoring events with non-UTC timestamp");
-                                noteIgnoringTZ = true;
-                            }
-                        } else {
-                            parseCount++;
-                            if (emitEventTimestamps) {
-                                // XXX Should we always emit an event with a timestamp here? With
-                                // PubsubIO the currently results in events being slightly behind the
-                                // watermark and an error.
-                                //
-                                // Using withTimestampAttribute might be the correct way to handle this.
-                                c.outputWithTimestamp(e, e.getTimestamp().toInstant());
-                            } else {
-                                c.output(e);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return col.apply(ParDo.of(new Parse()))
+            return col.apply(ParDo.of(new ParserDoFn()))
+                .apply(EventFilter.getTransform(filter))
                 .apply(Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1))));
         }
     }

@@ -38,4 +38,15 @@ public abstract class PayloadBase {
     public Payload.PayloadType getType() {
         return null;
     }
+
+    /**
+     * Test if string filter matches event payload
+     *
+     * @param property {@link EventFilterPayload#StringProperty}
+     * @param s Match string
+     * @return True if match is found
+     */
+    public Boolean eventStringFilter(EventFilterPayload.StringProperty property, String s) {
+        return false;
+    }
 }
