@@ -29,6 +29,7 @@ import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
+import com.mozilla.secops.parser.EventFilterPayload;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.Parser;
 import com.mozilla.secops.parser.ParserDoFn;
@@ -70,25 +71,14 @@ public class AuthProfile implements Serializable {
 
         @Override
         public PCollection<KV<String, Iterable<Event>>> expand(PCollection<String> col) {
-            class ExtractSubjectUser extends DoFn<Event, KV<String, Event>> {
-                private static final long serialVersionUID = 1L;
-
-                @ProcessElement
-                public void processElement(ProcessContext c) {
-                    Event e = c.element();
-                    Normalized n = e.getNormalized();
-                    if (n != null && n.getSubjectUser() != null) {
-                        c.output(KV.of(n.getSubjectUser(), e));
-                    }
-                }
-            }
-
             EventFilter filter = new EventFilter();
             filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
+            filter.addKeyingSelector(new EventFilterRule()
+                .addPayloadFilter(new EventFilterPayload()
+                    .withStringSelector(EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER)));
 
             return col.apply(ParDo.of(new ParserDoFn()))
-                .apply(EventFilter.getTransform(filter))
-                .apply(ParDo.of(new ExtractSubjectUser()))
+                .apply(EventFilter.getKeyingTransform(filter))
                 .apply(Window.<KV<String, Event>>into(new GlobalWindows())
                     .triggering(Repeatedly.forever(AfterProcessingTime
                         .pastFirstElementInPane()
