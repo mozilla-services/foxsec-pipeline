@@ -38,7 +38,11 @@ public class EventFilterPayload implements Serializable {
             return false;
         }
         for (Map.Entry<StringProperty, String> entry : stringMatchers.entrySet()) {
-            if (!(e.getPayload().eventStringFilter(entry.getKey(), entry.getValue()))) {
+            String value = e.getPayload().eventStringValue(entry.getKey());
+            if (value == null) {
+                return false;
+            }
+            if (!(value.equals(entry.getValue()))) {
                 return false;
             }
         }
