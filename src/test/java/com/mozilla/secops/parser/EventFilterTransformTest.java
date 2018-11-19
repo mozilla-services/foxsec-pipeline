@@ -135,4 +135,35 @@ public class EventFilterTransformTest {
 
         pipeline.run().waitUntilFinish();
     }
+
+    @Test
+    public void testTransformKeyingNormalized() throws Exception {
+        String buf = "Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from 12" +
+            "7.0.0.1 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        Parser p = new Parser();
+        assertNotNull(p);
+        Event e = p.parse(buf);
+        assertNotNull(e);
+        PCollection<Event> input = pipeline.apply(Create.of(e));
+
+        EventFilter filter = new EventFilter().matchAny();
+        assertNotNull(filter);
+        filter.addKeyingSelector(new EventFilterRule()
+            .addPayloadFilter(new EventFilterPayload()
+                .withStringSelector(EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER)));
+        filter.addKeyingSelector(new EventFilterRule()
+            .addPayloadFilter(new EventFilterPayload(OpenSSH.class)
+                .withStringSelector(EventFilterPayload.StringProperty.OPENSSH_AUTHMETHOD)));
+
+        PCollection<KV<String, Event>> keyed = input.apply("filter", EventFilter.getKeyingTransform(filter));
+
+        PAssert.thatMap(keyed).satisfies(
+            results -> {
+                Event ev = results.get("riker+publickey");
+                assertNotNull(ev);
+                return null;
+            });
+
+        pipeline.run().waitUntilFinish();
+    }
 }

@@ -20,9 +20,13 @@ public class EventFilterPayload implements Serializable {
      * Properties match strings from various payload event types
      */
     public enum StringProperty {
+        NORMALIZED_SUBJECTUSER,
+
         SECEVENT_ACTION,
         SECEVENT_SOURCEADDRESS,
         SECEVENT_ACCOUNTID,
+
+        OPENSSH_AUTHMETHOD,
 
         RAW_RAW
     }
@@ -63,7 +67,16 @@ public class EventFilterPayload implements Serializable {
     public ArrayList<String> getKeys(Event e) {
         ArrayList<String> ret = new ArrayList<String>();
         for (StringProperty s : stringSelectors) {
-            String value = e.getPayload().eventStringValue(s);
+            String value;
+            if (s.name().startsWith("NORMALIZED_")) {
+                Normalized n = e.getNormalized();
+                if (n == null) {
+                    return null;
+                }
+                value = n.eventStringValue(s);
+            } else {
+                value = e.getPayload().eventStringValue(s);
+            }
             if (value == null) {
                 return null;
             }
@@ -96,12 +109,20 @@ public class EventFilterPayload implements Serializable {
     }
 
     /**
-     * Create new payload filter that matches against specified payload class
+     * Create new payload filter that additionally verifies against the supplied payload
+     * class
      *
      * @param ptype Payload class
      */
     public EventFilterPayload(Class<? extends PayloadBase> ptype) {
+        this();
         this.ptype = ptype;
+    }
+
+    /**
+     * Create new empty payload filter
+     */
+    public EventFilterPayload() {
         stringMatchers = new HashMap<StringProperty, String>();
         stringSelectors = new ArrayList<StringProperty>();
     }

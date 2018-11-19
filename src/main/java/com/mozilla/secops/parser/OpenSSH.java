@@ -136,4 +136,13 @@ public class OpenSSH extends PayloadBase implements Serializable {
     public String getSourceAddressCountry() {
         return sourceAddressCountry;
     }
+
+    @Override
+    public String eventStringValue(EventFilterPayload.StringProperty property) {
+        switch (property) {
+            case OPENSSH_AUTHMETHOD:
+                return getAuthMethod();
+        }
+        return null;
+    }
 }

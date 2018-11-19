@@ -34,6 +34,20 @@ public class Normalized implements Serializable {
     }
 
     /**
+     * Return a given normalized payload field based on the supplied field identifier
+     *
+     * @param property {@link EventFilterPayload.StringProperty}
+     * @return String value or null
+     */
+    public String eventStringValue(EventFilterPayload.StringProperty property) {
+        switch (property) {
+            case NORMALIZED_SUBJECTUSER:
+                return getSubjectUser();
+        }
+        return null;
+    }
+
+    /**
      * Test if normalized event is of a given type
      *
      * @param t {@link Normalized.Type}
