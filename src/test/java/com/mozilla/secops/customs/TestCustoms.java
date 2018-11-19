@@ -68,7 +68,7 @@ public class TestCustoms {
             .apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
         PAssert.that(count)
-            .containsInAnyOrder(13L);
+            .containsInAnyOrder(447L);
 
         p.run().waitUntilFinish();
     }
