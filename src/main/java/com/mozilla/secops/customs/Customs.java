@@ -77,11 +77,12 @@ public class Customs implements Serializable {
                 .wantSubtype(Payload.PayloadType.SECEVENT)
                 .addPayloadFilter(new EventFilterPayload(SecEvent.class)
                     .withStringMatch(EventFilterPayload.StringProperty.SECEVENT_ACTION, "loginFailure")));
+            filter.addKeyingSelector(new EventFilterRule()
+                .wantSubtype(Payload.PayloadType.SECEVENT)
+                .addPayloadFilter(new EventFilterPayload(SecEvent.class)
+                    .withStringSelector(EventFilterPayload.StringProperty.SECEVENT_SOURCEADDRESS)));
 
-            return col.apply(EventFilter.getTransform(filter))
-                // Filter the events down to login failure events, key them based on the source address
-                // in each event, and window into a sliding window.
-                .apply(ParDo.of(new ElementExtractor(ElementExtractor.ExtractElement.SOURCEADDRESS)))
+            return col.apply(EventFilter.getKeyingTransform(filter))
                 .apply("Sliding window", Window.<KV<String, Event>>into(
                     SlidingWindows.of(Duration.standardSeconds(windowLength))
                     .every(Duration.standardSeconds(5)))
@@ -213,52 +214,6 @@ public class Customs implements Serializable {
             alert.addMetadata("customs_suspected", key);
             alert.setSeverity(severity);
             c.output(KV.of(key, alert));
-        }
-    }
-
-    /**
-     * {@link DoFn} to convert an {@link Event} into a {@link KV} where the key is a
-     * specific known field in the event, and the value is the event itself.
-     */
-    public static class ElementExtractor extends DoFn<Event, KV<String, Event>> {
-        private static final long serialVersionUID = 1L;
-
-        /**
-         * Possible elements for extraction
-         */
-        public enum ExtractElement {
-            /** SecEvent source address */
-            SOURCEADDRESS
-        }
-
-        private final ExtractElement etype;
-
-        public ElementExtractor(ExtractElement etype) {
-            this.etype = etype;
-        }
-
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-            Event e = c.element();
-            if (e == null) {
-                return;
-            }
-            SecEvent s = e.getPayload();
-            if (s == null) {
-                return;
-            }
-            String k;
-            switch (etype) {
-                case SOURCEADDRESS:
-                    k = s.getSecEventData().getSourceAddress();
-                    break;
-                default:
-                    throw new IllegalArgumentException("invalid extraction element");
-            }
-            if (k == null) {
-                return;
-            }
-            c.output(KV.of(k, e));
         }
     }
 

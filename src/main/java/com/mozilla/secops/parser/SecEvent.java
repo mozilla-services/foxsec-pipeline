@@ -65,6 +65,8 @@ public class SecEvent extends PayloadBase implements Serializable {
         switch (property) {
             case SECEVENT_ACTION:
                 return secEventData.getAction();
+            case SECEVENT_SOURCEADDRESS:
+                return secEventData.getSourceAddress();
         }
         return null;
     }

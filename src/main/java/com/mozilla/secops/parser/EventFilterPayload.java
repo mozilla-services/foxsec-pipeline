@@ -21,6 +21,7 @@ public class EventFilterPayload implements Serializable {
      */
     public enum StringProperty {
         SECEVENT_ACTION,
+        SECEVENT_SOURCEADDRESS,
 
         RAW_RAW
     }
@@ -28,9 +29,12 @@ public class EventFilterPayload implements Serializable {
     private Class<? extends PayloadBase> ptype;
     private Map<StringProperty, String> stringMatchers;
 
+    private ArrayList<StringProperty> stringSelectors;
+
     /**
      * Return true if payload criteria matches
      *
+     * @param e Input event
      * @return True on match
      */
     public Boolean matches(Event e) {
@@ -50,6 +54,24 @@ public class EventFilterPayload implements Serializable {
     }
 
     /**
+     * Return extracted keys from event based on string selectors
+     *
+     * @param e Input event
+     * @return {@link ArrayList} of extracted keys
+     */
+    public ArrayList<String> getKeys(Event e) {
+        ArrayList<String> ret = new ArrayList<String>();
+        for (StringProperty s : stringSelectors) {
+            String value = e.getPayload().eventStringValue(s);
+            if (value == null) {
+                return null;
+            }
+            ret.add(value);
+        }
+        return ret;
+    }
+
+    /**
      * Add a new simple string match to the payload filter
      *
      * @param property {@link EventFilterPayload.StringProperty}
@@ -62,6 +84,17 @@ public class EventFilterPayload implements Serializable {
     }
 
     /**
+     * Add a string selector for filter keying operations
+     *
+     * @param property Property to extract for key
+     * @return EventFilterPayload for chaining
+     */
+    public EventFilterPayload withStringSelector(StringProperty property) {
+        stringSelectors.add(property);
+        return this;
+    }
+
+    /**
      * Create new payload filter that matches against specified payload class
      *
      * @param ptype Payload class
@@ -69,5 +102,6 @@ public class EventFilterPayload implements Serializable {
     public EventFilterPayload(Class<? extends PayloadBase> ptype) {
         this.ptype = ptype;
         stringMatchers = new HashMap<StringProperty, String>();
+        stringSelectors = new ArrayList<StringProperty>();
     }
 }
