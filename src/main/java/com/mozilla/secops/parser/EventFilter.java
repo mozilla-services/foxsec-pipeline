@@ -20,6 +20,7 @@ public class EventFilter implements Serializable {
 
     private Boolean wantUTC;
     private Boolean outputWithTimestamp;
+    private Boolean matchAny; // If true, match on any input event
 
     private String keyChar = "+";
 
@@ -105,6 +106,9 @@ public class EventFilter implements Serializable {
      * @return True if filter matches
      */
     public Boolean matches(Event e) {
+        if (matchAny) {
+            return true;
+        }
         for (EventFilterRule r : rules) {
             if (r.matches(e)) {
                 return true;
@@ -189,6 +193,11 @@ public class EventFilter implements Serializable {
         return wantUTC;
     }
 
+    public EventFilter matchAny() {
+        matchAny = true;
+        return this;
+    }
+
     /**
      * Create new {@link EventFilter}
      */
@@ -196,6 +205,7 @@ public class EventFilter implements Serializable {
         rules = new ArrayList<EventFilterRule>();
         keySelectors = new ArrayList<EventFilterRule>();
         wantUTC = false;
+        matchAny = false;
         outputWithTimestamp = false;
     }
 }

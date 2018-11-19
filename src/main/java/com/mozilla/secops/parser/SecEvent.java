@@ -67,6 +67,8 @@ public class SecEvent extends PayloadBase implements Serializable {
                 return secEventData.getAction();
             case SECEVENT_SOURCEADDRESS:
                 return secEventData.getSourceAddress();
+            case SECEVENT_ACCOUNTID:
+                return secEventData.getActorAccountId();
         }
         return null;
     }

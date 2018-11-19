@@ -22,6 +22,7 @@ public class EventFilterPayload implements Serializable {
     public enum StringProperty {
         SECEVENT_ACTION,
         SECEVENT_SOURCEADDRESS,
+        SECEVENT_ACCOUNTID,
 
         RAW_RAW
     }
