@@ -1,0 +1,16 @@
+{ "event_matchers": [
+    {
+      "description": "access key created",
+      "resource": "requestParameters.userName",
+      "fields":[["eventName", "CreateAccessKey"]]
+    },
+    {
+      "description": "IAM action from console without mfa",
+      "fields": [
+        ["eventSource", "iam.amazonaws.com"],
+        ["recipientAccountId", "123456789"],
+        ["userIdentity.invokedBy", "signin.amazonaws.com"],
+        ["userIdentity.sessionContext.attributes.mfaAuthenticated", "false"]
+      ]
+    }
+]}

@@ -28,7 +28,11 @@ public class EventFilterPayload implements Serializable {
 
         OPENSSH_AUTHMETHOD,
 
-        RAW_RAW
+        RAW_RAW,
+
+        CLOUDTRAIL_EVENTNAME,
+        CLOUDTRAIL_USERIDENTITY,
+        CLOUDTRAIL_ACCOUNTID
     }
 
     private Class<? extends PayloadBase> ptype;
