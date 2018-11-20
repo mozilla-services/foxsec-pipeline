@@ -17,7 +17,7 @@ import java.util.Collection;
  * Operate in conjunction with {@link RateLimitAnalyzer} to apply analysis criterion
  * to incoming event stream.
  */
-public class RateLimitCriterion extends DoFn<KV<String, Iterable<Event>>, KV<String, Alert>> {
+public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>> {
     private static final long serialVersionUID = 1L;
 
     private final Alert.AlertSeverity severity;
@@ -47,16 +47,11 @@ public class RateLimitCriterion extends DoFn<KV<String, Iterable<Event>>, KV<Str
 
     @ProcessElement
     public void processElement(ProcessContext c) {
-        KV<String, Iterable<Event>> e = c.element();
+        KV<String, Long> e = c.element();
 
         String key = e.getKey();
-        Iterable<Event> values = e.getValue();
-        if (!(values instanceof Collection)) {
-            log.warn("value was not instance of collection");
-            return;
-        }
-        Event[] events = ((Collection<Event>) values).toArray(new Event[0]);
-        if (events.length < limit) {
+        Long valueCount = e.getValue();
+        if (valueCount < limit) {
             return;
         }
 

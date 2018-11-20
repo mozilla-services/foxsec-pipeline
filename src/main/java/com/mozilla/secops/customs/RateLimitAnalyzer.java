@@ -3,6 +3,7 @@ package com.mozilla.secops.customs;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.transforms.windowing.Repeatedly;
@@ -54,7 +55,7 @@ public class RateLimitAnalyzer implements Serializable {
                         SlidingWindows.of(analyzer.getWindowLength())
                         .every(analyzer.getWindowSlideLength()))
                     )
-                    .apply("analysis gbk", GroupByKey.<String, Event>create())
+                    .apply(Count.<String, Event>perKey())
                     .apply(ParDo.of(new RateLimitCriterion(analyzer.getAlertCriteriaSeverity(),
                         analyzer.getIdentifier(), analyzer.getAlertCriteriaLimit())))
                     .apply("suppression windows",
