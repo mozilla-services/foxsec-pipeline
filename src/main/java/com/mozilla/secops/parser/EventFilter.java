@@ -4,6 +4,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.KV;
 
 import java.util.ArrayList;
 import java.io.Serializable;
@@ -15,9 +16,13 @@ public class EventFilter implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private ArrayList<EventFilterRule> rules;
+    private ArrayList<EventFilterRule> keySelectors;
 
     private Boolean wantUTC;
     private Boolean outputWithTimestamp;
+    private Boolean matchAny; // If true, match on any input event
+
+    private String keyChar = "+";
 
     /**
      * Get composite transform to apply filter to event stream
@@ -61,12 +66,49 @@ public class EventFilter implements Serializable {
     }
 
     /**
+     * Get composite transform to apply filter to event stream and perform any required
+     * keying operations
+     *
+     * @param filter Event filter
+     * @return Transform
+     */
+    public static PTransform<PCollection<Event>,
+        PCollection<KV<String, Event>>> getKeyingTransform(EventFilter filter) {
+        return new PTransform<PCollection<Event>, PCollection<KV<String, Event>>>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public PCollection<KV<String, Event>> expand(PCollection<Event> input) {
+                return input.apply(getTransform(filter))
+                    .apply(ParDo.of(
+                        new DoFn<Event, KV<String, Event>>() {
+                            private static final long serialVersionUID = 1L;
+
+                            @ProcessElement
+                            public void processElement(ProcessContext c) {
+                                Event e = c.element();
+                                String key = filter.getKey(e);
+                                if (key == null) {
+                                    return;
+                                }
+                                c.output(KV.of(key, e));
+                            }
+                        }
+                    ));
+            }
+        };
+    }
+
+    /**
      * Test if event matches filter
      *
      * @param e Event to match against filter
      * @return True if filter matches
      */
     public Boolean matches(Event e) {
+        if (matchAny) {
+            return true;
+        }
         for (EventFilterRule r : rules) {
             if (r.matches(e)) {
                 return true;
@@ -76,12 +118,39 @@ public class EventFilter implements Serializable {
     }
 
     /**
+     * Given any keySelectors return the applicable key from the event
+     *
+     * @param e Input event
+     * @return Key string
+     */
+    public String getKey(Event e) {
+        ArrayList<String> keys = new ArrayList<String>();
+        for (EventFilterRule r : keySelectors) {
+            ArrayList<String> values = r.getKeys(e);
+            if (values == null) {
+                return null;
+            }
+            keys.addAll(values);
+        }
+        return String.join(keyChar, keys);
+    }
+
+    /**
      * Add new rule to filter
      *
      * @param rule New rule to add
      */
     public void addRule(EventFilterRule rule) {
         rules.add(rule);
+    }
+
+    /**
+     * Add a new keying selector to the filter
+     *
+     * @param rule New rule to add that includes key selector
+     */
+    public void addKeyingSelector(EventFilterRule rule) {
+        keySelectors.add(rule);
     }
 
     /**
@@ -124,12 +193,19 @@ public class EventFilter implements Serializable {
         return wantUTC;
     }
 
+    public EventFilter matchAny() {
+        matchAny = true;
+        return this;
+    }
+
     /**
      * Create new {@link EventFilter}
      */
     public EventFilter() {
         rules = new ArrayList<EventFilterRule>();
+        keySelectors = new ArrayList<EventFilterRule>();
         wantUTC = false;
+        matchAny = false;
         outputWithTimestamp = false;
     }
 }

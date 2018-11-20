@@ -68,7 +68,7 @@ public class TestCustoms {
             .apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
         PAssert.that(count)
-            .containsInAnyOrder(13L);
+            .containsInAnyOrder(447L);
 
         p.run().waitUntilFinish();
     }
@@ -108,6 +108,7 @@ public class TestCustoms {
                         int cnt = 0;
                         for (Alert a : x) {
                             assertEquals("customs", a.getCategory());
+                            assertEquals("127.0.0.1", a.getMetadataValue("customs_suspected"));
                             cnt++;
                         }
                         assertEquals(1, cnt);

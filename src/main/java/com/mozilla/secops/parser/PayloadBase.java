@@ -40,13 +40,12 @@ public abstract class PayloadBase {
     }
 
     /**
-     * Test if string filter matches event payload
+     * Return a given String payload field value based on the supplied field identifier
      *
-     * @param property {@link EventFilterPayload#StringProperty}
-     * @param s Match string
-     * @return True if match is found
+     * @param property {@link EventFilterPayload.StringProperty}
+     * @return String value or null
      */
-    public Boolean eventStringFilter(EventFilterPayload.StringProperty property, String s) {
-        return false;
+    public String eventStringValue(EventFilterPayload.StringProperty property) {
+        return null;
     }
 }

@@ -20,7 +20,13 @@ public class EventFilterPayload implements Serializable {
      * Properties match strings from various payload event types
      */
     public enum StringProperty {
+        NORMALIZED_SUBJECTUSER,
+
         SECEVENT_ACTION,
+        SECEVENT_SOURCEADDRESS,
+        SECEVENT_ACCOUNTID,
+
+        OPENSSH_AUTHMETHOD,
 
         RAW_RAW
     }
@@ -28,9 +34,12 @@ public class EventFilterPayload implements Serializable {
     private Class<? extends PayloadBase> ptype;
     private Map<StringProperty, String> stringMatchers;
 
+    private ArrayList<StringProperty> stringSelectors;
+
     /**
      * Return true if payload criteria matches
      *
+     * @param e Input event
      * @return True on match
      */
     public Boolean matches(Event e) {
@@ -38,7 +47,11 @@ public class EventFilterPayload implements Serializable {
             return false;
         }
         for (Map.Entry<StringProperty, String> entry : stringMatchers.entrySet()) {
-            if (!(e.getPayload().eventStringFilter(entry.getKey(), entry.getValue()))) {
+            String value = e.getPayload().eventStringValue(entry.getKey());
+            if (value == null) {
+                return false;
+            }
+            if (!(value.equals(entry.getValue()))) {
                 return false;
             }
         }
@@ -46,9 +59,36 @@ public class EventFilterPayload implements Serializable {
     }
 
     /**
+     * Return extracted keys from event based on string selectors
+     *
+     * @param e Input event
+     * @return {@link ArrayList} of extracted keys
+     */
+    public ArrayList<String> getKeys(Event e) {
+        ArrayList<String> ret = new ArrayList<String>();
+        for (StringProperty s : stringSelectors) {
+            String value;
+            if (s.name().startsWith("NORMALIZED_")) {
+                Normalized n = e.getNormalized();
+                if (n == null) {
+                    return null;
+                }
+                value = n.eventStringValue(s);
+            } else {
+                value = e.getPayload().eventStringValue(s);
+            }
+            if (value == null) {
+                return null;
+            }
+            ret.add(value);
+        }
+        return ret;
+    }
+
+    /**
      * Add a new simple string match to the payload filter
      *
-     * @param property {@link EventFilterPayload#StringProperty}
+     * @param property {@link EventFilterPayload.StringProperty}
      * @param s String to match against
      * @return EventFilterPayload for chaining
      */
@@ -58,12 +98,32 @@ public class EventFilterPayload implements Serializable {
     }
 
     /**
-     * Create new payload filter that matches against specified payload class
+     * Add a string selector for filter keying operations
+     *
+     * @param property Property to extract for key
+     * @return EventFilterPayload for chaining
+     */
+    public EventFilterPayload withStringSelector(StringProperty property) {
+        stringSelectors.add(property);
+        return this;
+    }
+
+    /**
+     * Create new payload filter that additionally verifies against the supplied payload
+     * class
      *
      * @param ptype Payload class
      */
     public EventFilterPayload(Class<? extends PayloadBase> ptype) {
+        this();
         this.ptype = ptype;
+    }
+
+    /**
+     * Create new empty payload filter
+     */
+    public EventFilterPayload() {
         stringMatchers = new HashMap<StringProperty, String>();
+        stringSelectors = new ArrayList<StringProperty>();
     }
 }

@@ -44,6 +44,29 @@ public class EventFilterRule implements Serializable {
     }
 
     /**
+     * Return extracted keys from event based on string selectors
+     *
+     * @param e Input event
+     * @return {@link ArrayList} of extracted keys
+     */
+    public ArrayList<String> getKeys(Event e) {
+        ArrayList<String> ret = new ArrayList<String>();
+        if (wantSubtype != null) {
+            if (e.getPayloadType() != wantSubtype) {
+                return null;
+            }
+        }
+        for (EventFilterPayload p : payloadFilters) {
+            ArrayList<String> values = p.getKeys(e);
+            if (values == null) {
+                return null;
+            }
+            ret.addAll(values);
+        }
+        return ret;
+    }
+
+    /**
      * Add payload filter
      *
      * @param p Payload filter criteria
