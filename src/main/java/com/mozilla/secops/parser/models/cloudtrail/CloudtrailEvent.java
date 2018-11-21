@@ -1,6 +1,6 @@
 package com.mozilla.secops.parser.models.cloudtrail;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
 
@@ -93,19 +93,19 @@ public class CloudtrailEvent {
         return userIdentity.getType();
     }
 
-    @JsonSetter("userIdentity")
-    public void setUserIdentity(UserIdentity userIdentity) {
-        this.userIdentity = userIdentity;
+    @JsonProperty("userIdentity")
+    public UserIdentity getUserIdentity() {
+        return userIdentity;
     }
 
-    @JsonSetter("responseElements")
-    public void setResponseElements(HashMap<String, Object> responseElements) {
-        this.responseElements = responseElements;
+    @JsonProperty("responseElements")
+    public HashMap<String, Object> getResponseElements() {
+        return responseElements;
     }
 
-    @JsonSetter("requestParameters")
-    public void setRequestParameters(HashMap<String, Object> requestParameters) {
-        this.requestParameters = requestParameters;
+    @JsonProperty("requestParameters")
+    public HashMap<String, Object> getRequestParameters() {
+        return requestParameters;
     }
 
 

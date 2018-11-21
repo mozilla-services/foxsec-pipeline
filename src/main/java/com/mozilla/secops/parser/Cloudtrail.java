@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.maxmind.geoip2.model.CityResponse;
 
 import com.mozilla.secops.parser.models.cloudtrail.CloudtrailEvent;
+import com.mozilla.secops.parser.models.cloudtrail.UserIdentity;
 import com.mozilla.secops.identity.IdentityManager;
 
 import java.io.ByteArrayOutputStream;
@@ -208,11 +209,22 @@ public class Cloudtrail extends PayloadBase implements Serializable {
 
     @Override
     public String eventStringValue(EventFilterPayload.StringProperty property) {
+        UserIdentity ui = event.getUserIdentity();
         switch (property) {
             case CLOUDTRAIL_EVENTNAME:
                 return event.getEventName();
             case CLOUDTRAIL_ACCOUNTID:
                 return event.getRecipientAccountID();
+            case CLOUDTRAIL_INVOKEDBY:
+                if (ui == null) {
+                    return null;
+                }
+                return ui.getInvokedBy();
+            case CLOUDTRAIL_MFA:
+                if (ui == null) {
+                    return null;
+                }
+                return ui.getSessionAttributesValue("mfaAuthenticate");
         }
         return null;
     }

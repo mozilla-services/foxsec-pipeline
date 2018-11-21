@@ -53,7 +53,12 @@ public class CloudtrailMatcher {
                 return EventFilterPayload.StringProperty.CLOUDTRAIL_EVENTNAME;
             case "recipientAccountId":
                 return EventFilterPayload.StringProperty.CLOUDTRAIL_ACCOUNTID;
+            case "userIdentity.invokedBy":
+                return EventFilterPayload.StringProperty.CLOUDTRAIL_INVOKEDBY;
+            case "userIdentity.sessionContext.attributes.mfaAuthenticated":
+                return EventFilterPayload.StringProperty.CLOUDTRAIL_MFA;
         }
+
         return null;
     }
 }

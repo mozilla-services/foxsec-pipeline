@@ -31,7 +31,9 @@ public class EventFilterPayload implements Serializable {
         RAW_RAW,
 
         CLOUDTRAIL_EVENTNAME,
-        CLOUDTRAIL_ACCOUNTID
+        CLOUDTRAIL_ACCOUNTID,
+        CLOUDTRAIL_INVOKEDBY,
+        CLOUDTRAIL_MFA
     }
 
     private Class<? extends PayloadBase> ptype;
