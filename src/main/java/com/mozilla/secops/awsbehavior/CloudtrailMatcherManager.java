@@ -9,11 +9,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Translates a JSON document into EventFilter's
+ * Loads a JSON document and converts it
+ * into a list of {@link CloudtrailMatcher}s
  */
 public class CloudtrailMatcherManager {
     private ArrayList<CloudtrailMatcher> eventMatchers;
 
+    /**
+     * Load cloudtrail matcher manager configuration from a resource file
+     *
+     * @param resourcePath Resource path to load JSON file from
+     * @return {@link CloudtrailMatcherManager}
+     */
     public static CloudtrailMatcherManager loadFromResource(String resourcePath) throws IOException {
         InputStream in = CloudtrailMatcherManager.class.getResourceAsStream(resourcePath);
         if (in == null) {
@@ -23,6 +30,11 @@ public class CloudtrailMatcherManager {
         return mapper.readValue(in, CloudtrailMatcherManager.class);
     }
 
+    /**
+     * Returns parsed {@link CloudtrailMatcher}s
+     *
+     * @return {@link ArrayList} of {@link CloudtrailMatcher}
+     */
     @JsonProperty("event_matchers")
     public ArrayList<CloudtrailMatcher> getEventMatchers() {
         return eventMatchers;

@@ -11,13 +11,18 @@ import java.util.ArrayList;
 
 /**
  * Translates a JSON object into an EventFilter
- * and metadata for the Alert
+ * and context for any resulting matches.
  */
 public class CloudtrailMatcher {
     private ArrayList<ArrayList<String>> fields;
     private String description;
     private String resource;
 
+    /**
+     * Converts {@link CloudtrailMatcher} into an {@link EventFilterRule}
+     *
+     * @return {@link EventFilterRule}
+     */
     public EventFilterRule toEventFilterRule() {
         EventFilterRule rule = new EventFilterRule();
         for (ArrayList<String> fieldMatcher : fields) {
@@ -46,8 +51,6 @@ public class CloudtrailMatcher {
         switch (field) {
             case "eventName":
                 return EventFilterPayload.StringProperty.CLOUDTRAIL_EVENTNAME;
-            case "userIdentity":
-                return EventFilterPayload.StringProperty.CLOUDTRAIL_USERIDENTITY;
             case "recipientAccountId":
                 return EventFilterPayload.StringProperty.CLOUDTRAIL_ACCOUNTID;
         }

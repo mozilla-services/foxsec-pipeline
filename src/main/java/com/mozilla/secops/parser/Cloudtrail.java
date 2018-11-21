@@ -205,4 +205,15 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         }
         return false;
     }
+
+    @Override
+    public String eventStringValue(EventFilterPayload.StringProperty property) {
+        switch (property) {
+            case CLOUDTRAIL_EVENTNAME:
+                return event.getEventName();
+            case CLOUDTRAIL_ACCOUNTID:
+                return event.getRecipientAccountID();
+        }
+        return null;
+    }
 }
