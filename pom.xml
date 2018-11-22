@@ -34,6 +34,8 @@
                 <version>3.0.1</version>
                 <configuration>
                     <show>public</show>
+                    <reportOutputDirectory>${projects.basedir}/docs</reportOutputDirectory>
+                    <destDir>secops-beam</destDir>
                 </configuration>
             </plugin>
             <plugin>

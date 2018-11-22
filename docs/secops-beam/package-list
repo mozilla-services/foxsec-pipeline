@@ -1,0 +1,12 @@
+com.mozilla.secops
+com.mozilla.secops.alert
+com.mozilla.secops.authprofile
+com.mozilla.secops.crypto
+com.mozilla.secops.customs
+com.mozilla.secops.httprequest
+com.mozilla.secops.identity
+com.mozilla.secops.parser
+com.mozilla.secops.parser.models.cloudtrail
+com.mozilla.secops.parser.models.duopull
+com.mozilla.secops.parser.models.secevent
+com.mozilla.secops.state
