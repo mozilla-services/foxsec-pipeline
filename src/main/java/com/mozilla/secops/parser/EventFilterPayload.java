@@ -34,7 +34,7 @@ public class EventFilterPayload implements Serializable {
    * @return True on match
    */
   public Boolean matches(Event e) {
-    if (!(ptype.isInstance(e.getPayload()))) {
+    if (ptype != null && !(ptype.isInstance(e.getPayload()))) {
       return false;
     }
     for (Map.Entry<StringProperty, String> entry : stringMatchers.entrySet()) {
