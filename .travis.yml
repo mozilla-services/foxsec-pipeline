@@ -9,4 +9,5 @@ before_install:
 script:
   - docker build -t foxsec-pipeline:latest .
   - bin/m compile
+  - bin/m spotless:check
   - bin/m test

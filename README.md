@@ -40,3 +40,7 @@ using these identifiers when the pipeline is executing.
 
 The output of the command can be prefixed with `cloudkms://` in an option to enable runtime decryption of the secrets
 during pipeline execution.
+
+## Contributing
+
+See the [contributing guidelines](./CONTRIBUTING.md).
