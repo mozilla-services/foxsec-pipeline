@@ -41,3 +41,11 @@ augroup autoformat_settings
   autocmd FileType java AutoFormatBuffer google-java-format
 augroup END
 ```
+
+## Code documentation
+
+Source code should have appropriate comments (e.g., javadoc comments) associated with exposed
+functionality.
+
+**Note:** Do not include regenerated javadoc HTML files in submitted PRs, documentation is
+regenerated periodically and should not be included with functionality/code changes.
