@@ -36,6 +36,7 @@
                     <show>public</show>
                     <reportOutputDirectory>${projects.basedir}/docs</reportOutputDirectory>
                     <destDir>secops-beam</destDir>
+                    <additionalJOption>-notimestamp</additionalJOption>
                 </configuration>
             </plugin>
             <plugin>
