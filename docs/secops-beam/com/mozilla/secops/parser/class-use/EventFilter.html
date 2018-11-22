@@ -90,6 +90,10 @@
 <td class="colFirst"><a href="#com.mozilla.secops.parser">com.mozilla.secops.parser</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
+<tr class="altColor">
+<td class="colFirst"><a href="#com.mozilla.secops.parser.eventfiltercfg">com.mozilla.secops.parser.eventfiltercfg</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
 </tbody>
 </table>
 </li>
@@ -177,6 +181,27 @@
 <td class="colFirst"><code>static org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">EventFilter.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilter.html#getTransform-com.mozilla.secops.parser.EventFilter-">getTransform</a></span>(<a href="../../../../../com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a>&nbsp;filter)</code>
 <div class="block">Get composite transform to apply filter to event stream</div>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.parser.eventfiltercfg">
+<!--   -->
+</a>
+<h3>Uses of <a href="../../../../../com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a> in <a href="../../../../../com/mozilla/secops/parser/eventfiltercfg/package-summary.html">com.mozilla.secops.parser.eventfiltercfg</a></h3>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
+<caption><span>Methods in <a href="../../../../../com/mozilla/secops/parser/eventfiltercfg/package-summary.html">com.mozilla.secops.parser.eventfiltercfg</a> that return <a href="../../../../../com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code><a href="../../../../../com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a></code></td>
+<td class="colLast"><span class="typeNameLabel">EventFilterCfg.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html#getEventFilter-java.lang.String-">getEventFilter</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;filterName)</code>
+<div class="block">Given a filter name from the filter configuration, return an initialized <a href="../../../../../com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser"><code>EventFilter</code></a>
+ object</div>
 </td>
 </tr>
 </tbody>

@@ -220,6 +220,8 @@
 <dd>&nbsp;</dd>
 <dt><a href="com/mozilla/secops/parser/package-summary.html">com.mozilla.secops.parser</a> - package com.mozilla.secops.parser</dt>
 <dd>&nbsp;</dd>
+<dt><a href="com/mozilla/secops/parser/eventfiltercfg/package-summary.html">com.mozilla.secops.parser.eventfiltercfg</a> - package com.mozilla.secops.parser.eventfiltercfg</dt>
+<dd>&nbsp;</dd>
 <dt><a href="com/mozilla/secops/parser/models/cloudtrail/package-summary.html">com.mozilla.secops.parser.models.cloudtrail</a> - package com.mozilla.secops.parser.models.cloudtrail</dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/mozilla/secops/parser/models/duopull/package-summary.html">com.mozilla.secops.parser.models.duopull</a> - package com.mozilla.secops.parser.models.duopull</dt>
@@ -336,6 +338,14 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/EventFilter.html#EventFilter--">EventFilter()</a></span> - Constructor for class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a></dt>
 <dd>
 <div class="block">Create new <a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser"><code>EventFilter</code></a></div>
+</dd>
+<dt><a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html" title="class in com.mozilla.secops.parser.eventfiltercfg"><span class="typeNameLink">EventFilterCfg</span></a> - Class in <a href="com/mozilla/secops/parser/eventfiltercfg/package-summary.html">com.mozilla.secops.parser.eventfiltercfg</a></dt>
+<dd>
+<div class="block">Initialize <a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser"><code>EventFilter</code></a> objects using a configuration file</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html#EventFilterCfg--">EventFilterCfg()</a></span> - Constructor for class com.mozilla.secops.parser.eventfiltercfg.<a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html" title="class in com.mozilla.secops.parser.eventfiltercfg">EventFilterCfg</a></dt>
+<dd>
+<div class="block">Initialize new <a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html" title="class in com.mozilla.secops.parser.eventfiltercfg"><code>EventFilterCfg</code></a></div>
 </dd>
 <dt><a href="com/mozilla/secops/parser/EventFilterPayload.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">EventFilterPayload</span></a> - Class in <a href="com/mozilla/secops/parser/package-summary.html">com.mozilla.secops.parser</a></dt>
 <dd>
@@ -579,6 +589,11 @@
 <dd>
 <div class="block">Get event factor</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html#getEventFilter-java.lang.String-">getEventFilter(String)</a></span> - Method in class com.mozilla.secops.parser.eventfiltercfg.<a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html" title="class in com.mozilla.secops.parser.eventfiltercfg">EventFilterCfg</a></dt>
+<dd>
+<div class="block">Given a filter name from the filter configuration, return an initialized <a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser"><code>EventFilter</code></a>
+ object</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Event.html#getEventId--">getEventId()</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a></dt>
 <dd>
 <div class="block">Get unique event ID.</div>
@@ -622,6 +637,11 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/customs/RateLimitAnalyzer.html#getFilter--">getFilter()</a></span> - Method in class com.mozilla.secops.customs.<a href="com/mozilla/secops/customs/RateLimitAnalyzer.html" title="class in com.mozilla.secops.customs">RateLimitAnalyzer</a></dt>
 <dd>
 <div class="block">Get configured event filter</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html#getFilters--">getFilters()</a></span> - Method in class com.mozilla.secops.parser.eventfiltercfg.<a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html" title="class in com.mozilla.secops.parser.eventfiltercfg">EventFilterCfg</a></dt>
+<dd>
+<div class="block">Return filter configuration loaded from the configuration file, where the key is the name of
+ the filter.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/identity/Identity.html#getFragment--">getFragment()</a></span> - Method in class com.mozilla.secops.identity.<a href="com/mozilla/secops/identity/Identity.html" title="class in com.mozilla.secops.identity">Identity</a></dt>
 <dd>
@@ -1162,6 +1182,10 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/identity/IdentityManager.html#loadFromResource-java.lang.String-">loadFromResource(String)</a></span> - Static method in class com.mozilla.secops.identity.<a href="com/mozilla/secops/identity/IdentityManager.html" title="class in com.mozilla.secops.identity">IdentityManager</a></dt>
 <dd>
 <div class="block">Load identity manager configuration from a resource file</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html#loadFromResource-java.lang.String-">loadFromResource(String)</a></span> - Static method in class com.mozilla.secops.parser.eventfiltercfg.<a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html" title="class in com.mozilla.secops.parser.eventfiltercfg">EventFilterCfg</a></dt>
+<dd>
+<div class="block">Load filter configuration from a resource file</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/GeoIP.html#lookup-java.lang.String-">lookup(String)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser">GeoIP</a></dt>
 <dd>
