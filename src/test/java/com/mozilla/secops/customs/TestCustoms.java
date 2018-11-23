@@ -59,10 +59,10 @@ public class TestCustoms {
   public void rlLoginFailureSourceAddressTest() throws Exception {
     PCollection<String> input = getInput("/testdata/customs_rl_badlogin_simple1.txt");
 
+    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
+
     PCollection<Alert> alerts =
-        input
-            .apply(ParDo.of(new ParserDoFn()))
-            .apply(new Customs.RlLoginFailureSourceAddress(true, 3L, 900L));
+        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg));
 
     ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();
     windows.add(new IntervalWindow(new Instant(1800000L), new Instant(2700000L)));
