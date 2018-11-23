@@ -17,7 +17,17 @@
                                         "class": "com.mozilla.secops.parser.SecEvent",
                                         "string_match": [
                                             [ "SECEVENT_ACTION", "loginFailure" ]
-                                        ],
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "keying": [
+                            {
+                                "subtype": "SECEVENT",
+                                "payload_filters": [
+                                    {
+                                        "class": "com.mozilla.secops.parser.SecEvent",
                                         "string_selectors": [
                                             "SECEVENT_SOURCEADDRESS"
                                         ]

@@ -60,11 +60,17 @@ class FilterRule {
 
 class FilterCfg {
   private ArrayList<FilterRule> filterRules;
+  private ArrayList<FilterRule> keyingRules;
   private Boolean outputWithTimestamp;
 
   @JsonProperty("rules")
   public ArrayList<FilterRule> getFilterRules() {
     return filterRules;
+  }
+
+  @JsonProperty("keying")
+  public ArrayList<FilterRule> getKeyingRules() {
+    return keyingRules;
   }
 
   @JsonProperty("output_with_timestamp")
@@ -75,6 +81,7 @@ class FilterCfg {
   FilterCfg() {
     outputWithTimestamp = false;
     filterRules = new ArrayList<FilterRule>();
+    keyingRules = new ArrayList<FilterRule>();
   }
 }
 
@@ -172,6 +179,9 @@ public class EventFilterCfg {
 
     for (FilterRule rule : cfg.getFilterRules()) {
       ret.addRule(processRuleConfiguration(rule));
+    }
+    for (FilterRule rule : cfg.getKeyingRules()) {
+      ret.addKeyingSelector(processRuleConfiguration(rule));
     }
 
     return ret;
