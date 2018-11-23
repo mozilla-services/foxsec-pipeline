@@ -1,0 +1,43 @@
+{
+    "detectors": {
+        "rl_login_failure_source_address": {
+            "sliding_window_length": 900,
+            "sliding_window_slides": 5,
+            "threshold": 3,
+            "alert_suppression_length": 900,
+            "filter": {
+                "filters": {
+                    "default": {
+                        "output_with_timestamp": false,
+                        "rules": [
+                            {
+                                "subtype": "SECEVENT",
+                                "payload_filters": [
+                                    {
+                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "string_match": [
+                                            [ "SECEVENT_ACTION", "loginFailure" ]
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "keying": [
+                            {
+                                "subtype": "SECEVENT",
+                                "payload_filters": [
+                                    {
+                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "string_selectors": [
+                                            "SECEVENT_SOURCEADDRESS"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
