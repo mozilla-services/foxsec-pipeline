@@ -328,10 +328,10 @@
 <dd>1L</dd>
 </dl>
 </li>
-<li class="blockList"><a name="com.mozilla.secops.customs.Customs.RlLoginFailureSourceAddress">
+<li class="blockList"><a name="com.mozilla.secops.customs.Customs.Detector">
 <!--   -->
 </a>
-<h3>Class <a href="com/mozilla/secops/customs/Customs.RlLoginFailureSourceAddress.html" title="class in com.mozilla.secops.customs">com.mozilla.secops.customs.Customs.RlLoginFailureSourceAddress</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt; implements Serializable</h3>
+<h3>Class <a href="com/mozilla/secops/customs/Customs.Detector.html" title="class in com.mozilla.secops.customs">com.mozilla.secops.customs.Customs.Detector</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt; implements Serializable</h3>
 <dl class="nameValue">
 <dt>serialVersionUID:</dt>
 <dd>1L</dd>
@@ -341,6 +341,10 @@
 <h3>Serialized Fields</h3>
 <ul class="blockList">
 <li class="blockList">
+<h4>detectorName</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> detectorName</pre>
+</li>
+<li class="blockList">
 <h4>threshold</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> threshold</pre>
 </li>
@@ -348,9 +352,97 @@
 <h4>windowLength</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> windowLength</pre>
 </li>
+<li class="blockList">
+<h4>windowSlides</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> windowSlides</pre>
+</li>
+<li class="blockList">
+<h4>suppressLength</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> suppressLength</pre>
+</li>
+<li class="blockList">
+<h4>filter</h4>
+<pre><a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a> filter</pre>
+</li>
 <li class="blockListLast">
-<h4>emitTimestamps</h4>
-<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a> emitTimestamps</pre>
+<h4>log</h4>
+<pre>org.slf4j.Logger log</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.customs.Customs.Detectors">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/customs/Customs.Detectors.html" title="class in com.mozilla.secops.customs">com.mozilla.secops.customs.Customs.Detectors</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt; implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>cfg</h4>
+<pre><a href="com/mozilla/secops/customs/CustomsCfg.html" title="class in com.mozilla.secops.customs">CustomsCfg</a> cfg</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.customs.CustomsCfg">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/customs/CustomsCfg.html" title="class in com.mozilla.secops.customs">com.mozilla.secops.customs.CustomsCfg</a> extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>detectors</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">K</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">V</a>&gt; detectors</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.customs.CustomsCfgEntry">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/customs/CustomsCfgEntry.html" title="class in com.mozilla.secops.customs">com.mozilla.secops.customs.CustomsCfgEntry</a> extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>slidingWindowLength</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> slidingWindowLength</pre>
+</li>
+<li class="blockList">
+<h4>slidingWindowSlides</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> slidingWindowSlides</pre>
+</li>
+<li class="blockList">
+<h4>alertSuppressionLength</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> alertSuppressionLength</pre>
+</li>
+<li class="blockList">
+<h4>threshold</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> threshold</pre>
+</li>
+<li class="blockListLast">
+<h4>eventFilterCfg</h4>
+<pre><a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html" title="class in com.mozilla.secops.parser.eventfiltercfg">EventFilterCfg</a> eventFilterCfg</pre>
 </li>
 </ul>
 </li>

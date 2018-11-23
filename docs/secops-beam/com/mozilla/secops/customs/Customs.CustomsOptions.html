@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6};
+var methods = {"i0":6,"i1":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/customs/Customs.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/customs/Customs.RlLoginFailureSourceAddress.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/customs/Customs.Detector.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/customs/Customs.CustomsOptions.html" target="_top">Frames</a></li>
@@ -153,20 +153,12 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/Customs.CustomsOptions.html#getLoginFailureBySourceAddressLimitThreshold--">getLoginFailureBySourceAddressLimitThreshold</a></span>()</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/Customs.CustomsOptions.html#getConfigurationResourcePath--">getConfigurationResourcePath</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/Customs.CustomsOptions.html#getLoginFailureBySourceAddressLimitWindowLength--">getLoginFailureBySourceAddressLimitWindowLength</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/Customs.CustomsOptions.html#setLoginFailureBySourceAddressLimitThreshold-java.lang.Long-">setLoginFailureBySourceAddressLimitThreshold</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;value)</code>&nbsp;</td>
-</tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/Customs.CustomsOptions.html#setLoginFailureBySourceAddressLimitWindowLength-java.lang.Long-">setLoginFailureBySourceAddressLimitWindowLength</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/Customs.CustomsOptions.html#setConfigurationResourcePath-java.lang.String-">setConfigurationResourcePath</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -232,42 +224,23 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="getLoginFailureBySourceAddressLimitThreshold--">
+<a name="getConfigurationResourcePath--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getLoginFailureBySourceAddressLimitThreshold</h4>
-<pre>@Default.Long(value=3L)
-<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;getLoginFailureBySourceAddressLimitThreshold()</pre>
+<h4>getConfigurationResourcePath</h4>
+<pre>@Default.String(value="/customs/customsdefault.json")
+<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getConfigurationResourcePath()</pre>
 </li>
 </ul>
-<a name="setLoginFailureBySourceAddressLimitThreshold-java.lang.Long-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>setLoginFailureBySourceAddressLimitThreshold</h4>
-<pre>void&nbsp;setLoginFailureBySourceAddressLimitThreshold(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;value)</pre>
-</li>
-</ul>
-<a name="getLoginFailureBySourceAddressLimitWindowLength--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getLoginFailureBySourceAddressLimitWindowLength</h4>
-<pre>@Default.Long(value=900L)
-<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;getLoginFailureBySourceAddressLimitWindowLength()</pre>
-</li>
-</ul>
-<a name="setLoginFailureBySourceAddressLimitWindowLength-java.lang.Long-">
+<a name="setConfigurationResourcePath-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>setLoginFailureBySourceAddressLimitWindowLength</h4>
-<pre>void&nbsp;setLoginFailureBySourceAddressLimitWindowLength(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;value)</pre>
+<h4>setConfigurationResourcePath</h4>
+<pre>void&nbsp;setConfigurationResourcePath(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
 </li>
 </ul>
 </li>
@@ -299,7 +272,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/customs/Customs.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/customs/Customs.RlLoginFailureSourceAddress.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/customs/Customs.Detector.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/customs/Customs.CustomsOptions.html" target="_top">Frames</a></li>
