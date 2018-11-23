@@ -2,6 +2,7 @@ package com.mozilla.secops.customs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mozilla.secops.parser.eventfiltercfg.EventFilterCfg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -37,6 +38,18 @@ public class CustomsCfg implements Serializable {
   @JsonProperty("detectors")
   public Map<String, CustomsCfgEntry> getDetectors() {
     return detectors;
+  }
+
+  /**
+   * Override timestamp emission settings for all detectors
+   *
+   * @param flag True to enable timestamp emission, false to disable
+   */
+  public void setTimestampOverride(Boolean flag) {
+    for (CustomsCfgEntry entry : detectors.values()) {
+      EventFilterCfg efc = entry.getEventFilterCfg();
+      efc.setTimestampOverride(flag);
+    }
   }
 
   public CustomsCfg() {

@@ -60,6 +60,8 @@ public class TestCustoms {
     PCollection<String> input = getInput("/testdata/customs_rl_badlogin_simple1.txt");
 
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
+    // Force use of event timestamp for testing purposes
+    cfg.setTimestampOverride(true);
 
     PCollection<Alert> alerts =
         input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg));

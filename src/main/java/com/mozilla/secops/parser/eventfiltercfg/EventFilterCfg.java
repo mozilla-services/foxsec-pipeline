@@ -88,6 +88,7 @@ class FilterCfg {
  */
 public class EventFilterCfg {
   private Map<String, FilterCfg> filterCfgs;
+  private Boolean timestampOverride;
 
   /**
    * Return filter configuration loaded from the configuration file, where the key is the name of
@@ -98,6 +99,15 @@ public class EventFilterCfg {
   @JsonProperty("filters")
   public Map<String, FilterCfg> getFilters() {
     return filterCfgs;
+  }
+
+  /**
+   * Set to manually override timestamp emission setting in filter configuration
+   *
+   * @param flag True to emit with timestamps, false to disable
+   */
+  public void setTimestampOverride(Boolean flag) {
+    timestampOverride = flag;
   }
 
   @SuppressWarnings("unchecked")
@@ -153,7 +163,12 @@ public class EventFilterCfg {
       return null;
     }
 
-    EventFilter ret = new EventFilter().setOutputWithTimestamp(cfg.getOutputWithTimestamp());
+    EventFilter ret;
+    if (timestampOverride == null) {
+      ret = new EventFilter().setOutputWithTimestamp(cfg.getOutputWithTimestamp());
+    } else {
+      ret = new EventFilter().setOutputWithTimestamp(timestampOverride);
+    }
 
     for (FilterRule rule : cfg.getFilterRules()) {
       ret.addRule(processRuleConfiguration(rule));

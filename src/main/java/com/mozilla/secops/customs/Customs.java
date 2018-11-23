@@ -89,7 +89,7 @@ public class Customs implements Serializable {
       for (Map.Entry<String, CustomsCfgEntry> entry : cfg.getDetectors().entrySet()) {
         String detectorName = entry.getKey();
         CustomsCfgEntry detectorCfg = entry.getValue();
-        alerts.and(col.apply(new Detector(detectorName, detectorCfg)));
+        alerts = alerts.and(col.apply(new Detector(detectorName, detectorCfg)));
       }
       PCollection<Alert> ret = alerts.apply(Flatten.<Alert>pCollections());
       return ret;
