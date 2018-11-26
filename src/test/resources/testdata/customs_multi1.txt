@@ -1,0 +1,26 @@
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"riker@uss.enterprise","timestamp":"1970-01-01T00:00:00+00:00","source_address":"192.168.1.1"}
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"riker@uss.enterprise","timestamp":"1970-01-01T00:15:01+00:00","source_address":"192.168.1.1"}
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"riker@uss.enterprise","timestamp":"1970-01-01T00:30:01+00:00","source_address":"192.168.1.1"}
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"riker@uss.enterprise","timestamp":"1970-01-01T00:45:01+00:00","source_address":"192.168.1.1"}
+
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"riker@uss.enterprise","timestamp":"1970-01-01T01:00:00+00:00","source_address":"192.168.1.1"}
+# Should trigger threshold alert on loginFailure for picard+10.0.0.1 here, two alerts should be generated
+# since the sliding window findings will be windowed into two fixed 15 minute windows per default alert
+# suppression windowing
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"picard@uss.enterprise","timestamp":"1970-01-01T01:01:01+00:00","source_address":"10.0.0.1"}
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"picard@uss.enterprise","timestamp":"1970-01-01T01:01:02+00:00","source_address":"10.0.0.1"}
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"picard@uss.enterprise","timestamp":"1970-01-01T01:01:03+00:00","source_address":"10.0.0.1"}
+
+# Since loginFailure is tied to account+ip, should not trigger here for varying source address
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"picard@uss.enterprise","timestamp":"1970-01-01T01:30:01+00:00","source_address":"10.0.0.1"}
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"picard@uss.enterprise","timestamp":"1970-01-01T01:30:02+00:00","source_address":"10.0.0.2"}
+# Mix an SMS related detection in which should fire, since these default to a one hour sliding window 4 alerts
+# should be generated for each detector (beginning from the 01:44:59 suppression window and ending at the
+# 02:29:59 window
+{"secevent_version":"secevent.model.1","action":"sendSms","account_id":"worf@uss.enterprise","timestamp":"1970-01-01T01:30:02+00:00","source_address":"10.0.0.2","sms_recipient":"00000000000"}
+{"secevent_version":"secevent.model.1","action":"sendSms","account_id":"worf@uss.enterprise","timestamp":"1970-01-01T01:30:02+00:00","source_address":"10.0.0.2","sms_recipient":"00000000000"}
+{"secevent_version":"secevent.model.1","action":"sendSms","account_id":"worf@uss.enterprise","timestamp":"1970-01-01T01:30:02+00:00","source_address":"10.0.0.2","sms_recipient":"00000000000"}
+{"secevent_version":"secevent.model.1","action":"sendSms","account_id":"worf@uss.enterprise","timestamp":"1970-01-01T01:30:02+00:00","source_address":"10.0.0.2","sms_recipient":"00000000000"}
+{"secevent_version":"secevent.model.1","action":"sendSms","account_id":"worf@uss.enterprise","timestamp":"1970-01-01T01:30:02+00:00","source_address":"10.0.0.2","sms_recipient":"00000000000"}
+{"secevent_version":"secevent.model.1","action":"sendSms","account_id":"worf@uss.enterprise","timestamp":"1970-01-01T01:30:02+00:00","source_address":"10.0.0.2","sms_recipient":"00000000000"}
+{"secevent_version":"secevent.model.1","action":"loginFailure","account_id":"picard@uss.enterprise","timestamp":"1970-01-01T01:30:03+00:00","source_address":"10.0.0.3"}

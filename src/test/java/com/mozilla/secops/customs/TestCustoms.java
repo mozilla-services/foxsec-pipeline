@@ -1,12 +1,14 @@
 package com.mozilla.secops.customs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Scanner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -51,6 +53,70 @@ public class TestCustoms {
             .apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
     PAssert.that(count).containsInAnyOrder(447L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void customsMulti1Test() throws Exception {
+    PCollection<String> input = getInput("/testdata/customs_multi1.txt");
+
+    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
+    // Force use of event timestamp for testing purposes
+    cfg.setTimestampOverride(true);
+
+    PCollection<Alert> alerts =
+        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg));
+
+    ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();
+    windows.add(new IntervalWindow(new Instant(3600000L), new Instant(4500000L)));
+    windows.add(new IntervalWindow(new Instant(4500000L), new Instant(5400000L)));
+    for (IntervalWindow w : windows) {
+      PAssert.that(alerts)
+          .inWindow(w)
+          .satisfies(
+              x -> {
+                Alert[] a = ((Collection<Alert>) x).toArray(new Alert[0]);
+                assertEquals(1, a.length);
+                assertEquals("customs", a[0].getCategory());
+                assertEquals(Alert.AlertSeverity.INFORMATIONAL, a[0].getSeverity());
+                assertEquals(
+                    "10.0.0.1+picard@uss.enterprise", a[0].getMetadataValue("customs_suspected"));
+                assertEquals(
+                    "rl_login_failure_sourceaddress_accountid",
+                    a[0].getMetadataValue("customs_category"));
+                return null;
+              });
+    }
+
+    windows.clear();
+    windows.add(new IntervalWindow(new Instant(5400000L), new Instant(6300000L)));
+    windows.add(new IntervalWindow(new Instant(6300000L), new Instant(7200000L)));
+    windows.add(new IntervalWindow(new Instant(7200000L), new Instant(8100000L)));
+    windows.add(new IntervalWindow(new Instant(8100000L), new Instant(9000000L)));
+    for (IntervalWindow w : windows) {
+      PAssert.that(alerts)
+          .inWindow(w)
+          .satisfies(
+              x -> {
+                Alert[] a = ((Collection<Alert>) x).toArray(new Alert[0]);
+                assertEquals(3, a.length);
+                for (Alert ta : a) {
+                  assertEquals("customs", ta.getCategory());
+                  String cc = ta.getMetadataValue("customs_category");
+                  if (cc.equals("rl_sms_recipient")) {
+                    assertEquals("00000000000", ta.getMetadataValue("customs_suspected"));
+                  } else if (cc.equals("rl_sms_sourceaddress")) {
+                    assertEquals("10.0.0.2", ta.getMetadataValue("customs_suspected"));
+                  } else if (cc.equals("rl_sms_accountid")) {
+                    assertEquals("worf@uss.enterprise", ta.getMetadataValue("customs_suspected"));
+                  } else {
+                    fail("invalid customs category: " + cc);
+                  }
+                }
+                return null;
+              });
+    }
 
     p.run().waitUntilFinish();
   }
