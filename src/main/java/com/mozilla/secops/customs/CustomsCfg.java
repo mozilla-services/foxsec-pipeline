@@ -1,0 +1,58 @@
+package com.mozilla.secops.customs;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mozilla.secops.parser.eventfiltercfg.EventFilterCfg;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+/** Maps to a customs pipeline configuration file */
+public class CustomsCfg implements Serializable {
+  private static final long serialVersionUID = 1L;
+
+  private Map<String, CustomsCfgEntry> detectors;
+
+  /**
+   * Load customs configuration from a resource path
+   *
+   * @param resourcePath Path to resource
+   * @return Customs configuration
+   */
+  public static CustomsCfg loadFromResource(String resourcePath) throws IOException {
+    InputStream in = CustomsCfg.class.getResourceAsStream(resourcePath);
+    if (in == null) {
+      throw new IOException("customs configuration resource not found");
+    }
+    ObjectMapper mapper = new ObjectMapper();
+    return mapper.readValue(in, CustomsCfg.class);
+  }
+
+  /**
+   * Get all configured detectors
+   *
+   * @return Map where key is detector name and value is detector configuration
+   */
+  @JsonProperty("detectors")
+  public Map<String, CustomsCfgEntry> getDetectors() {
+    return detectors;
+  }
+
+  /**
+   * Override timestamp emission settings for all detectors
+   *
+   * @param flag True to enable timestamp emission, false to disable
+   */
+  public void setTimestampOverride(Boolean flag) {
+    for (CustomsCfgEntry entry : detectors.values()) {
+      EventFilterCfg efc = entry.getEventFilterCfg();
+      efc.setTimestampOverride(flag);
+    }
+  }
+
+  public CustomsCfg() {
+    detectors = new HashMap<String, CustomsCfgEntry>();
+  }
+}

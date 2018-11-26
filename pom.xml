@@ -34,6 +34,9 @@
                 <version>3.0.1</version>
                 <configuration>
                     <show>public</show>
+                    <reportOutputDirectory>${projects.basedir}/docs</reportOutputDirectory>
+                    <destDir>secops-beam</destDir>
+                    <additionalJOption>-notimestamp</additionalJOption>
                 </configuration>
             </plugin>
             <plugin>
@@ -42,6 +45,17 @@
                 <version>2.22.0</version>
                 <configuration>
                     <argLine>-Xmx2048m</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>1.16.0</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                        </googleJavaFormat>
+                    </java>
                 </configuration>
             </plugin>
         </plugins>

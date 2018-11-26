@@ -1,6 +1,7 @@
 # foxsec-pipeline
 
 [![Build Status](https://travis-ci.org/mozilla-services/foxsec-pipeline.svg?branch=master)](https://travis-ci.org/mozilla-services/foxsec-pipeline)
+[![Documentation](https://img.shields.io/badge/documentation-link-purple.svg)](https://mozilla-services.github.io/foxsec-pipeline/secops-beam/)
 
 [Apache Beam](https://beam.apache.org/) pipelines for analyzing log data.
 
@@ -40,3 +41,14 @@ using these identifiers when the pipeline is executing.
 
 The output of the command can be prefixed with `cloudkms://` in an option to enable runtime decryption of the secrets
 during pipeline execution.
+
+## Documentation
+
+* [secops-beam Java documentation](https://mozilla-services.github.io/foxsec-pipeline/secops-beam/)
+
+javadoc documentation is currently updated manually and although should be up to date, may not be current
+with master.
+
+## Contributing
+
+See the [contributing guidelines](./CONTRIBUTING.md).
