@@ -85,6 +85,8 @@ public class TestCustoms {
                 assertEquals(
                     "rl_login_failure_sourceaddress_accountid",
                     a[0].getMetadataValue("customs_category"));
+                assertEquals("3", a[0].getMetadataValue("customs_threshold"));
+                assertEquals("3", a[0].getMetadataValue("customs_count"));
                 return null;
               });
     }
@@ -102,6 +104,8 @@ public class TestCustoms {
                 Alert[] a = ((Collection<Alert>) x).toArray(new Alert[0]);
                 assertEquals(3, a.length);
                 for (Alert ta : a) {
+                  assertEquals("5", ta.getMetadataValue("customs_threshold"));
+                  assertEquals("6", ta.getMetadataValue("customs_count"));
                   assertEquals("customs", ta.getCategory());
                   String cc = ta.getMetadataValue("customs_category");
                   if (cc.equals("rl_sms_recipient")) {

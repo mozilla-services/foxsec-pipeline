@@ -15,7 +15,7 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
 
   private final Alert.AlertSeverity severity;
   private final String customsMeta;
-  private final long limit;
+  private final Long limit;
 
   private Logger log;
 
@@ -26,7 +26,7 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
    * @param customsMeta Customs metadata tag to place on alert
    * @param limit Generate alert if count meets or exceeds limit value in window
    */
-  public RateLimitCriterion(Alert.AlertSeverity severity, String customsMeta, long limit) {
+  public RateLimitCriterion(Alert.AlertSeverity severity, String customsMeta, Long limit) {
     this.severity = severity;
     this.customsMeta = customsMeta;
     this.limit = limit;
@@ -53,6 +53,8 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     alert.setCategory("customs");
     alert.addMetadata("customs_category", customsMeta);
     alert.addMetadata("customs_suspected", key);
+    alert.addMetadata("customs_count", valueCount.toString());
+    alert.addMetadata("customs_threshold", limit.toString());
     alert.setSeverity(severity);
     c.output(KV.of(key, alert));
   }
