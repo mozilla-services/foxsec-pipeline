@@ -2,7 +2,7 @@
     "detectors": {
         "rl_login_failure_sourceaddress_accountid": {
             "sliding_window_length": 900,
-            "sliding_window_slides": 5,
+            "sliding_window_slides": 60,
             "threshold": 3,
             "alert_suppression_length": 900,
             "filter": {
@@ -42,7 +42,7 @@
         },
         "rl_sms_recipient": {
             "sliding_window_length": 3600,
-            "sliding_window_slides": 5,
+            "sliding_window_slides": 60,
             "threshold": 5,
             "alert_suppression_length": 900,
             "filter": {
@@ -81,7 +81,7 @@
         },
         "rl_sms_sourceaddress": {
             "sliding_window_length": 3600,
-            "sliding_window_slides": 5,
+            "sliding_window_slides": 60,
             "threshold": 5,
             "alert_suppression_length": 900,
             "filter": {
@@ -120,7 +120,7 @@
         },
         "rl_sms_accountid": {
             "sliding_window_length": 3600,
-            "sliding_window_slides": 5,
+            "sliding_window_slides": 60,
             "threshold": 5,
             "alert_suppression_length": 900,
             "filter": {
@@ -159,7 +159,7 @@
         },
         "rl_email_recipient": {
             "sliding_window_length": 900,
-            "sliding_window_slides": 5,
+            "sliding_window_slides": 60,
             "threshold": 3,
             "alert_suppression_length": 900,
             "filter": {
@@ -198,7 +198,7 @@
         },
         "rl_statuscheck": {
             "sliding_window_length": 900,
-            "sliding_window_slides": 5,
+            "sliding_window_slides": 60,
             "threshold": 5,
             "alert_suppression_length": 900,
             "filter": {
@@ -237,7 +237,7 @@
         },
         "rl_verifycode_sourceaddress_accountid": {
             "sliding_window_length": 900,
-            "sliding_window_slides": 5,
+            "sliding_window_slides": 60,
             "threshold": 10,
             "alert_suppression_length": 900,
             "filter": {

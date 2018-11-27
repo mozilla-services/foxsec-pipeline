@@ -4,11 +4,14 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import java.io.Serializable;
+import java.util.Map;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.AfterPane;
+import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Repeatedly;
@@ -16,6 +19,7 @@ import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.joda.time.Duration;
 
 /** Generic rate limiting heuristic */
@@ -41,20 +45,36 @@ public class RateLimitAnalyzer implements Serializable {
 
       @Override
       public PCollection<Alert> expand(PCollection<Event> input) {
-        return input
-            .apply(EventFilter.getKeyingTransform(analyzer.getFilter()))
-            .apply(
-                "analysis windows",
-                Window.<KV<String, Event>>into(
-                    SlidingWindows.of(analyzer.getWindowLength())
-                        .every(analyzer.getWindowSlideLength())))
+        PCollection<KV<String, Event>> winevents =
+            input
+                .apply(EventFilter.getKeyingTransform(analyzer.getFilter()))
+                .apply(
+                    "analysis windows",
+                    Window.<KV<String, Event>>into(
+                            SlidingWindows.of(analyzer.getWindowLength())
+                                .every(analyzer.getWindowSlideLength()))
+                        .triggering(
+                            Repeatedly.forever(
+                                AfterWatermark.pastEndOfWindow()
+                                    .withEarlyFirings(
+                                        AfterProcessingTime.pastFirstElementInPane()
+                                            .plusDelayOf(Duration.standardSeconds(5L)))))
+                        .withAllowedLateness(Duration.ZERO)
+                        .accumulatingFiredPanes());
+
+        PCollectionView<Map<String, Iterable<Event>>> eventView =
+            winevents.apply(View.<String, Event>asMultimap());
+
+        return winevents
             .apply(Count.<String, Event>perKey())
             .apply(
                 ParDo.of(
-                    new RateLimitCriterion(
-                        analyzer.getAlertCriteriaSeverity(),
-                        analyzer.getIdentifier(),
-                        analyzer.getAlertCriteriaLimit())))
+                        new RateLimitCriterion(
+                            analyzer.getAlertCriteriaSeverity(),
+                            analyzer.getIdentifier(),
+                            analyzer.getAlertCriteriaLimit(),
+                            eventView))
+                    .withSideInputs(eventView))
             .apply(
                 "suppression windows",
                 Window.<KV<String, Alert>>into(FixedWindows.of(analyzer.getAlertSuppression()))

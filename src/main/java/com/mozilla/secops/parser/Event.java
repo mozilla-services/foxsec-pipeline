@@ -1,5 +1,9 @@
 package com.mozilla.secops.parser;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.Serializable;
 import java.util.UUID;
 import org.joda.time.DateTime;
@@ -126,5 +130,24 @@ public class Event implements Serializable {
    */
   public Normalized getNormalized() {
     return normalized;
+  }
+
+  /**
+   * Utility function to convert an iterable list of events into a JSON string
+   *
+   * @param input List of events for conversion
+   * @return JSON string, null on failure
+   */
+  public static String iterableToJson(Iterable<Event> input) {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JodaModule());
+    mapper.configure(
+        com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    mapper.setSerializationInclusion(Include.NON_NULL);
+    try {
+      return mapper.writeValueAsString(input);
+    } catch (JsonProcessingException exc) {
+      return null;
+    }
   }
 }
