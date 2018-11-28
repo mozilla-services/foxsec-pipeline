@@ -121,7 +121,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
 
     try {
       CloudtrailEvent _event = mapper.readValue(input, CloudtrailEvent.class);
-      if (_event.getEventID() != null) {
+      if (_event.getEventVersion() != null) {
         return _event;
       }
     } catch (IOException exc) {
