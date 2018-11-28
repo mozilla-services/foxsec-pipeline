@@ -12,6 +12,7 @@ import com.mozilla.secops.parser.models.cloudtrail.UserIdentity;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 /** Payload parser for Cloudtrail events */
@@ -63,7 +64,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         n.setType(Normalized.Type.AUTH);
         n.setSubjectUser(getUser());
         n.setSourceAddress(getSourceAddress());
-        n.setObject(event.getRecipientAccountID());
+        n.setObject(event.getRecipientAccountId());
 
         // TODO: Consider moving identity management into Normalized
 
@@ -77,7 +78,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
           }
 
           Map<String, String> m = mgr.getAwsAccountMap();
-          String accountName = m.get(event.getRecipientAccountID());
+          String accountName = m.get(event.getRecipientAccountId());
           if (accountName != null) {
             n.setObject(accountName);
           }
@@ -202,8 +203,10 @@ public class Cloudtrail extends PayloadBase implements Serializable {
     switch (property) {
       case CLOUDTRAIL_EVENTNAME:
         return event.getEventName();
+      case CLOUDTRAIL_EVENTSOURCE:
+        return event.getEventSource();
       case CLOUDTRAIL_ACCOUNTID:
-        return event.getRecipientAccountID();
+        return event.getRecipientAccountId();
       case CLOUDTRAIL_INVOKEDBY:
         if (ui == null) {
           return null;
@@ -213,8 +216,21 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         if (ui == null) {
           return null;
         }
-        return ui.getSessionAttributesValue("mfaAuthenticate");
+        return ui.getMFAAuthenticated();
     }
     return null;
+  }
+
+  public String getResource(String resource) {
+    switch (resource) {
+      case "requestParameters.userName":
+        HashMap<String, Object> rp = event.getRequestParameters();
+        Object u = rp.get("userName");
+        if (u == null) {
+          return "";
+        }
+        return (String) u;
+    }
+    return "";
   }
 }

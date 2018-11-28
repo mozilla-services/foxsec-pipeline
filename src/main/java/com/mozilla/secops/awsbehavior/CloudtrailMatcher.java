@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.EventFilterPayload;
 import com.mozilla.secops.parser.EventFilterRule;
+import com.mozilla.secops.parser.Payload;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -15,17 +16,22 @@ public class CloudtrailMatcher implements Serializable {
   private String description;
   private String resource;
 
+  class UnknownStringPropertyException extends Exception {
+    private static final long serialVersionUID = 1L;
+  }
+
   /**
    * Converts {@link CloudtrailMatcher} into an {@link EventFilterRule}
    *
    * @return {@link EventFilterRule}
    */
-  public EventFilterRule toEventFilterRule() {
+  public EventFilterRule toEventFilterRule() throws UnknownStringPropertyException {
     EventFilterRule rule = new EventFilterRule();
+    rule.wantSubtype(Payload.PayloadType.CLOUDTRAIL);
     for (ArrayList<String> fieldMatcher : fields) {
+      EventFilterPayload.StringProperty sp = fieldToStringProperty(fieldMatcher.get(0));
       rule.addPayloadFilter(
-          new EventFilterPayload(Cloudtrail.class)
-              .withStringMatch(fieldToStringProperty(fieldMatcher.get(0)), fieldMatcher.get(1)));
+          new EventFilterPayload(Cloudtrail.class).withStringMatch(sp, fieldMatcher.get(1)));
     }
     return rule;
   }
@@ -45,10 +51,13 @@ public class CloudtrailMatcher implements Serializable {
     return resource;
   }
 
-  private EventFilterPayload.StringProperty fieldToStringProperty(String field) {
+  private EventFilterPayload.StringProperty fieldToStringProperty(String field)
+      throws UnknownStringPropertyException {
     switch (field) {
       case "eventName":
         return EventFilterPayload.StringProperty.CLOUDTRAIL_EVENTNAME;
+      case "eventSource":
+        return EventFilterPayload.StringProperty.CLOUDTRAIL_EVENTSOURCE;
       case "recipientAccountId":
         return EventFilterPayload.StringProperty.CLOUDTRAIL_ACCOUNTID;
       case "userIdentity.invokedBy":
@@ -57,6 +66,6 @@ public class CloudtrailMatcher implements Serializable {
         return EventFilterPayload.StringProperty.CLOUDTRAIL_MFA;
     }
 
-    return null;
+    throw new UnknownStringPropertyException();
   }
 }

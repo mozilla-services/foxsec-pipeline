@@ -4,6 +4,7 @@ import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -57,7 +58,14 @@ public class AwsBehavior implements Serializable {
       this.cm = cm;
       log = LoggerFactory.getLogger(Matcher.class);
       this.filter = new EventFilter();
-      this.filter.addRule(cm.toEventFilterRule());
+      try {
+        this.filter.addRule(cm.toEventFilterRule());
+      } catch (CloudtrailMatcher.UnknownStringPropertyException exc) {
+        log.error(
+            "CloudtrailMatcher with the description '{}' threw an UnknownStringPropertyException: {}",
+            cm.getDescription(),
+            exc.getMessage());
+      }
     }
 
     @Override
@@ -72,11 +80,17 @@ public class AwsBehavior implements Serializable {
                     public void processElement(ProcessContext c) {
                       Event e = c.element();
                       Alert alert = new Alert();
-                      // TODO
+
                       alert.setSeverity(Alert.AlertSeverity.CRITICAL);
                       alert.setSummary(cm.getDescription());
-                      alert.setCategory("AwsBehavior");
-                      alert.addToPayload(cm.getDescription());
+                      alert.setCategory("awsbehavior");
+
+                      Cloudtrail ct = e.getPayload();
+                      alert.addMetadata("user", ct.getUser());
+                      if (cm.getResource() != null) {
+                        alert.addMetadata("resource", ct.getResource(cm.getResource()));
+                      }
+
                       c.output(alert);
                     }
                   }));

@@ -65,6 +65,10 @@ public class UserIdentity implements Serializable {
     return sessionContext.getAttributes().get(key);
   }
 
+  public String getMFAAuthenticated() {
+    return getSessionAttributesValue("mfaAuthenticated");
+  }
+
   @JsonSetter("sessionContext")
   public void setSessionContext(SessionContext sessionContext) {
     this.sessionContext = sessionContext;

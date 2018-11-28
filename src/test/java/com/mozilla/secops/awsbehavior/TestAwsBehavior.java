@@ -85,7 +85,17 @@ public class TestAwsBehavior {
             results -> {
               int cnt = 0;
               for (Alert a : results) {
-                cnt++;
+                assertEquals("awsbehavior", a.getCategory());
+                assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
+                String actualSummary = a.getSummary();
+                if (actualSummary.equals("IAM action from console without mfa")) {
+                  cnt++;
+                  assertEquals("picard", a.getMetadataValue("user"));
+                } else if (actualSummary.equals("access key created")) {
+                  cnt++;
+                  assertEquals("uhura", a.getMetadataValue("user"));
+                  assertEquals("guinan", a.getMetadataValue("resource"));
+                }
               }
               assertEquals(2, cnt);
               return null;

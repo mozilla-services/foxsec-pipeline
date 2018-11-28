@@ -19,7 +19,7 @@ public class CloudtrailEvent implements Serializable {
   private String eventType;
   private String eventVersion;
   private Boolean readOnly;
-  private String recipientAccountID;
+  private String recipientAccountId;
   private String requestID;
   private String sourceIPAddress;
   private String userAgent;
@@ -73,8 +73,8 @@ public class CloudtrailEvent implements Serializable {
     return readOnly;
   }
 
-  public String getRecipientAccountID() {
-    return recipientAccountID;
+  public String getRecipientAccountId() {
+    return recipientAccountId;
   }
 
   public String getRequestID() {
