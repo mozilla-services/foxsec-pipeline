@@ -142,6 +142,44 @@ public class Event implements Serializable {
     return normalized;
   }
 
+  private static ObjectMapper getObjectMapper() {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JodaModule());
+    mapper.configure(
+        com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    mapper.setSerializationInclusion(Include.NON_NULL);
+    return mapper;
+  }
+
+  /**
+   * Convert event into JSON string representation
+   *
+   * @return JSON string, null on failure
+   */
+  public String toJSON() {
+    ObjectMapper mapper = getObjectMapper();
+    try {
+      return mapper.writeValueAsString(this);
+    } catch (JsonProcessingException exc) {
+      return null;
+    }
+  }
+
+  /**
+   * Convert a JSON string into an {@link Event}
+   *
+   * @param input Input JSON string
+   * @return Event object or null on failure
+   */
+  public static Event fromJSON(String input) {
+    ObjectMapper mapper = getObjectMapper();
+    try {
+      return mapper.readValue(input, Event.class);
+    } catch (IOException exc) {
+      return null;
+    }
+  }
+
   /**
    * Utility function to convert a JSON string into an iterable list of events
    *
@@ -149,12 +187,7 @@ public class Event implements Serializable {
    * @return Iterable list of events, or null on failure
    */
   public static Iterable<Event> jsonToIterable(String input) {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new JodaModule());
-    mapper.configure(
-        com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    mapper.setSerializationInclusion(Include.NON_NULL);
-
+    ObjectMapper mapper = getObjectMapper();
     try {
       return mapper.readValue(
           input, mapper.getTypeFactory().constructCollectionType(ArrayList.class, Event.class));
@@ -171,11 +204,7 @@ public class Event implements Serializable {
    * @return JSON string, null on failure
    */
   public static String iterableToJson(Iterable<Event> input) {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new JodaModule());
-    mapper.configure(
-        com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    mapper.setSerializationInclusion(Include.NON_NULL);
+    ObjectMapper mapper = getObjectMapper();
     try {
       return mapper.writeValueAsString(input);
     } catch (JsonProcessingException exc) {

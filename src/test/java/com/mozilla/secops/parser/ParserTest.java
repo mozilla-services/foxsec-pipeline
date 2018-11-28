@@ -551,4 +551,26 @@ public class ParserTest {
     assertEquals("US", resp.getCountry().getIsoCode());
     assertEquals("Milton", resp.getCity().getName());
   }
+
+  @Test
+  public void testParseJsonSerializeDeserializeRaw() throws Exception {
+    Parser p = new Parser();
+    assertNotNull(p);
+    Event e = p.parse("test");
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
+    Raw r = e.getPayload();
+    assertNotNull(r);
+    assertEquals("test", r.getRaw());
+
+    Event e2 = Event.fromJSON(e.toJSON());
+    assertNotNull(e2);
+    Raw r2 = e2.getPayload();
+    assertNotNull(r2);
+
+    assertEquals(e.getEventId(), e2.getEventId());
+    assertEquals(e.getTimestamp(), e2.getTimestamp());
+    assertEquals(e.getPayloadType(), e2.getPayloadType());
+    assertEquals(r.getRaw(), r2.getRaw());
+  }
 }
