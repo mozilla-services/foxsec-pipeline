@@ -1,6 +1,7 @@
 package com.mozilla.secops.customs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.mozilla.secops.alert.Alert;
@@ -87,6 +88,13 @@ public class TestCustoms {
                     a[0].getMetadataValue("customs_category"));
                 assertEquals("3", a[0].getMetadataValue("customs_threshold"));
                 assertEquals("3", a[0].getMetadataValue("customs_count"));
+
+                Iterable<Event> samples =
+                    Event.jsonToIterable(a[0].getMetadataValue("customs_sample"));
+                assertNotNull(samples);
+                Event[] elist = ((Collection<Event>) samples).toArray(new Event[0]);
+                assertNotNull(elist);
+                assertEquals(3, elist.length);
                 return null;
               });
     }
