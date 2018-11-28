@@ -4,10 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.EventFilterPayload;
 import com.mozilla.secops.parser.EventFilterRule;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /** Translates a JSON object into an EventFilter and context for any resulting matches. */
-public class CloudtrailMatcher {
+public class CloudtrailMatcher implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private ArrayList<ArrayList<String>> fields;
   private String description;
   private String resource;

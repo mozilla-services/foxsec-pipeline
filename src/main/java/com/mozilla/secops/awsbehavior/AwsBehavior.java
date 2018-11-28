@@ -4,7 +4,6 @@ import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
-import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -18,11 +17,13 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,35 +45,72 @@ public class AwsBehavior implements Serializable {
     }
   }
 
-  public static class Analyze extends DoFn<Event, Alert> {
+  public static class Matcher extends PTransform<PCollection<Event>, PCollection<Alert>> {
+    private static final long serialVersionUID = 1L;
+
+    private CloudtrailMatcher cm;
+    private EventFilter filter;
+
+    private Logger log;
+
+    public Matcher(CloudtrailMatcher cm) {
+      this.cm = cm;
+      log = LoggerFactory.getLogger(Matcher.class);
+      this.filter = new EventFilter();
+      this.filter.addRule(cm.toEventFilterRule());
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> col) {
+      return col.apply(EventFilter.getTransform(filter))
+          .apply(
+              ParDo.of(
+                  new DoFn<Event, Alert>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Event e = c.element();
+                      Alert alert = new Alert();
+                      // TODO
+                      alert.setSeverity(Alert.AlertSeverity.CRITICAL);
+                      alert.setSummary(cm.getDescription());
+                      alert.setCategory("AwsBehavior");
+                      alert.addToPayload(cm.getDescription());
+                      c.output(alert);
+                    }
+                  }));
+    }
+  }
+
+  public static class Matchers extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
     private final String cmmanagerPath;
-    private final String idmanagerPath;
     private CloudtrailMatcherManager cmmanager;
-    private IdentityManager idmanager;
     private Logger log;
 
-    public Analyze(AwsBehaviorOptions options) {
-      idmanagerPath = options.getIdentityManagerPath();
+    public Matchers(AwsBehaviorOptions options) {
+      log = LoggerFactory.getLogger(Matchers.class);
       cmmanagerPath = options.getCloudtrailMatcherManagerPath();
+      try {
+        cmmanager = CloudtrailMatcherManager.loadFromResource(cmmanagerPath);
+      } catch (IOException exc) {
+        log.error(
+            "loading cloudtrail matcher manager from resource at {} failed, {}",
+            cmmanagerPath,
+            exc.getMessage());
+      }
     }
 
-    @Setup
-    public void setup() throws IOException {
-      log = LoggerFactory.getLogger(Analyze.class);
-      idmanager = IdentityManager.loadFromResource(idmanagerPath);
-      cmmanager = CloudtrailMatcherManager.loadFromResource(cmmanagerPath);
-    }
-
-    @ProcessElement
-    public void processElement(ProcessContext c) {
-      EventFilter filter = new EventFilter();
-      // For each "event matcher"
-      //      - Does this event match?
-      //      - If yes:
-      //          - Fire off an alert
-      //              - Including optional event description, account name, identity name, resource
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> col) {
+      PCollectionList<Alert> alerts = PCollectionList.empty(col.getPipeline());
+      for (CloudtrailMatcher cm : cmmanager.getEventMatchers()) {
+        alerts = alerts.and(col.apply(cm.getDescription(), new Matcher(cm)));
+      }
+      PCollection<Alert> ret = alerts.apply(Flatten.<Alert>pCollections());
+      return ret;
     }
   }
 
@@ -92,15 +130,12 @@ public class AwsBehavior implements Serializable {
   }
 
   private static void runAwsBehavior(AwsBehaviorOptions options) throws IllegalArgumentException {
-    // TODO:
-    // Fan out to filters depending on resource/config
-
     Pipeline p = Pipeline.create(options);
 
     PCollection<Alert> alerts =
         p.apply("input", options.getInputType().read(p, options))
             .apply("parse and window", new ParseAndWindow())
-            .apply(ParDo.of(new Analyze(options)));
+            .apply(new Matchers(options));
 
     alerts
         .apply(ParDo.of(new AlertFormatter()))

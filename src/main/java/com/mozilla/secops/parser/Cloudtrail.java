@@ -18,8 +18,6 @@ import java.util.Map;
 public class Cloudtrail extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private final JacksonFactory jfmatcher;
-
   private ObjectMapper mapper;
 
   private CloudtrailEvent event;
@@ -47,7 +45,6 @@ public class Cloudtrail extends PayloadBase implements Serializable {
   /** Construct matcher object. */
   public Cloudtrail() {
     mapper = getObjectMapper();
-    jfmatcher = new JacksonFactory();
   }
 
   /**
@@ -59,7 +56,6 @@ public class Cloudtrail extends PayloadBase implements Serializable {
    */
   public Cloudtrail(String input, Event e, Parser p) {
     mapper = getObjectMapper();
-    jfmatcher = new JacksonFactory();
     try {
       event = parseInput(input);
       if (isAuthEvent()) {
@@ -104,6 +100,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
 
   private CloudtrailEvent parseInput(String input) throws IOException {
     try {
+      JacksonFactory jfmatcher = new JacksonFactory();
       JsonParser jp = jfmatcher.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
       Map<String, Object> m = entry.getJsonPayload();
@@ -123,7 +120,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
 
     try {
       CloudtrailEvent _event = mapper.readValue(input, CloudtrailEvent.class);
-      if (_event.getEventVersion() != null) {
+      if (_event.getEventID() != null) {
         return _event;
       }
     } catch (IOException exc) {

@@ -1,10 +1,13 @@
 package com.mozilla.secops.parser.models.cloudtrail;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.Serializable;
 import java.util.HashMap;
 
 /** Model for Cloudtrail Events JSON parsing */
-public class CloudtrailEvent {
+public class CloudtrailEvent implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private String accessKeyID;
   private String awsRegion;
   private String errorCode;
