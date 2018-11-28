@@ -1,10 +1,13 @@
 package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -65,6 +68,7 @@ public class Event implements Serializable {
    * @return Payload data extending {@link PayloadBase}.
    */
   @SuppressWarnings("unchecked")
+  @JsonProperty("payload")
   public <T extends PayloadBase> T getPayload() {
     return (T) payload.getData();
   }
@@ -74,8 +78,13 @@ public class Event implements Serializable {
    *
    * @return {@link Payload.PayloadType}
    */
+  @JsonProperty("payload_type")
   public Payload.PayloadType getPayloadType() {
     return payload.getType();
+  }
+
+  private void setPayloadType(Payload.PayloadType value) {
+    // Noop setter, required for event deserialization
   }
 
   /**
@@ -83,6 +92,7 @@ public class Event implements Serializable {
    *
    * @return {@link UUID} associated with event.
    */
+  @JsonProperty("id")
   public UUID getEventId() {
     return eventId;
   }
@@ -130,6 +140,28 @@ public class Event implements Serializable {
    */
   public Normalized getNormalized() {
     return normalized;
+  }
+
+  /**
+   * Utility function to convert a JSON string into an iterable list of events
+   *
+   * @param input Input JSON string
+   * @return Iterable list of events, or null on failure
+   */
+  public static Iterable<Event> jsonToIterable(String input) {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JodaModule());
+    mapper.configure(
+        com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    mapper.setSerializationInclusion(Include.NON_NULL);
+
+    try {
+      return mapper.readValue(
+          input, mapper.getTypeFactory().constructCollectionType(ArrayList.class, Event.class));
+    } catch (IOException exc) {
+      System.out.println(exc);
+      return null;
+    }
   }
 
   /**
