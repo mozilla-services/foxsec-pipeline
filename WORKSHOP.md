@@ -44,7 +44,7 @@ hints on what to look for.
 The initial version of the Workshop pipeline simply prints it's input as output, you can test that by running
 `./runworkshop.sh`.
 
-* Update `ExtractWords` to split the input strings and output individual words. For simplicity don't worry about trimming punctuation, but whitespace should be trimmed and no zero length strings should be emitted.
+* Update `ExtractWords` to split the input strings and output individual words all lowercase. For simplicity don't worry about trimming punctuation, but whitespace should be trimmed and no zero length strings should be emitted.
 * Use a counting transform to count occurences of each word
 * Create a new DoFn to convert the word/count key-value pairs into strings for output
 * Write the output to stdout using the PrintOutput transform which is supplied.
@@ -54,3 +54,10 @@ The initial version of the Workshop pipeline simply prints it's input as output,
 
 You can execute `./runworkshop.sh` to test your pipeline. This is a script the provides the required
 options to `bin/m` to execute the Workshop pipeline in the docker container.
+
+### Tips
+
+* Checkout the [Beam SDK documentation](https://beam.apache.org/releases/javadoc/2.8.0/)
+* The [HTTPRequest](https://github.com/mozilla-services/foxsec-pipeline/blob/master/src/main/java/com/mozilla/secops/httprequest/HTTPRequest.java) pipeline does some element counts and mean calculation and may be useful for review
+* The imports in the template Workshop class are limited to what it currently uses, so additional imports will be needed as code is added
+* There are some other word count examples around
