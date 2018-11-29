@@ -74,6 +74,7 @@ public class Workshop implements Serializable {
     // https://beam.apache.org/releases/javadoc/2.8.0/org/apache/beam/sdk/transforms/Count.html
     //
     // ADD CODE
+    // e.g., PCollection<KV<String, Long>> wordcounts = words.apply(...)
 
     // The count transform should produce an output that consists of a series of KV elements,
     // where the key is a string (the word) and the value is the count. Next, parallelize
