@@ -192,7 +192,6 @@ public class Event implements Serializable {
       return mapper.readValue(
           input, mapper.getTypeFactory().constructCollectionType(ArrayList.class, Event.class));
     } catch (IOException exc) {
-      System.out.println(exc);
       return null;
     }
   }

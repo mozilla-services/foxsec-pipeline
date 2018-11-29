@@ -13,7 +13,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 )
 @JsonSubTypes({
   @Type(value = SecEvent.class, name = "secevent"),
-  @Type(value = Raw.class, name = "raw")
+  @Type(value = Raw.class, name = "raw"),
+  @Type(value = Duopull.class, name = "duopull")
 })
 public abstract class PayloadBase {
   /** Construct matcher object. */
