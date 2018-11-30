@@ -19,6 +19,9 @@ public class IdentityManager {
   private Map<String, String> awsAccountMap;
   private Notify defaultNotification;
 
+  /** Default identity manager resource path */
+  public static final String DEFAULT_RESOURCE_PATH = "/identitymanager.json";
+
   /**
    * Load identity manager configuration from a resource file
    *
@@ -32,6 +35,15 @@ public class IdentityManager {
     }
     ObjectMapper mapper = new ObjectMapper();
     return mapper.readValue(in, IdentityManager.class);
+  }
+
+  /**
+   * Load identity manager configuration from default resource location
+   *
+   * @return {@link IdentityManager}
+   */
+  public static IdentityManager loadFromResource() throws IOException {
+    return loadFromResource(DEFAULT_RESOURCE_PATH);
   }
 
   /**
