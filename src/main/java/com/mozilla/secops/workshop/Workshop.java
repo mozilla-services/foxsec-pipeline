@@ -82,7 +82,7 @@ public class Workshop implements Serializable {
     //
     // There are a couple ways to go about this, the simplest is to create another DoFn similar
     // to ExtractWords that takes KV<String, Long> as input and produces a String output.
-    // e.g., PCollection<String> myoutput = counts.apply(ParDo.of(new FormatCount()));
+    // e.g., PCollection<String> myoutput = wordcounts.apply(ParDo.of(new FormatCount()));
     //
     // The second method is to use the MapElements transform with an associated Lambda for example.
     //
