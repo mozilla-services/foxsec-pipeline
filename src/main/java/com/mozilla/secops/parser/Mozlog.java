@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -116,6 +117,7 @@ public class Mozlog implements Serializable {
    *
    * @return Fields as JSON
    */
+  @JsonIgnore
   public String getFieldsAsJson() {
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(

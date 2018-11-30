@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -39,6 +40,7 @@ public class SecEvent extends PayloadBase implements Serializable {
   }
 
   @Override
+  @JsonProperty("type")
   public Payload.PayloadType getType() {
     return Payload.PayloadType.SECEVENT;
   }
@@ -68,6 +70,7 @@ public class SecEvent extends PayloadBase implements Serializable {
    *
    * @return SecEvent data
    */
+  @JsonProperty("secevent_data")
   public com.mozilla.secops.parser.models.secevent.SecEvent getSecEventData() {
     return secEventData;
   }

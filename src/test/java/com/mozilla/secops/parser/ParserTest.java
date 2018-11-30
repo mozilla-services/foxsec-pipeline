@@ -551,4 +551,70 @@ public class ParserTest {
     assertEquals("US", resp.getCountry().getIsoCode());
     assertEquals("Milton", resp.getCity().getName());
   }
+
+  @Test
+  public void testParseJsonSerializeDeserializeRaw() throws Exception {
+    Parser p = new Parser();
+    assertNotNull(p);
+    Event e = p.parse("test");
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
+    Raw r = e.getPayload();
+    assertNotNull(r);
+    assertEquals("test", r.getRaw());
+
+    Event e2 = Event.fromJSON(e.toJSON());
+    assertNotNull(e2);
+    Raw r2 = e2.getPayload();
+    assertNotNull(r2);
+
+    assertEquals(e.getEventId(), e2.getEventId());
+    assertEquals(e.getTimestamp(), e2.getTimestamp());
+    assertEquals(e.getPayloadType(), e2.getPayloadType());
+    assertEquals(r.getRaw(), r2.getRaw());
+  }
+
+  @Test
+  public void testParseJsonSerializeDeserializeMozlogDuopull() throws Exception {
+    String buf =
+        "{\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Fields\": "
+            + "{\"event_description_valid_secs\": 3600, \"event_description_count\": 1, "
+            + "\"event_description_user_id\": \"ZZZZZZZZZZZZZZZZZZZZ\", \"event_object\": \"worf\", "
+            + "\"event_timestamp\": 1530282703, \"event_username\": \"First Last\", "
+            + "\"event_description_bypass_code_ids\": [\"XXXXXXXXXXXXXXXXXXXX\"], "
+            + "\"event_description_bypass\": \"\", \"path\": \"/admin/v1/logs/administrator\", "
+            + "\"msg\": \"duopull event\", \"event_action\": \"bypass_create\", "
+            + "\"event_description_auto_generated\": true, \"event_description_remaining_uses\": 1}, "
+            + "\"Hostname\": \"test\", \"Pid\": 62312, \"Time\": \"2018-07-04T15:49:46Z\", "
+            + "\"Logger\": \"duopull\", \"Type\": \"app.log\", \"Timestamp\": 1530719386349480000}";
+    Parser p = new Parser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+    Mozlog m = e.getMozlog();
+    assertNotNull(m);
+    Duopull d = e.getPayload();
+    assertNotNull(d);
+    com.mozilla.secops.parser.models.duopull.Duopull data = d.getDuopullData();
+    assertEquals("duopull event", data.getMsg());
+
+    Event e2 = Event.fromJSON(e.toJSON());
+    assertNotNull(e2);
+    Mozlog m2 = e2.getMozlog();
+    assertNotNull(m2);
+    Duopull d2 = e2.getPayload();
+    assertNotNull(d2);
+    com.mozilla.secops.parser.models.duopull.Duopull data2 = d2.getDuopullData();
+    assertNotNull(data2);
+    assertEquals(e.getEventId(), e2.getEventId());
+    assertEquals(e.getTimestamp(), e2.getTimestamp());
+    assertEquals(e.getPayloadType(), e2.getPayloadType());
+
+    assertEquals(data.getEventTimestamp(), data2.getEventTimestamp());
+    assertEquals(data.getEventAction(), data2.getEventAction());
+
+    assertEquals(m.getHostname(), m2.getHostname());
+    assertEquals(m.getLogger(), m2.getLogger());
+  }
 }
