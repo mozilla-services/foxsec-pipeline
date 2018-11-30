@@ -221,16 +221,23 @@ public class Cloudtrail extends PayloadBase implements Serializable {
     return null;
   }
 
+  /**
+   * Utility method for returning the resource the event was acting on, used for adding context to
+   * {@link Alerts}.
+   *
+   * @param resource Resource selector.
+   * @return Value of the resource selector.
+   */
   public String getResource(String resource) {
     switch (resource) {
       case "requestParameters.userName":
         HashMap<String, Object> rp = event.getRequestParameters();
         Object u = rp.get("userName");
         if (u == null) {
-          return "";
+          return null;
         }
         return (String) u;
     }
-    return "";
+    return null;
   }
 }

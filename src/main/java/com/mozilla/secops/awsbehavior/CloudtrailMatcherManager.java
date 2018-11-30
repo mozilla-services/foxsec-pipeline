@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /** Loads a JSON document and converts it into a list of {@link CloudtrailMatcher}s */
-public class CloudtrailMatcherManager {
+public class CloudtrailMatcherManager implements Serializable {
+  private static final long serialVersionUID = 1L;
   private ArrayList<CloudtrailMatcher> eventMatchers;
 
   /**

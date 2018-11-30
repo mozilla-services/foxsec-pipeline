@@ -21,7 +21,9 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
+import org.apache.beam.sdk.transforms.windowing.GlobalWindows;
+import org.apache.beam.sdk.transforms.windowing.Repeatedly;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
@@ -32,6 +34,13 @@ import org.slf4j.LoggerFactory;
 public class AwsBehavior implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  /**
+   * Transform to parse a {@link PCollection} containing events as strings and emit a {@link
+   * PCollection} of {@link Event} objects after filtering out events that are not {@link
+   * Cloudtrail} events
+   *
+   * <p>The output is windowed in the global window with a trigger which fires every 10 seconds.
+   */
   public static class ParseAndWindow extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
@@ -42,10 +51,22 @@ public class AwsBehavior implements Serializable {
 
       return col.apply(ParDo.of(new ParserDoFn()))
           .apply(EventFilter.getTransform(filter))
-          .apply(Window.<Event>into(FixedWindows.of(Duration.standardMinutes(5))));
+          .apply(
+              Window.<Event>into(new GlobalWindows())
+                  .triggering(
+                      Repeatedly.forever(
+                          AfterProcessingTime.pastFirstElementInPane()
+                              .plusDelayOf(Duration.standardSeconds(10))))
+                  .withAllowedLateness(Duration.standardSeconds(10))
+                  .discardingFiredPanes());
     }
   }
 
+  /**
+   * Tranform to take a specific {@link CloudtrailMatcher} and a {@link PCollection} of cloudtrail
+   * events and emit a {@link PCollection} of {@link Alert} objects constructed for each event that
+   * matches the {@link CloudtrailMatcher}
+   */
   public static class Matcher extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
@@ -97,6 +118,10 @@ public class AwsBehavior implements Serializable {
     }
   }
 
+  /**
+   * High level transform for invoking each of the matcher transforms after reading in the config
+   * with {@link CloudtrailMatcherManager}
+   */
   public static class Matchers extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
@@ -104,7 +129,7 @@ public class AwsBehavior implements Serializable {
     private CloudtrailMatcherManager cmmanager;
     private Logger log;
 
-    public Matchers(AwsBehaviorOptions options) {
+    public Matchers(AwsBehaviorOptions options) throws IOException {
       log = LoggerFactory.getLogger(Matchers.class);
       cmmanagerPath = options.getCloudtrailMatcherManagerPath();
       try {
@@ -114,6 +139,7 @@ public class AwsBehavior implements Serializable {
             "loading cloudtrail matcher manager from resource at {} failed, {}",
             cmmanagerPath,
             exc.getMessage());
+        throw exc;
       }
     }
 
@@ -137,13 +163,14 @@ public class AwsBehavior implements Serializable {
     void setIdentityManagerPath(String value);
 
     @Description("Cloudtrail matcher manager configuration; resource path")
-    @Default.String("/event_matchers.json")
+    @Default.String("/awsbehavior/event_matchers.json")
     String getCloudtrailMatcherManagerPath();
 
     void setCloudtrailMatcherManagerPath(String value);
   }
 
-  private static void runAwsBehavior(AwsBehaviorOptions options) throws IllegalArgumentException {
+  private static void runAwsBehavior(AwsBehaviorOptions options)
+      throws IllegalArgumentException, IOException {
     Pipeline p = Pipeline.create(options);
 
     PCollection<Alert> alerts =

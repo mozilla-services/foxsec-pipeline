@@ -2,12 +2,14 @@ package com.mozilla.secops.customs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.awsbehavior.AwsBehavior;
 import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -65,9 +67,26 @@ public class TestAwsBehavior {
                 Cloudtrail c = e.getPayload();
                 assertNotNull(c.getUser());
               }
-              assertEquals(3, cnt);
+              assertEquals(4, cnt);
               return null;
             });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void brokenMatcherTest() throws Exception {
+    AwsBehavior.AwsBehaviorOptions options = getTestOptions();
+    options.setCloudtrailMatcherManagerPath("/not-a-real-path");
+    PCollection<String> input = getInput("/testdata/cloudtrail_buffer1.txt");
+
+    try {
+      PCollection<Alert> res =
+          input.apply(new AwsBehavior.ParseAndWindow()).apply(new AwsBehavior.Matchers(options));
+      fail("Expected an IOException");
+    } catch (IOException exc) {
+      assertEquals(exc.getMessage(), "cloudtrail matcher manager resource not found");
+    }
 
     p.run().waitUntilFinish();
   }
@@ -94,10 +113,12 @@ public class TestAwsBehavior {
                 } else if (actualSummary.equals("access key created")) {
                   cnt++;
                   assertEquals("uhura", a.getMetadataValue("user"));
-                  assertEquals("guinan", a.getMetadataValue("resource"));
+                  if (a.getMetadataValue("resource") != null) {
+                    assertEquals("guinan", a.getMetadataValue("resource"));
+                  }
                 }
               }
-              assertEquals(2, cnt);
+              assertEquals(3, cnt);
               return null;
             });
 
