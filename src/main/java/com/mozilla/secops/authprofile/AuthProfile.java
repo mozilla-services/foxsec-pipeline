@@ -115,7 +115,11 @@ public class AuthProfile implements Serializable {
     public void setup() throws StateException, IOException {
       log = LoggerFactory.getLogger(Analyze.class);
 
-      idmanager = IdentityManager.loadFromResource(idmanagerPath);
+      if (idmanagerPath == null) {
+        idmanager = IdentityManager.loadFromResource();
+      } else {
+        idmanager = IdentityManager.loadFromResource(idmanagerPath);
+      }
 
       if (memcachedHost != null && memcachedPort != null) {
         log.info("using memcached for state management");
@@ -250,8 +254,7 @@ public class AuthProfile implements Serializable {
 
     void setDatastoreKind(String value);
 
-    @Description("Identity manager configuration; resource path")
-    @Default.String("/identitymanager.json")
+    @Description("Override default identity manager configuration; resource path")
     String getIdentityManagerPath();
 
     void setIdentityManagerPath(String value);
