@@ -2,7 +2,9 @@ package com.mozilla.secops.customs;
 
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.SecEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
@@ -51,6 +53,27 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
         "initialized new rate limit criterion analyzer, {} {} {}", severity, customsMeta, limit);
   }
 
+  private static String extractActorAccountId(Event e) {
+    return e.<SecEvent>getPayload().getSecEventData().getActorAccountId();
+  }
+
+  private Boolean uniqueActorAccountId(Iterable<Event> eventList) {
+    Event[] events = ((Collection<Event>) eventList).toArray(new Event[0]);
+    if (events.length == 0) {
+      return false;
+    }
+    if (events.length == 1) {
+      return true;
+    }
+    String actorComp = extractActorAccountId(events[0]);
+    for (Event e : events) {
+      if (!(extractActorAccountId(e).equals(actorComp))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @ProcessElement
   public void processElement(ProcessContext c) {
     KV<String, Long> e = c.element();
@@ -82,6 +105,9 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     alert.addMetadata("customs_suspected", key);
     alert.addMetadata("customs_count", valueCount.toString());
     alert.addMetadata("customs_threshold", limit.toString());
+    if (uniqueActorAccountId(eventList)) {
+      alert.addMetadata("customs_actor_accountid", extractActorAccountId(sample.get(0)));
+    }
     if (sample.size() > 0) {
       alert.addMetadata("customs_sample", Event.iterableToJson(sample));
     }
