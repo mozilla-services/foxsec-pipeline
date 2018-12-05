@@ -1,6 +1,21 @@
 package com.mozilla.secops.parser;
 
+import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /** Base class for payloads */
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME,
+  include = JsonTypeInfo.As.PROPERTY,
+  property = "type_descriptor"
+)
+@JsonSubTypes({
+  @Type(value = SecEvent.class, name = "secevent"),
+  @Type(value = Raw.class, name = "raw"),
+  @Type(value = Duopull.class, name = "duopull")
+})
 public abstract class PayloadBase {
   /** Construct matcher object. */
   public PayloadBase() {}
@@ -22,6 +37,10 @@ public abstract class PayloadBase {
    */
   public Boolean matcher(String input) {
     return false;
+  }
+
+  private void setType(String value) {
+    // Noop setter, required for event deserialization
   }
 
   /**

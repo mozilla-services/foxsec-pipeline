@@ -78,11 +78,7 @@ public class RateLimitSuppressor extends DoFn<KV<String, Iterable<Alert>>, Alert
         idx = i;
       }
     }
-    log.info(
-        "emit {} {} {}",
-        alerts[idx].getAlertId(),
-        alerts[idx].getCategory(),
-        alerts[idx].getTimestamp());
+    log.info("emit: {}", alerts[idx].toJSON());
     c.output(alerts[idx]);
   }
 }

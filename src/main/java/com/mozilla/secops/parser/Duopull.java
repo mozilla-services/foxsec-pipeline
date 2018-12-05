@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serializable;
@@ -31,6 +32,7 @@ public class Duopull extends PayloadBase implements Serializable {
   }
 
   @Override
+  @JsonProperty("type")
   public Payload.PayloadType getType() {
     return Payload.PayloadType.DUOPULL;
   }
@@ -40,8 +42,18 @@ public class Duopull extends PayloadBase implements Serializable {
    *
    * @return Duopull data
    */
+  @JsonProperty("duopull_data")
   public com.mozilla.secops.parser.models.duopull.Duopull getDuopullData() {
     return duoPullData;
+  }
+
+  /**
+   * Set duopull data element
+   *
+   * @param data Duopull data element
+   */
+  public void setDuopullData(com.mozilla.secops.parser.models.duopull.Duopull data) {
+    duoPullData = data;
   }
 
   /** Construct matcher object. */
