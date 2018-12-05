@@ -156,8 +156,7 @@ public class AwsBehavior implements Serializable {
 
   /** Runtime options for {@link AwsBehavior} pipeline. */
   public interface AwsBehaviorOptions extends PipelineOptions, InputOptions, OutputOptions {
-    @Description("Identity manager configuration; resource path")
-    @Default.String("/identitymanager.json")
+    @Description("Override default identity manager configuration; resource path")
     String getIdentityManagerPath();
 
     void setIdentityManagerPath(String value);
