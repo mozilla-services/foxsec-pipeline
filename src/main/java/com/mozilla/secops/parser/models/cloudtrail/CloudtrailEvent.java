@@ -1,10 +1,13 @@
 package com.mozilla.secops.parser.models.cloudtrail;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.Serializable;
 import java.util.HashMap;
 
 /** Model for Cloudtrail Events JSON parsing */
-public class CloudtrailEvent {
+public class CloudtrailEvent implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private String accessKeyID;
   private String awsRegion;
   private String errorCode;
@@ -16,7 +19,7 @@ public class CloudtrailEvent {
   private String eventType;
   private String eventVersion;
   private Boolean readOnly;
-  private String recipientAccountID;
+  private String recipientAccountId;
   private String requestID;
   private String sourceIPAddress;
   private String userAgent;
@@ -70,8 +73,8 @@ public class CloudtrailEvent {
     return readOnly;
   }
 
-  public String getRecipientAccountID() {
-    return recipientAccountID;
+  public String getRecipientAccountId() {
+    return recipientAccountId;
   }
 
   public String getRequestID() {
@@ -90,19 +93,19 @@ public class CloudtrailEvent {
     return userIdentity.getType();
   }
 
-  @JsonSetter("userIdentity")
-  public void setUserIdentity(UserIdentity userIdentity) {
-    this.userIdentity = userIdentity;
+  @JsonProperty("userIdentity")
+  public UserIdentity getUserIdentity() {
+    return userIdentity;
   }
 
-  @JsonSetter("responseElements")
-  public void setResponseElements(HashMap<String, Object> responseElements) {
-    this.responseElements = responseElements;
+  @JsonProperty("responseElements")
+  public HashMap<String, Object> getResponseElements() {
+    return responseElements;
   }
 
-  @JsonSetter("requestParameters")
-  public void setRequestParameters(HashMap<String, Object> requestParameters) {
-    this.requestParameters = requestParameters;
+  @JsonProperty("requestParameters")
+  public HashMap<String, Object> getRequestParameters() {
+    return requestParameters;
   }
 
   /**

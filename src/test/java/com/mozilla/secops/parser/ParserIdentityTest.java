@@ -50,7 +50,7 @@ public class ParserIdentityTest {
             + "\"00000000-0000-0000-0000-000000000000\",\"eventName\":\"ConsoleLogin\", "
             + "\"eventSource\":\"signin.amazonaws.com\",\"eventTime\":\"2018-06-26T06:00:13Z\", "
             + "\"eventType\":\"AwsConsoleSignIn\",\"eventVersion\":\"1.05\", "
-            + "\"recipientAccountID\":\"123456789\",\"responseElements\": "
+            + "\"recipientAccountId\":\"123456789\",\"responseElements\": "
             + "{\"ConsoleLogin\":\"Success\"},\"sourceIPAddress\":\"127.0.0.1\",\"userAgent\": "
             + "\"Mozilla/5.0(Macintosh;IntelMacOSX10.13;rv:62.0)Gecko/20100101Firefox/62.0\", "
             + "\"userIdentity\":{\"accountId\":\"123456789\",\"arn\": "

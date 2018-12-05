@@ -8,16 +8,16 @@ import com.google.api.services.logging.v2.model.LogEntry;
 import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.models.cloudtrail.CloudtrailEvent;
+import com.mozilla.secops.parser.models.cloudtrail.UserIdentity;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 /** Payload parser for Cloudtrail events */
 public class Cloudtrail extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
-
-  private final JacksonFactory jfmatcher;
 
   private ObjectMapper mapper;
 
@@ -46,7 +46,6 @@ public class Cloudtrail extends PayloadBase implements Serializable {
   /** Construct matcher object. */
   public Cloudtrail() {
     mapper = getObjectMapper();
-    jfmatcher = new JacksonFactory();
   }
 
   /**
@@ -58,7 +57,6 @@ public class Cloudtrail extends PayloadBase implements Serializable {
    */
   public Cloudtrail(String input, Event e, Parser p) {
     mapper = getObjectMapper();
-    jfmatcher = new JacksonFactory();
     try {
       event = parseInput(input);
       if (isAuthEvent()) {
@@ -66,7 +64,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         n.setType(Normalized.Type.AUTH);
         n.setSubjectUser(getUser());
         n.setSourceAddress(getSourceAddress());
-        n.setObject(event.getRecipientAccountID());
+        n.setObject(event.getRecipientAccountId());
 
         // TODO: Consider moving identity management into Normalized
 
@@ -80,7 +78,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
           }
 
           Map<String, String> m = mgr.getAwsAccountMap();
-          String accountName = m.get(event.getRecipientAccountID());
+          String accountName = m.get(event.getRecipientAccountId());
           if (accountName != null) {
             n.setObject(accountName);
           }
@@ -103,6 +101,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
 
   private CloudtrailEvent parseInput(String input) throws IOException {
     try {
+      JacksonFactory jfmatcher = new JacksonFactory();
       JsonParser jp = jfmatcher.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
       Map<String, Object> m = entry.getJsonPayload();
@@ -196,5 +195,49 @@ public class Cloudtrail extends PayloadBase implements Serializable {
       }
     }
     return false;
+  }
+
+  @Override
+  public String eventStringValue(EventFilterPayload.StringProperty property) {
+    UserIdentity ui = event.getUserIdentity();
+    switch (property) {
+      case CLOUDTRAIL_EVENTNAME:
+        return event.getEventName();
+      case CLOUDTRAIL_EVENTSOURCE:
+        return event.getEventSource();
+      case CLOUDTRAIL_ACCOUNTID:
+        return event.getRecipientAccountId();
+      case CLOUDTRAIL_INVOKEDBY:
+        if (ui == null) {
+          return null;
+        }
+        return ui.getInvokedBy();
+      case CLOUDTRAIL_MFA:
+        if (ui == null) {
+          return null;
+        }
+        return ui.getMFAAuthenticated();
+    }
+    return null;
+  }
+
+  /**
+   * Utility method for returning the resource the event was acting on, used for adding context to
+   * {@link Alerts}.
+   *
+   * @param resource Resource selector.
+   * @return Value of the resource selector.
+   */
+  public String getResource(String resource) {
+    switch (resource) {
+      case "requestParameters.userName":
+        HashMap<String, Object> rp = event.getRequestParameters();
+        Object u = rp.get("userName");
+        if (u == null) {
+          return null;
+        }
+        return (String) u;
+    }
+    return null;
   }
 }

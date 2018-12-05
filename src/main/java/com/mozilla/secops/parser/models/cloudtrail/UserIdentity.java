@@ -1,9 +1,12 @@
 package com.mozilla.secops.parser.models.cloudtrail;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
+import java.io.Serializable;
 
 /** Model for userIdentity element in Cloudtrail Events */
-public class UserIdentity {
+public class UserIdentity implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private String accessKeyId;
   private String accountId;
   private String arn;
@@ -60,6 +63,10 @@ public class UserIdentity {
       return null;
     }
     return sessionContext.getAttributes().get(key);
+  }
+
+  public String getMFAAuthenticated() {
+    return getSessionAttributesValue("mfaAuthenticated");
   }
 
   @JsonSetter("sessionContext")
