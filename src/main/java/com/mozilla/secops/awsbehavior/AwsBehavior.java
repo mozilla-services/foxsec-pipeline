@@ -12,6 +12,7 @@ import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.regex.PatternSyntaxException;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -84,6 +85,11 @@ public class AwsBehavior implements Serializable {
       } catch (CloudtrailMatcher.UnknownStringPropertyException exc) {
         log.error(
             "CloudtrailMatcher with the description '{}' threw an UnknownStringPropertyException: {}",
+            cm.getDescription(),
+            exc.getMessage());
+      } catch (PatternSyntaxException exc) {
+        log.error(
+            "CloudtrailMatcher with the description '{}' threw an PatternSyntaxException: {}",
             cm.getDescription(),
             exc.getMessage());
       }

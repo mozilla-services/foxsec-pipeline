@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /** Can be associated with {@link EventFilterRule} for payload matching */
 public class EventFilterPayload implements Serializable {
@@ -104,7 +105,8 @@ public class EventFilterPayload implements Serializable {
    * @param s String regex pattern to match against
    * @return EventFilterPayload for chaining
    */
-  public EventFilterPayload withStringRegexMatch(StringProperty property, String s) {
+  public EventFilterPayload withStringRegexMatch(StringProperty property, String s)
+      throws PatternSyntaxException {
     stringRegexMatchers.put(property, Pattern.compile(s));
     return this;
   }
