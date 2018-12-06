@@ -7,6 +7,7 @@ import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Payload;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.regex.PatternSyntaxException;
 
 /** Translates a JSON object into an EventFilter and context for any resulting matches. */
 public class CloudtrailMatcher implements Serializable {
@@ -21,17 +22,18 @@ public class CloudtrailMatcher implements Serializable {
   }
 
   /**
-   * Converts {@link CloudtrailMatcher} into an {@link EventFilterRule}
+   * Converts {@link CloudtrailMatcher} into an {@link EventFilterRule} as regex matchers.
    *
    * @return {@link EventFilterRule}
    */
-  public EventFilterRule toEventFilterRule() throws UnknownStringPropertyException {
+  public EventFilterRule toEventFilterRule()
+      throws UnknownStringPropertyException, PatternSyntaxException {
     EventFilterRule rule = new EventFilterRule();
     rule.wantSubtype(Payload.PayloadType.CLOUDTRAIL);
     for (ArrayList<String> fieldMatcher : fields) {
       EventFilterPayload.StringProperty sp = fieldToStringProperty(fieldMatcher.get(0));
       rule.addPayloadFilter(
-          new EventFilterPayload(Cloudtrail.class).withStringMatch(sp, fieldMatcher.get(1)));
+          new EventFilterPayload(Cloudtrail.class).withStringRegexMatch(sp, fieldMatcher.get(1)));
     }
     return rule;
   }

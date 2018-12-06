@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /** Can be associated with {@link EventFilterRule} for payload matching */
 public class EventFilterPayload implements Serializable {
@@ -32,6 +35,7 @@ public class EventFilterPayload implements Serializable {
 
   private Class<? extends PayloadBase> ptype;
   private Map<StringProperty, String> stringMatchers;
+  private Map<StringProperty, Pattern> stringRegexMatchers;
 
   private ArrayList<StringProperty> stringSelectors;
 
@@ -51,6 +55,16 @@ public class EventFilterPayload implements Serializable {
         return false;
       }
       if (!(value.equals(entry.getValue()))) {
+        return false;
+      }
+    }
+    for (Map.Entry<StringProperty, Pattern> entry : stringRegexMatchers.entrySet()) {
+      String value = e.getPayload().eventStringValue(entry.getKey());
+      if (value == null) {
+        return false;
+      }
+      Matcher mat = entry.getValue().matcher(value);
+      if (!(mat.matches())) {
         return false;
       }
     }
@@ -82,6 +96,19 @@ public class EventFilterPayload implements Serializable {
       ret.add(value);
     }
     return ret;
+  }
+
+  /**
+   * Add a new string regex match to the payload filter
+   *
+   * @param property {@link EventFilterPayload.StringProperty}
+   * @param s String regex pattern to match against
+   * @return EventFilterPayload for chaining
+   */
+  public EventFilterPayload withStringRegexMatch(StringProperty property, String s)
+      throws PatternSyntaxException {
+    stringRegexMatchers.put(property, Pattern.compile(s));
+    return this;
   }
 
   /**
@@ -120,6 +147,7 @@ public class EventFilterPayload implements Serializable {
   /** Create new empty payload filter */
   public EventFilterPayload() {
     stringMatchers = new HashMap<StringProperty, String>();
+    stringRegexMatchers = new HashMap<StringProperty, Pattern>();
     stringSelectors = new ArrayList<StringProperty>();
   }
 }
