@@ -202,10 +202,20 @@ public class Alert implements Serializable {
     return category;
   }
 
+  /**
+   * Set template name
+   *
+   * @param templateName Freemarker template name with file extension
+   */
   public void setTemplateName(String templateName) {
     templateName = templateName;
   }
 
+  /**
+   * Get template name
+   *
+   * @return Freemarker template name with file extension
+   */
   @JsonProperty("timestamp")
   public String getTemplateName() {
     return templateName;
@@ -278,6 +288,11 @@ public class Alert implements Serializable {
     }
   }
 
+  /**
+   * Return HashMap used by Freemarker to generate an HTML alert email
+   *
+   * @return Template data model
+   */
   public HashMap<String, Object> getTemplateVariables() {
     HashMap<String, Object> v = new HashMap<String, Object>();
     v.put("alert", this);
