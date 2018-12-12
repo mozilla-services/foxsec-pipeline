@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -35,6 +36,7 @@ public class Alert implements Serializable {
   private DateTime timestamp;
   private ArrayList<AlertMeta> metadata;
   private AlertSeverity severity;
+  private String templateName;
 
   /** Construct new alert object */
   public Alert() {
@@ -200,6 +202,15 @@ public class Alert implements Serializable {
     return category;
   }
 
+  public void setTemplateName(String templateName) {
+    templateName = templateName;
+  }
+
+  @JsonProperty("timestamp")
+  public String getTemplateName() {
+    return templateName;
+  }
+
   /**
    * Override generated unique ID for alert
    *
@@ -265,5 +276,14 @@ public class Alert implements Serializable {
     } catch (JsonProcessingException exc) {
       return null;
     }
+  }
+
+  public HashMap<String, Object> getTemplateVariables() {
+    HashMap<String, Object> v = new HashMap<String, Object>();
+    v.put("alert", this);
+    for (AlertMeta m : metadata) {
+      v.put(m.getKey(), m.getValue());
+    }
+    return v;
   }
 }

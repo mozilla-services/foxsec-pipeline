@@ -54,6 +54,11 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputAlertEmailCatchall(String value);
 
+  @Description("With alert email output; path to html email templates used to generate alerts")
+  String getTemplatesPath();
+
+  void setTemplatesPath(String value);
+
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);
   }

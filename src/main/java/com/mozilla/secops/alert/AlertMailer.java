@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 public class AlertMailer {
   private final AlertConfiguration cfg;
   private final Logger log;
+  private TemplateManager templateManager;
 
   /**
    * Send email alert to specified address
@@ -32,7 +33,7 @@ public class AlertMailer {
 
     ArrayList<String> r = new ArrayList<String>();
     r.add(address);
-    sendMail(r, a.getSummary(), a.assemblePayload());
+    sendMail(r, a.getSummary(), createAlertMailBody(a));
   }
 
   /**
@@ -49,7 +50,7 @@ public class AlertMailer {
 
     ArrayList<String> r = new ArrayList<String>();
     r.add(dest);
-    sendMail(r, a.getSummary(), a.assemblePayload());
+    sendMail(r, a.getSummary(), createAlertMailBody(a));
   }
 
   private void sendMail(ArrayList<String> recipients, String subject, String body) {
@@ -106,5 +107,22 @@ public class AlertMailer {
   public AlertMailer(AlertConfiguration cfg) {
     log = LoggerFactory.getLogger(AlertMailer.class);
     this.cfg = cfg;
+    templateManager = null;
+    try {
+      templateManager = new TemplateManager(cfg.getTemplatesPath());
+    } catch (IOException exc) {
+      log.error("could not create template manager: {}", exc.getMessage());
+    }
+  }
+
+  private String createAlertMailBody(Alert a) {
+    if (a.getTemplateName() != null || templateManager != null) {
+      try {
+        return templateManager.createEmailBody(a.getTemplateName(), a.getTemplateVariables());
+      } catch (Exception exc) {
+        log.error("Could not create email body: {}", exc.getMessage());
+      }
+    }
+    return a.assemblePayload();
   }
 }

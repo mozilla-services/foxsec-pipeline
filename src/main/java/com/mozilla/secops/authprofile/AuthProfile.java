@@ -175,6 +175,8 @@ public class AuthProfile implements Serializable {
         }
 
         Alert alert = new Alert();
+        // TODO: Should this be moved to the output config?
+        alert.setTemplateName("authprofile.ftlh");
         String summary = String.format("%s authenticated to %s", username, destination);
         if (sm.updateEntry(address)) {
           // Address was new
@@ -223,6 +225,9 @@ public class AuthProfile implements Serializable {
         }
         if (country != null) {
           alert.addMetadata("sourceaddress_country", country);
+        }
+        if (city != null && country != null) {
+          alert.addMetadata("geolocation", String.format("%s, %s", city, country));
         }
 
         sm.set(state);
