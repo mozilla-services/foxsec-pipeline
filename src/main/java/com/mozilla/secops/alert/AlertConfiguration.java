@@ -11,7 +11,6 @@ public class AlertConfiguration implements Serializable {
   private String emailCatchall;
   private String emailFrom;
   private String gcpProject;
-  private String templatesPath;
 
   /**
    * Determine if {@link AlertIO} should be established in composite transform
@@ -110,24 +109,6 @@ public class AlertConfiguration implements Serializable {
    */
   public void setGcpProject(String gcpProject) {
     this.gcpProject = gcpProject;
-  }
-
-  /**
-   * Get Alert templates path
-   *
-   * @return templatesPath Alert templates path
-   */
-  public String getTemplatesPath() {
-    return templatesPath;
-  }
-
-  /**
-   * Set Alert templates path
-   *
-   * @param templatesPath Alert templates path
-   */
-  public void setTemplatesPath(String templatesPath) {
-    this.templatesPath = templatesPath;
   }
 
   /** Create new empty {@link AlertConfiguration} */

@@ -39,7 +39,6 @@ public abstract class CompositeOutput {
     alertcfg.setEmailCatchall(options.getOutputAlertEmailCatchall());
     alertcfg.setEmailFrom(options.getOutputAlertEmailFrom());
     alertcfg.setGcpProject(project);
-    alertcfg.setTemplatesPath(options.getTemplatesPath());
 
     return new PTransform<PCollection<String>, PDone>() {
       private static final long serialVersionUID = 1L;

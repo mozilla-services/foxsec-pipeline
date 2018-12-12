@@ -107,16 +107,11 @@ public class AlertMailer {
   public AlertMailer(AlertConfiguration cfg) {
     log = LoggerFactory.getLogger(AlertMailer.class);
     this.cfg = cfg;
-    templateManager = null;
-    try {
-      templateManager = new TemplateManager(cfg.getTemplatesPath());
-    } catch (IOException exc) {
-      log.error("could not create template manager: {}", exc.getMessage());
-    }
+    templateManager = new TemplateManager();
   }
 
   private String createAlertMailBody(Alert a) {
-    if (a.getTemplateName() != null || templateManager != null) {
+    if (a.getTemplateName() != null) {
       try {
         return templateManager.createEmailBody(a.getTemplateName(), a.getTemplateVariables());
       } catch (Exception exc) {
