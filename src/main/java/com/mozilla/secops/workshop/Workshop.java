@@ -12,7 +12,12 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
 
-/** Workshop pipeline */
+/**
+ * Getting started with Beam workshop pipeline.
+ *
+ * <p>This class is not meant for production use but instead is part of the introduction to Beam
+ * workshop that is part of the foxsec-pipeline repository.
+ */
 public class Workshop implements Serializable {
   private static final long serialVersionUID = 1L;
 

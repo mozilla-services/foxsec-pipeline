@@ -1,13 +1,14 @@
-## Mozlando 2018 Dataflow Workshop
+## Introduction to Beam
+
+This document details a small workshop that can be run through to get familiar with building
+pipelines in Beam.
 
 ### Getting started
 
-Fetch the [foxsec-pipeline](https://github.com/mozilla-services/foxsec-pipeline) repo, and
-switch to the mozlando2018 branch.
+Fetch the [foxsec-pipeline](https://github.com/mozilla-services/foxsec-pipeline) repo.
 
 ```
 git clone https://github.com/mozilla-services/foxsec-pipeline.git
-git checkout mozlando2018
 ```
 
 Build the docker image.
@@ -34,7 +35,7 @@ to create a new container, executes the pipeline, and removes the container afte
 
 ### Instructions
 
-An initial pipeline class has been created at [src/main/java/com/mozilla/secops/workshop/Workshop.java](src/main/java/com/mozilla/secops/workshop/Workshop.java). This is the only file you will be required to edit.
+An initial pipeline class has been created at [../../src/main/java/com/mozilla/secops/workshop/Workshop.java](../../src/main/java/com/mozilla/secops/workshop/Workshop.java). This is the only file you will be required to edit.
 
 The input has already been setup in the class to read the input data.
 
@@ -42,7 +43,7 @@ Placeholders have been added to the file indicating where code should be added, 
 hints on what to look for.
 
 The initial version of the Workshop pipeline simply prints it's input as output, you can test that by running
-`./runworkshop.sh`.
+`bin/runworkshop.sh` from the repository root.
 
 * Update `ExtractWords` to split the input strings and output individual words all lowercase. For simplicity don't worry about trimming punctuation, but whitespace should be trimmed and no zero length strings should be emitted.
 * Use a counting transform to count occurences of each word
@@ -52,7 +53,7 @@ The initial version of the Workshop pipeline simply prints it's input as output,
 
 ### Testing your pipeline
 
-You can execute `./runworkshop.sh` to test your pipeline. This is a script the provides the required
+You can execute `bin/runworkshop.sh` to test your pipeline. This is a script the provides the required
 options to `bin/m` to execute the Workshop pipeline in the docker container.
 
 ### Tips
