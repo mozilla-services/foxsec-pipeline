@@ -49,6 +49,12 @@ during pipeline execution.
 javadoc documentation is currently updated manually and although should be up to date, may not be current
 with master.
 
+## Introduction to Beam
+
+To get familiar with developing pipelines in Beam, this repository also contains a small workshop that
+provides some guidance on building basic pipelines. The introduction document can be found
+[here](docs/beam-intro/INTRO.md).
+
 ## Contributing
 
 See the [contributing guidelines](./CONTRIBUTING.md).
