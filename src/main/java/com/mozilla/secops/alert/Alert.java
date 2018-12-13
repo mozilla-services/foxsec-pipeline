@@ -1,6 +1,5 @@
 package com.mozilla.secops.alert;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,7 +14,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 /** Global standardized class representing alerting output from pipelines */
-@JsonIgnoreProperties({"templateName", "templateVariables"})
 public class Alert implements Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -210,7 +208,7 @@ public class Alert implements Serializable {
    * @param templateName Freemarker template name with file extension
    */
   public void setTemplateName(String templateName) {
-    templateName = templateName;
+    this.templateName = templateName;
   }
 
   /**
@@ -218,6 +216,7 @@ public class Alert implements Serializable {
    *
    * @return Freemarker template name with file extension
    */
+  @JsonProperty("template_name")
   public String getTemplateName() {
     return templateName;
   }
@@ -294,7 +293,7 @@ public class Alert implements Serializable {
    *
    * @return Template data model
    */
-  public HashMap<String, Object> getTemplateVariables() {
+  public HashMap<String, Object> generateTemplateVariables() {
     HashMap<String, Object> v = new HashMap<String, Object>();
     v.put("alert", this);
     for (AlertMeta m : metadata) {

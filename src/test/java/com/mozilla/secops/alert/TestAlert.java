@@ -23,7 +23,7 @@ public class TestAlert {
         "{\"severity\":\"info\",\"id\":\"d14277bb-8d69-4cd8-b83d-3ccdaf17c7b9\","
             + "\"summary\":\"test alert\""
             + ",\"category\":\"test\",\"payload\":\"first line\\n\\nsecond line\","
-            + "\"timestamp\":\"1970-01-01T00:00:00.000Z\"}";
+            + "\"timestamp\":\"1970-01-01T00:00:00.000Z\",\"template_name\":\"test.fthl\"}";
 
     Alert a = new Alert();
     assertNotNull(a);
@@ -32,6 +32,7 @@ public class TestAlert {
     a.setCategory("test");
     UUID u = UUID.fromString("d14277bb-8d69-4cd8-b83d-3ccdaf17c7b9");
     a.setAlertId(u);
+    a.setTemplateName("test.fthl");
     a.setTimestamp(new DateTime(0L));
 
     a.addToPayload("first line");

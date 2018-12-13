@@ -33,7 +33,7 @@ public class AlertMailer {
 
     ArrayList<String> r = new ArrayList<String>();
     r.add(address);
-    sendMail(r, a.getSummary(), createAlertMailBody(a));
+    sendMail(r, a.getSummary(), a.assemblePayload(), createAlertMailBody(a));
   }
 
   /**
@@ -50,10 +50,11 @@ public class AlertMailer {
 
     ArrayList<String> r = new ArrayList<String>();
     r.add(dest);
-    sendMail(r, a.getSummary(), createAlertMailBody(a));
+    sendMail(r, a.getSummary(), a.assemblePayload(), createAlertMailBody(a));
   }
 
-  private void sendMail(ArrayList<String> recipients, String subject, String body) {
+  private void sendMail(
+      ArrayList<String> recipients, String subject, String textBody, String htmlBody) {
     String smtpCreds;
     try {
       smtpCreds = RuntimeSecrets.interpretSecret(cfg.getSmtpCredentials(), cfg.getGcpProject());
@@ -92,7 +93,10 @@ public class AlertMailer {
       message.setFrom(new InternetAddress(cfg.getEmailFrom(), true));
       message.setRecipients(Message.RecipientType.TO, recips);
       message.setSubject(subject);
-      message.setText(body);
+      message.setText(textBody);
+      if (htmlBody != null) {
+        message.setContent(htmlBody, "text/html; charset=utf-8");
+      }
       Transport.send(message);
     } catch (MessagingException exc) {
       log.error("mail submission failed: {}", exc.getMessage());
@@ -113,11 +117,11 @@ public class AlertMailer {
   private String createAlertMailBody(Alert a) {
     if (a.getTemplateName() != null) {
       try {
-        return templateManager.createEmailBody(a.getTemplateName(), a.getTemplateVariables());
+        return templateManager.createEmailBody(a.getTemplateName(), a.generateTemplateVariables());
       } catch (Exception exc) {
         log.error("Could not create email body: {}", exc.getMessage());
       }
     }
-    return a.assemblePayload();
+    return null;
   }
 }

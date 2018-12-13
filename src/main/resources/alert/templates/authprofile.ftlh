@@ -108,10 +108,16 @@
                     <tr>
                       <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;">
 
-                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">We noticed a login for ${username} into ${object} at ${alert.timestamp} from a new location.</p>
+                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
+                        We noticed a login for ${username} into ${object} at ${alert.timestamp?datetime.iso_m_nz} from a new location.
+                        </p>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        ${alert.timestamp} - ${sourceaddress} - ${geolocation}
+                        <#if geolocation??>
+                          ${alert.timestamp?datetime.iso_m_nz} - ${sourceaddress} - ${geolocation}
+                        <#else>
+                          ${alert.timestamp?datetime.iso_m_nz} - ${sourceaddress}
+                        </#if>
                         </p>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
@@ -119,21 +125,21 @@
                         </p>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        These alerts are sent when a user logs into a jump host, AWS console, or assumes a role in AWS from an “unknown IP”. The inactivity expiry for IP’s is 10 days. Below are the IPs that are currently whitelisted for ${username}:
+                        These alerts are sent when a user logs into a jump host, AWS console, or assumes a role in AWS from an “unknown IP”. The inactivity expiry for IP’s is 10 days.
+                        </p>
+
+                        <#if current_entries??>
+                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
+                        Below are the IPs that are currently whitelisted for ${username}:
                         </p>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        TODO
-                        <Last Seen Time> - <IP> - <ISP> - <Location>
-                        <Last Seen Time> - <IP> - <ISP> - <Location>
+                        ${current_entries}
                         </p>
+                        </#if>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
                         If you have any questions about this notification, email us at secops@mozilla.com
-                        </p>
-
-                        <p style="font-family: sans-serif; font-size: 12px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        alert id: ${alert.alertId}
                         </p>
                       </td>
                     </tr>
@@ -149,13 +155,7 @@
               <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;">
                 <tr>
                   <td class="content-block" style="font-family: sans-serif; vertical-align: top; padding-bottom: 10px; padding-top: 10px; font-size: 12px; color: #999999; text-align: center;">
-                    <span class="apple-link" style="color: #999999; font-size: 12px; text-align: center;">Company Inc, 3 Abbey Road, San Francisco CA 94102</span>
-                    <br> Don't like these emails? <a href="http://i.imgur.com/CScmqnj.gif" style="text-decoration: underline; color: #999999; font-size: 12px; text-align: center;">Unsubscribe</a>.
-                  </td>
-                </tr>
-                <tr>
-                  <td class="content-block powered-by" style="font-family: sans-serif; vertical-align: top; padding-bottom: 10px; padding-top: 10px; font-size: 12px; color: #999999; text-align: center;">
-                    Powered by <a href="http://htmlemail.io" style="color: #999999; font-size: 12px; text-align: center; text-decoration: none;">HTMLemail</a>.
+                        alert id: ${alert.alertId}
                   </td>
                 </tr>
               </table>

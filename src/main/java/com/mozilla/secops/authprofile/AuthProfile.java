@@ -1,5 +1,6 @@
 package com.mozilla.secops.authprofile;
 
+import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
@@ -10,6 +11,7 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterPayload;
 import com.mozilla.secops.parser.EventFilterRule;
+import com.mozilla.secops.parser.GeoIP;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.state.DatastoreStateInterface;
@@ -18,6 +20,8 @@ import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -175,8 +179,11 @@ public class AuthProfile implements Serializable {
         }
 
         Alert alert = new Alert();
-        // TODO: Should this be moved to the output config?
+
+        // TODO: Should this be moved?
+        // TODO: Should the template only be used at a certain severity?
         alert.setTemplateName("authprofile.ftlh");
+
         String summary = String.format("%s authenticated to %s", username, destination);
         if (sm.updateEntry(address)) {
           // Address was new
@@ -228,6 +235,29 @@ public class AuthProfile implements Serializable {
         }
         if (city != null && country != null) {
           alert.addMetadata("geolocation", String.format("%s, %s", city, country));
+        }
+
+        // Used to construct a list of current entries other than the one being alerted on.
+        if (isUnknown) {
+          GeoIP geoip = new GeoIP();
+          ArrayList<String> currentEntries = new ArrayList<String>();
+          for (Map.Entry<String, StateModel.ModelEntry> entry : sm.getEntries().entrySet()) {
+            String ip = entry.getKey();
+            if (ip.equals(address)) {
+              continue;
+            }
+            CityResponse cr = geoip.lookup(ip);
+            String location = "<unknown location>";
+            if (cr != null) {
+              location =
+                  String.format("%s, %s", cr.getCity().getName(), cr.getCountry().getIsoCode());
+            }
+            currentEntries.add(
+                String.format(
+                    "%s - %s - %s",
+                    entry.getValue().getTimestamp(), entry.getKey(), "<geolocation>"));
+          }
+          alert.addMetadata("current_entries", String.join("\n", currentEntries));
         }
 
         sm.set(state);
