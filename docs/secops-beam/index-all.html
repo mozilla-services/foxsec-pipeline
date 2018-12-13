@@ -69,7 +69,7 @@
 <!--   -->
 </a></div>
 <!-- ========= END OF TOP NAVBAR ========= -->
-<div class="contentContainer"><a href="#I:A">A</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:N">N</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<a name="I:A">
+<div class="contentContainer"><a href="#I:A">A</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:N">N</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<a name="I:A">
 <!--   -->
 </a>
 <h2 class="title">A</h2>
@@ -180,6 +180,29 @@
  <code>PCollection</code> of <code>KV</code> objects where the key is a particular username and the value
  is a list of authentication events seen for that user within the window.</div>
 </dd>
+<dt><a href="com/mozilla/secops/awsbehavior/AwsBehavior.html" title="class in com.mozilla.secops.awsbehavior"><span class="typeNameLink">AwsBehavior</span></a> - Class in <a href="com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.html#AwsBehavior--">AwsBehavior()</a></span> - Constructor for class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.html" title="class in com.mozilla.secops.awsbehavior">AwsBehavior</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html" title="interface in com.mozilla.secops.awsbehavior"><span class="typeNameLink">AwsBehavior.AwsBehaviorOptions</span></a> - Interface in <a href="com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a></dt>
+<dd>
+<div class="block">Runtime options for <a href="com/mozilla/secops/awsbehavior/AwsBehavior.html" title="class in com.mozilla.secops.awsbehavior"><code>AwsBehavior</code></a> pipeline.</div>
+</dd>
+<dt><a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matcher.html" title="class in com.mozilla.secops.awsbehavior"><span class="typeNameLink">AwsBehavior.Matcher</span></a> - Class in <a href="com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a></dt>
+<dd>
+<div class="block">Tranform to take a specific <a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior"><code>CloudtrailMatcher</code></a> and a <code>PCollection</code> of cloudtrail
+ events and emit a <code>PCollection</code> of <a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a> objects constructed for each event that
+ matches the <a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior"><code>CloudtrailMatcher</code></a></div>
+</dd>
+<dt><a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matchers.html" title="class in com.mozilla.secops.awsbehavior"><span class="typeNameLink">AwsBehavior.Matchers</span></a> - Class in <a href="com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a></dt>
+<dd>
+<div class="block">High level transform for invoking each of the matcher transforms after reading in the config
+ with <a href="com/mozilla/secops/awsbehavior/CloudtrailMatcherManager.html" title="class in com.mozilla.secops.awsbehavior"><code>CloudtrailMatcherManager</code></a></div>
+</dd>
+<dt><a href="com/mozilla/secops/awsbehavior/AwsBehavior.ParseAndWindow.html" title="class in com.mozilla.secops.awsbehavior"><span class="typeNameLink">AwsBehavior.ParseAndWindow</span></a> - Class in <a href="com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a></dt>
+<dd>
+<div class="block">Transform to parse a <code>PCollection</code> containing events as strings and emit a <code>PCollection</code> of <a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser"><code>Event</code></a> objects after filtering out events that are not <a href="com/mozilla/secops/parser/Cloudtrail.html" title="class in com.mozilla.secops.parser"><code>Cloudtrail</code></a> events</div>
+</dd>
 </dl>
 <a name="I:C">
 <!--   -->
@@ -204,32 +227,80 @@
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#CloudtrailEvent--">CloudtrailEvent()</a></span> - Constructor for class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior"><span class="typeNameLink">CloudtrailMatcher</span></a> - Class in <a href="com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a></dt>
+<dd>
+<div class="block">Translates a JSON object into an EventFilter and context for any resulting matches.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html#CloudtrailMatcher--">CloudtrailMatcher()</a></span> - Constructor for class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior">CloudtrailMatcher</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcherManager.html" title="class in com.mozilla.secops.awsbehavior"><span class="typeNameLink">CloudtrailMatcherManager</span></a> - Class in <a href="com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a></dt>
+<dd>
+<div class="block">Loads a JSON document and converts it into a list of <a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior"><code>CloudtrailMatcher</code></a>s</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcherManager.html#CloudtrailMatcherManager--">CloudtrailMatcherManager()</a></span> - Constructor for class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/CloudtrailMatcherManager.html" title="class in com.mozilla.secops.awsbehavior">CloudtrailMatcherManager</a></dt>
+<dd>
+<div class="block">Create new empty <a href="com/mozilla/secops/awsbehavior/CloudtrailMatcherManager.html" title="class in com.mozilla.secops.awsbehavior"><code>CloudtrailMatcherManager</code></a></div>
+</dd>
 <dt><a href="com/mozilla/secops/package-summary.html">com.mozilla.secops</a> - package com.mozilla.secops</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">General utility classes and transforms for secops-beam</div>
+</dd>
 <dt><a href="com/mozilla/secops/alert/package-summary.html">com.mozilla.secops.alert</a> - package com.mozilla.secops.alert</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Alert generation and output</div>
+</dd>
 <dt><a href="com/mozilla/secops/authprofile/package-summary.html">com.mozilla.secops.authprofile</a> - package com.mozilla.secops.authprofile</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Pipeline for authentication source profiling and alerting</div>
+</dd>
+<dt><a href="com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a> - package com.mozilla.secops.awsbehavior</dt>
+<dd>
+<div class="block">Pipeline for monitoring AWS Cloudtrail events</div>
+</dd>
 <dt><a href="com/mozilla/secops/crypto/package-summary.html">com.mozilla.secops.crypto</a> - package com.mozilla.secops.crypto</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Utilities for dealing with runtime secrets in Beam pipelines</div>
+</dd>
 <dt><a href="com/mozilla/secops/customs/package-summary.html">com.mozilla.secops.customs</a> - package com.mozilla.secops.customs</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Customs server generic rate limiting heuristics pipeline</div>
+</dd>
 <dt><a href="com/mozilla/secops/httprequest/package-summary.html">com.mozilla.secops.httprequest</a> - package com.mozilla.secops.httprequest</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">HTTP request threshold and error rate monitoring</div>
+</dd>
 <dt><a href="com/mozilla/secops/identity/package-summary.html">com.mozilla.secops.identity</a> - package com.mozilla.secops.identity</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Centralized identity mapping and translation for user identities</div>
+</dd>
 <dt><a href="com/mozilla/secops/parser/package-summary.html">com.mozilla.secops.parser</a> - package com.mozilla.secops.parser</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Log parsing, processing, and enrichment</div>
+</dd>
 <dt><a href="com/mozilla/secops/parser/eventfiltercfg/package-summary.html">com.mozilla.secops.parser.eventfiltercfg</a> - package com.mozilla.secops.parser.eventfiltercfg</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Configuration file based event filters</div>
+</dd>
 <dt><a href="com/mozilla/secops/parser/models/cloudtrail/package-summary.html">com.mozilla.secops.parser.models.cloudtrail</a> - package com.mozilla.secops.parser.models.cloudtrail</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">JSON model for Cloudtrail events</div>
+</dd>
 <dt><a href="com/mozilla/secops/parser/models/duopull/package-summary.html">com.mozilla.secops.parser.models.duopull</a> - package com.mozilla.secops.parser.models.duopull</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">JSON model for Duopull events</div>
+</dd>
 <dt><a href="com/mozilla/secops/parser/models/secevent/package-summary.html">com.mozilla.secops.parser.models.secevent</a> - package com.mozilla.secops.parser.models.secevent</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">JSON model for generic security events</div>
+</dd>
 <dt><a href="com/mozilla/secops/state/package-summary.html">com.mozilla.secops.state</a> - package com.mozilla.secops.state</dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Classes for handling persistent state for Beam pipelines</div>
+</dd>
+<dt><a href="com/mozilla/secops/workshop/package-summary.html">com.mozilla.secops.workshop</a> - package com.mozilla.secops.workshop</dt>
+<dd>
+<div class="block">Getting started with Beam introduction pipeline</div>
+</dd>
 <dt><a href="com/mozilla/secops/CompositeOutput.html" title="class in com.mozilla.secops"><span class="typeNameLink">CompositeOutput</span></a> - Class in <a href="com/mozilla/secops/package-summary.html">com.mozilla.secops</a></dt>
 <dd>
 <div class="block"><a href="com/mozilla/secops/CompositeOutput.html" title="class in com.mozilla.secops"><code>CompositeOutput</code></a> provides a standardized composite output transform for use in pipelines.</div>
@@ -287,6 +358,10 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/crypto/RuntimeSecrets.html#decrypt-java.lang.String-">decrypt(String)</a></span> - Method in class com.mozilla.secops.crypto.<a href="com/mozilla/secops/crypto/RuntimeSecrets.html" title="class in com.mozilla.secops.crypto">RuntimeSecrets</a></dt>
 <dd>
 <div class="block">Decrypt the supplied input</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/identity/IdentityManager.html#DEFAULT_RESOURCE_PATH">DEFAULT_RESOURCE_PATH</a></span> - Static variable in class com.mozilla.secops.identity.<a href="com/mozilla/secops/identity/IdentityManager.html" title="class in com.mozilla.secops.identity">IdentityManager</a></dt>
+<dd>
+<div class="block">Default identity manager resource path</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/customs/Customs.Detector.html#Detector-java.lang.String-com.mozilla.secops.customs.CustomsCfgEntry-">Detector(String, CustomsCfgEntry)</a></span> - Constructor for class com.mozilla.secops.customs.<a href="com/mozilla/secops/customs/Customs.Detector.html" title="class in com.mozilla.secops.customs">Customs.Detector</a></dt>
 <dd>
@@ -395,6 +470,8 @@
 <dd>
 <div class="block">Create new empty <a href="com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser"><code>EventFilterRule</code></a></div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Cloudtrail.html#eventStringValue-com.mozilla.secops.parser.EventFilterPayload.StringProperty-">eventStringValue(EventFilterPayload.StringProperty)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Cloudtrail.html" title="class in com.mozilla.secops.parser">Cloudtrail</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Normalized.html#eventStringValue-com.mozilla.secops.parser.EventFilterPayload.StringProperty-">eventStringValue(EventFilterPayload.StringProperty)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Normalized.html" title="class in com.mozilla.secops.parser">Normalized</a></dt>
 <dd>
 <div class="block">Return a given normalized payload field based on the supplied field identifier</div>
@@ -413,6 +490,12 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html#expand-org.apache.beam.sdk.values.PCollection-">expand(PCollection&lt;String&gt;)</a></span> - Method in class com.mozilla.secops.authprofile.<a href="com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html" title="class in com.mozilla.secops.authprofile">AuthProfile.ParseAndWindow</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matcher.html#expand-org.apache.beam.sdk.values.PCollection-">expand(PCollection&lt;Event&gt;)</a></span> - Method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matcher.html" title="class in com.mozilla.secops.awsbehavior">AwsBehavior.Matcher</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matchers.html#expand-org.apache.beam.sdk.values.PCollection-">expand(PCollection&lt;Event&gt;)</a></span> - Method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matchers.html" title="class in com.mozilla.secops.awsbehavior">AwsBehavior.Matchers</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.ParseAndWindow.html#expand-org.apache.beam.sdk.values.PCollection-">expand(PCollection&lt;String&gt;)</a></span> - Method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.ParseAndWindow.html" title="class in com.mozilla.secops.awsbehavior">AwsBehavior.ParseAndWindow</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/customs/Customs.Detector.html#expand-org.apache.beam.sdk.values.PCollection-">expand(PCollection&lt;Event&gt;)</a></span> - Method in class com.mozilla.secops.customs.<a href="com/mozilla/secops/customs/Customs.Detector.html" title="class in com.mozilla.secops.customs">Customs.Detector</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/customs/Customs.Detectors.html#expand-org.apache.beam.sdk.values.PCollection-">expand(PCollection&lt;Event&gt;)</a></span> - Method in class com.mozilla.secops.customs.<a href="com/mozilla/secops/customs/Customs.Detectors.html" title="class in com.mozilla.secops.customs">Customs.Detectors</a></dt>
@@ -426,6 +509,10 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand(PCollection&lt;KV&lt;String, Long&gt;&gt;)</a></span> - Method in class com.mozilla.secops.httprequest.<a href="com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.ThresholdAnalysis</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/IprepdIO.Write.html#expand-org.apache.beam.sdk.values.PCollection-">expand(PCollection&lt;String&gt;)</a></span> - Method in class com.mozilla.secops.<a href="com/mozilla/secops/IprepdIO.Write.html" title="class in com.mozilla.secops">IprepdIO.Write</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/workshop/Workshop.PrintOutput.html#expand-org.apache.beam.sdk.values.PCollection-">expand(PCollection&lt;String&gt;)</a></span> - Method in class com.mozilla.secops.workshop.<a href="com/mozilla/secops/workshop/Workshop.PrintOutput.html" title="class in com.mozilla.secops.workshop">Workshop.PrintOutput</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/workshop/Workshop.ExtractWords.html#ExtractWords--">ExtractWords()</a></span> - Constructor for class com.mozilla.secops.workshop.<a href="com/mozilla/secops/workshop/Workshop.ExtractWords.html" title="class in com.mozilla.secops.workshop">Workshop.ExtractWords</a></dt>
 <dd>&nbsp;</dd>
 </dl>
 <a name="I:F">
@@ -442,6 +529,10 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/httprequest/Result.html#fromJSON-java.lang.String-">fromJSON(String)</a></span> - Static method in class com.mozilla.secops.httprequest.<a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a></dt>
 <dd>
 <div class="block">Return <a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a> from JSON string</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Event.html#fromJSON-java.lang.String-">fromJSON(String)</a></span> - Static method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a></dt>
+<dd>
+<div class="block">Convert a JSON string into an <a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser"><code>Event</code></a></div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Mozlog.html#fromJSON-java.lang.String-">fromJSON(String)</a></span> - Static method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Mozlog.html" title="class in com.mozilla.secops.parser">Mozlog</a></dt>
 <dd>
@@ -547,6 +638,8 @@
 <dd>
 <div class="block">Get client error count value in <a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a></div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html#getCloudtrailMatcherManagerPath--">getCloudtrailMatcherManagerPath()</a></span> - Method in interface com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html" title="interface in com.mozilla.secops.awsbehavior">AwsBehavior.AwsBehaviorOptions</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/customs/Customs.CustomsOptions.html#getConfigurationResourcePath--">getConfigurationResourcePath()</a></span> - Method in interface com.mozilla.secops.customs.<a href="com/mozilla/secops/customs/Customs.CustomsOptions.html" title="interface in com.mozilla.secops.customs">Customs.CustomsOptions</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/httprequest/Result.html#getCount--">getCount()</a></span> - Method in class com.mozilla.secops.httprequest.<a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a></dt>
@@ -565,6 +658,8 @@
 <dd>
 <div class="block">Get default notification configuration</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html#getDescription--">getDescription()</a></span> - Method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior">CloudtrailMatcher</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/secevent/SecEvent.html#getDestinationAccountId--">getDestinationAccountId()</a></span> - Method in class com.mozilla.secops.parser.models.secevent.<a href="com/mozilla/secops/parser/models/secevent/SecEvent.html" title="class in com.mozilla.secops.parser.models.secevent">SecEvent</a></dt>
 <dd>
 <div class="block">Get destination account ID</div>
@@ -640,6 +735,10 @@
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getEventID--">getEventID()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcherManager.html#getEventMatchers--">getEventMatchers()</a></span> - Method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/CloudtrailMatcherManager.html" title="class in com.mozilla.secops.awsbehavior">CloudtrailMatcherManager</a></dt>
+<dd>
+<div class="block">Returns parsed <a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior"><code>CloudtrailMatcher</code></a>s</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getEventName--">getEventName()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/duopull/Duopull.html#getEventReason--">getEventReason()</a></span> - Method in class com.mozilla.secops.parser.models.duopull.<a href="com/mozilla/secops/parser/models/duopull/Duopull.html" title="class in com.mozilla.secops.parser.models.duopull">Duopull</a></dt>
@@ -665,6 +764,8 @@
 <div class="block">Get event username</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getEventVersion--">getEventVersion()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html#getFields--">getFields()</a></span> - Method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior">CloudtrailMatcher</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Mozlog.html#getFields--">getFields()</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Mozlog.html" title="class in com.mozilla.secops.parser">Mozlog</a></dt>
 <dd>
@@ -712,6 +813,8 @@
 <div class="block">Get any configured identity manager from the parser</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#getIdentityManagerPath--">getIdentityManagerPath()</a></span> - Method in interface com.mozilla.secops.authprofile.<a href="com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html#getIdentityManagerPath--">getIdentityManagerPath()</a></span> - Method in interface com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html" title="interface in com.mozilla.secops.awsbehavior">AwsBehavior.AwsBehaviorOptions</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getIdentityName--">getIdentityName()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
 <dd>
@@ -770,6 +873,8 @@
 <dd>
 <div class="block">Return a specific metadata value</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/UserIdentity.html#getMFAAuthenticated--">getMFAAuthenticated()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/UserIdentity.html" title="class in com.mozilla.secops.parser.models.cloudtrail">UserIdentity</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Event.html#getMozlog--">getMozlog()</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a></dt>
 <dd>
 <div class="block">Get mozlog value</div>
@@ -850,7 +955,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getReadOnly--">getReadOnly()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getRecipientAccountID--">getRecipientAccountID()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getRecipientAccountId--">getRecipientAccountId()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getRequestID--">getRequestID()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
 <dd>&nbsp;</dd>
@@ -858,10 +963,21 @@
 <dd>
 <div class="block">Get request method.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getRequestParameters--">getRequestParameters()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/GLB.html#getRequestUrl--">getRequestUrl()</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/GLB.html" title="class in com.mozilla.secops.parser">GLB</a></dt>
 <dd>
 <div class="block">Get request URL.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html#getResource--">getResource()</a></span> - Method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior">CloudtrailMatcher</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Cloudtrail.html#getResource-java.lang.String-">getResource(String)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Cloudtrail.html" title="class in com.mozilla.secops.parser">Cloudtrail</a></dt>
+<dd>
+<div class="block">Utility method for returning the resource the event was acting on, used for adding context to
+ an <a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a>.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getResponseElements--">getResponseElements()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getResponseElementsValue-java.lang.String-">getResponseElementsValue(String)</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/httprequest/Result.html#getResultId--">getResultId()</a></span> - Method in class com.mozilla.secops.httprequest.<a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a></dt>
@@ -1066,6 +1182,8 @@
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getUserAgent--">getUserAgent()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getUserIdentity--">getUserIdentity()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/UserIdentity.html#getUserName--">getUserName()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/UserIdentity.html" title="class in com.mozilla.secops.parser.models.cloudtrail">UserIdentity</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#getUserType--">getUserType()</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
@@ -1221,12 +1339,30 @@
 <dd>
 <div class="block">Test if normalized event is of a given type</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Event.html#iterableToJson-java.lang.Iterable-">iterableToJson(Iterable&lt;Event&gt;)</a></span> - Static method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a></dt>
+<dd>
+<div class="block">Utility function to convert an iterable list of events into a JSON string</div>
+</dd>
+</dl>
+<a name="I:J">
+<!--   -->
+</a>
+<h2 class="title">J</h2>
+<dl>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Event.html#jsonToIterable-java.lang.String-">jsonToIterable(String)</a></span> - Static method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a></dt>
+<dd>
+<div class="block">Utility function to convert a JSON string into an iterable list of events</div>
+</dd>
 </dl>
 <a name="I:L">
 <!--   -->
 </a>
 <h2 class="title">L</h2>
 <dl>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcherManager.html#loadFromResource-java.lang.String-">loadFromResource(String)</a></span> - Static method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/CloudtrailMatcherManager.html" title="class in com.mozilla.secops.awsbehavior">CloudtrailMatcherManager</a></dt>
+<dd>
+<div class="block">Load cloudtrail matcher manager configuration from a resource file</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/customs/CustomsCfg.html#loadFromResource-java.lang.String-">loadFromResource(String)</a></span> - Static method in class com.mozilla.secops.customs.<a href="com/mozilla/secops/customs/CustomsCfg.html" title="class in com.mozilla.secops.customs">CustomsCfg</a></dt>
 <dd>
 <div class="block">Load customs configuration from a resource path</div>
@@ -1234,6 +1370,10 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/identity/IdentityManager.html#loadFromResource-java.lang.String-">loadFromResource(String)</a></span> - Static method in class com.mozilla.secops.identity.<a href="com/mozilla/secops/identity/IdentityManager.html" title="class in com.mozilla.secops.identity">IdentityManager</a></dt>
 <dd>
 <div class="block">Load identity manager configuration from a resource file</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/identity/IdentityManager.html#loadFromResource--">loadFromResource()</a></span> - Static method in class com.mozilla.secops.identity.<a href="com/mozilla/secops/identity/IdentityManager.html" title="class in com.mozilla.secops.identity">IdentityManager</a></dt>
+<dd>
+<div class="block">Load identity manager configuration from default resource location</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html#loadFromResource-java.lang.String-">loadFromResource(String)</a></span> - Static method in class com.mozilla.secops.parser.eventfiltercfg.<a href="com/mozilla/secops/parser/eventfiltercfg/EventFilterCfg.html" title="class in com.mozilla.secops.parser.eventfiltercfg">EventFilterCfg</a></dt>
 <dd>
@@ -1257,6 +1397,10 @@
 <dd>
 <div class="block">Entry point for Beam pipeline.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.html" title="class in com.mozilla.secops.awsbehavior">AwsBehavior</a></dt>
+<dd>
+<div class="block">Entry point for Beam pipeline.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/crypto/RuntimeSecrets.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class com.mozilla.secops.crypto.<a href="com/mozilla/secops/crypto/RuntimeSecrets.html" title="class in com.mozilla.secops.crypto">RuntimeSecrets</a></dt>
 <dd>
 <div class="block">main routine can be used to encrypt or decrypt data on the command line</div>
@@ -1269,7 +1413,13 @@
 <dd>
 <div class="block">Entry point for Beam pipeline.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/workshop/Workshop.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class com.mozilla.secops.workshop.<a href="com/mozilla/secops/workshop/Workshop.html" title="class in com.mozilla.secops.workshop">Workshop</a></dt>
+<dd>
+<div class="block">Entry point for Beam pipeline.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/EventFilter.html#matchAny--">matchAny()</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matcher.html#Matcher-com.mozilla.secops.awsbehavior.CloudtrailMatcher-">Matcher(CloudtrailMatcher)</a></span> - Constructor for class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matcher.html" title="class in com.mozilla.secops.awsbehavior">AwsBehavior.Matcher</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Cloudtrail.html#matcher-java.lang.String-">matcher(String)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Cloudtrail.html" title="class in com.mozilla.secops.parser">Cloudtrail</a></dt>
 <dd>&nbsp;</dd>
@@ -1286,6 +1436,8 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Raw.html#matcher-java.lang.String-">matcher(String)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Raw.html" title="class in com.mozilla.secops.parser">Raw</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/SecEvent.html#matcher-java.lang.String-">matcher(String)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/SecEvent.html" title="class in com.mozilla.secops.parser">SecEvent</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matchers.html#Matchers-com.mozilla.secops.awsbehavior.AwsBehavior.AwsBehaviorOptions-">Matchers(AwsBehavior.AwsBehaviorOptions)</a></span> - Constructor for class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.Matchers.html" title="class in com.mozilla.secops.awsbehavior">AwsBehavior.Matchers</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/EventFilter.html#matches-com.mozilla.secops.parser.Event-">matches(Event)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a></dt>
 <dd>
@@ -1370,6 +1522,8 @@
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html#ParseAndWindow--">ParseAndWindow()</a></span> - Constructor for class com.mozilla.secops.authprofile.<a href="com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html" title="class in com.mozilla.secops.authprofile">AuthProfile.ParseAndWindow</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.ParseAndWindow.html#ParseAndWindow--">ParseAndWindow()</a></span> - Constructor for class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.ParseAndWindow.html" title="class in com.mozilla.secops.awsbehavior">AwsBehavior.ParseAndWindow</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/httprequest/HTTPRequest.ParseAndWindow.html#ParseAndWindow-java.lang.Boolean-">ParseAndWindow(Boolean)</a></span> - Constructor for class com.mozilla.secops.httprequest.<a href="com/mozilla/secops/httprequest/HTTPRequest.ParseAndWindow.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.ParseAndWindow</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Parser.html#parseISO8601-java.lang.String-">parseISO8601(String)</a></span> - Static method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser">Parser</a></dt>
@@ -1414,6 +1568,8 @@
 <dd>
 <div class="block">Construct parser object.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/workshop/Workshop.PrintOutput.html#PrintOutput--">PrintOutput()</a></span> - Constructor for class com.mozilla.secops.workshop.<a href="com/mozilla/secops/workshop/Workshop.PrintOutput.html" title="class in com.mozilla.secops.workshop">Workshop.PrintOutput</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/alert/AlertFormatter.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-">processElement(DoFn&lt;Alert, String&gt;.ProcessContext)</a></span> - Method in class com.mozilla.secops.alert.<a href="com/mozilla/secops/alert/AlertFormatter.html" title="class in com.mozilla.secops.alert">AlertFormatter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/authprofile/AuthProfile.Analyze.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-">processElement(DoFn&lt;KV&lt;String, Iterable&lt;Event&gt;&gt;, Alert&gt;.ProcessContext)</a></span> - Method in class com.mozilla.secops.authprofile.<a href="com/mozilla/secops/authprofile/AuthProfile.Analyze.html" title="class in com.mozilla.secops.authprofile">AuthProfile.Analyze</a></dt>
@@ -1427,6 +1583,8 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/httprequest/HTTPRequest.OutputFormat.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-">processElement(DoFn&lt;Result, String&gt;.ProcessContext)</a></span> - Method in class com.mozilla.secops.httprequest.<a href="com/mozilla/secops/httprequest/HTTPRequest.OutputFormat.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.OutputFormat</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/ParserDoFn.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-">processElement(DoFn&lt;String, Event&gt;.ProcessContext)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/ParserDoFn.html" title="class in com.mozilla.secops.parser">ParserDoFn</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/workshop/Workshop.ExtractWords.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-">processElement(DoFn&lt;String, String&gt;.ProcessContext)</a></span> - Method in class com.mozilla.secops.workshop.<a href="com/mozilla/secops/workshop/Workshop.ExtractWords.html" title="class in com.mozilla.secops.workshop">Workshop.ExtractWords</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/authprofile/StateModel.html#pruneState--">pruneState()</a></span> - Method in class com.mozilla.secops.authprofile.<a href="com/mozilla/secops/authprofile/StateModel.html" title="class in com.mozilla.secops.authprofile">StateModel</a></dt>
 <dd>
@@ -1455,7 +1613,7 @@
 <div class="block">Operate in conjunction with <a href="com/mozilla/secops/customs/RateLimitAnalyzer.html" title="class in com.mozilla.secops.customs"><code>RateLimitAnalyzer</code></a> to apply analysis criterion to incoming
  event stream.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="com/mozilla/secops/customs/RateLimitCriterion.html#RateLimitCriterion-com.mozilla.secops.alert.Alert.AlertSeverity-java.lang.String-long-">RateLimitCriterion(Alert.AlertSeverity, String, long)</a></span> - Constructor for class com.mozilla.secops.customs.<a href="com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs">RateLimitCriterion</a></dt>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/customs/RateLimitCriterion.html#RateLimitCriterion-com.mozilla.secops.alert.Alert.AlertSeverity-java.lang.String-java.lang.Long-org.apache.beam.sdk.values.PCollectionView-">RateLimitCriterion(Alert.AlertSeverity, String, Long, PCollectionView&lt;Map&lt;String, Iterable&lt;Event&gt;&gt;&gt;)</a></span> - Constructor for class com.mozilla.secops.customs.<a href="com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs">RateLimitCriterion</a></dt>
 <dd>
 <div class="block"><a href="com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs"><code>RateLimitCriterion</code></a> static initializer</div>
 </dd>
@@ -1592,6 +1750,8 @@
 <dd>
 <div class="block">Set client error count value in <a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a></div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html#setCloudtrailMatcherManagerPath-java.lang.String-">setCloudtrailMatcherManagerPath(String)</a></span> - Method in interface com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html" title="interface in com.mozilla.secops.awsbehavior">AwsBehavior.AwsBehaviorOptions</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/customs/Customs.CustomsOptions.html#setConfigurationResourcePath-java.lang.String-">setConfigurationResourcePath(String)</a></span> - Method in interface com.mozilla.secops.customs.<a href="com/mozilla/secops/customs/Customs.CustomsOptions.html" title="interface in com.mozilla.secops.customs">Customs.CustomsOptions</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/httprequest/Result.html#setCount-java.lang.Long-">setCount(Long)</a></span> - Method in class com.mozilla.secops.httprequest.<a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a></dt>
@@ -1602,6 +1762,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#setDatastoreNamespace-java.lang.String-">setDatastoreNamespace(String)</a></span> - Method in interface com.mozilla.secops.authprofile.<a href="com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Duopull.html#setDuopullData-com.mozilla.secops.parser.models.duopull.Duopull-">setDuopullData(Duopull)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Duopull.html" title="class in com.mozilla.secops.parser">Duopull</a></dt>
+<dd>
+<div class="block">Set duopull data element</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/alert/AlertConfiguration.html#setEmailCatchall-java.lang.String-">setEmailCatchall(String)</a></span> - Method in class com.mozilla.secops.alert.<a href="com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert">AlertConfiguration</a></dt>
 <dd>
 <div class="block">Set email catchall address</div>
@@ -1623,6 +1787,8 @@
 <div class="block">Set an identity manager in the parser that can be used for lookups</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#setIdentityManagerPath-java.lang.String-">setIdentityManagerPath(String)</a></span> - Method in interface com.mozilla.secops.authprofile.<a href="com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html#setIdentityManagerPath-java.lang.String-">setIdentityManagerPath(String)</a></span> - Method in interface com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html" title="interface in com.mozilla.secops.awsbehavior">AwsBehavior.AwsBehaviorOptions</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/InputOptions.html#setInput-java.lang.String:A-">setInput(String[])</a></span> - Method in interface com.mozilla.secops.<a href="com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a></dt>
 <dd>&nbsp;</dd>
@@ -1674,10 +1840,6 @@
 <dd>
 <div class="block">Set event payload.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#setRequestParameters-java.util.HashMap-">setRequestParameters(HashMap&lt;String, Object&gt;)</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#setResponseElements-java.util.HashMap-">setResponseElements(HashMap&lt;String, Object&gt;)</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/httprequest/Result.html#setResultId-java.util.UUID-">setResultId(UUID)</a></span> - Method in class com.mozilla.secops.httprequest.<a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a></dt>
 <dd>
 <div class="block">Set id in <a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a>.</div>
@@ -1764,8 +1926,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/ParserDoFn.html#setup--">setup()</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/ParserDoFn.html" title="class in com.mozilla.secops.parser">ParserDoFn</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html#setUserIdentity-com.mozilla.secops.parser.models.cloudtrail.UserIdentity-">setUserIdentity(UserIdentity)</a></span> - Method in class com.mozilla.secops.parser.models.cloudtrail.<a href="com/mozilla/secops/parser/models/cloudtrail/CloudtrailEvent.html" title="class in com.mozilla.secops.parser.models.cloudtrail">CloudtrailEvent</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/EventFilter.html#setWantUTC-java.lang.Boolean-">setWantUTC(Boolean)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a></dt>
 <dd>
 <div class="block">Choose to ignore non-UTC timezone events</div>
@@ -1817,6 +1977,10 @@
 <dd>
 <div class="block">Static initializer for <a href="com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.ThresholdAnalysis</code></a>.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html#toEventFilterRule--">toEventFilterRule()</a></span> - Method in class com.mozilla.secops.awsbehavior.<a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior">CloudtrailMatcher</a></dt>
+<dd>
+<div class="block">Converts <a href="com/mozilla/secops/awsbehavior/CloudtrailMatcher.html" title="class in com.mozilla.secops.awsbehavior"><code>CloudtrailMatcher</code></a> into an <a href="com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser"><code>EventFilterRule</code></a> as regex matchers.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/alert/Alert.html#toJSON--">toJSON()</a></span> - Method in class com.mozilla.secops.alert.<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a></dt>
 <dd>
 <div class="block">Return JSON string representation.</div>
@@ -1824,6 +1988,10 @@
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/httprequest/Result.html#toJSON--">toJSON()</a></span> - Method in class com.mozilla.secops.httprequest.<a href="com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a></dt>
 <dd>
 <div class="block">Return JSON string representation.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/Event.html#toJSON--">toJSON()</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a></dt>
+<dd>
+<div class="block">Convert event into JSON string representation</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/Violation.html#toJSON--">toJSON()</a></span> - Method in class com.mozilla.secops.<a href="com/mozilla/secops/Violation.html" title="class in com.mozilla.secops">Violation</a></dt>
 <dd>
@@ -1961,9 +2129,31 @@ the order they are declared.</div>
 <dd>
 <div class="block">Add a new simple string match to the payload filter</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/EventFilterPayload.html#withStringRegexMatch-com.mozilla.secops.parser.EventFilterPayload.StringProperty-java.lang.String-">withStringRegexMatch(EventFilterPayload.StringProperty, String)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/EventFilterPayload.html" title="class in com.mozilla.secops.parser">EventFilterPayload</a></dt>
+<dd>
+<div class="block">Add a new string regex match to the payload filter</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/parser/EventFilterPayload.html#withStringSelector-com.mozilla.secops.parser.EventFilterPayload.StringProperty-">withStringSelector(EventFilterPayload.StringProperty)</a></span> - Method in class com.mozilla.secops.parser.<a href="com/mozilla/secops/parser/EventFilterPayload.html" title="class in com.mozilla.secops.parser">EventFilterPayload</a></dt>
 <dd>
 <div class="block">Add a string selector for filter keying operations</div>
+</dd>
+<dt><a href="com/mozilla/secops/workshop/Workshop.html" title="class in com.mozilla.secops.workshop"><span class="typeNameLink">Workshop</span></a> - Class in <a href="com/mozilla/secops/workshop/package-summary.html">com.mozilla.secops.workshop</a></dt>
+<dd>
+<div class="block">Getting started with Beam workshop pipeline.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/mozilla/secops/workshop/Workshop.html#Workshop--">Workshop()</a></span> - Constructor for class com.mozilla.secops.workshop.<a href="com/mozilla/secops/workshop/Workshop.html" title="class in com.mozilla.secops.workshop">Workshop</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/mozilla/secops/workshop/Workshop.ExtractWords.html" title="class in com.mozilla.secops.workshop"><span class="typeNameLink">Workshop.ExtractWords</span></a> - Class in <a href="com/mozilla/secops/workshop/package-summary.html">com.mozilla.secops.workshop</a></dt>
+<dd>
+<div class="block">DoFn to perform extraction of words from each line of input.</div>
+</dd>
+<dt><a href="com/mozilla/secops/workshop/Workshop.PrintOutput.html" title="class in com.mozilla.secops.workshop"><span class="typeNameLink">Workshop.PrintOutput</span></a> - Class in <a href="com/mozilla/secops/workshop/package-summary.html">com.mozilla.secops.workshop</a></dt>
+<dd>
+<div class="block">An output transform that simply prints a string</div>
+</dd>
+<dt><a href="com/mozilla/secops/workshop/Workshop.WorkshopOptions.html" title="interface in com.mozilla.secops.workshop"><span class="typeNameLink">Workshop.WorkshopOptions</span></a> - Interface in <a href="com/mozilla/secops/workshop/package-summary.html">com.mozilla.secops.workshop</a></dt>
+<dd>
+<div class="block">Runtime options for <a href="com/mozilla/secops/workshop/Workshop.html" title="class in com.mozilla.secops.workshop"><code>Workshop</code></a> pipeline.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/mozilla/secops/alert/AlertIO.html#write-com.mozilla.secops.alert.AlertConfiguration-">write(AlertConfiguration)</a></span> - Static method in class com.mozilla.secops.alert.<a href="com/mozilla/secops/alert/AlertIO.html" title="class in com.mozilla.secops.alert">AlertIO</a></dt>
 <dd>
@@ -1982,7 +2172,7 @@ the order they are declared.</div>
 <div class="block">Create new iprepd write transform</div>
 </dd>
 </dl>
-<a href="#I:A">A</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:N">N</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;</div>
+<a href="#I:A">A</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:N">N</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;</div>
 <!-- ======= START OF BOTTOM NAVBAR ====== -->
 <div class="bottomNav"><a name="navbar.bottom">
 <!--   -->

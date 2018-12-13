@@ -84,11 +84,21 @@
 <tbody>
 <tr class="altColor">
 <td class="colFirst"><a href="#com.mozilla.secops.alert">com.mozilla.secops.alert</a></td>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block">Alert generation and output</div>
+</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="#com.mozilla.secops.awsbehavior">com.mozilla.secops.awsbehavior</a></td>
+<td class="colLast">
+<div class="block">Pipeline for monitoring AWS Cloudtrail events</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="#com.mozilla.secops.customs">com.mozilla.secops.customs</a></td>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block">Customs server generic rate limiting heuristics pipeline</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -133,6 +143,28 @@
 <td class="colLast"><span class="typeNameLabel">AlertMailer.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/alert/AlertMailer.html#sendToCatchall-com.mozilla.secops.alert.Alert-">sendToCatchall</a></span>(<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&nbsp;a)</code>
 <div class="block">Send email alert to configured catchall address</div>
 </td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.awsbehavior">
+<!--   -->
+</a>
+<h3>Uses of <a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a> in <a href="../../../../../com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a></h3>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
+<caption><span>Methods in <a href="../../../../../com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a> that return types with arguments of type <a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">AwsBehavior.Matcher.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/awsbehavior/AwsBehavior.Matcher.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;col)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">AwsBehavior.Matchers.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/awsbehavior/AwsBehavior.Matchers.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;col)</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>

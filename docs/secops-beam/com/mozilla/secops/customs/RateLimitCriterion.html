@@ -159,9 +159,10 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html#RateLimitCriterion-com.mozilla.secops.alert.Alert.AlertSeverity-java.lang.String-long-">RateLimitCriterion</a></span>(<a href="../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a>&nbsp;severity,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html#RateLimitCriterion-com.mozilla.secops.alert.Alert.AlertSeverity-java.lang.String-java.lang.Long-org.apache.beam.sdk.values.PCollectionView-">RateLimitCriterion</a></span>(<a href="../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a>&nbsp;severity,
                   <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;customsMeta,
-                  long&nbsp;limit)</code>
+                  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;limit,
+                  org.apache.beam.sdk.values.PCollectionView&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt;&gt;&nbsp;eventView)</code>
 <div class="block"><a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs"><code>RateLimitCriterion</code></a> static initializer</div>
 </td>
 </tr>
@@ -217,7 +218,7 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="RateLimitCriterion-com.mozilla.secops.alert.Alert.AlertSeverity-java.lang.String-long-">
+<a name="RateLimitCriterion-com.mozilla.secops.alert.Alert.AlertSeverity-java.lang.String-java.lang.Long-org.apache.beam.sdk.values.PCollectionView-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -225,7 +226,8 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <h4>RateLimitCriterion</h4>
 <pre>public&nbsp;RateLimitCriterion(<a href="../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a>&nbsp;severity,
                           <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;customsMeta,
-                          long&nbsp;limit)</pre>
+                          <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;limit,
+                          org.apache.beam.sdk.values.PCollectionView&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt;&gt;&nbsp;eventView)</pre>
 <div class="block"><a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs"><code>RateLimitCriterion</code></a> static initializer</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>

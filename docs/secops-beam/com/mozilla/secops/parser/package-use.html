@@ -84,23 +84,39 @@
 <tbody>
 <tr class="altColor">
 <td class="colFirst"><a href="#com.mozilla.secops.authprofile">com.mozilla.secops.authprofile</a></td>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block">Pipeline for authentication source profiling and alerting</div>
+</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="#com.mozilla.secops.awsbehavior">com.mozilla.secops.awsbehavior</a></td>
+<td class="colLast">
+<div class="block">Pipeline for monitoring AWS Cloudtrail events</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="#com.mozilla.secops.customs">com.mozilla.secops.customs</a></td>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><a href="#com.mozilla.secops.httprequest">com.mozilla.secops.httprequest</a></td>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block">Customs server generic rate limiting heuristics pipeline</div>
+</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><a href="#com.mozilla.secops.parser">com.mozilla.secops.parser</a></td>
-<td class="colLast">&nbsp;</td>
+<td class="colFirst"><a href="#com.mozilla.secops.httprequest">com.mozilla.secops.httprequest</a></td>
+<td class="colLast">
+<div class="block">HTTP request threshold and error rate monitoring</div>
+</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><a href="#com.mozilla.secops.parser">com.mozilla.secops.parser</a></td>
+<td class="colLast">
+<div class="block">Log parsing, processing, and enrichment</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="#com.mozilla.secops.parser.eventfiltercfg">com.mozilla.secops.parser.eventfiltercfg</a></td>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block">Configuration file based event filters</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -117,6 +133,28 @@
 <tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/Event.html#com.mozilla.secops.authprofile">Event</a>
 <div class="block">Represents a high level event after being processed by a <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser"><code>Parser</code></a>.</div>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.awsbehavior">
+<!--   -->
+</a>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing classes, and an explanation">
+<caption><span>Classes in <a href="../../../../com/mozilla/secops/parser/package-summary.html">com.mozilla.secops.parser</a> used by <a href="../../../../com/mozilla/secops/awsbehavior/package-summary.html">com.mozilla.secops.awsbehavior</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colOne" scope="col">Class and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/Event.html#com.mozilla.secops.awsbehavior">Event</a>
+<div class="block">Represents a high level event after being processed by a <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser"><code>Parser</code></a>.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/EventFilterRule.html#com.mozilla.secops.awsbehavior">EventFilterRule</a>
+<div class="block">Rule within an event filter</div>
 </td>
 </tr>
 </tbody>
