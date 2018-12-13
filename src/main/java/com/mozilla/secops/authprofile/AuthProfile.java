@@ -246,16 +246,16 @@ public class AuthProfile implements Serializable {
             if (ip.equals(address)) {
               continue;
             }
-            CityResponse cr = geoip.lookup(ip);
+
             String location = "<unknown location>";
+            CityResponse cr = geoip.lookup(ip);
             if (cr != null) {
               location =
                   String.format("%s, %s", cr.getCity().getName(), cr.getCountry().getIsoCode());
             }
             currentEntries.add(
                 String.format(
-                    "%s - %s - %s",
-                    entry.getValue().getTimestamp(), entry.getKey(), "<geolocation>"));
+                    "%s - %s - %s", entry.getValue().getTimestamp(), entry.getKey(), location));
           }
           alert.addMetadata("current_entries", String.join("\n", currentEntries));
         }
