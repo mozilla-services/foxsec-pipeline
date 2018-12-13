@@ -223,7 +223,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
 
   /**
    * Utility method for returning the resource the event was acting on, used for adding context to
-   * {@link Alerts}.
+   * an {@link com.mozilla.secops.alert.Alert}.
    *
    * @param resource Resource selector.
    * @return Value of the resource selector.
