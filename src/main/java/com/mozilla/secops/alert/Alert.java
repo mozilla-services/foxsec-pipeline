@@ -214,7 +214,7 @@ public class Alert implements Serializable {
   /**
    * Get template name
    *
-   * @return Freemarker template name with file extension
+   * @return Freemarker template name with file extension or null if not set.
    */
   @JsonProperty("template_name")
   public String getTemplateName() {

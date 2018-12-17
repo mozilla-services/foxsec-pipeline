@@ -229,12 +229,13 @@ public class AuthProfile implements Serializable {
         }
         if (city != null) {
           alert.addMetadata("sourceaddress_city", city);
+        } else {
+          alert.addMetadata("sourceaddress_city", "unknown");
         }
         if (country != null) {
           alert.addMetadata("sourceaddress_country", country);
-        }
-        if (city != null && country != null) {
-          alert.addMetadata("geolocation", String.format("%s, %s", city, country));
+        } else {
+          alert.addMetadata("sourceaddress_country", "unknown");
         }
 
         // Used to construct a list of current entries other than the one being alerted on.

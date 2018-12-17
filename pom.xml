@@ -62,7 +62,7 @@
     </build>
 
     <dependencyManagement>
-      <dependencies>
+        <dependencies>
             <dependency>
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-core</artifactId>

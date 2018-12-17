@@ -113,10 +113,7 @@
                         </p>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        <#if geolocation??>
-                          ${alert.timestamp?datetime.iso_m_nz} - ${sourceaddress} - ${geolocation}
-                        <#else>
-                          ${alert.timestamp?datetime.iso_m_nz} - ${sourceaddress}
+                        ${alert.timestamp?datetime.iso_m_nz} - ${sourceaddress} - ${sourceaddress_city}, ${sourceaddress_country}
                         </#if>
                         </p>
 
