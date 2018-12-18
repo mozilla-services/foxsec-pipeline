@@ -114,7 +114,6 @@
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
                         ${alert.timestamp?datetime.iso_m_nz} - ${sourceaddress} - ${sourceaddress_city}, ${sourceaddress_country}
-                        </#if>
                         </p>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
@@ -127,7 +126,7 @@
 
                         <#if current_entries??>
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        Below are the IPs that are currently whitelisted for ${username}:
+                        Below are the IPs that are currently whitelisted for ${username} based on previous use:
                         </p>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
