@@ -5,10 +5,12 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.parser.Event;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
 import org.apache.beam.sdk.testing.PAssert;
@@ -19,6 +21,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
@@ -102,6 +105,42 @@ public class TestThresholdAnalysis1 {
             .apply(new HTTPRequest.ParseAndWindow(true))
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(1.0));
+
+    PCollection<Long> resultCount =
+        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+    PAssert.that(resultCount)
+        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .containsInAnyOrder(2L);
+
+    PAssert.that(results)
+        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .satisfies(
+            i -> {
+              for (Result r : i) {
+                assertThat(r.getSourceAddress(), anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
+                assertEquals(900L, (long) r.getCount());
+                assertEquals(180.0, (double) r.getMeanValue(), 0.1);
+                assertEquals(1.0, (double) r.getThresholdModifier(), 0.1);
+                assertEquals(359999L, r.getWindowTimestamp().getMillis());
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void thresholdAnalysisTestWithNatDetect() throws Exception {
+    PCollection<String> input = getInput();
+
+    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+
+    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
+
+    PCollection<Result> results =
+        events
+            .apply(new HTTPRequest.CountInWindow())
+            .apply(new HTTPRequest.ThresholdAnalysis(1.0, natView));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
