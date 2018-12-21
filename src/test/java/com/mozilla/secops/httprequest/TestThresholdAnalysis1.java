@@ -119,7 +119,7 @@ public class TestThresholdAnalysis1 {
   @Test
   public void thresholdAnalysisTestWithNatDetect() throws Exception {
     PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
     PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
 
@@ -132,16 +132,18 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+    // 10.0.0.2 would normally trigger a result being emitted, but with NAT detection enabled
+    // we should only see a single result for 10.0.0.1 in the selected interval window
     PAssert.that(resultCount)
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .containsInAnyOrder(2L);
+        .containsInAnyOrder(1L);
 
     PAssert.that(results)
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
         .satisfies(
             i -> {
               for (Result r : i) {
-                assertThat(r.getSourceAddress(), anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
+                assertEquals(r.getSourceAddress(), "10.0.0.1");
                 assertEquals(900L, (long) r.getCount());
                 assertEquals(180.0, (double) r.getMeanValue(), 0.1);
                 assertEquals(1.0, (double) r.getThresholdModifier(), 0.1);
