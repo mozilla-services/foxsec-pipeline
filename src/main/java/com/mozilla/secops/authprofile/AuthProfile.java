@@ -175,6 +175,7 @@ public class AuthProfile implements Serializable {
         }
 
         Alert alert = new Alert();
+
         String summary = String.format("%s authenticated to %s", username, destination);
         if (sm.updateEntry(address)) {
           // Address was new
@@ -182,6 +183,7 @@ public class AuthProfile implements Serializable {
           log.info("{}: escalating alert criteria for new source: {}", username, address);
           summary = summary + " from new source, " + summaryIndicator;
           alert.setSeverity(Alert.AlertSeverity.WARNING);
+          alert.setTemplateName("authprofile.ftlh");
 
           alert.addToPayload(
               String.format(
@@ -220,9 +222,13 @@ public class AuthProfile implements Serializable {
         }
         if (city != null) {
           alert.addMetadata("sourceaddress_city", city);
+        } else {
+          alert.addMetadata("sourceaddress_city", "unknown");
         }
         if (country != null) {
           alert.addMetadata("sourceaddress_country", country);
+        } else {
+          alert.addMetadata("sourceaddress_country", "unknown");
         }
 
         sm.set(state);
