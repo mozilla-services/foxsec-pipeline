@@ -5,17 +5,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Scanner;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -35,17 +32,6 @@ public class TestAuthProfile {
 
   public TestAuthProfile() {}
 
-  private PCollection<String> getInput(String resource) {
-    ArrayList<String> inputData = new ArrayList<String>();
-    InputStream in = TestAuthProfile.class.getResourceAsStream(resource);
-    Scanner scanner = new Scanner(in);
-    while (scanner.hasNextLine()) {
-      inputData.add(scanner.nextLine());
-    }
-    scanner.close();
-    return p.apply(Create.of(inputData));
-  }
-
   private AuthProfile.AuthProfileOptions getTestOptions() {
     AuthProfile.AuthProfileOptions ret =
         PipelineOptionsFactory.as(AuthProfile.AuthProfileOptions.class);
@@ -64,7 +50,7 @@ public class TestAuthProfile {
 
   @Test
   public void parseAndWindowTest() throws Exception {
-    PCollection<String> input = getInput("/testdata/authprof_buffer1.txt");
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer1.txt", p);
 
     PCollection<KV<String, Iterable<Event>>> res = input.apply(new AuthProfile.ParseAndWindow());
     PAssert.thatMap(res)
@@ -93,7 +79,7 @@ public class TestAuthProfile {
   public void analyzeTest() throws Exception {
     testEnv();
     AuthProfile.AuthProfileOptions options = getTestOptions();
-    PCollection<String> input = getInput("/testdata/authprof_buffer1.txt");
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer1.txt", p);
 
     PCollection<Alert> res =
         input

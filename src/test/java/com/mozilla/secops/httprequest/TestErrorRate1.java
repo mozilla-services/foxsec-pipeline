@@ -5,17 +5,14 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.parser.Event;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
-import java.util.zip.GZIPInputStream;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.KV;
@@ -27,18 +24,6 @@ import org.junit.Test;
 public class TestErrorRate1 {
   public TestErrorRate1() {}
 
-  private PCollection<String> getInput() throws IOException {
-    ArrayList<String> inputData = new ArrayList<String>();
-    GZIPInputStream in =
-        new GZIPInputStream(getClass().getResourceAsStream("/testdata/httpreq_errorrate1.txt.gz"));
-    Scanner scanner = new Scanner(in);
-    while (scanner.hasNextLine()) {
-      inputData.add(scanner.nextLine());
-    }
-    scanner.close();
-    return p.apply(Create.of(inputData));
-  }
-
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
@@ -48,7 +33,7 @@ public class TestErrorRate1 {
 
   @Test
   public void countRequestsTest() throws Exception {
-    PCollection<String> input = getInput();
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
 
     PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
     PCollection<Long> count =
@@ -69,7 +54,7 @@ public class TestErrorRate1 {
     ArrayList<KV<String, Long>> expect =
         new ArrayList<KV<String, Long>>(
             Arrays.asList(KV.of("10.0.0.1", 60L), KV.of("10.0.0.2", 60L)));
-    PCollection<String> input = getInput();
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
 
     PCollection<KV<String, Long>> counts =
         input
@@ -85,7 +70,7 @@ public class TestErrorRate1 {
 
   @Test
   public void errorRateTest() throws Exception {
-    PCollection<String> input = getInput();
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
 
     PCollection<Result> results =
         input

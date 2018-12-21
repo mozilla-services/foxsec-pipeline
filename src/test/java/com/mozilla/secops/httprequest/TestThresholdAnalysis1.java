@@ -6,18 +6,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.mozilla.secops.DetectNat;
+import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.parser.Event;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.zip.GZIPInputStream;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -29,19 +26,6 @@ import org.junit.Test;
 public class TestThresholdAnalysis1 {
   public TestThresholdAnalysis1() {}
 
-  private PCollection<String> getInput() throws IOException {
-    ArrayList<String> inputData = new ArrayList<String>();
-    GZIPInputStream in =
-        new GZIPInputStream(
-            getClass().getResourceAsStream("/testdata/httpreq_thresholdanalysis1.txt.gz"));
-    Scanner scanner = new Scanner(in);
-    while (scanner.hasNextLine()) {
-      inputData.add(scanner.nextLine());
-    }
-    scanner.close();
-    return p.apply(Create.of(inputData));
-  }
-
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
@@ -51,7 +35,8 @@ public class TestThresholdAnalysis1 {
 
   @Test
   public void countRequestsTest() throws Exception {
-    PCollection<String> input = getInput();
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
 
     PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
     PCollection<Long> count =
@@ -84,7 +69,8 @@ public class TestThresholdAnalysis1 {
                 KV.of("192.168.1.10", 60L),
                 KV.of("10.0.0.1", 900L),
                 KV.of("10.0.0.2", 900L)));
-    PCollection<String> input = getInput();
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
 
     PCollection<KV<String, Long>> counts =
         input.apply(new HTTPRequest.ParseAndWindow(true)).apply(new HTTPRequest.CountInWindow());
@@ -98,7 +84,8 @@ public class TestThresholdAnalysis1 {
 
   @Test
   public void thresholdAnalysisTest() throws Exception {
-    PCollection<String> input = getInput();
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
 
     PCollection<Result> results =
         input
@@ -131,7 +118,8 @@ public class TestThresholdAnalysis1 {
 
   @Test
   public void thresholdAnalysisTestWithNatDetect() throws Exception {
-    PCollection<String> input = getInput();
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
 
     PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
 
