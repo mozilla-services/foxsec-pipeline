@@ -34,6 +34,8 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link HTTPRequest} describes and implements a Beam pipeline for analysis of HTTP requests using
@@ -168,6 +170,8 @@ public class HTTPRequest implements Serializable {
     private final Double thresholdModifier;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
+    private Logger log;
+
     /**
      * Static initializer for {@link ThresholdAnalysis}.
      *
@@ -175,6 +179,7 @@ public class HTTPRequest implements Serializable {
      */
     public ThresholdAnalysis(Double thresholdModifier) {
       this.thresholdModifier = thresholdModifier;
+      log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
     /**
@@ -229,8 +234,12 @@ public class HTTPRequest implements Serializable {
                           if (c.element().getValue() >= (mv * thresholdModifier)) {
                             Boolean isNat = nv.get(c.element().getKey());
                             if (isNat != null && isNat) {
+                              log.info(
+                                  "detectnat: skipping result emission for {}",
+                                  c.element().getKey());
                               return;
                             }
+                            log.info("emitting result for {}", c.element().getKey());
                             Result r = new Result(Result.ResultType.THRESHOLD_ANALYSIS);
                             r.setCount(c.element().getValue());
                             r.setSourceAddress(c.element().getKey());
