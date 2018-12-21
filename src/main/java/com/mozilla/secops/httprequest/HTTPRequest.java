@@ -273,7 +273,7 @@ public class HTTPRequest implements Serializable {
 
     void setMaxClientErrorRate(Long value);
 
-    @Description("Enable NAT detection")
+    @Description("Enable NAT detection for threshold analysis")
     @Default.Boolean(false)
     Boolean getNatDetection();
 
