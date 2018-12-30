@@ -4,18 +4,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Scanner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
@@ -28,17 +26,6 @@ public class TestCustoms {
 
   public TestCustoms() {}
 
-  private PCollection<String> getInput(String resource) {
-    ArrayList<String> inputData = new ArrayList<String>();
-    InputStream in = TestCustoms.class.getResourceAsStream(resource);
-    Scanner scanner = new Scanner(in);
-    while (scanner.hasNextLine()) {
-      inputData.add(scanner.nextLine());
-    }
-    scanner.close();
-    return p.apply(Create.of(inputData));
-  }
-
   @Test
   public void noopPipelineTest() throws Exception {
     p.run().waitUntilFinish();
@@ -46,7 +33,8 @@ public class TestCustoms {
 
   @Test
   public void parseTest() throws Exception {
-    PCollection<String> input = getInput("/testdata/customs_rl_badlogin_simple1.txt");
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/customs_rl_badlogin_simple1.txt", p);
 
     PCollection<Long> count =
         input
@@ -60,7 +48,7 @@ public class TestCustoms {
 
   @Test
   public void customsMulti1Test() throws Exception {
-    PCollection<String> input = getInput("/testdata/customs_multi1.txt");
+    PCollection<String> input = TestUtil.getTestInput("/testdata/customs_multi1.txt", p);
 
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
     // Force use of event timestamp for testing purposes
@@ -135,7 +123,8 @@ public class TestCustoms {
 
   @Test
   public void rlLoginFailureSourceAddressTest() throws Exception {
-    PCollection<String> input = getInput("/testdata/customs_rl_badlogin_simple1.txt");
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/customs_rl_badlogin_simple1.txt", p);
 
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
     // Force use of event timestamp for testing purposes

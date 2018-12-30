@@ -4,19 +4,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.awsbehavior.AwsBehavior;
 import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Scanner;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,17 +31,6 @@ public class TestAwsBehavior {
     return ret;
   }
 
-  private PCollection<String> getInput(String resource) {
-    ArrayList<String> inputData = new ArrayList<String>();
-    InputStream in = TestAwsBehavior.class.getResourceAsStream(resource);
-    Scanner scanner = new Scanner(in);
-    while (scanner.hasNextLine()) {
-      inputData.add(scanner.nextLine());
-    }
-    scanner.close();
-    return p.apply(Create.of(inputData));
-  }
-
   @Test
   public void noopPipelineTest() throws Exception {
     p.run().waitUntilFinish();
@@ -52,7 +38,7 @@ public class TestAwsBehavior {
 
   @Test
   public void parseAndWindowTest() throws Exception {
-    PCollection<String> input = getInput("/testdata/cloudtrail_buffer1.txt");
+    PCollection<String> input = TestUtil.getTestInput("/testdata/cloudtrail_buffer1.txt", p);
 
     PCollection<Event> res = input.apply(new AwsBehavior.ParseAndWindow());
 
@@ -78,7 +64,7 @@ public class TestAwsBehavior {
   public void brokenMatcherTest() throws Exception {
     AwsBehavior.AwsBehaviorOptions options = getTestOptions();
     options.setCloudtrailMatcherManagerPath("/not-a-real-path");
-    PCollection<String> input = getInput("/testdata/cloudtrail_buffer1.txt");
+    PCollection<String> input = TestUtil.getTestInput("/testdata/cloudtrail_buffer1.txt", p);
 
     try {
       PCollection<Alert> res =
@@ -94,7 +80,7 @@ public class TestAwsBehavior {
   @Test
   public void matcherTest() throws Exception {
     AwsBehavior.AwsBehaviorOptions options = getTestOptions();
-    PCollection<String> input = getInput("/testdata/cloudtrail_buffer1.txt");
+    PCollection<String> input = TestUtil.getTestInput("/testdata/cloudtrail_buffer1.txt", p);
 
     PCollection<Alert> res =
         input.apply(new AwsBehavior.ParseAndWindow()).apply(new AwsBehavior.Matchers(options));

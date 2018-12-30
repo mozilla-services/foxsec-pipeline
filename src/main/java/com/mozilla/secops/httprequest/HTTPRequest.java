@@ -1,5 +1,6 @@
 package com.mozilla.secops.httprequest;
 
+import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.parser.Event;
@@ -9,17 +10,20 @@ import com.mozilla.secops.parser.GLB;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
 import java.io.Serializable;
+import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.Mean;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
@@ -27,8 +31,11 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptors;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link HTTPRequest} describes and implements a Beam pipeline for analysis of HTTP requests using
@@ -161,6 +168,9 @@ public class HTTPRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final Double thresholdModifier;
+    private PCollectionView<Map<String, Boolean>> natView = null;
+
+    private Logger log;
 
     /**
      * Static initializer for {@link ThresholdAnalysis}.
@@ -169,10 +179,33 @@ public class HTTPRequest implements Serializable {
      */
     public ThresholdAnalysis(Double thresholdModifier) {
       this.thresholdModifier = thresholdModifier;
+      log = LoggerFactory.getLogger(ThresholdAnalysis.class);
+    }
+
+    /**
+     * Static initializer for {@link ThresholdAnalysis}.
+     *
+     * @param thresholdModifier Threshold modifier to use for analysis.
+     * @param natView Use {@link DetectNat} view during threshold analysis
+     */
+    public ThresholdAnalysis(
+        Double thresholdModifier, PCollectionView<Map<String, Boolean>> natView) {
+      this(thresholdModifier);
+      this.natView = natView;
     }
 
     @Override
     public PCollection<Result> expand(PCollection<KV<String, Long>> col) {
+      if (natView == null) {
+        // If natView was not set then we just create an empty view for use as the side input
+        natView =
+            col.getPipeline()
+                .apply(
+                    Create.empty(
+                        TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
+                .apply(View.<String, Boolean>asMap());
+      }
+
       PCollection<Long> counts =
           col.apply(
               "Extract counts",
@@ -197,7 +230,16 @@ public class HTTPRequest implements Serializable {
                         @ProcessElement
                         public void processElement(ProcessContext c, BoundedWindow w) {
                           Double mv = c.sideInput(meanValue);
+                          Map<String, Boolean> nv = c.sideInput(natView);
                           if (c.element().getValue() >= (mv * thresholdModifier)) {
+                            Boolean isNat = nv.get(c.element().getKey());
+                            if (isNat != null && isNat) {
+                              log.info(
+                                  "detectnat: skipping result emission for {}",
+                                  c.element().getKey());
+                              return;
+                            }
+                            log.info("emitting result for {}", c.element().getKey());
                             Result r = new Result(Result.ResultType.THRESHOLD_ANALYSIS);
                             r.setCount(c.element().getValue());
                             r.setSourceAddress(c.element().getKey());
@@ -208,7 +250,7 @@ public class HTTPRequest implements Serializable {
                           }
                         }
                       })
-                  .withSideInputs(meanValue));
+                  .withSideInputs(meanValue, natView));
       return ret;
     }
   }
@@ -239,6 +281,12 @@ public class HTTPRequest implements Serializable {
     Long getMaxClientErrorRate();
 
     void setMaxClientErrorRate(Long value);
+
+    @Description("Enable NAT detection for threshold analysis")
+    @Default.Boolean(false)
+    Boolean getNatDetection();
+
+    void setNatDetection(Boolean value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
@@ -248,11 +296,17 @@ public class HTTPRequest implements Serializable {
         p.apply("input", options.getInputType().read(p, options))
             .apply("parse and window", new ParseAndWindow(false));
 
+    PCollectionView<Map<String, Boolean>> natView = null;
+    if (options.getNatDetection()) {
+      natView = DetectNat.getView(events);
+    }
+
     PCollection<String> threshResults =
         events
             .apply("per-client", new CountInWindow())
             .apply(
-                "threshold analysis", new ThresholdAnalysis(options.getAnalysisThresholdModifier()))
+                "threshold analysis",
+                new ThresholdAnalysis(options.getAnalysisThresholdModifier(), natView))
             .apply("output format", ParDo.of(new OutputFormat()));
 
     PCollection<String> errRateResults =
