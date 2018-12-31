@@ -187,4 +187,29 @@ public class TestThresholdAnalysis1 {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void thresholdAnalysisTestRequiredMinimumClients() throws Exception {
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
+
+    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+
+    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    // Set a required minimum above what we have in the test data set
+    options.setRequiredMinimumClients(500L);
+    PCollection<Result> results =
+        events
+            .apply(new HTTPRequest.CountInWindow())
+            .apply(new HTTPRequest.ThresholdAnalysis(options, natView));
+
+    PCollection<Long> resultCount =
+        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+    // No results should have been emitted
+    PAssert.that(resultCount).empty();
+
+    p.run().waitUntilFinish();
+  }
 }

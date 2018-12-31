@@ -16,10 +16,12 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.Mean;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -169,6 +171,7 @@ public class HTTPRequest implements Serializable {
 
     private final Double thresholdModifier;
     private final Double requiredMinimumAverage;
+    private final Long requiredMinimumClients;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
     private Logger log;
@@ -181,6 +184,7 @@ public class HTTPRequest implements Serializable {
     public ThresholdAnalysis(HTTPRequestOptions options) {
       this.thresholdModifier = options.getAnalysisThresholdModifier();
       this.requiredMinimumAverage = options.getRequiredMinimumAverage();
+      this.requiredMinimumClients = options.getRequiredMinimumClients();
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
@@ -208,6 +212,12 @@ public class HTTPRequest implements Serializable {
                 .apply(View.<String, Boolean>asMap());
       }
 
+      PCollectionView<Long> uniqueClients =
+          col.apply(Keys.<String>create())
+              .apply(
+                  "Unique client count",
+                  Combine.globally(Count.<String>combineFn()).withoutDefaults().asSingletonView());
+
       PCollection<Long> counts =
           col.apply(
               "Extract counts",
@@ -232,7 +242,11 @@ public class HTTPRequest implements Serializable {
                         @ProcessElement
                         public void processElement(ProcessContext c, BoundedWindow w) {
                           Double mv = c.sideInput(meanValue);
+                          Long uc = c.sideInput(uniqueClients);
                           Map<String, Boolean> nv = c.sideInput(natView);
+                          if (uc < requiredMinimumClients) {
+                            return;
+                          }
                           if (mv < requiredMinimumAverage) {
                             return;
                           }
@@ -255,7 +269,7 @@ public class HTTPRequest implements Serializable {
                           }
                         }
                       })
-                  .withSideInputs(meanValue, natView));
+                  .withSideInputs(meanValue, natView, uniqueClients));
       return ret;
     }
   }
@@ -286,6 +300,12 @@ public class HTTPRequest implements Serializable {
     Double getRequiredMinimumAverage();
 
     void setRequiredMinimumAverage(Double value);
+
+    @Description("Required minimum number of unique clients for threshold analysis")
+    @Default.Long(5L)
+    Long getRequiredMinimumClients();
+
+    void setRequiredMinimumClients(Long value);
 
     @Description("Maximum permitted client error rate per window")
     @Default.Long(30L)
