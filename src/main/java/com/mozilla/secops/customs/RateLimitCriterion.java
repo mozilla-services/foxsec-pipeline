@@ -88,12 +88,14 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     // Take a arbitrary sample of any events that were included in the detection window to be added
     // to the alert as metadata
     ArrayList<Event> sample = new ArrayList<Event>();
+    Boolean sampleTruncated = false;
     Iterable<Event> eventList = eventMap.get(key);
     int i = 0;
     if (eventList != null) {
       for (Event ev : eventList) {
         sample.add(ev);
         if (++i >= MAX_SAMPLE) {
+          sampleTruncated = true;
           break;
         }
       }
@@ -110,6 +112,7 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     }
     if (sample.size() > 0) {
       alert.addMetadata("customs_sample", Event.iterableToJson(sample));
+      alert.addMetadata("customs_sample_truncated", sampleTruncated.toString());
     }
     alert.setSeverity(severity);
     c.output(KV.of(key, alert));

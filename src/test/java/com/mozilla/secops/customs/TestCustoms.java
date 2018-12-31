@@ -82,6 +82,7 @@ public class TestCustoms {
                 Iterable<Event> samples =
                     Event.jsonToIterable(a[0].getMetadataValue("customs_sample"));
                 assertNotNull(samples);
+                assertEquals("false", a[0].getMetadataValue("customs_sample_truncated"));
                 Event[] elist = ((Collection<Event>) samples).toArray(new Event[0]);
                 assertNotNull(elist);
                 assertEquals(3, elist.length);
