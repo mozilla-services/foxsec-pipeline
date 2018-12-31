@@ -11,6 +11,7 @@ import com.mozilla.secops.parser.Event;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
@@ -27,6 +28,13 @@ public class TestThresholdAnalysis1 {
   public TestThresholdAnalysis1() {}
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
+
+  private HTTPRequest.HTTPRequestOptions getTestOptions() {
+    HTTPRequest.HTTPRequestOptions ret =
+        PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
+    ret.setAnalysisThresholdModifier(1.0);
+    return ret;
+  }
 
   @Test
   public void noopPipelineTest() throws Exception {
@@ -91,7 +99,7 @@ public class TestThresholdAnalysis1 {
         input
             .apply(new HTTPRequest.ParseAndWindow(true))
             .apply(new HTTPRequest.CountInWindow())
-            .apply(new HTTPRequest.ThresholdAnalysis(1.0));
+            .apply(new HTTPRequest.ThresholdAnalysis(getTestOptions()));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
@@ -128,7 +136,7 @@ public class TestThresholdAnalysis1 {
     PCollection<Result> results =
         events
             .apply(new HTTPRequest.CountInWindow())
-            .apply(new HTTPRequest.ThresholdAnalysis(1.0, natView));
+            .apply(new HTTPRequest.ThresholdAnalysis(getTestOptions(), natView));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
@@ -151,6 +159,31 @@ public class TestThresholdAnalysis1 {
               }
               return null;
             });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void thresholdAnalysisTestRequiredMinimum() throws Exception {
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
+
+    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+
+    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    // Set a minimum average well above what we will calculate with the test data set
+    options.setRequiredMinimumAverage(250.0);
+    PCollection<Result> results =
+        events
+            .apply(new HTTPRequest.CountInWindow())
+            .apply(new HTTPRequest.ThresholdAnalysis(options, natView));
+
+    PCollection<Long> resultCount =
+        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+    // No results should have been emitted
+    PAssert.that(resultCount).empty();
 
     p.run().waitUntilFinish();
   }

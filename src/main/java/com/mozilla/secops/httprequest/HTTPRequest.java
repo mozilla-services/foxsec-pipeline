@@ -168,6 +168,7 @@ public class HTTPRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final Double thresholdModifier;
+    private final Double requiredMinimumAverage;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
     private Logger log;
@@ -175,22 +176,23 @@ public class HTTPRequest implements Serializable {
     /**
      * Static initializer for {@link ThresholdAnalysis}.
      *
-     * @param thresholdModifier Threshold modifier to use for analysis.
+     * @param options {@link HTTPRequestOptions}
      */
-    public ThresholdAnalysis(Double thresholdModifier) {
-      this.thresholdModifier = thresholdModifier;
+    public ThresholdAnalysis(HTTPRequestOptions options) {
+      this.thresholdModifier = options.getAnalysisThresholdModifier();
+      this.requiredMinimumAverage = options.getRequiredMinimumAverage();
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
     /**
      * Static initializer for {@link ThresholdAnalysis}.
      *
-     * @param thresholdModifier Threshold modifier to use for analysis.
+     * @param options {@link HTTPRequestOptions}
      * @param natView Use {@link DetectNat} view during threshold analysis
      */
     public ThresholdAnalysis(
-        Double thresholdModifier, PCollectionView<Map<String, Boolean>> natView) {
-      this(thresholdModifier);
+        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
+      this(options);
       this.natView = natView;
     }
 
@@ -231,6 +233,9 @@ public class HTTPRequest implements Serializable {
                         public void processElement(ProcessContext c, BoundedWindow w) {
                           Double mv = c.sideInput(meanValue);
                           Map<String, Boolean> nv = c.sideInput(natView);
+                          if (mv < requiredMinimumAverage) {
+                            return;
+                          }
                           if (c.element().getValue() >= (mv * thresholdModifier)) {
                             Boolean isNat = nv.get(c.element().getKey());
                             if (isNat != null && isNat) {
@@ -276,6 +281,12 @@ public class HTTPRequest implements Serializable {
 
     void setAnalysisThresholdModifier(Double value);
 
+    @Description("Required minimum average for threshold analysis")
+    @Default.Double(5.0)
+    Double getRequiredMinimumAverage();
+
+    void setRequiredMinimumAverage(Double value);
+
     @Description("Maximum permitted client error rate per window")
     @Default.Long(30L)
     Long getMaxClientErrorRate();
@@ -304,9 +315,7 @@ public class HTTPRequest implements Serializable {
     PCollection<String> threshResults =
         events
             .apply("per-client", new CountInWindow())
-            .apply(
-                "threshold analysis",
-                new ThresholdAnalysis(options.getAnalysisThresholdModifier(), natView))
+            .apply("threshold analysis", new ThresholdAnalysis(options, natView))
             .apply("output format", ParDo.of(new OutputFormat()));
 
     PCollection<String> errRateResults =
