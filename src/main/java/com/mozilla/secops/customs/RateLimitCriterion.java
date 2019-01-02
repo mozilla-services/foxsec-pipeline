@@ -63,6 +63,9 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
       return true;
     }
     String comp = fn.apply(events[0]);
+    if (comp == null) {
+      return false;
+    }
     for (Event e : events) {
       if (!(fn.apply(e).equals(comp))) {
         return false;
@@ -124,6 +127,38 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
       alert.addMetadata(
           "customs_unique_actor_accountid",
           sample.get(0).<SecEvent>getPayload().getSecEventData().getActorAccountId());
+    }
+
+    // If SMS recipient was the same for all events, store that as metadata
+    if (uniqueAttribute(
+        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getSmsRecipient())) {
+      alert.addMetadata(
+          "customs_unique_sms_recipient",
+          sample.get(0).<SecEvent>getPayload().getSecEventData().getSmsRecipient());
+    }
+
+    // If email recipient was the same for all events, store that as metadata
+    if (uniqueAttribute(
+        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getEmailRecipient())) {
+      alert.addMetadata(
+          "customs_unique_email_recipient",
+          sample.get(0).<SecEvent>getPayload().getSecEventData().getEmailRecipient());
+    }
+
+    // If source address was unique for all events, store that as metadata
+    if (uniqueAttribute(
+        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getSourceAddress())) {
+      alert.addMetadata(
+          "customs_unique_source_address",
+          sample.get(0).<SecEvent>getPayload().getSecEventData().getSourceAddress());
+    }
+
+    // If object account ID was unique for all events, store that as metadata
+    if (uniqueAttribute(
+        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getDestinationAccountId())) {
+      alert.addMetadata(
+          "customs_unique_object_accountid",
+          sample.get(0).<SecEvent>getPayload().getSecEventData().getDestinationAccountId());
     }
 
     // Finally, store a sample of events that were part of this detection as metadata in the
