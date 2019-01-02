@@ -6,6 +6,7 @@ import com.mozilla.secops.parser.SecEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Function;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
@@ -53,11 +54,7 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
         "initialized new rate limit criterion analyzer, {} {} {}", severity, customsMeta, limit);
   }
 
-  private static String extractActorAccountId(Event e) {
-    return e.<SecEvent>getPayload().getSecEventData().getActorAccountId();
-  }
-
-  private Boolean uniqueActorAccountId(Iterable<Event> eventList) {
+  private Boolean uniqueAttribute(Iterable<Event> eventList, Function<Event, String> fn) {
     Event[] events = ((Collection<Event>) eventList).toArray(new Event[0]);
     if (events.length == 0) {
       return false;
@@ -65,9 +62,9 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     if (events.length == 1) {
       return true;
     }
-    String actorComp = extractActorAccountId(events[0]);
+    String comp = fn.apply(events[0]);
     for (Event e : events) {
-      if (!(extractActorAccountId(e).equals(actorComp))) {
+      if (!(fn.apply(e).equals(comp))) {
         return false;
       }
     }
@@ -107,8 +104,11 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     alert.addMetadata("customs_suspected", key);
     alert.addMetadata("customs_count", valueCount.toString());
     alert.addMetadata("customs_threshold", limit.toString());
-    if (uniqueActorAccountId(eventList)) {
-      alert.addMetadata("customs_unique_actor_accountid", extractActorAccountId(sample.get(0)));
+    if (uniqueAttribute(
+        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getActorAccountId())) {
+      alert.addMetadata(
+          "customs_unique_actor_accountid",
+          sample.get(0).<SecEvent>getPayload().getSecEventData().getActorAccountId());
     }
     if (sample.size() > 0) {
       alert.addMetadata("customs_sample", Event.iterableToJson(sample));
