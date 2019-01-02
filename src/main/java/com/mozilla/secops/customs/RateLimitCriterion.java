@@ -108,7 +108,7 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     alert.addMetadata("customs_count", valueCount.toString());
     alert.addMetadata("customs_threshold", limit.toString());
     if (uniqueActorAccountId(eventList)) {
-      alert.addMetadata("customs_actor_accountid", extractActorAccountId(sample.get(0)));
+      alert.addMetadata("customs_unique_actor_accountid", extractActorAccountId(sample.get(0)));
     }
     if (sample.size() > 0) {
       alert.addMetadata("customs_sample", Event.iterableToJson(sample));

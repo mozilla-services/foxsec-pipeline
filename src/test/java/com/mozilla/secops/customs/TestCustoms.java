@@ -77,7 +77,8 @@ public class TestCustoms {
                 assertEquals("3", a[0].getMetadataValue("customs_threshold"));
                 assertEquals("3", a[0].getMetadataValue("customs_count"));
                 assertEquals(
-                    "picard@uss.enterprise", a[0].getMetadataValue("customs_actor_accountid"));
+                    "picard@uss.enterprise",
+                    a[0].getMetadataValue("customs_unique_actor_accountid"));
 
                 Iterable<Event> samples =
                     Event.jsonToIterable(a[0].getMetadataValue("customs_sample"));
