@@ -79,6 +79,7 @@ public class TestCustoms {
                 assertEquals(
                     "picard@uss.enterprise",
                     a[0].getMetadataValue("customs_unique_actor_accountid"));
+                assertEquals("10.0.0.1", a[0].getMetadataValue("customs_unique_source_address"));
 
                 Iterable<Event> samples =
                     Event.jsonToIterable(a[0].getMetadataValue("customs_sample"));
@@ -110,10 +111,16 @@ public class TestCustoms {
                   String cc = ta.getMetadataValue("customs_category");
                   if (cc.equals("rl_sms_recipient")) {
                     assertEquals("00000000000", ta.getMetadataValue("customs_suspected"));
+                    assertEquals(
+                        "00000000000", ta.getMetadataValue("customs_unique_sms_recipient"));
                   } else if (cc.equals("rl_sms_sourceaddress")) {
                     assertEquals("10.0.0.2", ta.getMetadataValue("customs_suspected"));
+                    assertEquals("10.0.0.2", ta.getMetadataValue("customs_unique_source_address"));
                   } else if (cc.equals("rl_sms_accountid")) {
                     assertEquals("worf@uss.enterprise", ta.getMetadataValue("customs_suspected"));
+                    assertEquals(
+                        "worf@uss.enterprise",
+                        ta.getMetadataValue("customs_unique_actor_accountid"));
                   } else {
                     fail("invalid customs category: " + cc);
                   }
@@ -166,6 +173,9 @@ public class TestCustoms {
                   assertEquals("customs", a.getCategory());
                   assertEquals(
                       "127.0.0.1+q@the-q-continuum", a.getMetadataValue("customs_suspected"));
+                  assertEquals("127.0.0.1", a.getMetadataValue("customs_unique_source_address"));
+                  assertEquals(
+                      "q@the-q-continuum", a.getMetadataValue("customs_unique_actor_accountid"));
                   cnt++;
                 }
                 assertEquals(1, cnt);
