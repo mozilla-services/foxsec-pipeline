@@ -99,21 +99,40 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     }
 
     Alert alert = new Alert();
+
+    // Set our category to customs to indicate this alert originated from the customs pipeline
     alert.setCategory("customs");
+
+    // Add the name of the detector to the metadata to indicate the detector rule that fired
     alert.addMetadata("customs_category", customsMeta);
+
+    // customs_suspected is set to include the key on which the rate limiting logic operated, this
+    // could be a single value or multiple values joined with a + symbol depending on the
+    // detector configuration
     alert.addMetadata("customs_suspected", key);
+
+    // The number of events seen for the key within the window, and the threshold setting in the
+    // detector configuration. Since an alert is being generated the count will always meet or
+    // exceed the threshold.
     alert.addMetadata("customs_count", valueCount.toString());
     alert.addMetadata("customs_threshold", limit.toString());
+
+    // If all of the in-scope events in the alert pertain to the same account ID, include this
+    // unique account ID value as metadata.
     if (uniqueAttribute(
         eventList, le -> le.<SecEvent>getPayload().getSecEventData().getActorAccountId())) {
       alert.addMetadata(
           "customs_unique_actor_accountid",
           sample.get(0).<SecEvent>getPayload().getSecEventData().getActorAccountId());
     }
+
+    // Finally, store a sample of events that were part of this detection as metadata in the
+    // alert.
     if (sample.size() > 0) {
       alert.addMetadata("customs_sample", Event.iterableToJson(sample));
       alert.addMetadata("customs_sample_truncated", sampleTruncated.toString());
     }
+
     alert.setSeverity(severity);
     c.output(KV.of(key, alert));
   }
