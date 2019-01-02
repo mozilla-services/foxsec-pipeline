@@ -151,6 +151,21 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
       alert.addMetadata(
           "customs_unique_source_address",
           sample.get(0).<SecEvent>getPayload().getSecEventData().getSourceAddress());
+
+      // Since we had a unique source address, also see if we can pull in unique country and city
+      // values as well
+      if (uniqueAttribute(
+          eventList, le -> le.<SecEvent>getPayload().getSecEventData().getSourceAddressCity())) {
+        alert.addMetadata(
+            "customs_unique_source_address_city",
+            sample.get(0).<SecEvent>getPayload().getSecEventData().getSourceAddressCity());
+      }
+      if (uniqueAttribute(
+          eventList, le -> le.<SecEvent>getPayload().getSecEventData().getSourceAddressCountry())) {
+        alert.addMetadata(
+            "customs_unique_source_address_country",
+            sample.get(0).<SecEvent>getPayload().getSecEventData().getSourceAddressCountry());
+      }
     }
 
     // If object account ID was unique for all events, store that as metadata

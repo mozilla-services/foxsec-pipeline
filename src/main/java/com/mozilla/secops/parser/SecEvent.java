@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.maxmind.geoip2.model.CityResponse;
 import java.io.IOException;
 import java.io.Serializable;
 import org.joda.time.DateTime;
@@ -101,6 +102,15 @@ public class SecEvent extends PayloadBase implements Serializable {
     DateTime ts = secEventData.getTimestamp();
     if (ts != null) {
       e.setTimestamp(ts);
+    }
+
+    String sa = secEventData.getSourceAddress();
+    if (sa != null) {
+      CityResponse cr = p.geoIp(sa);
+      if (cr != null) {
+        secEventData.setSourceAddressCity(cr.getCity().getName());
+        secEventData.setSourceAddressCountry(cr.getCountry().getIsoCode());
+      }
     }
   }
 }

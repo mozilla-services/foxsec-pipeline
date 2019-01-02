@@ -17,6 +17,8 @@ public class SecEvent implements Serializable {
   private String actorAccountId;
   private String action;
   private String sourceAddress;
+  private String sourceAddressCity;
+  private String sourceAddressCountry;
 
   private String emailRecipient;
   private String smsRecipient;
@@ -62,6 +64,44 @@ public class SecEvent implements Serializable {
   @JsonProperty("source_address")
   public String getSourceAddress() {
     return sourceAddress;
+  }
+
+  /**
+   * Get source address city
+   *
+   * @return Source address city
+   */
+  @JsonProperty("source_address_city")
+  public String getSourceAddressCity() {
+    return sourceAddressCity;
+  }
+
+  /**
+   * Set source address city
+   *
+   * @param value City value
+   */
+  public void setSourceAddressCity(String value) {
+    sourceAddressCity = value;
+  }
+
+  /**
+   * Get source address country
+   *
+   * @return Source address country
+   */
+  @JsonProperty("source_address_country")
+  public String getSourceAddressCountry() {
+    return sourceAddressCountry;
+  }
+
+  /**
+   * Set source address country
+   *
+   * @param value Country value
+   */
+  public void setSourceAddressCountry(String value) {
+    sourceAddressCountry = value;
   }
 
   /**

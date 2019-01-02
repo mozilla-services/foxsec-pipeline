@@ -185,4 +185,50 @@ public class TestCustoms {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void rlStatusCheckWithGeoTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/customs_geo1.txt", p);
+
+    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
+    // Force use of event timestamp for testing purposes
+    cfg.setTimestampOverride(true);
+
+    PCollection<Alert> alerts =
+        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg));
+
+    PCollection<Long> count =
+        alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+    PAssert.that(count)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Long l : x) {
+                cnt += l;
+              }
+              assertEquals(1L, cnt);
+              return null;
+            });
+
+    PAssert.that(alerts)
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(900000L)))
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                assertEquals("customs", a.getCategory());
+                assertEquals("rl_statuscheck", a.getMetadataValue("customs_category"));
+                assertEquals("216.160.83.56", a.getMetadataValue("customs_unique_source_address"));
+                assertEquals("Milton", a.getMetadataValue("customs_unique_source_address_city"));
+                assertEquals("US", a.getMetadataValue("customs_unique_source_address_country"));
+                assertEquals("10", a.getMetadataValue("customs_count"));
+                assertEquals("5", a.getMetadataValue("customs_threshold"));
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }
