@@ -58,6 +58,9 @@ public class Parser {
         return ret;
       }
       Map<String, Object> jret = entry.getJsonPayload();
+      if (jret == null) {
+        jret = entry.getProtoPayload();
+      }
       if (jret != null) {
         // XXX Serialize the Stackdriver JSON data and emit a string for use in the
         // matchers. This is inefficient and we could probably look at changing this
@@ -170,6 +173,7 @@ public class Parser {
     payloads.add(new GLB());
     payloads.add(new SecEvent());
     payloads.add(new Cloudtrail());
+    payloads.add(new GcpAudit());
     payloads.add(new OpenSSH());
     payloads.add(new Duopull());
     payloads.add(new Raw());
