@@ -45,7 +45,7 @@ public class Parser {
     return fmt.parseDateTime(in);
   }
 
-  private String stripStackdriverEncapsulation(Event e, String input) {
+  private String stripStackdriverEncapsulation(Event e, String input, ParserState state) {
     try {
       JsonParser jp = jf.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
@@ -79,8 +79,8 @@ public class Parser {
     return input;
   }
 
-  private String stripEncapsulation(Event e, String input) {
-    input = stripStackdriverEncapsulation(e, input);
+  private String stripEncapsulation(Event e, String input, ParserState state) {
+    input = stripStackdriverEncapsulation(e, input, state);
     input = stripMozlog(e, input);
     return input;
   }
@@ -129,23 +129,25 @@ public class Parser {
    * @return {@link Event}
    */
   public Event parse(String input) {
+    ParserState state = new ParserState(this);
+
     if (input == null) {
       input = "";
     }
 
     Event e = new Event();
-    input = stripEncapsulation(e, input);
+    input = stripEncapsulation(e, input, state);
 
     for (PayloadBase p : payloads) {
-      if (!p.matcher(input)) {
+      if (!p.matcher(input, state)) {
         continue;
       }
       Class<?> cls = p.getClass();
       try {
         e.setPayload(
             (PayloadBase)
-                cls.getConstructor(String.class, Event.class, Parser.class)
-                    .newInstance(input, e, this));
+                cls.getConstructor(String.class, Event.class, ParserState.class)
+                    .newInstance(input, e, state));
       } catch (ReflectiveOperationException exc) {
         log.warn(exc.getMessage());
       }

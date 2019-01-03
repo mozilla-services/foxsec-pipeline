@@ -27,7 +27,7 @@ public abstract class PayloadBase {
    * @param e Parent {@link Event}.
    * @param p Parser instance.
    */
-  public PayloadBase(String input, Event e, Parser p) {}
+  public PayloadBase(String input, Event e, ParserState state) {}
 
   /**
    * Apply matcher.
@@ -35,7 +35,7 @@ public abstract class PayloadBase {
    * @param input Input string.
    * @return True if matcher matches.
    */
-  public Boolean matcher(String input) {
+  public Boolean matcher(String input, ParserState state) {
     return false;
   }
 

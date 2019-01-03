@@ -27,7 +27,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
   private String sourceAddressCountry;
 
   @Override
-  public Boolean matcher(String input) {
+  public Boolean matcher(String input, ParserState state) {
     try {
       if (parseInput(input) != null) {
         return true;
@@ -55,7 +55,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
    * @param e Parent {@link Event}.
    * @param p Parser instance.
    */
-  public Cloudtrail(String input, Event e, Parser p) {
+  public Cloudtrail(String input, Event e, ParserState state) {
     mapper = getObjectMapper();
     try {
       event = parseInput(input);
@@ -70,7 +70,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
 
         // If we have an instance of IdentityManager in the parser, see if we can
         // also set the resolved subject identity
-        IdentityManager mgr = p.getIdentityManager();
+        IdentityManager mgr = state.getParser().getIdentityManager();
         if (mgr != null) {
           String resId = mgr.lookupAlias(getUser());
           if (resId != null) {
@@ -85,7 +85,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         }
 
         if (getSourceAddress() != null) {
-          CityResponse cr = p.geoIp(getSourceAddress());
+          CityResponse cr = state.getParser().geoIp(getSourceAddress());
           if (cr != null) {
             sourceAddressCity = cr.getCity().getName();
             sourceAddressCountry = cr.getCountry().getIsoCode();

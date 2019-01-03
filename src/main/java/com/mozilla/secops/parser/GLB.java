@@ -22,7 +22,7 @@ public class GLB extends PayloadBase implements Serializable {
   private Integer status;
 
   @Override
-  public Boolean matcher(String input) {
+  public Boolean matcher(String input, ParserState state) {
     try {
       JsonParser jp = jfmatcher.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
@@ -62,7 +62,7 @@ public class GLB extends PayloadBase implements Serializable {
    * @param e Parent {@link Event}.
    * @param p Parser instance.
    */
-  public GLB(String input, Event e, Parser p) {
+  public GLB(String input, Event e, ParserState state) {
     jfmatcher = null;
     // Use method local JacksonFactory as the object is not serializable, and this event
     // may be passed around
