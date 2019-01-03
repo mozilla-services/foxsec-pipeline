@@ -14,7 +14,7 @@ public class Raw extends PayloadBase implements Serializable {
   private String raw;
 
   @Override
-  public Boolean matcher(String input) {
+  public Boolean matcher(String input, ParserState state) {
     return true;
   }
 
@@ -31,9 +31,9 @@ public class Raw extends PayloadBase implements Serializable {
    *
    * @param input Input string.
    * @param e Parent {@link Event}.
-   * @param p Parser instance.
+   * @param state State
    */
-  public Raw(String input, Event e, Parser p) {
+  public Raw(String input, Event e, ParserState state) {
     raw = input;
   }
 

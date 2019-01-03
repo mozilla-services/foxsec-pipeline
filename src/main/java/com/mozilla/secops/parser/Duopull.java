@@ -16,7 +16,7 @@ public class Duopull extends PayloadBase implements Serializable {
   private com.mozilla.secops.parser.models.duopull.Duopull duoPullData;
 
   @Override
-  public Boolean matcher(String input) {
+  public Boolean matcher(String input, ParserState state) {
     ObjectMapper mapper = new ObjectMapper();
     com.mozilla.secops.parser.models.duopull.Duopull d;
     try {
@@ -64,9 +64,9 @@ public class Duopull extends PayloadBase implements Serializable {
    *
    * @param input Input string.
    * @param e Parent {@link Event}.
-   * @param p Parser instance.
+   * @param state State
    */
-  public Duopull(String input, Event e, Parser p) {
+  public Duopull(String input, Event e, ParserState state) {
     ObjectMapper mapper = new ObjectMapper();
     try {
       duoPullData = mapper.readValue(input, com.mozilla.secops.parser.models.duopull.Duopull.class);
