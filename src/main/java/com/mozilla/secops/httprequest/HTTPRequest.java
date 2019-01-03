@@ -309,13 +309,14 @@ public class HTTPRequest implements Serializable {
 
     void setAnalysisThresholdModifier(Double value);
 
-    @Description("Required minimum average for threshold analysis")
+    @Description(
+        "Required minimum average number of requests per client/window for threshold analysis")
     @Default.Double(5.0)
     Double getRequiredMinimumAverage();
 
     void setRequiredMinimumAverage(Double value);
 
-    @Description("Required minimum number of unique clients for threshold analysis")
+    @Description("Required minimum number of unique clients per window for threshold analysis")
     @Default.Long(5L)
     Long getRequiredMinimumClients();
 
