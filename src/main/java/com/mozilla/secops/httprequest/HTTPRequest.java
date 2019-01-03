@@ -238,6 +238,12 @@ public class HTTPRequest implements Serializable {
               ParDo.of(
                       new DoFn<KV<String, Long>, Result>() {
                         private static final long serialVersionUID = 1L;
+                        private Boolean warningLogged;
+
+                        @Setup
+                        public void setup() {
+                          warningLogged = false;
+                        }
 
                         @ProcessElement
                         public void processElement(ProcessContext c, BoundedWindow w) {
@@ -245,9 +251,17 @@ public class HTTPRequest implements Serializable {
                           Long uc = c.sideInput(uniqueClients);
                           Map<String, Boolean> nv = c.sideInput(natView);
                           if (uc < requiredMinimumClients) {
+                            if (!warningLogged) {
+                              log.warn("ignoring events as window does not meet minimum clients");
+                              warningLogged = true;
+                            }
                             return;
                           }
                           if (mv < requiredMinimumAverage) {
+                            if (!warningLogged) {
+                              log.warn("ignoring events as window does not meet minimum average");
+                              warningLogged = true;
+                            }
                             return;
                           }
                           if (c.element().getValue() >= (mv * thresholdModifier)) {
