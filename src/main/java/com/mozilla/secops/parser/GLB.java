@@ -24,8 +24,12 @@ public class GLB extends PayloadBase implements Serializable {
   @Override
   public Boolean matcher(String input, ParserState state) {
     try {
-      JsonParser jp = jfmatcher.createJsonParser(input);
-      LogEntry entry = jp.parse(LogEntry.class);
+      LogEntry entry = state.getLogEntryHint();
+      if (entry == null) {
+        JsonParser jp = jfmatcher.createJsonParser(input);
+        entry = jp.parse(LogEntry.class);
+      }
+
       Map<String, Object> m = entry.getJsonPayload();
       if (m == null) {
         return false;
@@ -64,15 +68,17 @@ public class GLB extends PayloadBase implements Serializable {
    */
   public GLB(String input, Event e, ParserState state) {
     jfmatcher = null;
-    // Use method local JacksonFactory as the object is not serializable, and this event
-    // may be passed around
-    JacksonFactory jf = new JacksonFactory();
-    LogEntry entry;
-    try {
-      JsonParser jp = jf.createJsonParser(input);
-      entry = jp.parse(LogEntry.class);
-    } catch (IOException exc) {
-      return;
+    LogEntry entry = state.getLogEntryHint();
+    if (entry == null) {
+      // Use method local JacksonFactory as the object is not serializable, and this event
+      // may be passed around
+      JacksonFactory jf = new JacksonFactory();
+      try {
+        JsonParser jp = jf.createJsonParser(input);
+        entry = jp.parse(LogEntry.class);
+      } catch (IOException exc) {
+        return;
+      }
     }
     HttpRequest h = entry.getHttpRequest();
     if (h == null) {

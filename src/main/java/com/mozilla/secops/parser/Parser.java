@@ -49,6 +49,10 @@ public class Parser {
     try {
       JsonParser jp = jf.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
+
+      // We were able to deserialize the LogEntry so store it as a hint in the state
+      state.setLogEntryHint(entry);
+
       String ret = entry.getTextPayload();
       if (ret != null && !ret.isEmpty()) {
         return ret;
