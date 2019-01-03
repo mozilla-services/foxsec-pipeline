@@ -16,10 +16,12 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.Mean;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -168,6 +170,8 @@ public class HTTPRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final Double thresholdModifier;
+    private final Double requiredMinimumAverage;
+    private final Long requiredMinimumClients;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
     private Logger log;
@@ -175,22 +179,24 @@ public class HTTPRequest implements Serializable {
     /**
      * Static initializer for {@link ThresholdAnalysis}.
      *
-     * @param thresholdModifier Threshold modifier to use for analysis.
+     * @param options {@link HTTPRequestOptions}
      */
-    public ThresholdAnalysis(Double thresholdModifier) {
-      this.thresholdModifier = thresholdModifier;
+    public ThresholdAnalysis(HTTPRequestOptions options) {
+      this.thresholdModifier = options.getAnalysisThresholdModifier();
+      this.requiredMinimumAverage = options.getRequiredMinimumAverage();
+      this.requiredMinimumClients = options.getRequiredMinimumClients();
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
     /**
      * Static initializer for {@link ThresholdAnalysis}.
      *
-     * @param thresholdModifier Threshold modifier to use for analysis.
+     * @param options {@link HTTPRequestOptions}
      * @param natView Use {@link DetectNat} view during threshold analysis
      */
     public ThresholdAnalysis(
-        Double thresholdModifier, PCollectionView<Map<String, Boolean>> natView) {
-      this(thresholdModifier);
+        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
+      this(options);
       this.natView = natView;
     }
 
@@ -205,6 +211,12 @@ public class HTTPRequest implements Serializable {
                         TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
                 .apply(View.<String, Boolean>asMap());
       }
+
+      PCollectionView<Long> uniqueClients =
+          col.apply(Keys.<String>create())
+              .apply(
+                  "Unique client count",
+                  Combine.globally(Count.<String>combineFn()).withoutDefaults().asSingletonView());
 
       PCollection<Long> counts =
           col.apply(
@@ -226,11 +238,32 @@ public class HTTPRequest implements Serializable {
               ParDo.of(
                       new DoFn<KV<String, Long>, Result>() {
                         private static final long serialVersionUID = 1L;
+                        private Boolean warningLogged;
+
+                        @Setup
+                        public void setup() {
+                          warningLogged = false;
+                        }
 
                         @ProcessElement
                         public void processElement(ProcessContext c, BoundedWindow w) {
                           Double mv = c.sideInput(meanValue);
+                          Long uc = c.sideInput(uniqueClients);
                           Map<String, Boolean> nv = c.sideInput(natView);
+                          if (uc < requiredMinimumClients) {
+                            if (!warningLogged) {
+                              log.warn("ignoring events as window does not meet minimum clients");
+                              warningLogged = true;
+                            }
+                            return;
+                          }
+                          if (mv < requiredMinimumAverage) {
+                            if (!warningLogged) {
+                              log.warn("ignoring events as window does not meet minimum average");
+                              warningLogged = true;
+                            }
+                            return;
+                          }
                           if (c.element().getValue() >= (mv * thresholdModifier)) {
                             Boolean isNat = nv.get(c.element().getKey());
                             if (isNat != null && isNat) {
@@ -250,7 +283,7 @@ public class HTTPRequest implements Serializable {
                           }
                         }
                       })
-                  .withSideInputs(meanValue, natView));
+                  .withSideInputs(meanValue, natView, uniqueClients));
       return ret;
     }
   }
@@ -275,6 +308,19 @@ public class HTTPRequest implements Serializable {
     Double getAnalysisThresholdModifier();
 
     void setAnalysisThresholdModifier(Double value);
+
+    @Description(
+        "Required minimum average number of requests per client/window for threshold analysis")
+    @Default.Double(5.0)
+    Double getRequiredMinimumAverage();
+
+    void setRequiredMinimumAverage(Double value);
+
+    @Description("Required minimum number of unique clients per window for threshold analysis")
+    @Default.Long(5L)
+    Long getRequiredMinimumClients();
+
+    void setRequiredMinimumClients(Long value);
 
     @Description("Maximum permitted client error rate per window")
     @Default.Long(30L)
@@ -304,9 +350,7 @@ public class HTTPRequest implements Serializable {
     PCollection<String> threshResults =
         events
             .apply("per-client", new CountInWindow())
-            .apply(
-                "threshold analysis",
-                new ThresholdAnalysis(options.getAnalysisThresholdModifier(), natView))
+            .apply("threshold analysis", new ThresholdAnalysis(options, natView))
             .apply("output format", ParDo.of(new OutputFormat()));
 
     PCollection<String> errRateResults =
