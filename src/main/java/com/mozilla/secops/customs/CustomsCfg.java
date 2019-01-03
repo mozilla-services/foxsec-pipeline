@@ -27,7 +27,22 @@ public class CustomsCfg implements Serializable {
       throw new IOException("customs configuration resource not found");
     }
     ObjectMapper mapper = new ObjectMapper();
-    return mapper.readValue(in, CustomsCfg.class);
+    return mapper.readValue(in, CustomsCfg.class).validate();
+  }
+
+  /**
+   * Ensure configuration is valid
+   *
+   * @return Configuration, throws exception if inconsistencies identified
+   */
+  public CustomsCfg validate() throws IOException {
+    if (detectors.size() == 0) {
+      throw new IOException("no detectors configured");
+    }
+    for (CustomsCfgEntry entry : detectors.values()) {
+      entry.validate();
+    }
+    return this;
   }
 
   /**
