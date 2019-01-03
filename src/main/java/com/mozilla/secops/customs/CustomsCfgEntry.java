@@ -2,6 +2,7 @@ package com.mozilla.secops.customs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.parser.eventfiltercfg.EventFilterCfg;
+import java.io.IOException;
 import java.io.Serializable;
 
 /** An individual detector configuration within the customs configuration */
@@ -62,6 +63,23 @@ public class CustomsCfgEntry implements Serializable {
   @JsonProperty("filter")
   public EventFilterCfg getEventFilterCfg() {
     return eventFilterCfg;
+  }
+
+  /** Validate configuration entry */
+  public void validate() throws IOException {
+    if ((threshold == null) || (threshold < 0)) {
+      throw new IOException("threshold must be >= 0");
+    }
+    if ((alertSuppressionLength == null) || (alertSuppressionLength <= 0)) {
+      throw new IOException("alert suppression length must be > 0");
+    }
+    if ((slidingWindowLength == null) || (slidingWindowLength <= 0)) {
+      throw new IOException("sliding window length must be > 0");
+    }
+    if ((slidingWindowSlides == null) || (slidingWindowSlides <= 0)) {
+      throw new IOException("sliding window slides must be > 0");
+    }
+    eventFilterCfg.validate();
   }
 
   public CustomsCfgEntry() {}
