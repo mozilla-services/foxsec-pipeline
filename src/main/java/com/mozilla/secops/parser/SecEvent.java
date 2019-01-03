@@ -106,7 +106,7 @@ public class SecEvent extends PayloadBase implements Serializable {
 
     String sa = secEventData.getSourceAddress();
     if (sa != null) {
-      CityResponse cr = p.geoIp(sa);
+      CityResponse cr = state.getParser().geoIp(sa);
       if (cr != null) {
         secEventData.setSourceAddressCity(cr.getCity().getName());
         secEventData.setSourceAddressCountry(cr.getCountry().getIsoCode());
