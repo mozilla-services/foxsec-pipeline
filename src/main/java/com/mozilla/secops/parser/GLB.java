@@ -64,7 +64,7 @@ public class GLB extends PayloadBase implements Serializable {
    *
    * @param input Input string.
    * @param e Parent {@link Event}.
-   * @param p Parser instance.
+   * @param state State
    */
   public GLB(String input, Event e, ParserState state) {
     jfmatcher = null;

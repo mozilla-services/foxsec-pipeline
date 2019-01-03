@@ -83,7 +83,7 @@ public class SecEvent extends PayloadBase implements Serializable {
    *
    * @param input Input string.
    * @param e Parent {@link Event}.
-   * @param p Parser instance.
+   * @param state State
    */
   public SecEvent(String input, Event e, ParserState state) {
     ObjectMapper mapper = getObjectMapper();

@@ -53,7 +53,7 @@ public class Cloudtrail extends PayloadBase implements Serializable {
    *
    * @param input Input string.
    * @param e Parent {@link Event}.
-   * @param p Parser instance.
+   * @param state State
    */
   public Cloudtrail(String input, Event e, ParserState state) {
     mapper = getObjectMapper();
