@@ -18,6 +18,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     DUOPULL,
     /** SecEvent */
     SECEVENT,
+    /** GcpAudit */
+    GCPAUDIT,
     /** Raw */
     RAW
   }

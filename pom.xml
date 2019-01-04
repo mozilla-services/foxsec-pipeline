@@ -176,6 +176,11 @@
             <version>v2-rev603-1.25.0</version>
         </dependency>
         <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-servicecontrol</artifactId>
+            <version>v1-rev113-1.25.0</version>
+        </dependency>
+        <dependency>
             <groupId>net.spy</groupId>
             <artifactId>spymemcached</artifactId>
 	    <version>2.12.3</version>
