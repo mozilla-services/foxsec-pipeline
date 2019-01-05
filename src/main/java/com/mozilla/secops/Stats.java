@@ -193,6 +193,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
   @Override
   public PCollection<StatsOutput> expand(PCollection<Long> input) {
     PCollectionView<Double> meanValue = input.apply(Mean.<Long>globally().asSingletonView());
-    return input.apply(Combine.globally(new StatsCombiner(meanValue)).withSideInputs(meanValue));
+    return input.apply(
+        Combine.globally(new StatsCombiner(meanValue)).withoutDefaults().withSideInputs(meanValue));
   }
 }
