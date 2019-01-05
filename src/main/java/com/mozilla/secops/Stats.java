@@ -2,11 +2,13 @@ package com.mozilla.secops;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.UUID;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext;
 import org.apache.beam.sdk.transforms.CombineWithContext.Context;
 import org.apache.beam.sdk.transforms.Mean;
 import org.apache.beam.sdk.transforms.PTransform;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 
@@ -22,9 +24,31 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
   public static class StatsOutput implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    private final UUID sid;
+
     private Long totalSum;
     private Double popVar;
     private Double mean;
+
+    @Override
+    public boolean equals(Object o) {
+      StatsOutput s = (StatsOutput) o;
+      return getOutputId().equals(s.getOutputId());
+    }
+
+    @Override
+    public int hashCode() {
+      return sid.hashCode();
+    }
+
+    /**
+     * Return unique output ID
+     *
+     * @return Unique output ID
+     */
+    public UUID getOutputId() {
+      return sid;
+    }
 
     /**
      * Get mean value of set
@@ -82,6 +106,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
 
     /** Initialize new statistics output class */
     StatsOutput() {
+      sid = UUID.randomUUID();
       totalSum = 0L;
       popVar = 0.0;
       mean = 0.0;
@@ -154,6 +179,16 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
   }
 
   Stats() {}
+
+  /**
+   * Execute the transform returning a {@link PCollectionView} suitable for use as a side input
+   *
+   * @param input Input data set
+   * @return {@link PCollectionView} representing results of analysis
+   */
+  public static PCollectionView<StatsOutput> getView(PCollection<Long> input) {
+    return input.apply(new Stats()).apply(View.<StatsOutput>asSingleton());
+  }
 
   @Override
   public PCollection<StatsOutput> expand(PCollection<Long> input) {
