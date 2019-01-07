@@ -3,6 +3,7 @@ package com.mozilla.secops.httprequest;
 import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
+import com.mozilla.secops.Stats;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -22,7 +23,6 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.Keys;
-import org.apache.beam.sdk.transforms.Mean;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -230,8 +230,7 @@ public class HTTPRequest implements Serializable {
                       c.output(c.element().getValue());
                     }
                   }));
-      final PCollectionView<Double> meanValue =
-          counts.apply(Mean.<Long>globally().asSingletonView());
+      final PCollectionView<Stats.StatsOutput> wStats = Stats.getView(counts);
 
       PCollection<Result> ret =
           col.apply(
@@ -247,7 +246,7 @@ public class HTTPRequest implements Serializable {
 
                         @ProcessElement
                         public void processElement(ProcessContext c, BoundedWindow w) {
-                          Double mv = c.sideInput(meanValue);
+                          Stats.StatsOutput sOutput = c.sideInput(wStats);
                           Long uc = c.sideInput(uniqueClients);
                           Map<String, Boolean> nv = c.sideInput(natView);
                           if (uc < requiredMinimumClients) {
@@ -257,14 +256,14 @@ public class HTTPRequest implements Serializable {
                             }
                             return;
                           }
-                          if (mv < requiredMinimumAverage) {
+                          if (sOutput.getMean() < requiredMinimumAverage) {
                             if (!warningLogged) {
                               log.warn("ignoring events as window does not meet minimum average");
                               warningLogged = true;
                             }
                             return;
                           }
-                          if (c.element().getValue() >= (mv * thresholdModifier)) {
+                          if (c.element().getValue() >= (sOutput.getMean() * thresholdModifier)) {
                             Boolean isNat = nv.get(c.element().getKey());
                             if (isNat != null && isNat) {
                               log.info(
@@ -276,14 +275,14 @@ public class HTTPRequest implements Serializable {
                             Result r = new Result(Result.ResultType.THRESHOLD_ANALYSIS);
                             r.setCount(c.element().getValue());
                             r.setSourceAddress(c.element().getKey());
-                            r.setMeanValue(mv);
+                            r.setMeanValue(sOutput.getMean());
                             r.setThresholdModifier(thresholdModifier);
                             r.setWindowTimestamp(new DateTime(w.maxTimestamp()));
                             c.output(r);
                           }
                         }
                       })
-                  .withSideInputs(meanValue, natView, uniqueClients));
+                  .withSideInputs(wStats, natView, uniqueClients));
       return ret;
     }
   }
