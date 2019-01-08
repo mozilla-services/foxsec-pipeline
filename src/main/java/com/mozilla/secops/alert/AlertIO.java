@@ -61,6 +61,7 @@ public class AlertIO {
 
     private AlertConfiguration cfg;
     private AlertMailer mailer;
+    private AlertSlack slack;
 
     public WriteFn(Write wTransform) {
       this.wTransform = wTransform;
@@ -75,6 +76,10 @@ public class AlertIO {
       if (cfg.getSmtpCredentials() != null) {
         log.info("configuration requires AlertMailer");
         mailer = new AlertMailer(cfg);
+      }
+      if (cfg.getSlackToken() != null) {
+        log.info("configuration requires AlertSlack");
+        slack = new AlertSlack(cfg);
       }
     }
 
@@ -92,11 +97,22 @@ public class AlertIO {
           // Configured catchall address always recieves a copy of the alert
           mailer.sendToCatchall(a);
         }
+        String sd = a.getMetadataValue("notify_email_direct");
+        if (sd != null) {
+          mailer.sendToAddress(a, sd);
+        }
       }
 
-      String sd = a.getMetadataValue("notify_email_direct");
-      if (sd != null) {
-        mailer.sendToAddress(a, sd);
+      if (slack != null) {
+        String slackMessage = a.getMetadataValue("slack_alert_message");
+        String slackEmail = a.getMetadataValue("slack_email");
+        if (slackEmail != null) {
+          try {
+            slack.confirmationAlert(slack.getUserId(slackEmail), slackMessage);
+          } catch (Exception exc) {
+            log.error("error sending slack alert: {}", exc.getMessage());
+          }
+        }
       }
     }
   }
