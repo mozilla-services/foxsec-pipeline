@@ -97,6 +97,7 @@ public class AlertIO {
           // Configured catchall address always recieves a copy of the alert
           mailer.sendToCatchall(a);
         }
+
         String sd = a.getMetadataValue("notify_email_direct");
         if (sd != null) {
           mailer.sendToAddress(a, sd);
@@ -104,11 +105,10 @@ public class AlertIO {
       }
 
       if (slack != null) {
-        String slackMessage = a.getMetadataValue("slack_alert_message");
-        String slackEmail = a.getMetadataValue("slack_email");
+        String slackEmail = a.getMetadataValue("notify_slack_direct");
         if (slackEmail != null) {
           try {
-            slack.confirmationAlert(slack.getUserId(slackEmail), slackMessage);
+            slack.confirmationAlert(a, slack.getUserId(slackEmail));
           } catch (Exception exc) {
             log.error("error sending slack alert: {}", exc.getMessage());
           }

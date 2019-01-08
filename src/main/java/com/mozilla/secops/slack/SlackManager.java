@@ -76,7 +76,7 @@ public class SlackManager {
     ArrayList<Action> actions = new ArrayList<Action>();
     actions.add(
         Action.builder()
-            .name("confirmation")
+            .name("auth_confirmation")
             .text("Yes, this was me.")
             .style("primary")
             .value("yes")
@@ -84,7 +84,7 @@ public class SlackManager {
 
     actions.add(
         Action.builder()
-            .name("confirmation")
+            .name("auth_confirmation")
             .text("No, this was not me.")
             .style("danger")
             .value("no")
