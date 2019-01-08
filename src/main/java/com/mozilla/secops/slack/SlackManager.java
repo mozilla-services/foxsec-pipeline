@@ -41,7 +41,13 @@ public class SlackManager {
     while (true) {
       // TODO - Not sure if this is the right check
       if (resp.getResponseMetadata().getNextCursor() != null) {
-        resp = slack.methods().usersList(UsersListRequest.builder().build());
+        resp =
+            slack
+                .methods()
+                .usersList(
+                    UsersListRequest.builder()
+                        .cursor(resp.getResponseMetadata().getNextCursor())
+                        .build());
         users.addAll(resp.getMembers());
       } else {
         break;

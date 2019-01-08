@@ -22,6 +22,7 @@ public class AlertSlack {
 
   public String getUserId(String email) throws IOException, SlackApiException {
     if (emailToSlackUserId == null) {
+      // TODO: Move this to IdentityManager
       emailToSlackUserId = slackManager.getEmailToUserIdMapping();
     }
     return emailToSlackUserId.get(email);

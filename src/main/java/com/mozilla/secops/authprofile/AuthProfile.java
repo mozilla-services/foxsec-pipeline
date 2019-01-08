@@ -218,8 +218,7 @@ public class AuthProfile implements Serializable {
               alert.addMetadata("notify_email_direct", dnot);
 
               // TODO: If Slack confirmation is enabled for user
-              log.info(
-                  "{}: adding slack notification metadata to {}", identityKey, dnot);
+              log.info("{}: adding slack notification metadata to {}", identityKey, dnot);
               alert.addMetadata("slack_email", dnot);
               // TODO: Should probably move out of the code.
               alert.addMetadata("slack_alert_message", "AuthProfile TEST");
