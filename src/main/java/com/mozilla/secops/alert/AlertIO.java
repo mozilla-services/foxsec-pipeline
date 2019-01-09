@@ -92,11 +92,13 @@ public class AlertIO {
           // Configured catchall address always recieves a copy of the alert
           mailer.sendToCatchall(a);
         }
-      }
 
-      String sd = a.getMetadataValue("notify_email_direct");
-      if (sd != null) {
-        mailer.sendToAddress(a, sd);
+        // If a direct email metadata entry exists, also send the alert directly
+        // to the specified address
+        String sd = a.getMetadataValue("notify_email_direct");
+        if (sd != null) {
+          mailer.sendToAddress(a, sd);
+        }
       }
     }
   }
