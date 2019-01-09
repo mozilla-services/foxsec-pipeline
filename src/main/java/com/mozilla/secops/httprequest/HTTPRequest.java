@@ -242,8 +242,8 @@ public class HTTPRequest implements Serializable {
                         private Boolean warningLogged;
                         private Boolean clampMaximumLogged;
 
-                        @Setup
-                        public void setup() {
+                        @StartBundle
+                        public void startBundle() {
                           warningLogged = false;
                           clampMaximumLogged = false;
                         }
