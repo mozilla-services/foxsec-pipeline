@@ -265,7 +265,6 @@ public class Alert implements Serializable {
     try {
       return mapper.readValue(input, Alert.class);
     } catch (IOException exc) {
-      System.out.println(exc);
       return null;
     }
   }
