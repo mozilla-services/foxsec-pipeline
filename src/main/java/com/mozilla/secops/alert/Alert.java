@@ -30,8 +30,6 @@ public class Alert implements Serializable {
   }
 
   public enum AlertStatus {
-    @JsonProperty("none")
-    NONE,
     @JsonProperty("sent")
     SENT,
     @JsonProperty("acknowledged")
@@ -56,7 +54,6 @@ public class Alert implements Serializable {
     timestamp = new DateTime(DateTimeZone.UTC);
     metadata = new ArrayList<AlertMeta>();
     severity = AlertSeverity.INFORMATIONAL;
-    status = AlertStatus.NONE;
   }
 
   /**
