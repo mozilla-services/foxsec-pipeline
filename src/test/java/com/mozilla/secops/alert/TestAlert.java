@@ -2,7 +2,9 @@ package com.mozilla.secops.alert;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
+import com.mozilla.secops.Violation;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -61,5 +63,77 @@ public class TestAlert {
     a.addMetadata("key1", "another value");
 
     assertEquals(expect, a.toJSON());
+  }
+
+  @Test
+  public void alertToErrorRateViolationTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"ebf9ec46-4137-416a-8b22-583f90a941ea\",\"category\""
+            + ":\"httprequest\",\"timestamp\":\"2019-01-09T19:38:39.582Z\",\"metadata\":[{\"key\""
+            + ":\"category\",\"value\":\"error_rate\"},{\"key\":\"sourceaddress\",\"value\":\"10."
+            + "0.0.2\"},{\"key\":\"error_count\",\"value\":\"60\"},{\"key\":\"error_threshold\","
+            + "\"value\":\"30\"},{\"key\":\"window_timestamp\",\"value\":\"1970-01-01T00:05:59.999Z\"}]}";
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("httprequest", a.getCategory());
+    assertEquals("error_rate", a.getMetadataValue("category"));
+    assertEquals("10.0.0.2", a.getMetadataValue("sourceaddress"));
+    assertEquals("30", a.getMetadataValue("error_threshold"));
+    assertEquals("60", a.getMetadataValue("error_count"));
+    Violation v = Violation.fromAlert(a);
+    assertNotNull(v);
+    assertEquals("client_error_rate_violation", v.getViolation());
+    assertEquals("10.0.0.2", v.getSourceAddress());
+  }
+
+  @Test
+  public void alertToThresholdViolationTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"620171b5-6597-48a7-94c2-006cc2b83c96\",\"category\""
+            + ":\"httprequest\",\"timestamp\":\"2019-01-09T19:47:37.600Z\",\"metadata\":[{\"key\":"
+            + "\"category\",\"value\":\"threshold_analysis\"},{\"key\":\"sourceaddress\",\"value\""
+            + ":\"10.0.0.2\"},{\"key\":\"mean\",\"value\":\"180.0\"},{\"key\":\"count\",\"value\":"
+            + "\"900\"},{\"key\":\"threshold_modifier\",\"value\":\"1.0\"},{\"key\":\"window_times"
+            + "tamp\",\"value\":\"1970-01-01T00:05:59.999Z\"}]}";
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("httprequest", a.getCategory());
+    assertEquals("threshold_analysis", a.getMetadataValue("category"));
+    assertEquals("10.0.0.2", a.getMetadataValue("sourceaddress"));
+    assertEquals("180.0", a.getMetadataValue("mean"));
+    assertEquals("900", a.getMetadataValue("count"));
+    Violation v = Violation.fromAlert(a);
+    assertNotNull(v);
+    assertEquals("request_threshold_violation", v.getViolation());
+    assertEquals("10.0.0.2", v.getSourceAddress());
+  }
+
+  @Test
+  public void alertToUnknownViolationTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"620171b5-6597-48a7-94c2-006cc2b83c96\",\"category\""
+            + ":\"httprequest\",\"timestamp\":\"2019-01-09T19:47:37.600Z\",\"metadata\":[{\"key\":"
+            + "\"category\",\"value\":\"unknown\"},{\"key\":\"sourceaddress\",\"value\""
+            + ":\"10.0.0.2\"},{\"key\":\"mean\",\"value\":\"180.0\"},{\"key\":\"count\",\"value\":"
+            + "\"900\"},{\"key\":\"threshold_modifier\",\"value\":\"1.0\"},{\"key\":\"window_times"
+            + "tamp\",\"value\":\"1970-01-01T00:05:59.999Z\"}]}";
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("httprequest", a.getCategory());
+    assertEquals("unknown", a.getMetadataValue("category"));
+    assertEquals("10.0.0.2", a.getMetadataValue("sourceaddress"));
+    assertEquals("180.0", a.getMetadataValue("mean"));
+    assertEquals("900", a.getMetadataValue("count"));
+    Violation v = Violation.fromAlert(a);
+    assertNull(v);
+  }
+
+  @Test
+  public void alertFromBadJson() throws Exception {
+    Alert a = Alert.fromJSON("{{{");
+    assertNull(a);
   }
 }
