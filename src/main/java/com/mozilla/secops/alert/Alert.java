@@ -28,6 +28,17 @@ public class Alert implements Serializable {
     CRITICAL
   }
 
+  public enum AlertStatus {
+    @JsonProperty("none")
+    NONE,
+    @JsonProperty("sent")
+    SENT,
+    @JsonProperty("acknowledged")
+    ACKNOWLEDGED,
+    @JsonProperty("escalated")
+    ESCALATED
+  }
+
   private UUID alertId;
   private String summary;
   private String category;
@@ -35,6 +46,7 @@ public class Alert implements Serializable {
   private DateTime timestamp;
   private ArrayList<AlertMeta> metadata;
   private AlertSeverity severity;
+  private AlertStatus status;
 
   /** Construct new alert object */
   public Alert() {
@@ -42,6 +54,7 @@ public class Alert implements Serializable {
     timestamp = new DateTime(DateTimeZone.UTC);
     metadata = new ArrayList<AlertMeta>();
     severity = AlertSeverity.INFORMATIONAL;
+    status = AlertStatus.NONE;
   }
 
   /**
@@ -217,6 +230,15 @@ public class Alert implements Serializable {
   @JsonProperty("id")
   public UUID getAlertId() {
     return alertId;
+  }
+
+  public void setStatus(AlertStatus status) {
+    this.status = status;
+  }
+
+  @JsonProperty("status")
+  public AlertStatus getStatus() {
+    return status;
   }
 
   @Override
