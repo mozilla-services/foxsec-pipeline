@@ -109,7 +109,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../com/mozilla/secops/parser/Cloudtrail.html" title="class in com.mozilla.secops.parser">Cloudtrail</a>, <a href="../../../../com/mozilla/secops/parser/Duopull.html" title="class in com.mozilla.secops.parser">Duopull</a>, <a href="../../../../com/mozilla/secops/parser/GLB.html" title="class in com.mozilla.secops.parser">GLB</a>, <a href="../../../../com/mozilla/secops/parser/OpenSSH.html" title="class in com.mozilla.secops.parser">OpenSSH</a>, <a href="../../../../com/mozilla/secops/parser/Raw.html" title="class in com.mozilla.secops.parser">Raw</a>, <a href="../../../../com/mozilla/secops/parser/SecEvent.html" title="class in com.mozilla.secops.parser">SecEvent</a></dd>
+<dd><a href="../../../../com/mozilla/secops/parser/Cloudtrail.html" title="class in com.mozilla.secops.parser">Cloudtrail</a>, <a href="../../../../com/mozilla/secops/parser/Duopull.html" title="class in com.mozilla.secops.parser">Duopull</a>, <a href="../../../../com/mozilla/secops/parser/GcpAudit.html" title="class in com.mozilla.secops.parser">GcpAudit</a>, <a href="../../../../com/mozilla/secops/parser/GLB.html" title="class in com.mozilla.secops.parser">GLB</a>, <a href="../../../../com/mozilla/secops/parser/OpenSSH.html" title="class in com.mozilla.secops.parser">OpenSSH</a>, <a href="../../../../com/mozilla/secops/parser/Raw.html" title="class in com.mozilla.secops.parser">Raw</a>, <a href="../../../../com/mozilla/secops/parser/SecEvent.html" title="class in com.mozilla.secops.parser">SecEvent</a></dd>
 </dl>
 <hr>
 <br>
@@ -139,9 +139,9 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#PayloadBase-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.Parser-">PayloadBase</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#PayloadBase-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">PayloadBase</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
            <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
-           <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser">Parser</a>&nbsp;p)</code>
+           com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
@@ -174,7 +174,8 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#matcher-java.lang.String-">matcher</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#matcher-java.lang.String-com.mozilla.secops.parser.ParserState-">matcher</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
+       com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Apply matcher.</div>
 </td>
 </tr>
@@ -210,7 +211,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <div class="block">Construct matcher object.</div>
 </li>
 </ul>
-<a name="PayloadBase-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.Parser-">
+<a name="PayloadBase-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -218,13 +219,13 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <h4>PayloadBase</h4>
 <pre>public&nbsp;PayloadBase(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
                    <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
-                   <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser">Parser</a>&nbsp;p)</pre>
+                   com.mozilla.secops.parser.ParserState&nbsp;state)</pre>
 <div class="block">Construct parser object.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>input</code> - Input string.</dd>
 <dd><code>e</code> - Parent <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser"><code>Event</code></a>.</dd>
-<dd><code>p</code> - Parser instance.</dd>
+<dd><code>state</code> - Parser state.</dd>
 </dl>
 </li>
 </ul>
@@ -236,13 +237,14 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="matcher-java.lang.String-">
+<a name="matcher-java.lang.String-com.mozilla.secops.parser.ParserState-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>matcher</h4>
-<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;matcher(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input)</pre>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;matcher(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
+                       com.mozilla.secops.parser.ParserState&nbsp;state)</pre>
 <div class="block">Apply matcher.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -351,6 +353,6 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <!--   -->
 </a></div>
 <!-- ======== END OF BOTTOM NAVBAR ======= -->
-<p class="legalCopy"><small>Copyright &#169; 2018. All rights reserved.</small></p>
+<p class="legalCopy"><small>Copyright &#169; 2019. All rights reserved.</small></p>
 </body>
 </html>

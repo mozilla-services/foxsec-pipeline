@@ -1,7 +1,7 @@
 package com.mozilla.secops;
 
+import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.crypto.RuntimeSecrets;
-import com.mozilla.secops.httprequest.Result;
 import java.io.IOException;
 import java.util.StringJoiner;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -32,12 +32,12 @@ public class IprepdIO {
   }
 
   /**
-   * Write violation messages to iprepd based on submitted {@link Result} JSON strings
+   * Write violation messages to iprepd based on submitted {@link Alert} JSON strings
    *
-   * <p>For each JSON string processed, an attempt will be made to convert the {@link Result} into a
+   * <p>For each JSON string processed, an attempt will be made to convert the {@link Alert} into a
    * {@link Violation}, for any successful conversion the resulting violation will be submitted to
-   * iprepd as a violation message for the source address. Any input data that is not a {@link
-   * Result} will be ignored.
+   * iprepd as a violation message for the source address. Any input data that is not an {@link
+   * Alert} that can be converted into a violation will be ignored.
    */
   public static class Write extends PTransform<PCollection<String>, PDone> {
     private static final long serialVersionUID = 1L;
@@ -123,16 +123,18 @@ public class IprepdIO {
     public void processElement(ProcessContext c) {
       String el = c.element();
 
-      Result result = Result.fromJSON(el);
-      if (result == null) {
+      // See if we can convert this incoming element into an alert and subsequently into a
+      // violation, if this is successful we can escalate it to iprepd
+      Alert a = Alert.fromJSON(el);
+      if (a == null) {
         return;
       }
 
-      String sourceAddress = result.getSourceAddress();
-      Violation v = result.toViolation();
+      Violation v = Violation.fromAlert(a);
       if (v == null) {
         return;
       }
+      String sourceAddress = v.getSourceAddress();
 
       String violationJSON = v.toJSON();
       if (violationJSON == null) {

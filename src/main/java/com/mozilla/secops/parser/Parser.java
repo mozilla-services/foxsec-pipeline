@@ -45,15 +45,22 @@ public class Parser {
     return fmt.parseDateTime(in);
   }
 
-  private String stripStackdriverEncapsulation(Event e, String input) {
+  private String stripStackdriverEncapsulation(Event e, String input, ParserState state) {
     try {
       JsonParser jp = jf.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
+
+      // We were able to deserialize the LogEntry so store it as a hint in the state
+      state.setLogEntryHint(entry);
+
       String ret = entry.getTextPayload();
       if (ret != null && !ret.isEmpty()) {
         return ret;
       }
       Map<String, Object> jret = entry.getJsonPayload();
+      if (jret == null) {
+        jret = entry.getProtoPayload();
+      }
       if (jret != null) {
         // XXX Serialize the Stackdriver JSON data and emit a string for use in the
         // matchers. This is inefficient and we could probably look at changing this
@@ -79,8 +86,8 @@ public class Parser {
     return input;
   }
 
-  private String stripEncapsulation(Event e, String input) {
-    input = stripStackdriverEncapsulation(e, input);
+  private String stripEncapsulation(Event e, String input, ParserState state) {
+    input = stripStackdriverEncapsulation(e, input, state);
     input = stripMozlog(e, input);
     return input;
   }
@@ -129,23 +136,25 @@ public class Parser {
    * @return {@link Event}
    */
   public Event parse(String input) {
+    ParserState state = new ParserState(this);
+
     if (input == null) {
       input = "";
     }
 
     Event e = new Event();
-    input = stripEncapsulation(e, input);
+    input = stripEncapsulation(e, input, state);
 
     for (PayloadBase p : payloads) {
-      if (!p.matcher(input)) {
+      if (!p.matcher(input, state)) {
         continue;
       }
       Class<?> cls = p.getClass();
       try {
         e.setPayload(
             (PayloadBase)
-                cls.getConstructor(String.class, Event.class, Parser.class)
-                    .newInstance(input, e, this));
+                cls.getConstructor(String.class, Event.class, ParserState.class)
+                    .newInstance(input, e, state));
       } catch (ReflectiveOperationException exc) {
         log.warn(exc.getMessage());
       }
@@ -164,6 +173,7 @@ public class Parser {
     payloads.add(new GLB());
     payloads.add(new SecEvent());
     payloads.add(new Cloudtrail());
+    payloads.add(new GcpAudit());
     payloads.add(new OpenSSH());
     payloads.add(new Duopull());
     payloads.add(new Raw());

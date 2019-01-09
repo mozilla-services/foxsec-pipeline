@@ -149,9 +149,9 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/SecEvent.html#SecEvent-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.Parser-">SecEvent</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/SecEvent.html#SecEvent-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">SecEvent</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
         <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
-        <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser">Parser</a>&nbsp;p)</code>
+        com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
@@ -190,7 +190,8 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/SecEvent.html#matcher-java.lang.String-">matcher</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/SecEvent.html#matcher-java.lang.String-com.mozilla.secops.parser.ParserState-">matcher</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
+       com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Apply matcher.</div>
 </td>
 </tr>
@@ -226,7 +227,7 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <div class="block">Construct matcher object.</div>
 </li>
 </ul>
-<a name="SecEvent-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.Parser-">
+<a name="SecEvent-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -234,13 +235,13 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <h4>SecEvent</h4>
 <pre>public&nbsp;SecEvent(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
                 <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
-                <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser">Parser</a>&nbsp;p)</pre>
+                com.mozilla.secops.parser.ParserState&nbsp;state)</pre>
 <div class="block">Construct parser object.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>input</code> - Input string.</dd>
 <dd><code>e</code> - Parent <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser"><code>Event</code></a>.</dd>
-<dd><code>p</code> - Parser instance.</dd>
+<dd><code>state</code> - State</dd>
 </dl>
 </li>
 </ul>
@@ -252,18 +253,19 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="matcher-java.lang.String-">
+<a name="matcher-java.lang.String-com.mozilla.secops.parser.ParserState-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>matcher</h4>
-<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;matcher(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input)</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#matcher-java.lang.String-">PayloadBase</a></code></span></div>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;matcher(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
+                       com.mozilla.secops.parser.ParserState&nbsp;state)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#matcher-java.lang.String-com.mozilla.secops.parser.ParserState-">PayloadBase</a></code></span></div>
 <div class="block">Apply matcher.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
-<dd><code><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#matcher-java.lang.String-">matcher</a></code>&nbsp;in class&nbsp;<code><a href="../../../../com/mozilla/secops/parser/PayloadBase.html" title="class in com.mozilla.secops.parser">PayloadBase</a></code></dd>
+<dd><code><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#matcher-java.lang.String-com.mozilla.secops.parser.ParserState-">matcher</a></code>&nbsp;in class&nbsp;<code><a href="../../../../com/mozilla/secops/parser/PayloadBase.html" title="class in com.mozilla.secops.parser">PayloadBase</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>input</code> - Input string.</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -390,6 +392,6 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <!--   -->
 </a></div>
 <!-- ======== END OF BOTTOM NAVBAR ======= -->
-<p class="legalCopy"><small>Copyright &#169; 2018. All rights reserved.</small></p>
+<p class="legalCopy"><small>Copyright &#169; 2019. All rights reserved.</small></p>
 </body>
 </html>

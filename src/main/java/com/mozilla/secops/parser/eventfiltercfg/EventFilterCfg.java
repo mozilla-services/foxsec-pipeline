@@ -18,6 +18,9 @@ class FilterRulePayloadFilter {
   private ArrayList<ArrayList<String>> stringMatches;
   private ArrayList<String> stringSelectors;
 
+  /** Validate configuration of payload filter */
+  public void validate() throws IOException {}
+
   @JsonProperty("class")
   public String getWantClass() {
     return wantClass;
@@ -42,6 +45,13 @@ class FilterRulePayloadFilter {
 class FilterRule {
   private String wantSubtype;
   private ArrayList<FilterRulePayloadFilter> payloadFilters;
+
+  /** Validate configuration of filter rule */
+  public void validate() throws IOException {
+    for (FilterRulePayloadFilter frpf : payloadFilters) {
+      frpf.validate();
+    }
+  }
 
   @JsonProperty("subtype")
   public String getWantSubtype() {
@@ -78,6 +88,16 @@ class FilterCfg {
     return outputWithTimestamp;
   }
 
+  /** Validate filter configuration */
+  public void validate() throws IOException {
+    for (FilterRule rule : filterRules) {
+      rule.validate();
+    }
+    for (FilterRule rule : keyingRules) {
+      rule.validate();
+    }
+  }
+
   FilterCfg() {
     outputWithTimestamp = false;
     filterRules = new ArrayList<FilterRule>();
@@ -106,6 +126,13 @@ public class EventFilterCfg {
   @JsonProperty("filters")
   public Map<String, FilterCfg> getFilters() {
     return filterCfgs;
+  }
+
+  /** Validate filter configuration */
+  public void validate() throws IOException {
+    for (FilterCfg cfg : filterCfgs.values()) {
+      cfg.validate();
+    }
   }
 
   /**

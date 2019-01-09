@@ -25,7 +25,7 @@ public class OpenSSH extends PayloadBase implements Serializable {
   private String hostname;
 
   @Override
-  public Boolean matcher(String input) {
+  public Boolean matcher(String input, ParserState state) {
     Matcher mat = pattRe.matcher(input);
     if (mat.matches()) {
       return true;
@@ -48,9 +48,9 @@ public class OpenSSH extends PayloadBase implements Serializable {
    *
    * @param input Input string.
    * @param e Parent {@link Event}.
-   * @param p Parser instance
+   * @param state State
    */
-  public OpenSSH(String input, Event e, Parser p) {
+  public OpenSSH(String input, Event e, ParserState state) {
     pattAuthAcceptedRe = Pattern.compile(authAcceptedRe);
     Matcher mat = pattAuthAcceptedRe.matcher(input);
     if (mat.matches()) {
@@ -66,7 +66,7 @@ public class OpenSSH extends PayloadBase implements Serializable {
 
       // If we have an instance of IdentityManager in the parser, see if we can
       // also set the resolved subject identity
-      IdentityManager mgr = p.getIdentityManager();
+      IdentityManager mgr = state.getParser().getIdentityManager();
       if (mgr != null) {
         String resId = mgr.lookupAlias(user);
         if (resId != null) {
@@ -75,7 +75,7 @@ public class OpenSSH extends PayloadBase implements Serializable {
       }
 
       if (sourceAddress != null) {
-        CityResponse cr = p.geoIp(sourceAddress);
+        CityResponse cr = state.getParser().geoIp(sourceAddress);
         if (cr != null) {
           sourceAddressCity = cr.getCity().getName();
           sourceAddressCountry = cr.getCountry().getIsoCode();

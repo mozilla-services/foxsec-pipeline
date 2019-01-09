@@ -127,13 +127,13 @@
 <tr class="rowColor">
 <td class="colFirst"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.ErrorRateAnalysis</a></td>
 <td class="colLast">
-<div class="block"><code>DoFn</code> to analyze key value pairs of source address and error count and emit a <a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a> for each address that exceeds the maximum client error rate</div>
+<div class="block"><code>DoFn</code> to analyze key value pairs of source address and error count and emit a <a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a> for each address that exceeds the maximum client error rate</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.OutputFormat.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.OutputFormat</a></td>
 <td class="colLast">
-<div class="block"><code>DoFn</code> to transform any generated <a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a> objects into JSON for consumption by
+<div class="block"><code>DoFn</code> to transform any generated <a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a> objects into JSON for consumption by
  output transforms.</div>
 </td>
 </tr>
@@ -149,30 +149,6 @@
 <td class="colLast">
 <div class="block">Composite transform that conducts threshold analysis using the configured threshold modifier
  across a set of KV objects as returned by <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.CountInWindow.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.CountInWindow</code></a>.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a></td>
-<td class="colLast">
-<div class="block">A <a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a> describes a result as returned by analysis functions in the <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest</code></a>
- pipeline.</div>
-</td>
-</tr>
-</tbody>
-</table>
-</li>
-<li class="blockList">
-<table class="typeSummary" border="0" cellpadding="3" cellspacing="0" summary="Enum Summary table, listing enums, and an explanation">
-<caption><span>Enum Summary</span><span class="tabEnd">&nbsp;</span></caption>
-<tr>
-<th class="colFirst" scope="col">Enum</th>
-<th class="colLast" scope="col">Description</th>
-</tr>
-<tbody>
-<tr class="altColor">
-<td class="colFirst"><a href="../../../../com/mozilla/secops/httprequest/Result.ResultType.html" title="enum in com.mozilla.secops.httprequest">Result.ResultType</a></td>
-<td class="colLast">
-<div class="block">Valid <a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a> types</div>
 </td>
 </tr>
 </tbody>
@@ -232,6 +208,6 @@
 <!--   -->
 </a></div>
 <!-- ======== END OF BOTTOM NAVBAR ======= -->
-<p class="legalCopy"><small>Copyright &#169; 2018. All rights reserved.</small></p>
+<p class="legalCopy"><small>Copyright &#169; 2019. All rights reserved.</small></p>
 </body>
 </html>

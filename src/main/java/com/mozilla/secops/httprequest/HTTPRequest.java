@@ -1,7 +1,10 @@
 package com.mozilla.secops.httprequest;
 
+import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
+import com.mozilla.secops.Stats;
+import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -9,17 +12,21 @@ import com.mozilla.secops.parser.GLB;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
 import java.io.Serializable;
+import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
-import org.apache.beam.sdk.transforms.Mean;
+import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
@@ -27,8 +34,11 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptors;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link HTTPRequest} describes and implements a Beam pipeline for analysis of HTTP requests using
@@ -123,9 +133,9 @@ public class HTTPRequest implements Serializable {
 
   /**
    * {@link DoFn} to analyze key value pairs of source address and error count and emit a {@link
-   * Result} for each address that exceeds the maximum client error rate
+   * Alert} for each address that exceeds the maximum client error rate
    */
-  public static class ErrorRateAnalysis extends DoFn<KV<String, Long>, Result> {
+  public static class ErrorRateAnalysis extends DoFn<KV<String, Long>, Alert> {
     private static final long serialVersionUID = 1L;
     private final Long maxErrorRate;
 
@@ -143,12 +153,14 @@ public class HTTPRequest implements Serializable {
       if (c.element().getValue() <= maxErrorRate) {
         return;
       }
-      Result r = new Result(Result.ResultType.CLIENT_ERROR);
-      r.setSourceAddress(c.element().getKey());
-      r.setClientErrorCount(c.element().getValue());
-      r.setMaxClientErrorRate(maxErrorRate);
-      r.setWindowTimestamp(new DateTime(w.maxTimestamp()));
-      c.output(r);
+      Alert a = new Alert();
+      a.setCategory("httprequest");
+      a.addMetadata("category", "error_rate");
+      a.addMetadata("sourceaddress", c.element().getKey());
+      a.addMetadata("error_count", c.element().getValue().toString());
+      a.addMetadata("error_threshold", maxErrorRate.toString());
+      a.addMetadata("window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+      c.output(a);
     }
   }
 
@@ -157,22 +169,60 @@ public class HTTPRequest implements Serializable {
    * across a set of KV objects as returned by {@link CountInWindow}.
    */
   public static class ThresholdAnalysis
-      extends PTransform<PCollection<KV<String, Long>>, PCollection<Result>> {
+      extends PTransform<PCollection<KV<String, Long>>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
     private final Double thresholdModifier;
+    private final Double requiredMinimumAverage;
+    private final Long requiredMinimumClients;
+    private final Double clampThresholdMaximum;
+    private PCollectionView<Map<String, Boolean>> natView = null;
+
+    private Logger log;
 
     /**
      * Static initializer for {@link ThresholdAnalysis}.
      *
-     * @param thresholdModifier Threshold modifier to use for analysis.
+     * @param options {@link HTTPRequestOptions}
      */
-    public ThresholdAnalysis(Double thresholdModifier) {
-      this.thresholdModifier = thresholdModifier;
+    public ThresholdAnalysis(HTTPRequestOptions options) {
+      this.thresholdModifier = options.getAnalysisThresholdModifier();
+      this.requiredMinimumAverage = options.getRequiredMinimumAverage();
+      this.requiredMinimumClients = options.getRequiredMinimumClients();
+      this.clampThresholdMaximum = options.getClampThresholdMaximum();
+      log = LoggerFactory.getLogger(ThresholdAnalysis.class);
+    }
+
+    /**
+     * Static initializer for {@link ThresholdAnalysis}.
+     *
+     * @param options {@link HTTPRequestOptions}
+     * @param natView Use {@link DetectNat} view during threshold analysis
+     */
+    public ThresholdAnalysis(
+        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
+      this(options);
+      this.natView = natView;
     }
 
     @Override
-    public PCollection<Result> expand(PCollection<KV<String, Long>> col) {
+    public PCollection<Alert> expand(PCollection<KV<String, Long>> col) {
+      if (natView == null) {
+        // If natView was not set then we just create an empty view for use as the side input
+        natView =
+            col.getPipeline()
+                .apply(
+                    Create.empty(
+                        TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
+                .apply(View.<String, Boolean>asMap());
+      }
+
+      PCollectionView<Long> uniqueClients =
+          col.apply(Keys.<String>create())
+              .apply(
+                  "Unique client count",
+                  Combine.globally(Count.<String>combineFn()).withoutDefaults().asSingletonView());
+
       PCollection<Long> counts =
           col.apply(
               "Extract counts",
@@ -185,39 +235,91 @@ public class HTTPRequest implements Serializable {
                       c.output(c.element().getValue());
                     }
                   }));
-      final PCollectionView<Double> meanValue =
-          counts.apply(Mean.<Long>globally().asSingletonView());
+      final PCollectionView<Stats.StatsOutput> wStats = Stats.getView(counts);
 
-      PCollection<Result> ret =
+      PCollection<Alert> ret =
           col.apply(
               ParDo.of(
-                      new DoFn<KV<String, Long>, Result>() {
+                      new DoFn<KV<String, Long>, Alert>() {
                         private static final long serialVersionUID = 1L;
+                        private Boolean warningLogged;
+                        private Boolean clampMaximumLogged;
+
+                        @StartBundle
+                        public void startBundle() {
+                          warningLogged = false;
+                          clampMaximumLogged = false;
+                        }
 
                         @ProcessElement
                         public void processElement(ProcessContext c, BoundedWindow w) {
-                          Double mv = c.sideInput(meanValue);
-                          if (c.element().getValue() >= (mv * thresholdModifier)) {
-                            Result r = new Result(Result.ResultType.THRESHOLD_ANALYSIS);
-                            r.setCount(c.element().getValue());
-                            r.setSourceAddress(c.element().getKey());
-                            r.setMeanValue(mv);
-                            r.setThresholdModifier(thresholdModifier);
-                            r.setWindowTimestamp(new DateTime(w.maxTimestamp()));
-                            c.output(r);
+                          Stats.StatsOutput sOutput = c.sideInput(wStats);
+                          Long uc = c.sideInput(uniqueClients);
+                          Map<String, Boolean> nv = c.sideInput(natView);
+                          if (uc < requiredMinimumClients) {
+                            if (!warningLogged) {
+                              log.warn(
+                                  "{}: ignoring events as window does not meet minimum clients",
+                                  w.toString());
+                              warningLogged = true;
+                            }
+                            return;
+                          }
+                          Double cMean = sOutput.getMean();
+                          if (cMean < requiredMinimumAverage) {
+                            if (!warningLogged) {
+                              log.warn(
+                                  "{}: ignoring events as window does not meet minimum average",
+                                  w.toString());
+                              warningLogged = true;
+                            }
+                            return;
+                          }
+                          if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
+                            if (!clampMaximumLogged) {
+                              log.info(
+                                  "{}: clamping calculated mean {} to maximum {}",
+                                  w.toString(),
+                                  cMean,
+                                  clampThresholdMaximum);
+                              clampMaximumLogged = true;
+                            }
+                            cMean = clampThresholdMaximum;
+                          }
+                          if (c.element().getValue() >= (cMean * thresholdModifier)) {
+                            Boolean isNat = nv.get(c.element().getKey());
+                            if (isNat != null && isNat) {
+                              log.info(
+                                  "{}: detectnat: skipping result emission for {}",
+                                  w.toString(),
+                                  c.element().getKey());
+                              return;
+                            }
+                            log.info(
+                                "{}: emitting alert for {}", w.toString(), c.element().getKey());
+                            Alert a = new Alert();
+                            a.setCategory("httprequest");
+                            a.addMetadata("category", "threshold_analysis");
+                            a.addMetadata("sourceaddress", c.element().getKey());
+                            a.addMetadata("mean", sOutput.getMean().toString());
+                            a.addMetadata("count", c.element().getValue().toString());
+                            a.addMetadata("threshold_modifier", thresholdModifier.toString());
+                            a.addMetadata(
+                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                            c.output(a);
                           }
                         }
                       })
-                  .withSideInputs(meanValue));
+                  .withSideInputs(wStats, natView, uniqueClients));
       return ret;
     }
   }
 
   /**
-   * {@link DoFn} to transform any generated {@link Result} objects into JSON for consumption by
+   * {@link DoFn} to transform any generated {@link Alert} objects into JSON for consumption by
    * output transforms.
    */
-  public static class OutputFormat extends DoFn<Result, String> {
+  public static class OutputFormat extends DoFn<Alert, String> {
     private static final long serialVersionUID = 1L;
 
     @ProcessElement
@@ -234,11 +336,36 @@ public class HTTPRequest implements Serializable {
 
     void setAnalysisThresholdModifier(Double value);
 
+    @Description(
+        "Required minimum average number of requests per client/window for threshold analysis")
+    @Default.Double(5.0)
+    Double getRequiredMinimumAverage();
+
+    void setRequiredMinimumAverage(Double value);
+
+    @Description("Required minimum number of unique clients per window for threshold analysis")
+    @Default.Long(5L)
+    Long getRequiredMinimumClients();
+
+    void setRequiredMinimumClients(Long value);
+
+    @Description(
+        "Restrict maximum calculated average for threshold analysis; clamps to value if exceeded")
+    Double getClampThresholdMaximum();
+
+    void setClampThresholdMaximum(Double value);
+
     @Description("Maximum permitted client error rate per window")
     @Default.Long(30L)
     Long getMaxClientErrorRate();
 
     void setMaxClientErrorRate(Long value);
+
+    @Description("Enable NAT detection for threshold analysis")
+    @Default.Boolean(false)
+    Boolean getNatDetection();
+
+    void setNatDetection(Boolean value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
@@ -248,11 +375,15 @@ public class HTTPRequest implements Serializable {
         p.apply("input", options.getInputType().read(p, options))
             .apply("parse and window", new ParseAndWindow(false));
 
+    PCollectionView<Map<String, Boolean>> natView = null;
+    if (options.getNatDetection()) {
+      natView = DetectNat.getView(events);
+    }
+
     PCollection<String> threshResults =
         events
             .apply("per-client", new CountInWindow())
-            .apply(
-                "threshold analysis", new ThresholdAnalysis(options.getAnalysisThresholdModifier()))
+            .apply("threshold analysis", new ThresholdAnalysis(options, natView))
             .apply("output format", ParDo.of(new OutputFormat()));
 
     PCollection<String> errRateResults =

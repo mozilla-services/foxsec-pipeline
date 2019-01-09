@@ -4,18 +4,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Scanner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
@@ -28,17 +26,6 @@ public class TestCustoms {
 
   public TestCustoms() {}
 
-  private PCollection<String> getInput(String resource) {
-    ArrayList<String> inputData = new ArrayList<String>();
-    InputStream in = TestCustoms.class.getResourceAsStream(resource);
-    Scanner scanner = new Scanner(in);
-    while (scanner.hasNextLine()) {
-      inputData.add(scanner.nextLine());
-    }
-    scanner.close();
-    return p.apply(Create.of(inputData));
-  }
-
   @Test
   public void noopPipelineTest() throws Exception {
     p.run().waitUntilFinish();
@@ -46,7 +33,8 @@ public class TestCustoms {
 
   @Test
   public void parseTest() throws Exception {
-    PCollection<String> input = getInput("/testdata/customs_rl_badlogin_simple1.txt");
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/customs_rl_badlogin_simple1.txt", p);
 
     PCollection<Long> count =
         input
@@ -60,7 +48,7 @@ public class TestCustoms {
 
   @Test
   public void customsMulti1Test() throws Exception {
-    PCollection<String> input = getInput("/testdata/customs_multi1.txt");
+    PCollection<String> input = TestUtil.getTestInput("/testdata/customs_multi1.txt", p);
 
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
     // Force use of event timestamp for testing purposes
@@ -88,10 +76,15 @@ public class TestCustoms {
                     a[0].getMetadataValue("customs_category"));
                 assertEquals("3", a[0].getMetadataValue("customs_threshold"));
                 assertEquals("3", a[0].getMetadataValue("customs_count"));
+                assertEquals(
+                    "picard@uss.enterprise",
+                    a[0].getMetadataValue("customs_unique_actor_accountid"));
+                assertEquals("10.0.0.1", a[0].getMetadataValue("customs_unique_source_address"));
 
                 Iterable<Event> samples =
                     Event.jsonToIterable(a[0].getMetadataValue("customs_sample"));
                 assertNotNull(samples);
+                assertEquals("false", a[0].getMetadataValue("customs_sample_truncated"));
                 Event[] elist = ((Collection<Event>) samples).toArray(new Event[0]);
                 assertNotNull(elist);
                 assertEquals(3, elist.length);
@@ -118,10 +111,16 @@ public class TestCustoms {
                   String cc = ta.getMetadataValue("customs_category");
                   if (cc.equals("rl_sms_recipient")) {
                     assertEquals("00000000000", ta.getMetadataValue("customs_suspected"));
+                    assertEquals(
+                        "00000000000", ta.getMetadataValue("customs_unique_sms_recipient"));
                   } else if (cc.equals("rl_sms_sourceaddress")) {
                     assertEquals("10.0.0.2", ta.getMetadataValue("customs_suspected"));
+                    assertEquals("10.0.0.2", ta.getMetadataValue("customs_unique_source_address"));
                   } else if (cc.equals("rl_sms_accountid")) {
                     assertEquals("worf@uss.enterprise", ta.getMetadataValue("customs_suspected"));
+                    assertEquals(
+                        "worf@uss.enterprise",
+                        ta.getMetadataValue("customs_unique_actor_accountid"));
                   } else {
                     fail("invalid customs category: " + cc);
                   }
@@ -135,7 +134,8 @@ public class TestCustoms {
 
   @Test
   public void rlLoginFailureSourceAddressTest() throws Exception {
-    PCollection<String> input = getInput("/testdata/customs_rl_badlogin_simple1.txt");
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/customs_rl_badlogin_simple1.txt", p);
 
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
     // Force use of event timestamp for testing purposes
@@ -173,12 +173,61 @@ public class TestCustoms {
                   assertEquals("customs", a.getCategory());
                   assertEquals(
                       "127.0.0.1+q@the-q-continuum", a.getMetadataValue("customs_suspected"));
+                  assertEquals("127.0.0.1", a.getMetadataValue("customs_unique_source_address"));
+                  assertEquals(
+                      "q@the-q-continuum", a.getMetadataValue("customs_unique_actor_accountid"));
                   cnt++;
                 }
                 assertEquals(1, cnt);
                 return null;
               });
     }
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void rlStatusCheckWithGeoTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/customs_geo1.txt", p);
+
+    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
+    // Force use of event timestamp for testing purposes
+    cfg.setTimestampOverride(true);
+
+    PCollection<Alert> alerts =
+        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg));
+
+    PCollection<Long> count =
+        alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+    PAssert.that(count)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Long l : x) {
+                cnt += l;
+              }
+              assertEquals(1L, cnt);
+              return null;
+            });
+
+    PAssert.that(alerts)
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(900000L)))
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                assertEquals("customs", a.getCategory());
+                assertEquals("rl_statuscheck", a.getMetadataValue("customs_category"));
+                assertEquals("216.160.83.56", a.getMetadataValue("customs_unique_source_address"));
+                assertEquals("Milton", a.getMetadataValue("customs_unique_source_address_city"));
+                assertEquals("US", a.getMetadataValue("customs_unique_source_address_country"));
+                assertEquals("10", a.getMetadataValue("customs_count"));
+                assertEquals("5", a.getMetadataValue("customs_threshold"));
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
 
     p.run().waitUntilFinish();
   }

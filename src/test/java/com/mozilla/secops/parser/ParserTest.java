@@ -521,6 +521,47 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseGcpAudit() {
+    String buf =
+        "{\"protoPayload\":{\"@type\":\"type.googleapis.com/google.cloud.audit.AuditLog\","
+            + "\"status\":{},\"authenticationInfo\":{\"principalEmail\":\"laforge@mozilla.com\"},"
+            + "\"requestMetadata\":{\"callerIp\":\"216.160.83.56\",\"callerSuppliedUserAgent\":\""
+            + "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Gecko/20100101 Firefox/65.0\""
+            + ",\"requestAttributes\":{},\"destinationAttributes\":{}},\"serviceName\":\"cloudresou"
+            + "rcemanager.googleapis.com\",\"methodName\":\"SetIamPolicy\",\"authorizationInfo\":[{"
+            + "\"resource\":\"projects/test\",\"permission\":\"resourcemanager.projects.setIamPolic"
+            + "y\",\"granted\":true,\"resourceAttributes\":{}}],\"resourceName\":\"projects/test\","
+            + "\"serviceData\":{\"@type\":\"type.googleapis.com/google.iam.v1.logging.AuditData\","
+            + "\"policyDelta\":{\"auditConfigDeltas\":[{\"action\":\"ADD\",\"service\":\"iam.googl"
+            + "eapis.com\",\"logType\":\"ADMIN_READ\"},{\"action\":\"ADD\",\"service\":\"iam.googl"
+            + "eapis.com\",\"logType\":\"DATA_READ\"},{\"action\":\"ADD\",\"service\":\"iam.google"
+            + "apis.com\",\"logType\":\"DATA_WRITE\"}]}},\"request\":{\"@type\":\"type.googleapis."
+            + "com/google.iam.v1.SetIamPolicyRequest\",\"policy\":{\"etag\":\"AAAAAAAAAAAA\",\"aud"
+            + "itConfigs\":[{\"service\":\"iam.googleapis.com\",\"auditLogConfigs\":[{\"logType\":"
+            + "\"ADMIN_READ\"},{\"logType\":\"DATA_READ\"},{\"logType\":\"DATA_WRITE\"}]}]},\"upda"
+            + "teMask\":\"\",\"resource\":\"test\"},\"response\":{\"@type\":\"type.googleapis.com/"
+            + "google.iam.v1.Policy\",\"etag\":\"AAAAAAAAAAAA\",\"auditConfigs\":[{\"service\":\"i"
+            + "am.googleapis.com\",\"auditLogConfigs\":[{\"logType\":\"ADMIN_READ\"},{\"logType\":"
+            + "\"DATA_READ\"},{\"logType\":\"DATA_WRITE\"}]}],\"bindings\":[{\"members\":[\"servic"
+            + "eAccount:test@test.iam.gserviceaccount.com\"],\"role\":\"roles/bigquery.admin\"}]}}"
+            + ",\"insertId\":\"AAAAAAAAAAAA\",\"resource\":{\"type\":\"project\",\"labels\":{\"pro"
+            + "ject_id\":\"test\"}},\"timestamp\":\"2019-01-03T20:52:04.782Z\",\"severity\":\"NOTI"
+            + "CE\",\"logName\":\"projects/test/logs/cloudaudit.googleapis.com%2Factivity\",\"rece"
+            + "iveTimestamp\":\"2019-01-03T20:52:05.807173206Z\"}";
+    Parser p = new Parser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.GCPAUDIT, e.getPayloadType());
+    GcpAudit d = e.getPayload();
+    assertNotNull(d);
+    assertNotNull(d.getAuditLog());
+    assertNotNull(d.getAuditLog().getAuthenticationInfo());
+    assertEquals(
+        "laforge@mozilla.com", d.getAuditLog().getAuthenticationInfo().getPrincipalEmail());
+  }
+
+  @Test
   public void testParseSecEvent() {
     String buf =
         "{\"secevent_version\":\"secevent.model.1\",\"action\":\"loginFailure\""

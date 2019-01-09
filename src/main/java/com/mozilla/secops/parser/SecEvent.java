@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.maxmind.geoip2.model.CityResponse;
 import java.io.IOException;
 import java.io.Serializable;
 import org.joda.time.DateTime;
@@ -24,7 +25,7 @@ public class SecEvent extends PayloadBase implements Serializable {
   }
 
   @Override
-  public Boolean matcher(String input) {
+  public Boolean matcher(String input, ParserState state) {
     ObjectMapper mapper = getObjectMapper();
     com.mozilla.secops.parser.models.secevent.SecEvent d;
     try {
@@ -83,9 +84,9 @@ public class SecEvent extends PayloadBase implements Serializable {
    *
    * @param input Input string.
    * @param e Parent {@link Event}.
-   * @param p Parser instance.
+   * @param state State
    */
-  public SecEvent(String input, Event e, Parser p) {
+  public SecEvent(String input, Event e, ParserState state) {
     ObjectMapper mapper = getObjectMapper();
     try {
       secEventData =
@@ -101,6 +102,15 @@ public class SecEvent extends PayloadBase implements Serializable {
     DateTime ts = secEventData.getTimestamp();
     if (ts != null) {
       e.setTimestamp(ts);
+    }
+
+    String sa = secEventData.getSourceAddress();
+    if (sa != null) {
+      CityResponse cr = state.getParser().geoIp(sa);
+      if (cr != null) {
+        secEventData.setSourceAddressCity(cr.getCity().getName());
+        secEventData.setSourceAddressCountry(cr.getCountry().getIsoCode());
+      }
     }
   }
 }

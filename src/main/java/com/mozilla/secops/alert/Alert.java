@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -47,6 +48,7 @@ public class Alert implements Serializable {
   private ArrayList<AlertMeta> metadata;
   private AlertSeverity severity;
   private AlertStatus status;
+  private String templateName;
 
   /** Construct new alert object */
   public Alert() {
@@ -214,6 +216,25 @@ public class Alert implements Serializable {
   }
 
   /**
+   * Set template name
+   *
+   * @param templateName Freemarker template name with file extension
+   */
+  public void setTemplateName(String templateName) {
+    this.templateName = templateName;
+  }
+
+  /**
+   * Get template name
+   *
+   * @return Freemarker template name with file extension or null if not set.
+   */
+  @JsonProperty("template_name")
+  public String getTemplateName() {
+    return templateName;
+  }
+
+  /**
    * Override generated unique ID for alert
    *
    * <p>param id UUID for alert
@@ -266,7 +287,6 @@ public class Alert implements Serializable {
     try {
       return mapper.readValue(input, Alert.class);
     } catch (IOException exc) {
-      System.out.println(exc);
       return null;
     }
   }
@@ -287,5 +307,19 @@ public class Alert implements Serializable {
     } catch (JsonProcessingException exc) {
       return null;
     }
+  }
+
+  /**
+   * Return HashMap used by Freemarker to generate an HTML alert email
+   *
+   * @return Template data model
+   */
+  public HashMap<String, Object> generateTemplateVariables() {
+    HashMap<String, Object> v = new HashMap<String, Object>();
+    v.put("alert", this);
+    for (AlertMeta m : metadata) {
+      v.put(m.getKey(), m.getValue());
+    }
+    return v;
   }
 }
