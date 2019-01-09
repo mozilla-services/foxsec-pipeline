@@ -124,11 +124,11 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public static class <span class="typeNameLabel">IprepdIO.Write</span>
 extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;,org.apache.beam.sdk.values.PDone&gt;</pre>
-<div class="block">Write violation messages to iprepd based on submitted <a href="../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a> JSON strings
+<div class="block">Write violation messages to iprepd based on submitted <a href="../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a> JSON strings
 
- <p>For each JSON string processed, an attempt will be made to convert the <a href="../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a> into a
+ <p>For each JSON string processed, an attempt will be made to convert the <a href="../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a> into a
  <a href="../../../com/mozilla/secops/Violation.html" title="class in com.mozilla.secops"><code>Violation</code></a>, for any successful conversion the resulting violation will be submitted to
- iprepd as a violation message for the source address. Any input data that is not a <a href="../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><code>Result</code></a> will be ignored.</div>
+ iprepd as a violation message for the source address. Any input data that is not an <a href="../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a> that can be converted into a violation will be ignored.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../serialized-form.html#com.mozilla.secops.IprepdIO.Write">Serialized Form</a></dd>
@@ -373,6 +373,6 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <!--   -->
 </a></div>
 <!-- ======== END OF BOTTOM NAVBAR ======= -->
-<p class="legalCopy"><small>Copyright &#169; 2018. All rights reserved.</small></p>
+<p class="legalCopy"><small>Copyright &#169; 2019. All rights reserved.</small></p>
 </body>
 </html>

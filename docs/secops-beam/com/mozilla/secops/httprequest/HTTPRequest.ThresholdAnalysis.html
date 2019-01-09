@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ParseAndWindow.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" target="_top">Frames</a></li>
@@ -100,7 +100,7 @@ var activeTableTab = "activeTableTab";
 <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a>&gt;&gt;</li>
+<li>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</li>
 <li>
 <ul class="inheritance">
 <li>com.mozilla.secops.httprequest.HTTPRequest.ThresholdAnalysis</li>
@@ -123,7 +123,7 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public static class <span class="typeNameLabel">HTTPRequest.ThresholdAnalysis</span>
-extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a>&gt;&gt;</pre>
+extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</pre>
 <div class="block">Composite transform that conducts threshold analysis using the configured threshold modifier
  across a set of KV objects as returned by <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.CountInWindow.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.CountInWindow</code></a>.</div>
 <dl>
@@ -148,7 +148,13 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html#ThresholdAnalysis-java.lang.Double-">ThresholdAnalysis</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&nbsp;thresholdModifier)</code>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html#ThresholdAnalysis-com.mozilla.secops.httprequest.HTTPRequest.HTTPRequestOptions-">ThresholdAnalysis</a></span>(<a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>&nbsp;options)</code>
+<div class="block">Static initializer for <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.ThresholdAnalysis</code></a>.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html#ThresholdAnalysis-com.mozilla.secops.httprequest.HTTPRequest.HTTPRequestOptions-org.apache.beam.sdk.values.PCollectionView-">ThresholdAnalysis</a></span>(<a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>&nbsp;options,
+                 org.apache.beam.sdk.values.PCollectionView&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&gt;&gt;&nbsp;natView)</code>
 <div class="block">Static initializer for <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.ThresholdAnalysis</code></a>.</div>
 </td>
 </tr>
@@ -168,7 +174,7 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a>&gt;</code></td>
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;&nbsp;col)</code>&nbsp;</td>
 </tr>
 </table>
@@ -200,17 +206,33 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="ThresholdAnalysis-java.lang.Double-">
+<a name="ThresholdAnalysis-com.mozilla.secops.httprequest.HTTPRequest.HTTPRequestOptions-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>ThresholdAnalysis</h4>
+<pre>public&nbsp;ThresholdAnalysis(<a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>&nbsp;options)</pre>
+<div class="block">Static initializer for <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.ThresholdAnalysis</code></a>.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>options</code> - <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest"><code>HTTPRequest.HTTPRequestOptions</code></a></dd>
+</dl>
+</li>
+</ul>
+<a name="ThresholdAnalysis-com.mozilla.secops.httprequest.HTTPRequest.HTTPRequestOptions-org.apache.beam.sdk.values.PCollectionView-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>ThresholdAnalysis</h4>
-<pre>public&nbsp;ThresholdAnalysis(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&nbsp;thresholdModifier)</pre>
+<pre>public&nbsp;ThresholdAnalysis(<a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>&nbsp;options,
+                         org.apache.beam.sdk.values.PCollectionView&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&gt;&gt;&nbsp;natView)</pre>
 <div class="block">Static initializer for <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.ThresholdAnalysis</code></a>.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>thresholdModifier</code> - Threshold modifier to use for analysis.</dd>
+<dd><code>options</code> - <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest"><code>HTTPRequest.HTTPRequestOptions</code></a></dd>
+<dd><code>natView</code> - Use <a href="../../../../com/mozilla/secops/DetectNat.html" title="class in com.mozilla.secops"><code>DetectNat</code></a> view during threshold analysis</dd>
 </dl>
 </li>
 </ul>
@@ -228,10 +250,10 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <ul class="blockListLast">
 <li class="blockList">
 <h4>expand</h4>
-<pre>public&nbsp;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a>&gt;&nbsp;expand(org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;&nbsp;col)</pre>
+<pre>public&nbsp;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&nbsp;expand(org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;&nbsp;col)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>expand</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest">Result</a>&gt;&gt;</code></dd>
+<dd><code>expand</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -264,7 +286,7 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ParseAndWindow.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/httprequest/Result.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" target="_top">Frames</a></li>
@@ -304,6 +326,6 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <!--   -->
 </a></div>
 <!-- ======== END OF BOTTOM NAVBAR ======= -->
-<p class="legalCopy"><small>Copyright &#169; 2018. All rights reserved.</small></p>
+<p class="legalCopy"><small>Copyright &#169; 2019. All rights reserved.</small></p>
 </body>
 </html>

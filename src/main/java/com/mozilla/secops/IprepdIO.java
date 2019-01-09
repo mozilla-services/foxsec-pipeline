@@ -32,12 +32,12 @@ public class IprepdIO {
   }
 
   /**
-   * Write violation messages to iprepd based on submitted {@link Result} JSON strings
+   * Write violation messages to iprepd based on submitted {@link Alert} JSON strings
    *
-   * <p>For each JSON string processed, an attempt will be made to convert the {@link Result} into a
+   * <p>For each JSON string processed, an attempt will be made to convert the {@link Alert} into a
    * {@link Violation}, for any successful conversion the resulting violation will be submitted to
-   * iprepd as a violation message for the source address. Any input data that is not a {@link
-   * Result} will be ignored.
+   * iprepd as a violation message for the source address. Any input data that is not an {@link
+   * Alert} that can be converted into a violation will be ignored.
    */
   public static class Write extends PTransform<PCollection<String>, PDone> {
     private static final long serialVersionUID = 1L;

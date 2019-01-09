@@ -113,7 +113,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
     }
   }
 
-  /** {@link ConbineFnWithContext} for performing statistics operations on a collection of values */
+  /** {@link CombineFnWithContext} for performing statistics operations on a collection of values */
   public static class StatsCombiner
       extends CombineFnWithContext<Long, StatsCombiner.State, StatsOutput> {
     private static final long serialVersionUID = 1L;
