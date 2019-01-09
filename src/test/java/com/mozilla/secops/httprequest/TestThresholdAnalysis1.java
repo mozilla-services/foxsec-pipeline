@@ -212,4 +212,29 @@ public class TestThresholdAnalysis1 {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void thresholdAnalysisTestClampMaximum() throws Exception {
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
+
+    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+
+    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setClampThresholdMaximum(1.0);
+    PCollection<Result> results =
+        events
+            .apply(new HTTPRequest.CountInWindow())
+            .apply(new HTTPRequest.ThresholdAnalysis(options));
+
+    PCollection<Long> resultCount =
+        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+    PAssert.that(resultCount)
+        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .containsInAnyOrder(14L);
+
+    p.run().waitUntilFinish();
+  }
 }
