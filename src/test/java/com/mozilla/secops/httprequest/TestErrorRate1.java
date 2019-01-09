@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.mozilla.secops.TestUtil;
+import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,14 +73,14 @@ public class TestErrorRate1 {
   public void errorRateTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
 
-    PCollection<Result> results =
+    PCollection<Alert> results =
         input
             .apply(new HTTPRequest.ParseAndWindow(true))
             .apply(new HTTPRequest.CountErrorsInWindow())
             .apply(ParDo.of(new HTTPRequest.ErrorRateAnalysis(30L)));
 
     PCollection<Long> resultCount =
-        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.that(resultCount)
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
         .containsInAnyOrder(2L);
@@ -88,12 +89,14 @@ public class TestErrorRate1 {
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
         .satisfies(
             i -> {
-              for (Result r : i) {
-                assertThat(r.getSourceAddress(), anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
-                assertEquals(Result.ResultType.CLIENT_ERROR, r.getResultType());
-                assertEquals(60L, (long) r.getClientErrorCount());
-                assertEquals(30L, (long) r.getMaxClientErrorRate());
-                assertEquals(359999L, r.getWindowTimestamp().getMillis());
+              for (Alert a : i) {
+                assertThat(
+                    a.getMetadataValue("sourceaddress"),
+                    anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
+                assertEquals(a.getMetadataValue("category"), "error_rate");
+                assertEquals(60L, Long.parseLong(a.getMetadataValue("error_count"), 10));
+                assertEquals(30L, Long.parseLong(a.getMetadataValue("error_threshold"), 10));
+                assertEquals("1970-01-01T00:05:59.999Z", a.getMetadataValue("window_timestamp"));
               }
               return null;
             });

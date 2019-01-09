@@ -7,6 +7,7 @@ import static org.junit.Assert.assertThat;
 
 import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.TestUtil;
+import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,14 +96,14 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
 
-    PCollection<Result> results =
+    PCollection<Alert> results =
         input
             .apply(new HTTPRequest.ParseAndWindow(true))
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(getTestOptions()));
 
     PCollection<Long> resultCount =
-        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.that(resultCount)
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
         .containsInAnyOrder(2L);
@@ -111,12 +112,15 @@ public class TestThresholdAnalysis1 {
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
         .satisfies(
             i -> {
-              for (Result r : i) {
-                assertThat(r.getSourceAddress(), anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
-                assertEquals(900L, (long) r.getCount());
-                assertEquals(180.0, (double) r.getMeanValue(), 0.1);
-                assertEquals(1.0, (double) r.getThresholdModifier(), 0.1);
-                assertEquals(359999L, r.getWindowTimestamp().getMillis());
+              for (Alert a : i) {
+                assertThat(
+                    a.getMetadataValue("sourceaddress"),
+                    anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
+                assertEquals(900L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals(180.0, Double.parseDouble(a.getMetadataValue("mean")), 0.1);
+                assertEquals(
+                    1.0, Double.parseDouble(a.getMetadataValue("threshold_modifier")), 0.1);
+                assertEquals("1970-01-01T00:05:59.999Z", a.getMetadataValue("window_timestamp"));
               }
               return null;
             });
@@ -133,13 +137,13 @@ public class TestThresholdAnalysis1 {
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
-    PCollection<Result> results =
+    PCollection<Alert> results =
         events
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(getTestOptions(), natView));
 
     PCollection<Long> resultCount =
-        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     // 10.0.0.2 would normally trigger a result being emitted, but with NAT detection enabled
     // we should only see a single result for 10.0.0.1 in the selected interval window
     PAssert.that(resultCount)
@@ -150,12 +154,13 @@ public class TestThresholdAnalysis1 {
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
         .satisfies(
             i -> {
-              for (Result r : i) {
-                assertEquals(r.getSourceAddress(), "10.0.0.1");
-                assertEquals(900L, (long) r.getCount());
-                assertEquals(180.0, (double) r.getMeanValue(), 0.1);
-                assertEquals(1.0, (double) r.getThresholdModifier(), 0.1);
-                assertEquals(359999L, r.getWindowTimestamp().getMillis());
+              for (Alert a : i) {
+                assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                assertEquals(900L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals(180.0, Double.parseDouble(a.getMetadataValue("mean")), 0.1);
+                assertEquals(
+                    1.0, Double.parseDouble(a.getMetadataValue("threshold_modifier")), 0.1);
+                assertEquals("1970-01-01T00:05:59.999Z", a.getMetadataValue("window_timestamp"));
               }
               return null;
             });
@@ -175,13 +180,13 @@ public class TestThresholdAnalysis1 {
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     // Set a minimum average well above what we will calculate with the test data set
     options.setRequiredMinimumAverage(250.0);
-    PCollection<Result> results =
+    PCollection<Alert> results =
         events
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(options, natView));
 
     PCollection<Long> resultCount =
-        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     // No results should have been emitted
     PAssert.that(resultCount).empty();
 
@@ -200,13 +205,13 @@ public class TestThresholdAnalysis1 {
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     // Set a required minimum above what we have in the test data set
     options.setRequiredMinimumClients(500L);
-    PCollection<Result> results =
+    PCollection<Alert> results =
         events
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(options, natView));
 
     PCollection<Long> resultCount =
-        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     // No results should have been emitted
     PAssert.that(resultCount).empty();
 
