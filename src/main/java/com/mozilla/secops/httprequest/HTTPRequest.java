@@ -255,7 +255,9 @@ public class HTTPRequest implements Serializable {
                           Map<String, Boolean> nv = c.sideInput(natView);
                           if (uc < requiredMinimumClients) {
                             if (!warningLogged) {
-                              log.warn("ignoring events as window does not meet minimum clients");
+                              log.warn(
+                                  "{}: ignoring events as window does not meet minimum clients",
+                                  w.toString());
                               warningLogged = true;
                             }
                             return;
@@ -263,7 +265,9 @@ public class HTTPRequest implements Serializable {
                           Double cMean = sOutput.getMean();
                           if (cMean < requiredMinimumAverage) {
                             if (!warningLogged) {
-                              log.warn("ignoring events as window does not meet minimum average");
+                              log.warn(
+                                  "{}: ignoring events as window does not meet minimum average",
+                                  w.toString());
                               warningLogged = true;
                             }
                             return;
@@ -271,7 +275,8 @@ public class HTTPRequest implements Serializable {
                           if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
                             if (!clampMaximumLogged) {
                               log.info(
-                                  "clamping calculated mean {} to maximum {}",
+                                  "{}: clamping calculated mean {} to maximum {}",
+                                  w.toString(),
                                   cMean,
                                   clampThresholdMaximum);
                               clampMaximumLogged = true;
@@ -282,11 +287,13 @@ public class HTTPRequest implements Serializable {
                             Boolean isNat = nv.get(c.element().getKey());
                             if (isNat != null && isNat) {
                               log.info(
-                                  "detectnat: skipping result emission for {}",
+                                  "{}: detectnat: skipping result emission for {}",
+                                  w.toString(),
                                   c.element().getKey());
                               return;
                             }
-                            log.info("emitting result for {}", c.element().getKey());
+                            log.info(
+                                "{}: emitting result for {}", w.toString(), c.element().getKey());
                             Result r = new Result(Result.ResultType.THRESHOLD_ANALYSIS);
                             r.setCount(c.element().getValue());
                             r.setSourceAddress(c.element().getKey());
