@@ -4,6 +4,7 @@ import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.Stats;
+import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -132,9 +133,9 @@ public class HTTPRequest implements Serializable {
 
   /**
    * {@link DoFn} to analyze key value pairs of source address and error count and emit a {@link
-   * Result} for each address that exceeds the maximum client error rate
+   * Alert} for each address that exceeds the maximum client error rate
    */
-  public static class ErrorRateAnalysis extends DoFn<KV<String, Long>, Result> {
+  public static class ErrorRateAnalysis extends DoFn<KV<String, Long>, Alert> {
     private static final long serialVersionUID = 1L;
     private final Long maxErrorRate;
 
@@ -152,12 +153,14 @@ public class HTTPRequest implements Serializable {
       if (c.element().getValue() <= maxErrorRate) {
         return;
       }
-      Result r = new Result(Result.ResultType.CLIENT_ERROR);
-      r.setSourceAddress(c.element().getKey());
-      r.setClientErrorCount(c.element().getValue());
-      r.setMaxClientErrorRate(maxErrorRate);
-      r.setWindowTimestamp(new DateTime(w.maxTimestamp()));
-      c.output(r);
+      Alert a = new Alert();
+      a.setCategory("httprequest");
+      a.addMetadata("category", "error_rate");
+      a.addMetadata("sourceaddress", c.element().getKey());
+      a.addMetadata("error_count", c.element().getValue().toString());
+      a.addMetadata("error_threshold", maxErrorRate.toString());
+      a.addMetadata("window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+      c.output(a);
     }
   }
 
@@ -166,7 +169,7 @@ public class HTTPRequest implements Serializable {
    * across a set of KV objects as returned by {@link CountInWindow}.
    */
   public static class ThresholdAnalysis
-      extends PTransform<PCollection<KV<String, Long>>, PCollection<Result>> {
+      extends PTransform<PCollection<KV<String, Long>>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
     private final Double thresholdModifier;
@@ -203,7 +206,7 @@ public class HTTPRequest implements Serializable {
     }
 
     @Override
-    public PCollection<Result> expand(PCollection<KV<String, Long>> col) {
+    public PCollection<Alert> expand(PCollection<KV<String, Long>> col) {
       if (natView == null) {
         // If natView was not set then we just create an empty view for use as the side input
         natView =
@@ -234,10 +237,10 @@ public class HTTPRequest implements Serializable {
                   }));
       final PCollectionView<Stats.StatsOutput> wStats = Stats.getView(counts);
 
-      PCollection<Result> ret =
+      PCollection<Alert> ret =
           col.apply(
               ParDo.of(
-                      new DoFn<KV<String, Long>, Result>() {
+                      new DoFn<KV<String, Long>, Alert>() {
                         private static final long serialVersionUID = 1L;
                         private Boolean warningLogged;
                         private Boolean clampMaximumLogged;
@@ -293,14 +296,17 @@ public class HTTPRequest implements Serializable {
                               return;
                             }
                             log.info(
-                                "{}: emitting result for {}", w.toString(), c.element().getKey());
-                            Result r = new Result(Result.ResultType.THRESHOLD_ANALYSIS);
-                            r.setCount(c.element().getValue());
-                            r.setSourceAddress(c.element().getKey());
-                            r.setMeanValue(sOutput.getMean());
-                            r.setThresholdModifier(thresholdModifier);
-                            r.setWindowTimestamp(new DateTime(w.maxTimestamp()));
-                            c.output(r);
+                                "{}: emitting alert for {}", w.toString(), c.element().getKey());
+                            Alert a = new Alert();
+                            a.setCategory("httprequest");
+                            a.addMetadata("category", "threshold_analysis");
+                            a.addMetadata("sourceaddress", c.element().getKey());
+                            a.addMetadata("mean", sOutput.getMean().toString());
+                            a.addMetadata("count", c.element().getValue().toString());
+                            a.addMetadata("threshold_modifier", thresholdModifier.toString());
+                            a.addMetadata(
+                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                            c.output(a);
                           }
                         }
                       })
@@ -310,10 +316,10 @@ public class HTTPRequest implements Serializable {
   }
 
   /**
-   * {@link DoFn} to transform any generated {@link Result} objects into JSON for consumption by
+   * {@link DoFn} to transform any generated {@link Alert} objects into JSON for consumption by
    * output transforms.
    */
-  public static class OutputFormat extends DoFn<Result, String> {
+  public static class OutputFormat extends DoFn<Alert, String> {
     private static final long serialVersionUID = 1L;
 
     @ProcessElement
