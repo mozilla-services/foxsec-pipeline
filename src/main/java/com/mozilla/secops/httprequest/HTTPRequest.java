@@ -172,6 +172,7 @@ public class HTTPRequest implements Serializable {
     private final Double thresholdModifier;
     private final Double requiredMinimumAverage;
     private final Long requiredMinimumClients;
+    private final Double clampThresholdMaximum;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
     private Logger log;
@@ -185,6 +186,7 @@ public class HTTPRequest implements Serializable {
       this.thresholdModifier = options.getAnalysisThresholdModifier();
       this.requiredMinimumAverage = options.getRequiredMinimumAverage();
       this.requiredMinimumClients = options.getRequiredMinimumClients();
+      this.clampThresholdMaximum = options.getClampThresholdMaximum();
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
@@ -238,10 +240,12 @@ public class HTTPRequest implements Serializable {
                       new DoFn<KV<String, Long>, Result>() {
                         private static final long serialVersionUID = 1L;
                         private Boolean warningLogged;
+                        private Boolean clampMaximumLogged;
 
-                        @Setup
-                        public void setup() {
+                        @StartBundle
+                        public void startBundle() {
                           warningLogged = false;
+                          clampMaximumLogged = false;
                         }
 
                         @ProcessElement
@@ -251,27 +255,45 @@ public class HTTPRequest implements Serializable {
                           Map<String, Boolean> nv = c.sideInput(natView);
                           if (uc < requiredMinimumClients) {
                             if (!warningLogged) {
-                              log.warn("ignoring events as window does not meet minimum clients");
+                              log.warn(
+                                  "{}: ignoring events as window does not meet minimum clients",
+                                  w.toString());
                               warningLogged = true;
                             }
                             return;
                           }
-                          if (sOutput.getMean() < requiredMinimumAverage) {
+                          Double cMean = sOutput.getMean();
+                          if (cMean < requiredMinimumAverage) {
                             if (!warningLogged) {
-                              log.warn("ignoring events as window does not meet minimum average");
+                              log.warn(
+                                  "{}: ignoring events as window does not meet minimum average",
+                                  w.toString());
                               warningLogged = true;
                             }
                             return;
                           }
-                          if (c.element().getValue() >= (sOutput.getMean() * thresholdModifier)) {
+                          if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
+                            if (!clampMaximumLogged) {
+                              log.info(
+                                  "{}: clamping calculated mean {} to maximum {}",
+                                  w.toString(),
+                                  cMean,
+                                  clampThresholdMaximum);
+                              clampMaximumLogged = true;
+                            }
+                            cMean = clampThresholdMaximum;
+                          }
+                          if (c.element().getValue() >= (cMean * thresholdModifier)) {
                             Boolean isNat = nv.get(c.element().getKey());
                             if (isNat != null && isNat) {
                               log.info(
-                                  "detectnat: skipping result emission for {}",
+                                  "{}: detectnat: skipping result emission for {}",
+                                  w.toString(),
                                   c.element().getKey());
                               return;
                             }
-                            log.info("emitting result for {}", c.element().getKey());
+                            log.info(
+                                "{}: emitting result for {}", w.toString(), c.element().getKey());
                             Result r = new Result(Result.ResultType.THRESHOLD_ANALYSIS);
                             r.setCount(c.element().getValue());
                             r.setSourceAddress(c.element().getKey());
@@ -320,6 +342,12 @@ public class HTTPRequest implements Serializable {
     Long getRequiredMinimumClients();
 
     void setRequiredMinimumClients(Long value);
+
+    @Description(
+        "Restrict maximum calculated average for threshold analysis; clamps to value if exceeded")
+    Double getClampThresholdMaximum();
+
+    void setClampThresholdMaximum(Double value);
 
     @Description("Maximum permitted client error rate per window")
     @Default.Long(30L)
