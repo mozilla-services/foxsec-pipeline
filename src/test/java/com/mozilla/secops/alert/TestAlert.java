@@ -2,6 +2,7 @@ package com.mozilla.secops.alert;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.UUID;
 import org.joda.time.DateTime;
@@ -61,5 +62,11 @@ public class TestAlert {
     a.addMetadata("key1", "another value");
 
     assertEquals(expect, a.toJSON());
+  }
+
+  @Test
+  public void alertFromBadJson() throws Exception {
+    Alert a = Alert.fromJSON("{{{");
+    assertNull(a);
   }
 }
