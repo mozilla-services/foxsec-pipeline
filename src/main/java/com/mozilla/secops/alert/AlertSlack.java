@@ -21,8 +21,12 @@ public class AlertSlack {
 
   public Boolean confirmationAlert(Alert a, String userId) throws IOException, SlackApiException {
     log.info("generating slack message for {}", userId);
-    // TODO: Will probably want to construct an alert message with more context.
-    return slackManager.sendConfirmationRequestToUser(userId, a.getSummary());
+
+    String text =
+        String.format(
+            "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
+            a.getSummary(), a.assemblePayload(), a.getAlertId());
+    return slackManager.sendConfirmationRequestToUser(userId, text);
   }
 
   public String getUserId(String email) throws IOException, SlackApiException {

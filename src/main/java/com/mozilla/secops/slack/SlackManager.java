@@ -39,7 +39,6 @@ public class SlackManager {
     users.addAll(resp.getMembers());
 
     while (true) {
-      // TODO - Not sure if this is the right check
       if (resp.getResponseMetadata().getNextCursor() != null) {
         resp =
             slack
@@ -76,7 +75,7 @@ public class SlackManager {
     ArrayList<Action> actions = new ArrayList<Action>();
     actions.add(
         Action.builder()
-            .name("auth_confirmation")
+            .name("auth_yes")
             .text("Yes, this was me.")
             .style("primary")
             .value("yes")
@@ -84,14 +83,15 @@ public class SlackManager {
 
     actions.add(
         Action.builder()
-            .name("auth_confirmation")
+            .name("auth_no")
             .text("No, this was not me.")
             .style("danger")
             .value("no")
             .confirm(
                 Confirmation.builder()
-                    .title("Are you sure?")
-                    .text("TODO")
+                    .title("Confirm this selection")
+                    .text(
+                        "It's alright if you are unsure, but please double-check before selecting 'No'.")
                     .ok_text("Yes")
                     .dismiss_text("No")
                     .build())
@@ -101,8 +101,8 @@ public class SlackManager {
     attachments.add(
         Attachment.builder()
             .text("Was this you?")
-            .fallback("TODO")
-            .callbackId("was_this_you")
+            .fallback("Unable to create slack buttons; please contact secops@mozilla.com")
+            .callbackId("auth_confirmation")
             .color("#3AA3E3")
             .actions(actions)
             .build());
