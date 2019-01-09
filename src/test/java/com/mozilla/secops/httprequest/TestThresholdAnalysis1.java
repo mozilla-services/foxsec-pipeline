@@ -229,13 +229,13 @@ public class TestThresholdAnalysis1 {
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setClampThresholdMaximum(1.0);
-    PCollection<Result> results =
+    PCollection<Alert> results =
         events
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(options));
 
     PCollection<Long> resultCount =
-        results.apply(Combine.globally(Count.<Result>combineFn()).withoutDefaults());
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.that(resultCount)
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
         .containsInAnyOrder(14L);
