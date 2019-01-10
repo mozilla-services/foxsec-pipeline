@@ -3,6 +3,7 @@ package com.mozilla.secops.parser;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
+import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.identity.IdentityManager;
 import java.io.IOException;
@@ -34,6 +35,8 @@ public class Parser {
 
   private IdentityManager idmanager;
 
+  private String stackdriverProjectFilter;
+
   /**
    * Parse an ISO8601 date string and return a {@link DateTime} object.
    *
@@ -45,10 +48,43 @@ public class Parser {
     return fmt.parseDateTime(in);
   }
 
+  public void installStackdriverProjectFilter(String project) {
+    stackdriverProjectFilter = project;
+  }
+
+  private Boolean applyStackdriverProjectFilter(LogEntry entry) {
+    // Return true if the message should be filtered due to any existing Stackdriver project
+    // filter configuration
+    if (stackdriverProjectFilter == null) {
+      return false;
+    }
+    MonitoredResource mr = entry.getResource();
+    if (mr == null) {
+      // Ignore a LogEntry without a resource section if a filter is applied
+      return true;
+    }
+    Map<String, String> labels = mr.getLabels();
+    if (labels == null) {
+      return true;
+    }
+    String thisProject = labels.get("project_id");
+    if (thisProject == null) {
+      return true;
+    }
+    if (stackdriverProjectFilter.equals(thisProject)) {
+      return false;
+    }
+    return true;
+  }
+
   private String stripStackdriverEncapsulation(Event e, String input, ParserState state) {
     try {
       JsonParser jp = jf.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
+
+      if (applyStackdriverProjectFilter(entry)) {
+        return null;
+      }
 
       // We were able to deserialize the LogEntry so store it as a hint in the state
       state.setLogEntryHint(entry);
@@ -88,6 +124,11 @@ public class Parser {
 
   private String stripEncapsulation(Event e, String input, ParserState state) {
     input = stripStackdriverEncapsulation(e, input, state);
+    // If stripping the encapsulation returns null, just return null here to ignore the event. This
+    // could occur for example of Stackdriver specific project filtering is in place.
+    if (input == null) {
+      return null;
+    }
     input = stripMozlog(e, input);
     return input;
   }
@@ -133,7 +174,7 @@ public class Parser {
    * Parse an event
    *
    * @param input Input string
-   * @return {@link Event}
+   * @return {@link Event} or null if the event should be ignored
    */
   public Event parse(String input) {
     ParserState state = new ParserState(this);
@@ -144,6 +185,10 @@ public class Parser {
 
     Event e = new Event();
     input = stripEncapsulation(e, input, state);
+    // If the strip function returns null we will just ignore the event and return null
+    if (input == null) {
+      return null;
+    }
 
     for (PayloadBase p : payloads) {
       if (!p.matcher(input, state)) {
