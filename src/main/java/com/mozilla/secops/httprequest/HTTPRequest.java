@@ -58,6 +58,16 @@ public class HTTPRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final Boolean emitEventTimestamps;
+    private String stackdriverProjectFilter;
+
+    /**
+     * Only emit parsed Stackdriver events that are associated with specified project
+     *
+     * @param project Project name
+     */
+    public void withStackdriverProjectFilter(String project) {
+      stackdriverProjectFilter = project;
+    }
 
     public ParseAndWindow(Boolean emitEventTimestamps) {
       this.emitEventTimestamps = emitEventTimestamps;
@@ -69,7 +79,11 @@ public class HTTPRequest implements Serializable {
           new EventFilter().setWantUTC(true).setOutputWithTimestamp(emitEventTimestamps);
       filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.GLB));
 
-      return col.apply(ParDo.of(new ParserDoFn()))
+      ParserDoFn fn = new ParserDoFn();
+      if (stackdriverProjectFilter != null) {
+        fn = fn.withStackdriverProjectFilter(stackdriverProjectFilter);
+      }
+      return col.apply(ParDo.of(fn))
           .apply(EventFilter.getTransform(filter))
           .apply(Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1))));
     }
@@ -366,14 +380,22 @@ public class HTTPRequest implements Serializable {
     Boolean getNatDetection();
 
     void setNatDetection(Boolean value);
+
+    @Description("Filter any Stackdriver events that do not match project name")
+    String getStackdriverProjectFilter();
+
+    void setStackdriverProjectFilter(String value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
     Pipeline p = Pipeline.create(options);
 
+    ParseAndWindow pw = new ParseAndWindow(false);
+    if (options.getStackdriverProjectFilter() != null) {
+      pw.withStackdriverProjectFilter(options.getStackdriverProjectFilter());
+    }
     PCollection<Event> events =
-        p.apply("input", options.getInputType().read(p, options))
-            .apply("parse and window", new ParseAndWindow(false));
+        p.apply("input", options.getInputType().read(p, options)).apply("parse and window", pw);
 
     PCollectionView<Map<String, Boolean>> natView = null;
     if (options.getNatDetection()) {

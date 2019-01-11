@@ -12,11 +12,31 @@ public class ParserDoFn extends DoFn<String, Event> {
   private Parser ep;
   private Long parseCount;
 
+  private String stackdriverProjectFilter;
+
+  /**
+   * Return a parser that filters any Stackdriver LogEntry message that does not originate from the
+   * specified project
+   *
+   * <p>Any events that are seen that are not Stackdriver events will just be passed as is.
+   *
+   * @param project Project name
+   * @return Parser DoFn
+   */
+  public ParserDoFn withStackdriverProjectFilter(String project) {
+    stackdriverProjectFilter = project;
+    return this;
+  }
+
   @Setup
   public void setup() {
     ep = new Parser();
     log = LoggerFactory.getLogger(ParserDoFn.class);
     log.info("initialized new parser");
+    if (stackdriverProjectFilter != null) {
+      log.info("installing stackdriver project filter for {}", stackdriverProjectFilter);
+      ep.installStackdriverProjectFilter(stackdriverProjectFilter);
+    }
   }
 
   @StartBundle
