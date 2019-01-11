@@ -5,6 +5,7 @@ import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.Stats;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -315,19 +316,6 @@ public class HTTPRequest implements Serializable {
     }
   }
 
-  /**
-   * {@link DoFn} to transform any generated {@link Alert} objects into JSON for consumption by
-   * output transforms.
-   */
-  public static class OutputFormat extends DoFn<Alert, String> {
-    private static final long serialVersionUID = 1L;
-
-    @ProcessElement
-    public void processElement(ProcessContext c) {
-      c.output(c.element().toJSON());
-    }
-  }
-
   /** Runtime options for {@link HTTPRequest} pipeline. */
   public interface HTTPRequestOptions extends PipelineOptions, InputOptions, OutputOptions {
     @Description("Analysis threshold modifier")
@@ -384,7 +372,7 @@ public class HTTPRequest implements Serializable {
         events
             .apply("per-client", new CountInWindow())
             .apply("threshold analysis", new ThresholdAnalysis(options, natView))
-            .apply("output format", ParDo.of(new OutputFormat()));
+            .apply("output format", ParDo.of(new AlertFormatter(options)));
 
     PCollection<String> errRateResults =
         events
@@ -392,7 +380,7 @@ public class HTTPRequest implements Serializable {
             .apply(
                 "error rate analysis",
                 ParDo.of(new ErrorRateAnalysis(options.getMaxClientErrorRate())))
-            .apply("output format", ParDo.of(new OutputFormat()));
+            .apply("output format", ParDo.of(new AlertFormatter(options)));
 
     PCollectionList<String> resultsList = PCollectionList.of(threshResults).and(errRateResults);
     PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());

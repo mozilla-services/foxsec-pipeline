@@ -124,7 +124,7 @@ public class Customs implements Serializable {
     PCollection<Alert> alerts = input.apply(new Detectors(cfg));
 
     alerts
-        .apply(ParDo.of(new AlertFormatter()))
+        .apply(ParDo.of(new AlertFormatter(options)))
         .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();
