@@ -26,7 +26,7 @@ public class AlertSlack {
         String.format(
             "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
             a.getSummary(), a.assemblePayload(), a.getAlertId());
-    return slackManager.sendConfirmationRequestToUser(userId, text);
+    return slackManager.sendConfirmationRequestToUser(userId, a.getAlertId().toString(), text);
   }
 
   public String getUserId(String email) throws IOException, SlackApiException {

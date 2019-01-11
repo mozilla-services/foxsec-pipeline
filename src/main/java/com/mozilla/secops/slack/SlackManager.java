@@ -56,7 +56,7 @@ public class SlackManager {
     return users;
   }
 
-  public Boolean sendConfirmationRequestToUser(String userId, String message)
+  public Boolean sendConfirmationRequestToUser(String userId, String alertId, String message)
       throws IOException, SlackApiException {
     ChatPostMessageResponse resp =
         slack
@@ -66,12 +66,12 @@ public class SlackManager {
                     .token(apiToken)
                     .channel(userId)
                     .text(message)
-                    .attachments(createConfirmationButtons())
+                    .attachments(createAuthConfirmationButtons(alertId))
                     .build());
     return resp.isOk();
   }
 
-  private List<Attachment> createConfirmationButtons() {
+  private List<Attachment> createAuthConfirmationButtons(String alertId) {
     ArrayList<Action> actions = new ArrayList<Action>();
     actions.add(
         Action.builder()
@@ -102,7 +102,7 @@ public class SlackManager {
         Attachment.builder()
             .text("Was this you?")
             .fallback("Unable to create slack buttons; please contact secops@mozilla.com")
-            .callbackId("auth_confirmation")
+            .callbackId(String.format("auth_confirmation_%s", alertId))
             .color("#3AA3E3")
             .actions(actions)
             .build());
