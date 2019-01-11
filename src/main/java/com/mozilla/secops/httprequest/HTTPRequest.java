@@ -259,11 +259,13 @@ public class HTTPRequest implements Serializable {
                         private static final long serialVersionUID = 1L;
                         private Boolean warningLogged;
                         private Boolean clampMaximumLogged;
+                        private Boolean statsLogged;
 
                         @StartBundle
                         public void startBundle() {
                           warningLogged = false;
                           clampMaximumLogged = false;
+                          statsLogged = false;
                         }
 
                         @ProcessElement
@@ -271,6 +273,16 @@ public class HTTPRequest implements Serializable {
                           Stats.StatsOutput sOutput = c.sideInput(wStats);
                           Long uc = c.sideInput(uniqueClients);
                           Map<String, Boolean> nv = c.sideInput(natView);
+                          Double cMean = sOutput.getMean();
+                          if (!statsLogged) {
+                            log.info(
+                                "{}: statistics: mean/{} unique_clients/{} threshold/{}",
+                                w.toString(),
+                                cMean,
+                                uc,
+                                cMean * thresholdModifier);
+                            statsLogged = true;
+                          }
                           if (uc < requiredMinimumClients) {
                             if (!warningLogged) {
                               log.warn(
@@ -280,7 +292,6 @@ public class HTTPRequest implements Serializable {
                             }
                             return;
                           }
-                          Double cMean = sOutput.getMean();
                           if (cMean < requiredMinimumAverage) {
                             if (!warningLogged) {
                               log.warn(
