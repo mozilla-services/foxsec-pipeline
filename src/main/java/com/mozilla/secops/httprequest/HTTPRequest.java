@@ -343,6 +343,18 @@ public class HTTPRequest implements Serializable {
 
   /** Runtime options for {@link HTTPRequest} pipeline. */
   public interface HTTPRequestOptions extends PipelineOptions, InputOptions, OutputOptions {
+    @Description("Enable threshold analysis")
+    @Default.Boolean(false)
+    Boolean getEnableThresholdAnalysis();
+
+    void setEnableThresholdAnalysis(Boolean value);
+
+    @Description("Enable error rate analysis")
+    @Default.Boolean(false)
+    Boolean getEnableErrorRateAnalysis();
+
+    void setEnableErrorRateAnalysis(Boolean value);
+
     @Description("Analysis threshold modifier")
     @Default.Double(75.0)
     Double getAnalysisThresholdModifier();
@@ -401,21 +413,28 @@ public class HTTPRequest implements Serializable {
       natView = DetectNat.getView(events);
     }
 
-    PCollection<String> threshResults =
-        events
-            .apply("per-client", new CountInWindow())
-            .apply("threshold analysis", new ThresholdAnalysis(options, natView))
-            .apply("output format", ParDo.of(new AlertFormatter(options)));
+    PCollectionList<String> resultsList = PCollectionList.empty(p);
 
-    PCollection<String> errRateResults =
-        events
-            .apply("cerr per client", new CountErrorsInWindow())
-            .apply(
-                "error rate analysis",
-                ParDo.of(new ErrorRateAnalysis(options.getMaxClientErrorRate())))
-            .apply("output format", ParDo.of(new AlertFormatter(options)));
+    if (options.getEnableThresholdAnalysis()) {
+      resultsList =
+          resultsList.and(
+              events
+                  .apply("per-client", new CountInWindow())
+                  .apply("threshold analysis", new ThresholdAnalysis(options, natView))
+                  .apply("output format", ParDo.of(new AlertFormatter(options))));
+    }
 
-    PCollectionList<String> resultsList = PCollectionList.of(threshResults).and(errRateResults);
+    if (options.getEnableErrorRateAnalysis()) {
+      resultsList =
+          resultsList.and(
+              events
+                  .apply("cerr per client", new CountErrorsInWindow())
+                  .apply(
+                      "error rate analysis",
+                      ParDo.of(new ErrorRateAnalysis(options.getMaxClientErrorRate())))
+                  .apply("output format", ParDo.of(new AlertFormatter(options))));
+    }
+
     PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
 
     results.apply("output", OutputOptions.compositeOutput(options));
