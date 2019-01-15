@@ -24,6 +24,20 @@ public class SlackManager {
     slack = Slack.getInstance();
   }
 
+  public Boolean sendMessageToChannel(String channelId, String message)
+      throws IOException, SlackApiException {
+    ChatPostMessageResponse resp =
+        slack
+            .methods()
+            .chatPostMessage(
+                ChatPostMessageRequest.builder()
+                    .token(apiToken)
+                    .channel(channelId)
+                    .text(message)
+                    .build());
+    return resp.isOk();
+  }
+
   public HashMap<String, String> getEmailToUserIdMapping() throws IOException, SlackApiException {
     List<User> users = getUserList();
     HashMap<String, String> emailToUser = new HashMap<String, String>();
