@@ -234,6 +234,17 @@ public class HTTPRequest implements Serializable {
 
     @Override
     public PCollection<Alert> expand(PCollection<Event> input) {
+      if (natView == null) {
+        // If natView was not set then we just create an empty view for use as the side input
+        natView =
+            input
+                .getPipeline()
+                .apply(
+                    Create.empty(
+                        TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
+                .apply(View.<String, Boolean>asMap());
+      }
+
       return input
           .apply(
               "filter inapplicable requests",
@@ -264,58 +275,69 @@ public class HTTPRequest implements Serializable {
           .apply(
               "analyze per-client",
               ParDo.of(
-                  new DoFn<KV<String, Iterable<ArrayList<String>>>, Alert>() {
-                    private static final long serialVersionUID = 1L;
+                      new DoFn<KV<String, Iterable<ArrayList<String>>>, Alert>() {
+                        private static final long serialVersionUID = 1L;
 
-                    @ProcessElement
-                    public void processElement(ProcessContext c, BoundedWindow w) {
-                      String remoteAddress = c.element().getKey();
-                      Iterable<ArrayList<String>> paths = c.element().getValue();
+                        @ProcessElement
+                        public void processElement(ProcessContext c, BoundedWindow w) {
+                          Map<String, Boolean> nv = c.sideInput(natView);
+                          String remoteAddress = c.element().getKey();
+                          Iterable<ArrayList<String>> paths = c.element().getValue();
 
-                      // Take a look at the first entry in the data set and see if it
-                      // corresponds to anything we have in the endpoints map. If so, look at
-                      // the rest of the requests in the window to determine variance and
-                      // if the noted threshold has been exceeded.
-                      Integer foundThreshold = null;
-                      String compareMethod = null;
-                      String comparePath = null;
-                      int count = 0;
-                      for (ArrayList<String> i : paths) {
-                        if (foundThreshold == null) {
-                          foundThreshold = getEndpointThreshold(i.get(1), i.get(0));
-                          compareMethod = i.get(0);
-                          comparePath = i.get(1);
-                        } else {
-                          if (!(compareMethod.equals(i.get(0)))
-                              || !(comparePath.equals(i.get(1)))) {
-                            // Variance in requests in-window
-                            return;
+                          // Take a look at the first entry in the data set and see if it
+                          // corresponds to anything we have in the endpoints map. If so, look at
+                          // the rest of the requests in the window to determine variance and
+                          // if the noted threshold has been exceeded.
+                          Integer foundThreshold = null;
+                          String compareMethod = null;
+                          String comparePath = null;
+                          int count = 0;
+                          for (ArrayList<String> i : paths) {
+                            if (foundThreshold == null) {
+                              foundThreshold = getEndpointThreshold(i.get(1), i.get(0));
+                              compareMethod = i.get(0);
+                              comparePath = i.get(1);
+                            } else {
+                              if (!(compareMethod.equals(i.get(0)))
+                                  || !(comparePath.equals(i.get(1)))) {
+                                // Variance in requests in-window
+                                return;
+                              }
+                            }
+                            if (foundThreshold == null) {
+                              // Entry wasn't in monitor map, so just ignore this client
+                              //
+                              // XXX This should be improved to determine when to ignore based on
+                              // perhaps a weighting heuristic if most of the requests are
+                              // applicable.
+                              return;
+                            }
+                            count++;
+                          }
+                          if (count >= foundThreshold) {
+                            Boolean isNat = nv.get(remoteAddress);
+                            if (isNat != null && isNat) {
+                              log.info(
+                                  "{}: detectnat: skipping result emission for {}",
+                                  w.toString(),
+                                  remoteAddress);
+                              return;
+                            }
+                            log.info("{}: emitting alert for {}", w.toString(), remoteAddress);
+                            Alert a = new Alert();
+                            a.setCategory("httprequest");
+                            a.addMetadata("category", "endpoint_abuse");
+                            a.addMetadata("sourceaddress", remoteAddress);
+                            a.addMetadata("endpoint", comparePath);
+                            a.addMetadata("method", compareMethod);
+                            a.addMetadata("count", Integer.toString(count));
+                            a.addMetadata(
+                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                            c.output(a);
                           }
                         }
-                        if (foundThreshold == null) {
-                          // Entry wasn't in monitor map, so just ignore this client
-                          //
-                          // XXX This should be improved to determine when to ignore based on some
-                          // sort of weighting heuristic if most of the requests are applicable.
-                          return;
-                        }
-                        count++;
-                      }
-                      if (count >= foundThreshold) {
-                        log.info("{}: emitting alert for {}", w.toString(), remoteAddress);
-                        Alert a = new Alert();
-                        a.setCategory("httprequest");
-                        a.addMetadata("category", "endpoint_abuse");
-                        a.addMetadata("sourceaddress", remoteAddress);
-                        a.addMetadata("endpoint", comparePath);
-                        a.addMetadata("method", compareMethod);
-                        a.addMetadata("count", Integer.toString(count));
-                        a.addMetadata(
-                            "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-                        c.output(a);
-                      }
-                    }
-                  }));
+                      })
+                  .withSideInputs(natView));
     }
 
     private Integer getEndpointThreshold(String path, String method) {
