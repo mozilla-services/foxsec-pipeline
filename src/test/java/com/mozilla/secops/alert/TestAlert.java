@@ -111,6 +111,29 @@ public class TestAlert {
   }
 
   @Test
+  public void alertToEndpointAbuseViolationTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"620171b5-6597-48a7-94c2-006cc2b83c96\",\"category\""
+            + ":\"httprequest\",\"timestamp\":\"2019-01-09T19:47:37.600Z\",\"metadata\":[{\"key\":"
+            + "\"category\",\"value\":\"endpoint_abuse\"},{\"key\":\"sourceaddress\",\"value\""
+            + ":\"10.0.0.2\"},{\"key\":\"endpoint\",\"value\":\"/test\"},{\"key\":\"count\",\"value\":"
+            + "\"900\"},{\"key\":\"method\",\"value\":\"POST\"},{\"key\":\"window_times"
+            + "tamp\",\"value\":\"1970-01-01T00:05:59.999Z\"}]}";
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("httprequest", a.getCategory());
+    assertEquals("endpoint_abuse", a.getMetadataValue("category"));
+    assertEquals("10.0.0.2", a.getMetadataValue("sourceaddress"));
+    assertEquals("/test", a.getMetadataValue("endpoint"));
+    assertEquals("900", a.getMetadataValue("count"));
+    Violation v = Violation.fromAlert(a);
+    assertNotNull(v);
+    assertEquals("endpoint_abuse_violation", v.getViolation());
+    assertEquals("10.0.0.2", v.getSourceAddress());
+  }
+
+  @Test
   public void alertToUnknownViolationTest() throws Exception {
     String buf =
         "{\"severity\":\"info\",\"id\":\"620171b5-6597-48a7-94c2-006cc2b83c96\",\"category\""

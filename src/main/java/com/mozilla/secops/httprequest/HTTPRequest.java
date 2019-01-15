@@ -13,6 +13,9 @@ import com.mozilla.secops.parser.GLB;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
 import java.io.Serializable;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
@@ -24,6 +27,7 @@ import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -176,6 +180,174 @@ public class HTTPRequest implements Serializable {
       a.addMetadata("error_threshold", maxErrorRate.toString());
       a.addMetadata("window_timestamp", (new DateTime(w.maxTimestamp())).toString());
       c.output(a);
+    }
+  }
+
+  /**
+   * Transform for detection of a single source endpoint making excessive requests of a specific
+   * endpoint path solely.
+   *
+   * <p>Generates alerts where the request profile violates path thresholds specified in the
+   * endpointAbusePath pipeline option configuration.
+   */
+  public static class EndpointAbuseAnalysis
+      extends PTransform<PCollection<Event>, PCollection<Alert>> {
+    private static final long serialVersionUID = 1L;
+
+    private Logger log;
+
+    private PCollectionView<Map<String, Boolean>> natView = null;
+    private final Map<String[], Integer> endpoints;
+
+    /**
+     * Static initializer for {@link EndpointAbuseAnalysis}
+     *
+     * @param options Pipeline options
+     */
+    public EndpointAbuseAnalysis(HTTPRequestOptions options) {
+      log = LoggerFactory.getLogger(EndpointAbuseAnalysis.class);
+      endpoints = new HashMap<String[], Integer>();
+      for (String endpoint : options.getEndpointAbusePath()) {
+        String[] parts = endpoint.split(":");
+        if (parts.length != 3) {
+          throw new IllegalArgumentException(
+              "invalid format for abuse endpoint path, must be <int>:<method>:<path>");
+        }
+        String k[] = new String[2];
+        k[0] = parts[1];
+        k[1] = parts[2];
+        endpoints.put(k, new Integer(parts[0]));
+      }
+    }
+
+    /**
+     * Static initializer for {@link EndpointAbuseAnalysis}
+     *
+     * @param options Pipeline options
+     * @param natView NAT detection {@link PCollectionView}
+     */
+    public EndpointAbuseAnalysis(
+        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
+      this(options);
+      this.natView = natView;
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> input) {
+      if (natView == null) {
+        // If natView was not set then we just create an empty view for use as the side input
+        natView =
+            input
+                .getPipeline()
+                .apply(
+                    Create.empty(
+                        TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
+                .apply(View.<String, Boolean>asMap());
+      }
+
+      return input
+          .apply(
+              "filter inapplicable requests",
+              ParDo.of(
+                  new DoFn<Event, KV<String, ArrayList<String>>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      GLB g = c.element().getPayload();
+
+                      String sourceAddress = g.getSourceAddress();
+                      String requestMethod = g.getRequestMethod();
+                      if (sourceAddress == null || requestMethod == null) {
+                        return;
+                      }
+                      URL u = g.getParsedUrl();
+                      if (u == null) {
+                        return;
+                      }
+                      ArrayList<String> v = new ArrayList<>();
+                      v.add(requestMethod);
+                      v.add(u.getPath());
+                      c.output(KV.of(sourceAddress, v));
+                    }
+                  }))
+          .apply(GroupByKey.<String, ArrayList<String>>create())
+          .apply(
+              "analyze per-client",
+              ParDo.of(
+                      new DoFn<KV<String, Iterable<ArrayList<String>>>, Alert>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @ProcessElement
+                        public void processElement(ProcessContext c, BoundedWindow w) {
+                          Map<String, Boolean> nv = c.sideInput(natView);
+                          String remoteAddress = c.element().getKey();
+                          Iterable<ArrayList<String>> paths = c.element().getValue();
+
+                          // Take a look at the first entry in the data set and see if it
+                          // corresponds to anything we have in the endpoints map. If so, look at
+                          // the rest of the requests in the window to determine variance and
+                          // if the noted threshold has been exceeded.
+                          Integer foundThreshold = null;
+                          String compareMethod = null;
+                          String comparePath = null;
+                          int count = 0;
+                          for (ArrayList<String> i : paths) {
+                            if (foundThreshold == null) {
+                              foundThreshold = getEndpointThreshold(i.get(1), i.get(0));
+                              compareMethod = i.get(0);
+                              comparePath = i.get(1);
+                            } else {
+                              if (!(compareMethod.equals(i.get(0)))
+                                  || !(comparePath.equals(i.get(1)))) {
+                                // Variance in requests in-window
+                                return;
+                              }
+                            }
+                            if (foundThreshold == null) {
+                              // Entry wasn't in monitor map, so just ignore this client
+                              //
+                              // XXX This should be improved to determine when to ignore based on
+                              // perhaps a weighting heuristic if most of the requests are
+                              // applicable.
+                              return;
+                            }
+                            count++;
+                          }
+                          if (count >= foundThreshold) {
+                            Boolean isNat = nv.get(remoteAddress);
+                            if (isNat != null && isNat) {
+                              log.info(
+                                  "{}: detectnat: skipping result emission for {}",
+                                  w.toString(),
+                                  remoteAddress);
+                              return;
+                            }
+                            log.info("{}: emitting alert for {}", w.toString(), remoteAddress);
+                            Alert a = new Alert();
+                            a.setCategory("httprequest");
+                            a.addMetadata("category", "endpoint_abuse");
+                            a.addMetadata("sourceaddress", remoteAddress);
+                            a.addMetadata("endpoint", comparePath);
+                            a.addMetadata("method", compareMethod);
+                            a.addMetadata("count", Integer.toString(count));
+                            a.addMetadata(
+                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                            c.output(a);
+                          }
+                        }
+                      })
+                  .withSideInputs(natView));
+    }
+
+    private Integer getEndpointThreshold(String path, String method) {
+      for (Map.Entry<String[], Integer> entry : endpoints.entrySet()) {
+        String k[] = entry.getKey();
+        if (method.equals(k[0]) && path.equals(k[1])) {
+          return entry.getValue();
+        }
+      }
+      return null;
     }
   }
 
@@ -343,6 +515,24 @@ public class HTTPRequest implements Serializable {
 
   /** Runtime options for {@link HTTPRequest} pipeline. */
   public interface HTTPRequestOptions extends PipelineOptions, InputOptions, OutputOptions {
+    @Description("Enable threshold analysis")
+    @Default.Boolean(false)
+    Boolean getEnableThresholdAnalysis();
+
+    void setEnableThresholdAnalysis(Boolean value);
+
+    @Description("Enable error rate analysis")
+    @Default.Boolean(false)
+    Boolean getEnableErrorRateAnalysis();
+
+    void setEnableErrorRateAnalysis(Boolean value);
+
+    @Description("Enable endpoint abuse analysis")
+    @Default.Boolean(false)
+    Boolean getEnableEndpointAbuseAnalysis();
+
+    void setEnableEndpointAbuseAnalysis(Boolean value);
+
     @Description("Analysis threshold modifier")
     @Default.Double(75.0)
     Double getAnalysisThresholdModifier();
@@ -384,6 +574,12 @@ public class HTTPRequest implements Serializable {
     String getStackdriverProjectFilter();
 
     void setStackdriverProjectFilter(String value);
+
+    @Description(
+        "Endpoint abuse analysis paths for monitoring (multiple allowed); e.g., threshold:method:/path")
+    String[] getEndpointAbusePath();
+
+    void setEndpointAbusePath(String[] value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
@@ -401,21 +597,36 @@ public class HTTPRequest implements Serializable {
       natView = DetectNat.getView(events);
     }
 
-    PCollection<String> threshResults =
-        events
-            .apply("per-client", new CountInWindow())
-            .apply("threshold analysis", new ThresholdAnalysis(options, natView))
-            .apply("output format", ParDo.of(new AlertFormatter(options)));
+    PCollectionList<String> resultsList = PCollectionList.empty(p);
 
-    PCollection<String> errRateResults =
-        events
-            .apply("cerr per client", new CountErrorsInWindow())
-            .apply(
-                "error rate analysis",
-                ParDo.of(new ErrorRateAnalysis(options.getMaxClientErrorRate())))
-            .apply("output format", ParDo.of(new AlertFormatter(options)));
+    if (options.getEnableThresholdAnalysis()) {
+      resultsList =
+          resultsList.and(
+              events
+                  .apply("per-client", new CountInWindow())
+                  .apply("threshold analysis", new ThresholdAnalysis(options, natView))
+                  .apply("output format", ParDo.of(new AlertFormatter(options))));
+    }
 
-    PCollectionList<String> resultsList = PCollectionList.of(threshResults).and(errRateResults);
+    if (options.getEnableErrorRateAnalysis()) {
+      resultsList =
+          resultsList.and(
+              events
+                  .apply("cerr per client", new CountErrorsInWindow())
+                  .apply(
+                      "error rate analysis",
+                      ParDo.of(new ErrorRateAnalysis(options.getMaxClientErrorRate())))
+                  .apply("output format", ParDo.of(new AlertFormatter(options))));
+    }
+
+    if (options.getEnableEndpointAbuseAnalysis()) {
+      resultsList =
+          resultsList.and(
+              events
+                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options, natView))
+                  .apply("output format", ParDo.of(new AlertFormatter(options))));
+    }
+
     PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
 
     results.apply("output", OutputOptions.compositeOutput(options));
