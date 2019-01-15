@@ -12,6 +12,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
@@ -42,6 +43,7 @@ public class TestEndpointAbuse1 {
     PCollection<Alert> results =
         input
             .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
     PCollection<Long> count =
@@ -77,11 +79,41 @@ public class TestEndpointAbuse1 {
     options.setEndpointAbusePath(v);
     options.setNatDetection(true);
 
-    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()));
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
     PCollection<Alert> results =
         events.apply(new HTTPRequest.EndpointAbuseAnalysis(options, natView));
+
+    PCollection<Long> count =
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+
+    PAssert.that(count).inWindow(new IntervalWindow(new Instant(0L), new Instant(60000))).empty();
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void endpointAbuseTestPreprocessFilter() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_endpointabuse1.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    String v[] = new String[1];
+    v[0] = "8:GET:/test";
+    options.setEndpointAbusePath(v);
+    String w[] = new String[1];
+    w[0] = "GET:/test";
+    options.setFilterRequestPath(w);
+
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor(options)));
+
+    PCollection<Alert> results = events.apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
     PCollection<Long> count =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());

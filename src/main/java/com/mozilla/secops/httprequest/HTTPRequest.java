@@ -95,6 +95,72 @@ public class HTTPRequest implements Serializable {
   }
 
   /**
+   * Additional event preprocessing for {@link HTTPRequest} analysis components
+   *
+   * <p>DoFn to apply additional processing to the event stream prior to events being pushed into
+   * the analysis components of the pipeline.
+   */
+  public static class Preprocessor extends DoFn<Event, Event> {
+    private static final long serialVersionUID = 1L;
+
+    private String[] filterRequestPath;
+
+    /** Static initializer for {@link Preprocessor} */
+    public Preprocessor() {
+      filterRequestPath = null;
+    }
+
+    /**
+     * Static initializer for {@link Preprocessor}
+     *
+     * @param options Pipeline options
+     */
+    public Preprocessor(HTTPRequestOptions options) {
+      this();
+      filterRequestPath = options.getFilterRequestPath();
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext c) {
+      if (filterRequestPath == null) {
+        c.output(c.element());
+        return;
+      }
+      Event e = c.element();
+      GLB g = e.getPayload();
+      Integer status = g.getStatus();
+      if (status == null || status != 200) {
+        // Always emit errors
+        c.output(e);
+        return;
+      }
+      String method = g.getRequestMethod();
+      URL u = g.getParsedUrl();
+      if (u == null) {
+        c.output(e);
+        return;
+      }
+      String path = u.getPath();
+      if (path == null) {
+        c.output(e);
+        return;
+      }
+      for (String s : filterRequestPath) {
+        String[] parts = s.split(":");
+        if (parts.length != 2) {
+          throw new IllegalArgumentException(
+              "invalid format for filter path, must be <method>:<path>");
+        }
+        if (parts[0].equals(method) && parts[1].equals(path)) {
+          // Match, so just drop the event
+          return;
+        }
+      }
+      c.output(e);
+    }
+  }
+
+  /**
    * Composite transform which given a set of windowed {@link Event} types, emits a set of {@link
    * KV} objects where the key is the source address of the request and the value is the number of
    * requests for that source within the window.
@@ -580,6 +646,11 @@ public class HTTPRequest implements Serializable {
     String[] getEndpointAbusePath();
 
     void setEndpointAbusePath(String[] value);
+
+    @Description("Filter successful requests for path before analysis; e.g., method:/path")
+    String[] getFilterRequestPath();
+
+    void setFilterRequestPath(String[] value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
@@ -590,7 +661,9 @@ public class HTTPRequest implements Serializable {
       pw.withStackdriverProjectFilter(options.getStackdriverProjectFilter());
     }
     PCollection<Event> events =
-        p.apply("input", options.getInputType().read(p, options)).apply("parse and window", pw);
+        p.apply("input", options.getInputType().read(p, options))
+            .apply("parse and window", pw)
+            .apply("preprocess", ParDo.of(new Preprocessor(options)));
 
     PCollectionView<Map<String, Boolean>> natView = null;
     if (options.getNatDetection()) {

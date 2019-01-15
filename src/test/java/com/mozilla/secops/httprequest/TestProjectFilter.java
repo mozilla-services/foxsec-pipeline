@@ -6,6 +6,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Instant;
@@ -21,7 +22,10 @@ public class TestProjectFilter {
   public void noFilterTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_projectfilter.txt", p);
 
-    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()));
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -38,7 +42,7 @@ public class TestProjectFilter {
 
     HTTPRequest.ParseAndWindow pw = new HTTPRequest.ParseAndWindow(true);
     pw.withStackdriverProjectFilter("test");
-    PCollection<Event> events = input.apply(pw);
+    PCollection<Event> events = input.apply(pw).apply(ParDo.of(new HTTPRequest.Preprocessor()));
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
