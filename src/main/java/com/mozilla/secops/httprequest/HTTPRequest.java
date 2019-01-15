@@ -132,15 +132,18 @@ public class HTTPRequest implements Serializable {
       if (status == null || status != 200) {
         // Always emit errors
         c.output(e);
+        return;
       }
       String method = g.getRequestMethod();
       URL u = g.getParsedUrl();
       if (u == null) {
         c.output(e);
+        return;
       }
       String path = u.getPath();
       if (path == null) {
         c.output(e);
+        return;
       }
       for (String s : filterRequestPath) {
         String[] parts = s.split(":");
