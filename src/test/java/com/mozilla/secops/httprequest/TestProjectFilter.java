@@ -40,10 +40,9 @@ public class TestProjectFilter {
   public void withFilterTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_projectfilter.txt", p);
 
-    HTTPRequest.ParseAndWindow pw =
-        new HTTPRequest.ParseAndWindow(true).apply(ParDo.of(new HTTPRequest.Preprocessor()));
+    HTTPRequest.ParseAndWindow pw = new HTTPRequest.ParseAndWindow(true);
     pw.withStackdriverProjectFilter("test");
-    PCollection<Event> events = input.apply(pw);
+    PCollection<Event> events = input.apply(pw).apply(ParDo.of(new HTTPRequest.Preprocessor()));
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
