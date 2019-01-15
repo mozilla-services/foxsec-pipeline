@@ -209,7 +209,7 @@ public class ParserTest {
     String buf =
         "{\"httpRequest\":{\"referer\":\"https://send.firefox.com/\",\"remoteIp\":"
             + "\"127.0.0.1\",\"requestMethod\":\"GET\",\"requestSize\":\"43\",\"requestUrl\":\"htt"
-            + "ps://send.firefox.com/public/locales/en-US/send.js\",\"responseSize\":\"2692\","
+            + "ps://send.firefox.com/public/locales/en-US/send.js?test=test\",\"responseSize\":\"2692\","
             + "\"serverIp\":\"10.8.0.3\",\"status\":200,\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel M"
             + "ac OS X 10_13_3)"
             + "\"},\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"@type\":\"type.googleapis.com/"
@@ -233,9 +233,12 @@ public class ParserTest {
     assertEquals("GET", g.getRequestMethod());
     assertEquals("127.0.0.1", g.getSourceAddress());
     assertEquals("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3)", g.getUserAgent());
-    assertEquals("https://send.firefox.com/public/locales/en-US/send.js", g.getRequestUrl());
+    assertEquals(
+        "https://send.firefox.com/public/locales/en-US/send.js?test=test", g.getRequestUrl());
     assertEquals("2018-09-28T18:55:12.469Z", e.getTimestamp().toString());
     assertEquals(200, (int) g.getStatus());
+    assertEquals("/public/locales/en-US/send.js", g.getParsedUrl().getPath());
+    assertEquals("test=test", g.getParsedUrl().getQuery());
   }
 
   @Test
