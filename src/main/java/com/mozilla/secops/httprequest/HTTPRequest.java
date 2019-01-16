@@ -22,6 +22,9 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.state.StateSpec;
+import org.apache.beam.sdk.state.StateSpecs;
+import org.apache.beam.sdk.state.ValueState;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.Create;
@@ -350,8 +353,14 @@ public class HTTPRequest implements Serializable {
                   new DoFn<KV<String, Iterable<ArrayList<String>>>, Alert>() {
                     private static final long serialVersionUID = 1L;
 
+                    @StateId("suppression")
+                    private final StateSpec<ValueState<Boolean>> suppression = StateSpecs.value();
+
                     @ProcessElement
-                    public void processElement(ProcessContext c, BoundedWindow w) {
+                    public void processElement(
+                        ProcessContext c,
+                        BoundedWindow w,
+                        @StateId("suppression") ValueState<Boolean> suppress) {
                       String remoteAddress = c.element().getKey();
                       Iterable<ArrayList<String>> paths = c.element().getValue();
 
@@ -386,6 +395,12 @@ public class HTTPRequest implements Serializable {
                         count++;
                       }
                       if (count >= foundThreshold) {
+                        Boolean sflag = suppress.read();
+                        if (sflag != null && sflag) {
+                          log.info("suppressing additional in-window alert for {}", remoteAddress);
+                          return;
+                        }
+                        suppress.write(true);
                         log.info("{}: emitting alert for {}", w.toString(), remoteAddress);
                         Alert a = new Alert();
                         a.setCategory("httprequest");
