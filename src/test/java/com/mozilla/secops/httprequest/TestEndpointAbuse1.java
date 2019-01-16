@@ -48,11 +48,11 @@ public class TestEndpointAbuse1 {
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
 
     PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(600000)))
         .containsInAnyOrder(1L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(600000)))
         .satisfies(
             i -> {
               for (Alert a : i) {
@@ -60,7 +60,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
-                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals("1970-01-01T00:09:59.999Z", a.getMetadataValue("window_timestamp"));
               }
               return null;
             });
@@ -91,7 +91,7 @@ public class TestEndpointAbuse1 {
     PCollection<Long> count =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
 
-    PAssert.that(count).inWindow(new IntervalWindow(new Instant(0L), new Instant(60000))).empty();
+    PAssert.that(count).inWindow(new IntervalWindow(new Instant(0L), new Instant(600000))).empty();
 
     p.run().waitUntilFinish();
   }

@@ -113,7 +113,7 @@ public class HTTPRequest implements Serializable {
   }
 
   /**
-   * Window events into fixed one minute windows with early firings
+   * Window events into fixed ten minute windows with early firings
    *
    * <p>Panes are accumulated.
    */
@@ -124,13 +124,13 @@ public class HTTPRequest implements Serializable {
     @Override
     public PCollection<Event> expand(PCollection<Event> input) {
       return input.apply(
-          Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1)))
+          Window.<Event>into(FixedWindows.of(Duration.standardMinutes(10)))
               .triggering(
                   Repeatedly.forever(
                       AfterWatermark.pastEndOfWindow()
                           .withEarlyFirings(
                               AfterProcessingTime.pastFirstElementInPane()
-                                  .plusDelayOf(Duration.standardSeconds(5L)))))
+                                  .plusDelayOf(Duration.standardSeconds(10L)))))
               .withAllowedLateness(Duration.ZERO)
               .accumulatingFiredPanes());
     }
