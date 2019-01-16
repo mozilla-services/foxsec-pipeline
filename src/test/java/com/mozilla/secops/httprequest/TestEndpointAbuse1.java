@@ -58,6 +58,7 @@ public class TestEndpointAbuse1 {
               for (Alert a : i) {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
+                assertEquals("Mozilla", a.getMetadataValue("useragent"));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
                 assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
               }

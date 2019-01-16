@@ -333,8 +333,12 @@ public class HTTPRequest implements Serializable {
 
                       String sourceAddress = g.getSourceAddress();
                       String requestMethod = g.getRequestMethod();
+                      String userAgent = g.getUserAgent();
                       if (sourceAddress == null || requestMethod == null) {
                         return;
+                      }
+                      if (userAgent == null) {
+                        userAgent = "unknown";
                       }
                       URL u = g.getParsedUrl();
                       if (u == null) {
@@ -343,6 +347,7 @@ public class HTTPRequest implements Serializable {
                       ArrayList<String> v = new ArrayList<>();
                       v.add(requestMethod);
                       v.add(u.getPath());
+                      v.add(userAgent);
                       c.output(KV.of(sourceAddress, v));
                     }
                   }))
@@ -371,12 +376,14 @@ public class HTTPRequest implements Serializable {
                       Integer foundThreshold = null;
                       String compareMethod = null;
                       String comparePath = null;
+                      String userAgent = null;
                       int count = 0;
                       for (ArrayList<String> i : paths) {
                         if (foundThreshold == null) {
                           foundThreshold = getEndpointThreshold(i.get(1), i.get(0));
                           compareMethod = i.get(0);
                           comparePath = i.get(1);
+                          userAgent = i.get(2);
                         } else {
                           if (!(compareMethod.equals(i.get(0)))
                               || !(comparePath.equals(i.get(1)))) {
@@ -432,6 +439,7 @@ public class HTTPRequest implements Serializable {
                         a.addMetadata("endpoint", comparePath);
                         a.addMetadata("method", compareMethod);
                         a.addMetadata("count", Integer.toString(count));
+                        a.addMetadata("useragent", userAgent);
                         a.addMetadata(
                             "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
                         c.output(a);
