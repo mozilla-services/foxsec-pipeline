@@ -79,6 +79,11 @@ public class HTTPRequest implements Serializable {
       stackdriverProjectFilter = project;
     }
 
+    /**
+     * Static initializer for {@link Parse} transform
+     *
+     * @param emitEventTimestamps If true, attempt to use the timestamp in the Event
+     */
     public Parse(Boolean emitEventTimestamps) {
       this.emitEventTimestamps = emitEventTimestamps;
     }
@@ -107,7 +112,11 @@ public class HTTPRequest implements Serializable {
     }
   }
 
-  /** Window events into fixed one minute windows with early firings */
+  /**
+   * Window events into fixed one minute windows with early firings
+   *
+   * <p>Panes are accumulated.
+   */
   public static class WindowForFixedFireEarly
       extends PTransform<PCollection<Event>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
@@ -739,12 +748,10 @@ public class HTTPRequest implements Serializable {
     }
 
     if (options.getEnableEndpointAbuseAnalysis()) {
-      PCollection<String> epaOutput =
-          efEvents
-              .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
-              .apply("output format", ParDo.of(new AlertFormatter(options)));
-
-      epaOutput.apply("output", OutputOptions.compositeOutput(options));
+      efEvents
+          .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
+          .apply("output format", ParDo.of(new AlertFormatter(options)))
+          .apply("output", OutputOptions.compositeOutput(options));
     }
 
     PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
