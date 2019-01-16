@@ -2,11 +2,9 @@ package com.mozilla.secops.httprequest;
 
 import static org.junit.Assert.assertEquals;
 
-import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
-import java.util.Map;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -15,7 +13,6 @@ import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,7 +41,7 @@ public class TestEndpointAbuse1 {
         input
             .apply(new HTTPRequest.Parse(true))
             .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed())
+            .apply(new HTTPRequest.WindowForFixedFireEarly())
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
     PCollection<Long> count =
@@ -71,34 +68,6 @@ public class TestEndpointAbuse1 {
   }
 
   @Test
-  public void endpointAbuseTestNatDetect() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_endpointabuse1.txt", p);
-
-    HTTPRequest.HTTPRequestOptions options = getTestOptions();
-    String v[] = new String[1];
-    v[0] = "8:GET:/test";
-    options.setEndpointAbusePath(v);
-    options.setNatDetection(true);
-
-    PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
-    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
-
-    PCollection<Alert> results =
-        events.apply(new HTTPRequest.EndpointAbuseAnalysis(options, natView));
-
-    PCollection<Long> count =
-        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-
-    PAssert.that(count).inWindow(new IntervalWindow(new Instant(0L), new Instant(60000))).empty();
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
   public void endpointAbuseTestPreprocessFilter() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_endpointabuse1.txt", p);
 
@@ -114,7 +83,7 @@ public class TestEndpointAbuse1 {
         input
             .apply(new HTTPRequest.Parse(true))
             .apply(ParDo.of(new HTTPRequest.Preprocessor(options)))
-            .apply(new HTTPRequest.WindowForFixed());
+            .apply(new HTTPRequest.WindowForFixedFireEarly());
 
     PCollection<Alert> results = events.apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 

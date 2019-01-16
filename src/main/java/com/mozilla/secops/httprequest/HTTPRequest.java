@@ -32,8 +32,11 @@ import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
+import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.Repeatedly;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -98,6 +101,26 @@ public class HTTPRequest implements Serializable {
     @Override
     public PCollection<Event> expand(PCollection<Event> input) {
       return input.apply(Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1))));
+    }
+  }
+
+  /** Window events into fixed one minute windows with early firings */
+  public static class WindowForFixedFireEarly
+      extends PTransform<PCollection<Event>, PCollection<Event>> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public PCollection<Event> expand(PCollection<Event> input) {
+      return input.apply(
+          Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1)))
+              .triggering(
+                  Repeatedly.forever(
+                      AfterWatermark.pastEndOfWindow()
+                          .withEarlyFirings(
+                              AfterProcessingTime.pastFirstElementInPane()
+                                  .plusDelayOf(Duration.standardSeconds(5L)))))
+              .withAllowedLateness(Duration.ZERO)
+              .accumulatingFiredPanes());
     }
   }
 
@@ -269,7 +292,6 @@ public class HTTPRequest implements Serializable {
 
     private Logger log;
 
-    private PCollectionView<Map<String, Boolean>> natView = null;
     private final Map<String[], Integer> endpoints;
 
     /**
@@ -293,31 +315,8 @@ public class HTTPRequest implements Serializable {
       }
     }
 
-    /**
-     * Static initializer for {@link EndpointAbuseAnalysis}
-     *
-     * @param options Pipeline options
-     * @param natView NAT detection {@link PCollectionView}
-     */
-    public EndpointAbuseAnalysis(
-        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
-      this(options);
-      this.natView = natView;
-    }
-
     @Override
     public PCollection<Alert> expand(PCollection<Event> input) {
-      if (natView == null) {
-        // If natView was not set then we just create an empty view for use as the side input
-        natView =
-            input
-                .getPipeline()
-                .apply(
-                    Create.empty(
-                        TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
-                .apply(View.<String, Boolean>asMap());
-      }
-
       return input
           .apply(
               "filter inapplicable requests",
@@ -348,69 +347,59 @@ public class HTTPRequest implements Serializable {
           .apply(
               "analyze per-client",
               ParDo.of(
-                      new DoFn<KV<String, Iterable<ArrayList<String>>>, Alert>() {
-                        private static final long serialVersionUID = 1L;
+                  new DoFn<KV<String, Iterable<ArrayList<String>>>, Alert>() {
+                    private static final long serialVersionUID = 1L;
 
-                        @ProcessElement
-                        public void processElement(ProcessContext c, BoundedWindow w) {
-                          Map<String, Boolean> nv = c.sideInput(natView);
-                          String remoteAddress = c.element().getKey();
-                          Iterable<ArrayList<String>> paths = c.element().getValue();
+                    @ProcessElement
+                    public void processElement(ProcessContext c, BoundedWindow w) {
+                      String remoteAddress = c.element().getKey();
+                      Iterable<ArrayList<String>> paths = c.element().getValue();
 
-                          // Take a look at the first entry in the data set and see if it
-                          // corresponds to anything we have in the endpoints map. If so, look at
-                          // the rest of the requests in the window to determine variance and
-                          // if the noted threshold has been exceeded.
-                          Integer foundThreshold = null;
-                          String compareMethod = null;
-                          String comparePath = null;
-                          int count = 0;
-                          for (ArrayList<String> i : paths) {
-                            if (foundThreshold == null) {
-                              foundThreshold = getEndpointThreshold(i.get(1), i.get(0));
-                              compareMethod = i.get(0);
-                              comparePath = i.get(1);
-                            } else {
-                              if (!(compareMethod.equals(i.get(0)))
-                                  || !(comparePath.equals(i.get(1)))) {
-                                // Variance in requests in-window
-                                return;
-                              }
-                            }
-                            if (foundThreshold == null) {
-                              // Entry wasn't in monitor map, so just ignore this client
-                              //
-                              // XXX This should be improved to determine when to ignore based on
-                              // perhaps a weighting heuristic if most of the requests are
-                              // applicable.
-                              return;
-                            }
-                            count++;
-                          }
-                          if (count >= foundThreshold) {
-                            Boolean isNat = nv.get(remoteAddress);
-                            if (isNat != null && isNat) {
-                              log.info(
-                                  "{}: detectnat: skipping result emission for {}",
-                                  w.toString(),
-                                  remoteAddress);
-                              return;
-                            }
-                            log.info("{}: emitting alert for {}", w.toString(), remoteAddress);
-                            Alert a = new Alert();
-                            a.setCategory("httprequest");
-                            a.addMetadata("category", "endpoint_abuse");
-                            a.addMetadata("sourceaddress", remoteAddress);
-                            a.addMetadata("endpoint", comparePath);
-                            a.addMetadata("method", compareMethod);
-                            a.addMetadata("count", Integer.toString(count));
-                            a.addMetadata(
-                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-                            c.output(a);
+                      // Take a look at the first entry in the data set and see if it
+                      // corresponds to anything we have in the endpoints map. If so, look at
+                      // the rest of the requests in the window to determine variance and
+                      // if the noted threshold has been exceeded.
+                      Integer foundThreshold = null;
+                      String compareMethod = null;
+                      String comparePath = null;
+                      int count = 0;
+                      for (ArrayList<String> i : paths) {
+                        if (foundThreshold == null) {
+                          foundThreshold = getEndpointThreshold(i.get(1), i.get(0));
+                          compareMethod = i.get(0);
+                          comparePath = i.get(1);
+                        } else {
+                          if (!(compareMethod.equals(i.get(0)))
+                              || !(comparePath.equals(i.get(1)))) {
+                            // Variance in requests in-window
+                            return;
                           }
                         }
-                      })
-                  .withSideInputs(natView));
+                        if (foundThreshold == null) {
+                          // Entry wasn't in monitor map, so just ignore this client
+                          //
+                          // XXX This should be improved to determine when to ignore based on
+                          // perhaps a weighting heuristic if most of the requests are
+                          // applicable.
+                          return;
+                        }
+                        count++;
+                      }
+                      if (count >= foundThreshold) {
+                        log.info("{}: emitting alert for {}", w.toString(), remoteAddress);
+                        Alert a = new Alert();
+                        a.setCategory("httprequest");
+                        a.addMetadata("category", "endpoint_abuse");
+                        a.addMetadata("sourceaddress", remoteAddress);
+                        a.addMetadata("endpoint", comparePath);
+                        a.addMetadata("method", compareMethod);
+                        a.addMetadata("count", Integer.toString(count));
+                        a.addMetadata(
+                            "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                        c.output(a);
+                      }
+                    }
+                  }));
     }
 
     private Integer getEndpointThreshold(String path, String method) {
@@ -670,12 +659,15 @@ public class HTTPRequest implements Serializable {
     PCollection<Event> events =
         p.apply("input", options.getInputType().read(p, options))
             .apply("parse", pw)
-            .apply("preprocess", ParDo.of(new Preprocessor(options)))
-            .apply("window for fixed", new WindowForFixed());
+            .apply("preprocess", ParDo.of(new Preprocessor(options)));
+
+    PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
+    PCollection<Event> efEvents =
+        events.apply("window for fixed fire early", new WindowForFixedFireEarly());
 
     PCollectionView<Map<String, Boolean>> natView = null;
     if (options.getNatDetection()) {
-      natView = DetectNat.getView(events);
+      natView = DetectNat.getView(fwEvents);
     }
 
     PCollectionList<String> resultsList = PCollectionList.empty(p);
@@ -683,7 +675,7 @@ public class HTTPRequest implements Serializable {
     if (options.getEnableThresholdAnalysis()) {
       resultsList =
           resultsList.and(
-              events
+              fwEvents
                   .apply("per-client", new CountInWindow())
                   .apply("threshold analysis", new ThresholdAnalysis(options, natView))
                   .apply("output format", ParDo.of(new AlertFormatter(options))));
@@ -692,7 +684,7 @@ public class HTTPRequest implements Serializable {
     if (options.getEnableErrorRateAnalysis()) {
       resultsList =
           resultsList.and(
-              events
+              fwEvents
                   .apply("cerr per client", new CountErrorsInWindow())
                   .apply(
                       "error rate analysis",
@@ -703,8 +695,8 @@ public class HTTPRequest implements Serializable {
     if (options.getEnableEndpointAbuseAnalysis()) {
       resultsList =
           resultsList.and(
-              events
-                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options, natView))
+              efEvents
+                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
                   .apply("output format", ParDo.of(new AlertFormatter(options))));
     }
 
