@@ -708,15 +708,15 @@ public class HTTPRequest implements Serializable {
     }
 
     if (options.getEnableEndpointAbuseAnalysis()) {
-      resultsList =
-          resultsList.and(
-              efEvents
-                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
-                  .apply("output format", ParDo.of(new AlertFormatter(options))));
+      PCollection<String> epaOutput =
+          efEvents
+              .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
+              .apply("output format", ParDo.of(new AlertFormatter(options)));
+
+      epaOutput.apply("output", OutputOptions.compositeOutput(options));
     }
 
     PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
-
     results.apply("output", OutputOptions.compositeOutput(options));
 
     p.run();
