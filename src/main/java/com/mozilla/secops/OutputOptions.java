@@ -59,6 +59,11 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputAlertSlackToken(String value);
 
+  @Description("With alert slack output; channel to receive copy of alerts")
+  String getOutputAlertSlackCatchall();
+
+  void setOutputAlertSlackCatchall(String value);
+
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);
   }
