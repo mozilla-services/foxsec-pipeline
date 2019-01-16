@@ -109,7 +109,10 @@ public class AlertIO {
       if (slack != null) {
         if (cfg.getSlackCatchall() != null) {
           // Configured catchall slack channel always recieves a copy of the alert
-          slack.sendToCatchall(a);
+          Boolean resp = slack.sendToCatchall(a);
+          if (!resp) {
+            log.error("failed to send alert to slack catchall");
+          }
         }
 
         String slackEmail = a.getMetadataValue("notify_slack_direct");

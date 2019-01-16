@@ -20,6 +20,7 @@ public class AlertSlack {
   }
 
   public Boolean sendToCatchall(Alert a) {
+    log.info("generating catchall slack for {} (channel id)", cfg.getSlackCatchall());
     String text =
         String.format(
             "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
