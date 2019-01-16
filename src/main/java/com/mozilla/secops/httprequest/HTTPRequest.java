@@ -353,14 +353,14 @@ public class HTTPRequest implements Serializable {
                   new DoFn<KV<String, Iterable<ArrayList<String>>>, Alert>() {
                     private static final long serialVersionUID = 1L;
 
-                    @StateId("suppression")
-                    private final StateSpec<ValueState<Boolean>> suppression = StateSpecs.value();
+                    @StateId("counter")
+                    private final StateSpec<ValueState<Integer>> counterState = StateSpecs.value();
 
                     @ProcessElement
                     public void processElement(
                         ProcessContext c,
                         BoundedWindow w,
-                        @StateId("suppression") ValueState<Boolean> suppress) {
+                        @StateId("counter") ValueState<Integer> counter) {
                       String remoteAddress = c.element().getKey();
                       Iterable<ArrayList<String>> paths = c.element().getValue();
 
@@ -395,13 +395,36 @@ public class HTTPRequest implements Serializable {
                         count++;
                       }
                       if (count >= foundThreshold) {
-                        Boolean sflag = suppress.read();
-                        if (sflag != null && sflag) {
+                        // If we already have counter state for this key, compare it against what
+                        // the path count was. If they are the same, this is likely a
+                        // duplicate associated with the window closing so we just
+                        // ignore it.
+                        Integer rCount = counter.read();
+                        if (rCount != null && rCount.equals(count)) {
                           log.info("suppressing additional in-window alert for {}", remoteAddress);
                           return;
                         }
-                        suppress.write(true);
-                        log.info("{}: emitting alert for {}", w.toString(), remoteAddress);
+                        counter.write(count);
+
+                        if (rCount != null && rCount < count) {
+                          // If we had counter state for this key and it is less than the
+                          // path component count, this is a supplemental pane with more
+                          // requests in it.
+                          //
+                          // Generate another alert, but decrement the count value in the
+                          // alert to reflect the delta between what we have already alerted
+                          // on and this new alert.
+                          count = count - rCount;
+                          log.info(
+                              "{}: supplemental alert for {} {}",
+                              w.toString(),
+                              remoteAddress,
+                              count);
+                        } else {
+                          log.info(
+                              "{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
+                        }
+
                         Alert a = new Alert();
                         a.setCategory("httprequest");
                         a.addMetadata("category", "endpoint_abuse");
