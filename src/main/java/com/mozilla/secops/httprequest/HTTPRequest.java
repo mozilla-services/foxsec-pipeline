@@ -56,10 +56,9 @@ public class HTTPRequest implements Serializable {
    * Composite transform to parse a {@link PCollection} containing events as strings and emit a
    * {@link PCollection} of {@link Event} objects.
    *
-   * <p>The output is windowed into fixed windows of one minute. This function discards events that
-   * are not considered HTTP requests.
+   * <p>This function discards events that are not considered HTTP requests.
    */
-  public static class ParseAndWindow extends PTransform<PCollection<String>, PCollection<Event>> {
+  public static class Parse extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
     private final Boolean emitEventTimestamps;
@@ -74,7 +73,7 @@ public class HTTPRequest implements Serializable {
       stackdriverProjectFilter = project;
     }
 
-    public ParseAndWindow(Boolean emitEventTimestamps) {
+    public Parse(Boolean emitEventTimestamps) {
       this.emitEventTimestamps = emitEventTimestamps;
     }
 
@@ -88,9 +87,17 @@ public class HTTPRequest implements Serializable {
       if (stackdriverProjectFilter != null) {
         fn = fn.withStackdriverProjectFilter(stackdriverProjectFilter);
       }
-      return col.apply(ParDo.of(fn))
-          .apply(EventFilter.getTransform(filter))
-          .apply(Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1))));
+      return col.apply(ParDo.of(fn)).apply(EventFilter.getTransform(filter));
+    }
+  }
+
+  /** Window events into fixed one minute windows */
+  public static class WindowForFixed extends PTransform<PCollection<Event>, PCollection<Event>> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public PCollection<Event> expand(PCollection<Event> input) {
+      return input.apply(Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1))));
     }
   }
 
@@ -656,14 +663,15 @@ public class HTTPRequest implements Serializable {
   private static void runHTTPRequest(HTTPRequestOptions options) {
     Pipeline p = Pipeline.create(options);
 
-    ParseAndWindow pw = new ParseAndWindow(false);
+    Parse pw = new Parse(false);
     if (options.getStackdriverProjectFilter() != null) {
       pw.withStackdriverProjectFilter(options.getStackdriverProjectFilter());
     }
     PCollection<Event> events =
         p.apply("input", options.getInputType().read(p, options))
-            .apply("parse and window", pw)
-            .apply("preprocess", ParDo.of(new Preprocessor(options)));
+            .apply("parse", pw)
+            .apply("preprocess", ParDo.of(new Preprocessor(options)))
+            .apply("window for fixed", new WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = null;
     if (options.getNatDetection()) {

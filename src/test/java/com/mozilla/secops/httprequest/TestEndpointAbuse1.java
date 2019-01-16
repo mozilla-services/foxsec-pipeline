@@ -42,8 +42,9 @@ public class TestEndpointAbuse1 {
 
     PCollection<Alert> results =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(new HTTPRequest.Parse(true))
             .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
     PCollection<Long> count =
@@ -81,8 +82,9 @@ public class TestEndpointAbuse1 {
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()));
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
     PCollection<Alert> results =
@@ -110,8 +112,9 @@ public class TestEndpointAbuse1 {
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor(options)));
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor(options)))
+            .apply(new HTTPRequest.WindowForFixed());
 
     PCollection<Alert> results = events.apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
