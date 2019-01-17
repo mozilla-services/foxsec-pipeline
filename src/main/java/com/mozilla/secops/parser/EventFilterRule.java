@@ -9,6 +9,7 @@ public class EventFilterRule implements Serializable {
 
   private Payload.PayloadType wantSubtype;
   private Normalized.Type wantNormalizedType;
+  private String wantStackdriverProject;
   private ArrayList<EventFilterPayload> payloadFilters;
 
   /**
@@ -18,6 +19,12 @@ public class EventFilterRule implements Serializable {
    * @return True if event matches
    */
   public Boolean matches(Event e) {
+    if (wantStackdriverProject != null) {
+      String p = e.getStackdriverProject();
+      if ((p == null) || !(p.equals(wantStackdriverProject))) {
+        return false;
+      }
+    }
     if (wantSubtype != null) {
       if (e.getPayloadType() != wantSubtype) {
         return false;
@@ -78,6 +85,20 @@ public class EventFilterRule implements Serializable {
    */
   public EventFilterRule wantSubtype(Payload.PayloadType p) {
     wantSubtype = p;
+    return this;
+  }
+
+  /**
+   * Add match criteria for Stackdriver project
+   *
+   * <p>If this rule is installed, an event will only match if it is an event from Stackdriver and
+   * the project matches the supplied argument.
+   *
+   * @param project Project name to match against
+   * @return EventFilterRule for chaining
+   */
+  public EventFilterRule wantStackdriverProject(String project) {
+    wantStackdriverProject = project;
     return this;
   }
 
