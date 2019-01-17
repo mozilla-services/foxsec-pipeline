@@ -50,8 +50,9 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()));
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -87,8 +88,9 @@ public class TestThresholdAnalysis1 {
 
     PCollection<KV<String, Long>> counts =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(new HTTPRequest.Parse(true))
             .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountInWindow());
 
     PAssert.that(counts)
@@ -105,8 +107,9 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Alert> results =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(new HTTPRequest.Parse(true))
             .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(getTestOptions()));
 
@@ -143,8 +146,9 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()));
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
@@ -186,8 +190,9 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()));
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
@@ -212,7 +217,11 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
-    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
@@ -239,8 +248,9 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()));
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
