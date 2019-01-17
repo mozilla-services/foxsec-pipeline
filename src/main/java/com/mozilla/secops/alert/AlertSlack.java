@@ -2,6 +2,7 @@ package com.mozilla.secops.alert;
 
 import com.github.seratch.jslack.api.methods.SlackApiException;
 import com.github.seratch.jslack.api.methods.SlackApiResponse;
+import com.mozilla.secops.crypto.RuntimeSecrets;
 import com.mozilla.secops.slack.SlackManager;
 import java.io.IOException;
 import java.util.HashMap;
@@ -16,8 +17,13 @@ public class AlertSlack {
 
   /** Construct new alert slack object */
   public AlertSlack(AlertConfiguration cfg) {
-    slackManager = new SlackManager(cfg.getSlackToken());
     log = LoggerFactory.getLogger(AlertSlack.class);
+    try {
+      String slackToken = RuntimeSecrets.interpretSecret(cfg.getSlackToken(), cfg.getGcpProject());
+      slackManager = new SlackManager(slackToken);
+    } catch (IOException exc) {
+      log.error("failed to get slack token: {}", exc.getMessage());
+    }
     this.cfg = cfg;
   }
 
@@ -29,11 +35,8 @@ public class AlertSlack {
    */
   public Boolean sendToCatchall(Alert a) {
     log.info("generating catchall slack for {} (channel id)", cfg.getSlackCatchall());
-    String text =
-        String.format(
-            "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
-            a.getSummary(), a.assemblePayload(), a.getAlertId());
 
+    String text = String.format("%s\nAlert Id: %s", a.getSummary(), a.getAlertId());
     try {
       return handleSlackResponse(slackManager.sendMessageToChannel(cfg.getSlackCatchall(), text));
     } catch (IOException exc) {
@@ -89,6 +92,9 @@ public class AlertSlack {
       } catch (SlackApiException exc) {
         log.error("error getting user list from slack (SlackApiException): {}", exc.getMessage());
       }
+
+      emailToSlackUserId = null;
+      return null;
     }
     return emailToSlackUserId.get(email);
   }
