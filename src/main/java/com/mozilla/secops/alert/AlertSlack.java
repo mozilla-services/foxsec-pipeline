@@ -14,12 +14,19 @@ public class AlertSlack {
   private HashMap<String, String> emailToSlackUserId;
   private final Logger log;
 
+  /** Construct new alert slack object */
   public AlertSlack(AlertConfiguration cfg) {
     slackManager = new SlackManager(cfg.getSlackToken());
     log = LoggerFactory.getLogger(AlertSlack.class);
     this.cfg = cfg;
   }
 
+  /**
+   * Send alert to slack catchall channel
+   *
+   * @param a Alert
+   * @return Boolean on whether the alert was sent successfully
+   */
   public Boolean sendToCatchall(Alert a) {
     log.info("generating catchall slack for {} (channel id)", cfg.getSlackCatchall());
     String text =
@@ -37,6 +44,13 @@ public class AlertSlack {
     return false;
   }
 
+  /**
+   * Send an alert to a user asking them if it was caused by them. Used for AuthProfile
+   *
+   * @param a Alert
+   * @param userId Slack user id
+   * @return Boolean on whether the alert was sent successfully
+   */
   public Boolean confirmationAlert(Alert a, String userId) {
     if (a == null || userId == null) {
       return false;
@@ -59,6 +73,12 @@ public class AlertSlack {
     return false;
   }
 
+  /**
+   * Get slack user id from user's email
+   *
+   * @param email User's email
+   * @return User's slack user id
+   */
   public String getUserId(String email) {
     if (emailToSlackUserId == null) {
       // TODO: Move this to IdentityManager

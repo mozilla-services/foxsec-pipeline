@@ -19,11 +19,25 @@ public class SlackManager {
   private String apiToken;
   private Slack slack;
 
+  /**
+   * Construct new slack manager object
+   *
+   * @param apiToken Slack api token
+   */
   public SlackManager(String apiToken) {
     this.apiToken = apiToken;
     slack = Slack.getInstance();
   }
 
+  /**
+   * Send message to slack channel.
+   *
+   * <p>If it is a private channel, the bot must be invited to that channel first.
+   *
+   * @param channelId Slack channel id
+   * @param message Message to be sent
+   * @return Message response object
+   */
   public ChatPostMessageResponse sendMessageToChannel(String channelId, String message)
       throws IOException, SlackApiException {
     return slack
@@ -36,6 +50,11 @@ public class SlackManager {
                 .build());
   }
 
+  /**
+   * Get map where the key is user's emails and the corresponding value is their slack id.
+   *
+   * @return HashMap for email to slack id
+   */
   public HashMap<String, String> getEmailToUserIdMapping() throws IOException, SlackApiException {
     List<User> users = getUserList();
     HashMap<String, String> emailToUser = new HashMap<String, String>();
@@ -45,6 +64,11 @@ public class SlackManager {
     return emailToUser;
   }
 
+  /**
+   * Get list of all Slack users
+   *
+   * @return List of Slack user objects
+   */
   public List<User> getUserList() throws IOException, SlackApiException {
     ArrayList<User> users = new ArrayList<User>();
     UsersListResponse resp = slack.methods().usersList(UsersListRequest.builder().build());
@@ -68,6 +92,14 @@ public class SlackManager {
     return users;
   }
 
+  /**
+   * Send message with confirmation request to slack user.
+   *
+   * @param userId Slack user id to send message to
+   * @param alertId Alert id to include in button callback
+   * @param message Message to be sent
+   * @return Message response object
+   */
   public ChatPostMessageResponse sendConfirmationRequestToUser(
       String userId, String alertId, String message) throws IOException, SlackApiException {
     return slack

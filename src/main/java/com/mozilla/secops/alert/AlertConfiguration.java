@@ -113,10 +113,20 @@ public class AlertConfiguration implements Serializable {
     this.gcpProject = gcpProject;
   }
 
+  /**
+   * Get slack bot token
+   *
+   * @return Slack bot token string
+   */
   public String getSlackToken() {
     return slackToken;
   }
 
+  /**
+   * Set slack bot token
+   *
+   * @param slackToken Slack bot token string
+   */
   public void setSlackToken(String slackToken) {
     this.slackToken = slackToken;
   }
