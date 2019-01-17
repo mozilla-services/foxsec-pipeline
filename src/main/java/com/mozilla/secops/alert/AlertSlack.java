@@ -1,6 +1,7 @@
 package com.mozilla.secops.alert;
 
 import com.github.seratch.jslack.api.methods.SlackApiException;
+import com.github.seratch.jslack.api.methods.SlackApiResponse;
 import com.mozilla.secops.slack.SlackManager;
 import java.io.IOException;
 import java.util.HashMap;
@@ -25,32 +26,63 @@ public class AlertSlack {
         String.format(
             "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
             a.getSummary(), a.assemblePayload(), a.getAlertId());
-    Boolean resp = false;
+
     try {
-      resp = slackManager.sendMessageToChannel(cfg.getSlackCatchall(), text);
+      return handleSlackResponse(slackManager.sendMessageToChannel(cfg.getSlackCatchall(), text));
     } catch (IOException exc) {
       log.error("error sending slack alert (IOException): {}", exc.getMessage());
     } catch (SlackApiException exc) {
       log.error("error sending slack alert (SlackApiException): {}", exc.getMessage());
     }
-    return resp;
+    return false;
   }
 
-  public Boolean confirmationAlert(Alert a, String userId) throws IOException, SlackApiException {
+  public Boolean confirmationAlert(Alert a, String userId) {
+    if (a == null || userId == null) {
+      return false;
+    }
+
     log.info("generating slack message for {}", userId);
 
     String text =
         String.format(
             "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
             a.getSummary(), a.assemblePayload(), a.getAlertId());
-    return slackManager.sendConfirmationRequestToUser(userId, a.getAlertId().toString(), text);
+    try {
+      return handleSlackResponse(
+          slackManager.sendConfirmationRequestToUser(userId, a.getAlertId().toString(), text));
+    } catch (IOException exc) {
+      log.error("error sending slack alert (IOException): {}", exc.getMessage());
+    } catch (SlackApiException exc) {
+      log.error("error sending slack alert (SlackApiException): {}", exc.getMessage());
+    }
+    return false;
   }
 
-  public String getUserId(String email) throws IOException, SlackApiException {
+  public String getUserId(String email) {
     if (emailToSlackUserId == null) {
       // TODO: Move this to IdentityManager
-      emailToSlackUserId = slackManager.getEmailToUserIdMapping();
+      try {
+        emailToSlackUserId = slackManager.getEmailToUserIdMapping();
+      } catch (IOException exc) {
+        log.error("error getting user list from slack (IOException): {}", exc.getMessage());
+      } catch (SlackApiException exc) {
+        log.error("error getting user list from slack (SlackApiException): {}", exc.getMessage());
+      }
     }
     return emailToSlackUserId.get(email);
+  }
+
+  private Boolean handleSlackResponse(SlackApiResponse resp) {
+    if (resp.isOk()) {
+      return true;
+    }
+    if (resp.getError() != null && resp.getError() != "") {
+      log.error("error sending slack alert: {}", resp.getError());
+    }
+    if (resp.getWarning() != null && resp.getWarning() != "") {
+      log.warn("warning from sending slack alert: {}", resp.getWarning());
+    }
+    return false;
   }
 }

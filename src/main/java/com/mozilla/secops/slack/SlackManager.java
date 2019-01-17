@@ -24,18 +24,16 @@ public class SlackManager {
     slack = Slack.getInstance();
   }
 
-  public Boolean sendMessageToChannel(String channelId, String message)
+  public ChatPostMessageResponse sendMessageToChannel(String channelId, String message)
       throws IOException, SlackApiException {
-    ChatPostMessageResponse resp =
-        slack
-            .methods()
-            .chatPostMessage(
-                ChatPostMessageRequest.builder()
-                    .token(apiToken)
-                    .channel(channelId)
-                    .text(message)
-                    .build());
-    return resp.isOk();
+    return slack
+        .methods()
+        .chatPostMessage(
+            ChatPostMessageRequest.builder()
+                .token(apiToken)
+                .channel(channelId)
+                .text(message)
+                .build());
   }
 
   public HashMap<String, String> getEmailToUserIdMapping() throws IOException, SlackApiException {
@@ -70,19 +68,17 @@ public class SlackManager {
     return users;
   }
 
-  public Boolean sendConfirmationRequestToUser(String userId, String alertId, String message)
-      throws IOException, SlackApiException {
-    ChatPostMessageResponse resp =
-        slack
-            .methods()
-            .chatPostMessage(
-                ChatPostMessageRequest.builder()
-                    .token(apiToken)
-                    .channel(userId)
-                    .text(message)
-                    .attachments(createAuthConfirmationButtons(alertId))
-                    .build());
-    return resp.isOk();
+  public ChatPostMessageResponse sendConfirmationRequestToUser(
+      String userId, String alertId, String message) throws IOException, SlackApiException {
+    return slack
+        .methods()
+        .chatPostMessage(
+            ChatPostMessageRequest.builder()
+                .token(apiToken)
+                .channel(userId)
+                .text(message)
+                .attachments(createAuthConfirmationButtons(alertId))
+                .build());
   }
 
   private List<Attachment> createAuthConfirmationButtons(String alertId) {
