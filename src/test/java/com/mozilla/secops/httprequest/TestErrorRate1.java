@@ -36,7 +36,11 @@ public class TestErrorRate1 {
   public void countRequestsTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
 
-    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -59,7 +63,9 @@ public class TestErrorRate1 {
 
     PCollection<KV<String, Long>> counts =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountErrorsInWindow());
 
     PAssert.that(counts)
@@ -75,7 +81,9 @@ public class TestErrorRate1 {
 
     PCollection<Alert> results =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountErrorsInWindow())
             .apply(ParDo.of(new HTTPRequest.ErrorRateAnalysis(30L)));
 

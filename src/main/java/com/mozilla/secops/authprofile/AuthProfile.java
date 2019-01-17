@@ -280,7 +280,7 @@ public class AuthProfile implements Serializable {
     PCollection<String> alerts =
         events
             .apply(ParDo.of(new Analyze(options)))
-            .apply("output format", ParDo.of(new AlertFormatter()));
+            .apply("output format", ParDo.of(new AlertFormatter(options)));
 
     alerts.apply("output", OutputOptions.compositeOutput(options));
 

@@ -17,6 +17,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -47,7 +48,11 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
 
-    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -82,7 +87,11 @@ public class TestThresholdAnalysis1 {
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
 
     PCollection<KV<String, Long>> counts =
-        input.apply(new HTTPRequest.ParseAndWindow(true)).apply(new HTTPRequest.CountInWindow());
+        input
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed())
+            .apply(new HTTPRequest.CountInWindow());
 
     PAssert.that(counts)
         .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
@@ -98,7 +107,9 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Alert> results =
         input
-            .apply(new HTTPRequest.ParseAndWindow(true))
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(getTestOptions()));
 
@@ -133,7 +144,11 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
-    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
@@ -173,7 +188,11 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
-    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
@@ -198,7 +217,11 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
-    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
@@ -223,7 +246,11 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
-    PCollection<Event> events = input.apply(new HTTPRequest.ParseAndWindow(true));
+    PCollection<Event> events =
+        input
+            .apply(new HTTPRequest.Parse(true))
+            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 

@@ -184,7 +184,7 @@ public class AwsBehavior implements Serializable {
             .apply(new Matchers(options));
 
     alerts
-        .apply(ParDo.of(new AlertFormatter()))
+        .apply(ParDo.of(new AlertFormatter(options)))
         .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();

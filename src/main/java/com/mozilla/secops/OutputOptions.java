@@ -3,6 +3,7 @@ package com.mozilla.secops;
 import org.apache.beam.sdk.extensions.gcp.options.GcpOptions;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
+import org.apache.beam.sdk.options.Validation;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
@@ -63,6 +64,12 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
   String getOutputAlertSlackCatchall();
 
   void setOutputAlertSlackCatchall(String value);
+
+  @Description("Monitored resource indicator to include in any alert metadata")
+  @Validation.Required
+  String getMonitoredResourceIndicator();
+
+  void setMonitoredResourceIndicator(String value);
 
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);

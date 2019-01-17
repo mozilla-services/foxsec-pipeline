@@ -5,6 +5,7 @@ import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.Stats;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -12,23 +13,33 @@ import com.mozilla.secops.parser.GLB;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
 import java.io.Serializable;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.state.StateSpec;
+import org.apache.beam.sdk.state.StateSpecs;
+import org.apache.beam.sdk.state.ValueState;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
+import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.Repeatedly;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -51,15 +62,29 @@ public class HTTPRequest implements Serializable {
    * Composite transform to parse a {@link PCollection} containing events as strings and emit a
    * {@link PCollection} of {@link Event} objects.
    *
-   * <p>The output is windowed into fixed windows of one minute. This function discards events that
-   * are not considered HTTP requests.
+   * <p>This function discards events that are not considered HTTP requests.
    */
-  public static class ParseAndWindow extends PTransform<PCollection<String>, PCollection<Event>> {
+  public static class Parse extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
     private final Boolean emitEventTimestamps;
+    private String stackdriverProjectFilter;
 
-    public ParseAndWindow(Boolean emitEventTimestamps) {
+    /**
+     * Only emit parsed Stackdriver events that are associated with specified project
+     *
+     * @param project Project name
+     */
+    public void withStackdriverProjectFilter(String project) {
+      stackdriverProjectFilter = project;
+    }
+
+    /**
+     * Static initializer for {@link Parse} transform
+     *
+     * @param emitEventTimestamps If true, attempt to use the timestamp in the Event
+     */
+    public Parse(Boolean emitEventTimestamps) {
       this.emitEventTimestamps = emitEventTimestamps;
     }
 
@@ -69,9 +94,111 @@ public class HTTPRequest implements Serializable {
           new EventFilter().setWantUTC(true).setOutputWithTimestamp(emitEventTimestamps);
       filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.GLB));
 
-      return col.apply(ParDo.of(new ParserDoFn()))
-          .apply(EventFilter.getTransform(filter))
-          .apply(Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1))));
+      ParserDoFn fn = new ParserDoFn();
+      if (stackdriverProjectFilter != null) {
+        fn = fn.withStackdriverProjectFilter(stackdriverProjectFilter);
+      }
+      return col.apply(ParDo.of(fn)).apply(EventFilter.getTransform(filter));
+    }
+  }
+
+  /** Window events into fixed one minute windows */
+  public static class WindowForFixed extends PTransform<PCollection<Event>, PCollection<Event>> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public PCollection<Event> expand(PCollection<Event> input) {
+      return input.apply(Window.<Event>into(FixedWindows.of(Duration.standardMinutes(1))));
+    }
+  }
+
+  /**
+   * Window events into fixed ten minute windows with early firings
+   *
+   * <p>Panes are accumulated.
+   */
+  public static class WindowForFixedFireEarly
+      extends PTransform<PCollection<Event>, PCollection<Event>> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public PCollection<Event> expand(PCollection<Event> input) {
+      return input.apply(
+          Window.<Event>into(FixedWindows.of(Duration.standardMinutes(10)))
+              .triggering(
+                  Repeatedly.forever(
+                      AfterWatermark.pastEndOfWindow()
+                          .withEarlyFirings(
+                              AfterProcessingTime.pastFirstElementInPane()
+                                  .plusDelayOf(Duration.standardSeconds(10L)))))
+              .withAllowedLateness(Duration.ZERO)
+              .accumulatingFiredPanes());
+    }
+  }
+
+  /**
+   * Additional event preprocessing for {@link HTTPRequest} analysis components
+   *
+   * <p>DoFn to apply additional processing to the event stream prior to events being pushed into
+   * the analysis components of the pipeline.
+   */
+  public static class Preprocessor extends DoFn<Event, Event> {
+    private static final long serialVersionUID = 1L;
+
+    private String[] filterRequestPath;
+
+    /** Static initializer for {@link Preprocessor} */
+    public Preprocessor() {
+      filterRequestPath = null;
+    }
+
+    /**
+     * Static initializer for {@link Preprocessor}
+     *
+     * @param options Pipeline options
+     */
+    public Preprocessor(HTTPRequestOptions options) {
+      this();
+      filterRequestPath = options.getFilterRequestPath();
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext c) {
+      if (filterRequestPath == null) {
+        c.output(c.element());
+        return;
+      }
+      Event e = c.element();
+      GLB g = e.getPayload();
+      Integer status = g.getStatus();
+      if (status == null || status != 200) {
+        // Always emit errors
+        c.output(e);
+        return;
+      }
+      String method = g.getRequestMethod();
+      URL u = g.getParsedUrl();
+      if (u == null) {
+        c.output(e);
+        return;
+      }
+      String path = u.getPath();
+      if (path == null) {
+        c.output(e);
+        return;
+      }
+      for (String s : filterRequestPath) {
+        String[] parts = s.split(":");
+        if (parts.length != 2) {
+          throw new IllegalArgumentException(
+              "invalid format for filter path, must be <method>:<path>");
+        }
+        if (parts[0].equals(method) && parts[1].equals(path)) {
+          // Match, so just drop the event
+          return;
+        }
+      }
+      c.output(e);
     }
   }
 
@@ -165,6 +292,183 @@ public class HTTPRequest implements Serializable {
   }
 
   /**
+   * Transform for detection of a single source endpoint making excessive requests of a specific
+   * endpoint path solely.
+   *
+   * <p>Generates alerts where the request profile violates path thresholds specified in the
+   * endpointAbusePath pipeline option configuration.
+   */
+  public static class EndpointAbuseAnalysis
+      extends PTransform<PCollection<Event>, PCollection<Alert>> {
+    private static final long serialVersionUID = 1L;
+
+    private Logger log;
+
+    private final Map<String[], Integer> endpoints;
+
+    /**
+     * Static initializer for {@link EndpointAbuseAnalysis}
+     *
+     * @param options Pipeline options
+     */
+    public EndpointAbuseAnalysis(HTTPRequestOptions options) {
+      log = LoggerFactory.getLogger(EndpointAbuseAnalysis.class);
+      endpoints = new HashMap<String[], Integer>();
+      for (String endpoint : options.getEndpointAbusePath()) {
+        String[] parts = endpoint.split(":");
+        if (parts.length != 3) {
+          throw new IllegalArgumentException(
+              "invalid format for abuse endpoint path, must be <int>:<method>:<path>");
+        }
+        String k[] = new String[2];
+        k[0] = parts[1];
+        k[1] = parts[2];
+        endpoints.put(k, new Integer(parts[0]));
+      }
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> input) {
+      return input
+          .apply(
+              "filter inapplicable requests",
+              ParDo.of(
+                  new DoFn<Event, KV<String, ArrayList<String>>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      GLB g = c.element().getPayload();
+
+                      String sourceAddress = g.getSourceAddress();
+                      String requestMethod = g.getRequestMethod();
+                      String userAgent = g.getUserAgent();
+                      if (sourceAddress == null || requestMethod == null) {
+                        return;
+                      }
+                      if (userAgent == null) {
+                        userAgent = "unknown";
+                      }
+                      URL u = g.getParsedUrl();
+                      if (u == null) {
+                        return;
+                      }
+                      ArrayList<String> v = new ArrayList<>();
+                      v.add(requestMethod);
+                      v.add(u.getPath());
+                      v.add(userAgent);
+                      c.output(KV.of(sourceAddress, v));
+                    }
+                  }))
+          .apply(GroupByKey.<String, ArrayList<String>>create())
+          .apply(
+              "analyze per-client",
+              ParDo.of(
+                  new DoFn<KV<String, Iterable<ArrayList<String>>>, Alert>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @StateId("counter")
+                    private final StateSpec<ValueState<Integer>> counterState = StateSpecs.value();
+
+                    @ProcessElement
+                    public void processElement(
+                        ProcessContext c,
+                        BoundedWindow w,
+                        @StateId("counter") ValueState<Integer> counter) {
+                      String remoteAddress = c.element().getKey();
+                      Iterable<ArrayList<String>> paths = c.element().getValue();
+
+                      // Take a look at the first entry in the data set and see if it
+                      // corresponds to anything we have in the endpoints map. If so, look at
+                      // the rest of the requests in the window to determine variance and
+                      // if the noted threshold has been exceeded.
+                      Integer foundThreshold = null;
+                      String compareMethod = null;
+                      String comparePath = null;
+                      String userAgent = null;
+                      int count = 0;
+                      for (ArrayList<String> i : paths) {
+                        if (foundThreshold == null) {
+                          foundThreshold = getEndpointThreshold(i.get(1), i.get(0));
+                          compareMethod = i.get(0);
+                          comparePath = i.get(1);
+                          userAgent = i.get(2);
+                        } else {
+                          if (!(compareMethod.equals(i.get(0)))
+                              || !(comparePath.equals(i.get(1)))) {
+                            // Variance in requests in-window
+                            return;
+                          }
+                        }
+                        if (foundThreshold == null) {
+                          // Entry wasn't in monitor map, so just ignore this client
+                          //
+                          // XXX This should be improved to determine when to ignore based on
+                          // perhaps a weighting heuristic if most of the requests are
+                          // applicable.
+                          return;
+                        }
+                        count++;
+                      }
+                      if (count >= foundThreshold) {
+                        // If we already have counter state for this key, compare it against what
+                        // the path count was. If they are the same, this is likely a
+                        // duplicate associated with the window closing so we just
+                        // ignore it.
+                        Integer rCount = counter.read();
+                        if (rCount != null && rCount.equals(count)) {
+                          log.info("suppressing additional in-window alert for {}", remoteAddress);
+                          return;
+                        }
+                        counter.write(count);
+
+                        if (rCount != null && rCount < count) {
+                          // If we had counter state for this key and it is less than the
+                          // path component count, this is a supplemental pane with more
+                          // requests in it.
+                          //
+                          // Generate another alert, but decrement the count value in the
+                          // alert to reflect the delta between what we have already alerted
+                          // on and this new alert.
+                          count = count - rCount;
+                          log.info(
+                              "{}: supplemental alert for {} {}",
+                              w.toString(),
+                              remoteAddress,
+                              count);
+                        } else {
+                          log.info(
+                              "{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
+                        }
+
+                        Alert a = new Alert();
+                        a.setCategory("httprequest");
+                        a.addMetadata("category", "endpoint_abuse");
+                        a.addMetadata("sourceaddress", remoteAddress);
+                        a.addMetadata("endpoint", comparePath);
+                        a.addMetadata("method", compareMethod);
+                        a.addMetadata("count", Integer.toString(count));
+                        a.addMetadata("useragent", userAgent);
+                        a.addMetadata(
+                            "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                        c.output(a);
+                      }
+                    }
+                  }));
+    }
+
+    private Integer getEndpointThreshold(String path, String method) {
+      for (Map.Entry<String[], Integer> entry : endpoints.entrySet()) {
+        String k[] = entry.getKey();
+        if (method.equals(k[0]) && path.equals(k[1])) {
+          return entry.getValue();
+        }
+      }
+      return null;
+    }
+  }
+
+  /**
    * Composite transform that conducts threshold analysis using the configured threshold modifier
    * across a set of KV objects as returned by {@link CountInWindow}.
    */
@@ -244,11 +548,13 @@ public class HTTPRequest implements Serializable {
                         private static final long serialVersionUID = 1L;
                         private Boolean warningLogged;
                         private Boolean clampMaximumLogged;
+                        private Boolean statsLogged;
 
                         @StartBundle
                         public void startBundle() {
                           warningLogged = false;
                           clampMaximumLogged = false;
+                          statsLogged = false;
                         }
 
                         @ProcessElement
@@ -256,6 +562,16 @@ public class HTTPRequest implements Serializable {
                           Stats.StatsOutput sOutput = c.sideInput(wStats);
                           Long uc = c.sideInput(uniqueClients);
                           Map<String, Boolean> nv = c.sideInput(natView);
+                          Double cMean = sOutput.getMean();
+                          if (!statsLogged) {
+                            log.info(
+                                "{}: statistics: mean/{} unique_clients/{} threshold/{}",
+                                w.toString(),
+                                cMean,
+                                uc,
+                                cMean * thresholdModifier);
+                            statsLogged = true;
+                          }
                           if (uc < requiredMinimumClients) {
                             if (!warningLogged) {
                               log.warn(
@@ -265,7 +581,6 @@ public class HTTPRequest implements Serializable {
                             }
                             return;
                           }
-                          Double cMean = sOutput.getMean();
                           if (cMean < requiredMinimumAverage) {
                             if (!warningLogged) {
                               log.warn(
@@ -315,21 +630,26 @@ public class HTTPRequest implements Serializable {
     }
   }
 
-  /**
-   * {@link DoFn} to transform any generated {@link Alert} objects into JSON for consumption by
-   * output transforms.
-   */
-  public static class OutputFormat extends DoFn<Alert, String> {
-    private static final long serialVersionUID = 1L;
-
-    @ProcessElement
-    public void processElement(ProcessContext c) {
-      c.output(c.element().toJSON());
-    }
-  }
-
   /** Runtime options for {@link HTTPRequest} pipeline. */
   public interface HTTPRequestOptions extends PipelineOptions, InputOptions, OutputOptions {
+    @Description("Enable threshold analysis")
+    @Default.Boolean(false)
+    Boolean getEnableThresholdAnalysis();
+
+    void setEnableThresholdAnalysis(Boolean value);
+
+    @Description("Enable error rate analysis")
+    @Default.Boolean(false)
+    Boolean getEnableErrorRateAnalysis();
+
+    void setEnableErrorRateAnalysis(Boolean value);
+
+    @Description("Enable endpoint abuse analysis")
+    @Default.Boolean(false)
+    Boolean getEnableEndpointAbuseAnalysis();
+
+    void setEnableEndpointAbuseAnalysis(Boolean value);
+
     @Description("Analysis threshold modifier")
     @Default.Double(75.0)
     Double getAnalysisThresholdModifier();
@@ -366,37 +686,75 @@ public class HTTPRequest implements Serializable {
     Boolean getNatDetection();
 
     void setNatDetection(Boolean value);
+
+    @Description("Filter any Stackdriver events that do not match project name")
+    String getStackdriverProjectFilter();
+
+    void setStackdriverProjectFilter(String value);
+
+    @Description(
+        "Endpoint abuse analysis paths for monitoring (multiple allowed); e.g., threshold:method:/path")
+    String[] getEndpointAbusePath();
+
+    void setEndpointAbusePath(String[] value);
+
+    @Description("Filter successful requests for path before analysis; e.g., method:/path")
+    String[] getFilterRequestPath();
+
+    void setFilterRequestPath(String[] value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
     Pipeline p = Pipeline.create(options);
 
+    Parse pw = new Parse(false);
+    if (options.getStackdriverProjectFilter() != null) {
+      pw.withStackdriverProjectFilter(options.getStackdriverProjectFilter());
+    }
     PCollection<Event> events =
         p.apply("input", options.getInputType().read(p, options))
-            .apply("parse and window", new ParseAndWindow(false));
+            .apply("parse", pw)
+            .apply("preprocess", ParDo.of(new Preprocessor(options)));
+
+    PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
+    PCollection<Event> efEvents =
+        events.apply("window for fixed fire early", new WindowForFixedFireEarly());
 
     PCollectionView<Map<String, Boolean>> natView = null;
     if (options.getNatDetection()) {
-      natView = DetectNat.getView(events);
+      natView = DetectNat.getView(fwEvents);
     }
 
-    PCollection<String> threshResults =
-        events
-            .apply("per-client", new CountInWindow())
-            .apply("threshold analysis", new ThresholdAnalysis(options, natView))
-            .apply("output format", ParDo.of(new OutputFormat()));
+    PCollectionList<String> resultsList = PCollectionList.empty(p);
 
-    PCollection<String> errRateResults =
-        events
-            .apply("cerr per client", new CountErrorsInWindow())
-            .apply(
-                "error rate analysis",
-                ParDo.of(new ErrorRateAnalysis(options.getMaxClientErrorRate())))
-            .apply("output format", ParDo.of(new OutputFormat()));
+    if (options.getEnableThresholdAnalysis()) {
+      resultsList =
+          resultsList.and(
+              fwEvents
+                  .apply("per-client", new CountInWindow())
+                  .apply("threshold analysis", new ThresholdAnalysis(options, natView))
+                  .apply("output format", ParDo.of(new AlertFormatter(options))));
+    }
 
-    PCollectionList<String> resultsList = PCollectionList.of(threshResults).and(errRateResults);
+    if (options.getEnableErrorRateAnalysis()) {
+      resultsList =
+          resultsList.and(
+              fwEvents
+                  .apply("cerr per client", new CountErrorsInWindow())
+                  .apply(
+                      "error rate analysis",
+                      ParDo.of(new ErrorRateAnalysis(options.getMaxClientErrorRate())))
+                  .apply("output format", ParDo.of(new AlertFormatter(options))));
+    }
+
+    if (options.getEnableEndpointAbuseAnalysis()) {
+      efEvents
+          .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
+          .apply("output format", ParDo.of(new AlertFormatter(options)))
+          .apply("output", OutputOptions.compositeOutput(options));
+    }
+
     PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
-
     results.apply("output", OutputOptions.compositeOutput(options));
 
     p.run();

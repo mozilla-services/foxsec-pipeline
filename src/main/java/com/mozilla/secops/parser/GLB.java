@@ -6,6 +6,8 @@ import com.google.api.services.logging.v2.model.HttpRequest;
 import com.google.api.services.logging.v2.model.LogEntry;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import org.joda.time.DateTime;
 
@@ -20,6 +22,7 @@ public class GLB extends PayloadBase implements Serializable {
   private String requestUrl;
   private String sourceAddress;
   private Integer status;
+  private URL parsedUrl;
 
   @Override
   public Boolean matcher(String input, ParserState state) {
@@ -98,6 +101,23 @@ public class GLB extends PayloadBase implements Serializable {
     userAgent = h.getUserAgent();
     requestMethod = h.getRequestMethod();
     status = h.getStatus();
+
+    if (h.getRequestUrl() != null) {
+      try {
+        parsedUrl = new URL(h.getRequestUrl());
+      } catch (MalformedURLException exc) {
+        // pass
+      }
+    }
+  }
+
+  /**
+   * Get parsed URL object
+   *
+   * @return URL
+   */
+  public URL getParsedUrl() {
+    return parsedUrl;
   }
 
   /**
