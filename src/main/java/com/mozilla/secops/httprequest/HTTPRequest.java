@@ -10,6 +10,7 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.GLB;
+import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
 import java.io.Serializable;
 import java.net.URL;
@@ -96,7 +97,7 @@ public class HTTPRequest implements Serializable {
         rule.wantStackdriverProject(stackdriverProjectFilter);
       }
       filter.addRule(rule);
-      return col.apply(ParDo.of(new ParseDoFn())).apply(EventFilter.getTransform(filter));
+      return col.apply(ParDo.of(new ParserDoFn())).apply(EventFilter.getTransform(filter));
     }
   }
 
