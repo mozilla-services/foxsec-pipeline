@@ -62,7 +62,7 @@ public class HTTPRequest implements Serializable {
    * Composite transform to parse a {@link PCollection} containing events as strings and emit a
    * {@link PCollection} of {@link Event} objects.
    *
-   * <p>This function discards events that are not considered HTTP requests.
+   * <p>This transform currently discards events that are not {@link GLB} events.
    */
   public static class Parse extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
