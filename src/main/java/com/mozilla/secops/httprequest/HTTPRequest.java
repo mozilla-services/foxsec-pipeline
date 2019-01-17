@@ -68,24 +68,16 @@ public class HTTPRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final Boolean emitEventTimestamps;
-    private String stackdriverProjectFilter;
-
-    /**
-     * Only emit parsed Stackdriver events that are associated with specified project
-     *
-     * @param project Project name
-     */
-    public void withStackdriverProjectFilter(String project) {
-      stackdriverProjectFilter = project;
-    }
+    private final String stackdriverProjectFilter;
 
     /**
      * Static initializer for {@link Parse} transform
      *
-     * @param emitEventTimestamps If true, attempt to use the timestamp in the Event
+     * @param options Pipeline options
      */
-    public Parse(Boolean emitEventTimestamps) {
-      this.emitEventTimestamps = emitEventTimestamps;
+    public Parse(HTTPRequestOptions options) {
+      emitEventTimestamps = options.getUseEventTimestamp();
+      stackdriverProjectFilter = options.getStackdriverProjectFilter();
     }
 
     @Override
@@ -686,7 +678,7 @@ public class HTTPRequest implements Serializable {
 
     void setNatDetection(Boolean value);
 
-    @Description("Filter any Stackdriver events that do not match project name")
+    @Description("Only inspect Stackdriver events generated for specified project identifier")
     String getStackdriverProjectFilter();
 
     void setStackdriverProjectFilter(String value);
@@ -701,18 +693,20 @@ public class HTTPRequest implements Serializable {
     String[] getFilterRequestPath();
 
     void setFilterRequestPath(String[] value);
+
+    @Description("Use timestamp parsed from event instead of timestamp set in input transform")
+    @Default.Boolean(false)
+    Boolean getUseEventTimestamp();
+
+    void setUseEventTimestamp(Boolean value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
     Pipeline p = Pipeline.create(options);
 
-    Parse pw = new Parse(false);
-    if (options.getStackdriverProjectFilter() != null) {
-      pw.withStackdriverProjectFilter(options.getStackdriverProjectFilter());
-    }
     PCollection<Event> events =
         p.apply("input", options.getInputType().read(p, options))
-            .apply("parse", pw)
+            .apply("parse", new Parse(options))
             .apply("preprocess", ParDo.of(new Preprocessor(options)));
 
     PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());

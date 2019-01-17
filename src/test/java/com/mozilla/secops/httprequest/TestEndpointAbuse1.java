@@ -25,6 +25,7 @@ public class TestEndpointAbuse1 {
   private HTTPRequest.HTTPRequestOptions getTestOptions() {
     HTTPRequest.HTTPRequestOptions ret =
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
+    ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     return ret;
   }
 
@@ -39,7 +40,7 @@ public class TestEndpointAbuse1 {
 
     PCollection<Alert> results =
         input
-            .apply(new HTTPRequest.Parse(true))
+            .apply(new HTTPRequest.Parse(options))
             .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixedFireEarly())
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
@@ -82,7 +83,7 @@ public class TestEndpointAbuse1 {
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.Parse(true))
+            .apply(new HTTPRequest.Parse(options))
             .apply(ParDo.of(new HTTPRequest.Preprocessor(options)))
             .apply(new HTTPRequest.WindowForFixedFireEarly());
 

@@ -10,6 +10,7 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
@@ -32,13 +33,20 @@ public class TestErrorRate1 {
     p.run().waitUntilFinish();
   }
 
+  private HTTPRequest.HTTPRequestOptions getTestOptions() {
+    HTTPRequest.HTTPRequestOptions ret =
+        PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
+    ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
+    return ret;
+  }
+
   @Test
   public void countRequestsTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.Parse(true))
+            .apply(new HTTPRequest.Parse(getTestOptions()))
             .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixed());
     PCollection<Long> count =
@@ -63,7 +71,7 @@ public class TestErrorRate1 {
 
     PCollection<KV<String, Long>> counts =
         input
-            .apply(new HTTPRequest.Parse(true))
+            .apply(new HTTPRequest.Parse(getTestOptions()))
             .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountErrorsInWindow());
@@ -81,7 +89,7 @@ public class TestErrorRate1 {
 
     PCollection<Alert> results =
         input
-            .apply(new HTTPRequest.Parse(true))
+            .apply(new HTTPRequest.Parse(getTestOptions()))
             .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountErrorsInWindow())
