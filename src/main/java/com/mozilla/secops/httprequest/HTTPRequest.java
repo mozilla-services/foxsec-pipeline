@@ -153,31 +153,6 @@ public class HTTPRequest implements Serializable {
   /**
    * Composite transform which given a set of windowed {@link Event} types, emits a set of {@link
    * KV} objects where the key is the source address of the request and the value is the number of
-   * requests for that source within the window.
-   */
-  public static class CountInWindow
-      extends PTransform<PCollection<Event>, PCollection<KV<String, Long>>> {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public PCollection<KV<String, Long>> expand(PCollection<Event> col) {
-      class GetSourceAddress extends DoFn<Event, String> {
-        private static final long serialVersionUID = 1L;
-
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-          GLB g = c.element().getPayload();
-          c.output(g.getSourceAddress());
-        }
-      }
-
-      return col.apply(ParDo.of(new GetSourceAddress())).apply(Count.<String>perElement());
-    }
-  }
-
-  /**
-   * Composite transform which given a set of windowed {@link Event} types, emits a set of {@link
-   * KV} objects where the key is the source address of the request and the value is the number of
    * client errors for that source within the window.
    */
   public static class CountErrorsInWindow
@@ -418,10 +393,8 @@ public class HTTPRequest implements Serializable {
 
   /**
    * Composite transform that conducts threshold analysis using the configured threshold modifier
-   * across a set of KV objects as returned by {@link CountInWindow}.
    */
-  public static class ThresholdAnalysis
-      extends PTransform<PCollection<KV<String, Long>>, PCollection<Alert>> {
+  public static class ThresholdAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
     private final Double thresholdModifier;
@@ -458,7 +431,7 @@ public class HTTPRequest implements Serializable {
     }
 
     @Override
-    public PCollection<Alert> expand(PCollection<KV<String, Long>> col) {
+    public PCollection<Alert> expand(PCollection<Event> col) {
       if (natView == null) {
         // If natView was not set then we just create an empty view for use as the side input
         natView =
@@ -469,15 +442,34 @@ public class HTTPRequest implements Serializable {
                 .apply(View.<String, Boolean>asMap());
       }
 
+      // Count per source address
+      PCollection<KV<String, Long>> clientCounts =
+          col.apply(
+                  "calculate per client count",
+                  ParDo.of(
+                      new DoFn<Event, String>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @ProcessElement
+                        public void processElement(ProcessContext c) {
+                          GLB g = c.element().getPayload();
+                          c.output(g.getSourceAddress());
+                        }
+                      }))
+              .apply(Count.<String>perElement());
+
+      // Calculate the number of unique clients in the collection
       PCollectionView<Long> uniqueClients =
-          col.apply(Keys.<String>create())
+          clientCounts
+              .apply(Keys.<String>create())
               .apply(
-                  "Unique client count",
+                  "unique client count",
                   Combine.globally(Count.<String>combineFn()).withoutDefaults().asSingletonView());
 
+      // For each client, extract the request count
       PCollection<Long> counts =
-          col.apply(
-              "Extract counts",
+          clientCounts.apply(
+              "extract counts",
               ParDo.of(
                   new DoFn<KV<String, Long>, Long>() {
                     private static final long serialVersionUID = 1L;
@@ -487,94 +479,98 @@ public class HTTPRequest implements Serializable {
                       c.output(c.element().getValue());
                     }
                   }));
+      // Obtain statistics on the client count population for use as a side input
       final PCollectionView<Stats.StatsOutput> wStats = Stats.getView(counts);
 
-      PCollection<Alert> ret =
-          col.apply(
-              ParDo.of(
-                      new DoFn<KV<String, Long>, Alert>() {
-                        private static final long serialVersionUID = 1L;
-                        private Boolean warningLogged;
-                        private Boolean clampMaximumLogged;
-                        private Boolean statsLogged;
+      return clientCounts.apply(
+          ParDo.of(
+                  new DoFn<KV<String, Long>, Alert>() {
+                    private static final long serialVersionUID = 1L;
 
-                        @StartBundle
-                        public void startBundle() {
-                          warningLogged = false;
-                          clampMaximumLogged = false;
-                          statsLogged = false;
-                        }
+                    private Boolean warningLogged;
+                    private Boolean clampMaximumLogged;
+                    private Boolean statsLogged;
 
-                        @ProcessElement
-                        public void processElement(ProcessContext c, BoundedWindow w) {
-                          Stats.StatsOutput sOutput = c.sideInput(wStats);
-                          Long uc = c.sideInput(uniqueClients);
-                          Map<String, Boolean> nv = c.sideInput(natView);
-                          Double cMean = sOutput.getMean();
-                          if (!statsLogged) {
-                            log.info(
-                                "{}: statistics: mean/{} unique_clients/{} threshold/{}",
-                                w.toString(),
-                                cMean,
-                                uc,
-                                cMean * thresholdModifier);
-                            statsLogged = true;
-                          }
-                          if (uc < requiredMinimumClients) {
-                            if (!warningLogged) {
-                              log.warn(
-                                  "{}: ignoring events as window does not meet minimum clients",
-                                  w.toString());
-                              warningLogged = true;
-                            }
-                            return;
-                          }
-                          if (cMean < requiredMinimumAverage) {
-                            if (!warningLogged) {
-                              log.warn(
-                                  "{}: ignoring events as window does not meet minimum average",
-                                  w.toString());
-                              warningLogged = true;
-                            }
-                            return;
-                          }
-                          if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
-                            if (!clampMaximumLogged) {
-                              log.info(
-                                  "{}: clamping calculated mean {} to maximum {}",
-                                  w.toString(),
-                                  cMean,
-                                  clampThresholdMaximum);
-                              clampMaximumLogged = true;
-                            }
-                            cMean = clampThresholdMaximum;
-                          }
-                          if (c.element().getValue() >= (cMean * thresholdModifier)) {
-                            Boolean isNat = nv.get(c.element().getKey());
-                            if (isNat != null && isNat) {
-                              log.info(
-                                  "{}: detectnat: skipping result emission for {}",
-                                  w.toString(),
-                                  c.element().getKey());
-                              return;
-                            }
-                            log.info(
-                                "{}: emitting alert for {}", w.toString(), c.element().getKey());
-                            Alert a = new Alert();
-                            a.setCategory("httprequest");
-                            a.addMetadata("category", "threshold_analysis");
-                            a.addMetadata("sourceaddress", c.element().getKey());
-                            a.addMetadata("mean", sOutput.getMean().toString());
-                            a.addMetadata("count", c.element().getValue().toString());
-                            a.addMetadata("threshold_modifier", thresholdModifier.toString());
-                            a.addMetadata(
-                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-                            c.output(a);
-                          }
+                    @StartBundle
+                    public void startBundle() {
+                      warningLogged = false;
+                      clampMaximumLogged = false;
+                      statsLogged = false;
+                    }
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c, BoundedWindow w) {
+                      Stats.StatsOutput sOutput = c.sideInput(wStats);
+                      Long uc = c.sideInput(uniqueClients);
+                      Map<String, Boolean> nv = c.sideInput(natView);
+
+                      Double cMean = sOutput.getMean();
+                      if (!statsLogged) {
+                        log.info(
+                            "{}: statistics: mean/{} unique_clients/{} threshold/{}",
+                            w.toString(),
+                            cMean,
+                            uc,
+                            cMean * thresholdModifier);
+                        statsLogged = true;
+                      }
+
+                      if (uc < requiredMinimumClients) {
+                        if (!warningLogged) {
+                          log.warn(
+                              "{}: ignoring events as window does not meet minimum clients",
+                              w.toString());
+                          warningLogged = true;
                         }
-                      })
-                  .withSideInputs(wStats, natView, uniqueClients));
-      return ret;
+                        return;
+                      }
+
+                      if (cMean < requiredMinimumAverage) {
+                        if (!warningLogged) {
+                          log.warn(
+                              "{}: ignoring events as window does not meet minimum average",
+                              w.toString());
+                          warningLogged = true;
+                        }
+                        return;
+                      }
+
+                      if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
+                        if (!clampMaximumLogged) {
+                          log.info(
+                              "{}: clamping calculated mean {} to maximum {}",
+                              w.toString(),
+                              cMean,
+                              clampThresholdMaximum);
+                          clampMaximumLogged = true;
+                        }
+                        cMean = clampThresholdMaximum;
+                      }
+
+                      if (c.element().getValue() >= (cMean * thresholdModifier)) {
+                        Boolean isNat = nv.get(c.element().getKey());
+                        if (isNat != null && isNat) {
+                          log.info(
+                              "{}: detectnat: skipping result emission for {}",
+                              w.toString(),
+                              c.element().getKey());
+                          return;
+                        }
+                        log.info("{}: emitting alert for {}", w.toString(), c.element().getKey());
+                        Alert a = new Alert();
+                        a.setCategory("httprequest");
+                        a.addMetadata("category", "threshold_analysis");
+                        a.addMetadata("sourceaddress", c.element().getKey());
+                        a.addMetadata("mean", sOutput.getMean().toString());
+                        a.addMetadata("count", c.element().getValue().toString());
+                        a.addMetadata("threshold_modifier", thresholdModifier.toString());
+                        a.addMetadata(
+                            "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                        c.output(a);
+                      }
+                    }
+                  })
+              .withSideInputs(wStats, natView, uniqueClients));
     }
   }
 
@@ -680,7 +676,6 @@ public class HTTPRequest implements Serializable {
       resultsList =
           resultsList.and(
               fwEvents
-                  .apply("per-client", new CountInWindow())
                   .apply("threshold analysis", new ThresholdAnalysis(options, natView))
                   .apply("output format", ParDo.of(new AlertFormatter(options))));
     }
