@@ -55,6 +55,16 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputAlertEmailCatchall(String value);
 
+  @Description("With alert slack output; Slack token (supports RuntimeSecrets)")
+  String getOutputAlertSlackToken();
+
+  void setOutputAlertSlackToken(String value);
+
+  @Description("With alert slack output; channel to receive copy of alerts")
+  String getOutputAlertSlackCatchall();
+
+  void setOutputAlertSlackCatchall(String value);
+
   @Description("Monitored resource indicator to include in any alert metadata")
   @Validation.Required
   String getMonitoredResourceIndicator();

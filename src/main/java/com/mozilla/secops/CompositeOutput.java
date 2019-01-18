@@ -39,6 +39,8 @@ public abstract class CompositeOutput {
     alertcfg.setEmailCatchall(options.getOutputAlertEmailCatchall());
     alertcfg.setEmailFrom(options.getOutputAlertEmailFrom());
     alertcfg.setGcpProject(project);
+    alertcfg.setSlackToken(options.getOutputAlertSlackToken());
+    alertcfg.setSlackCatchall(options.getOutputAlertSlackCatchall());
 
     return new PTransform<PCollection<String>, PDone>() {
       private static final long serialVersionUID = 1L;

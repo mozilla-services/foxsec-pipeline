@@ -11,6 +11,8 @@ public class AlertConfiguration implements Serializable {
   private String emailCatchall;
   private String emailFrom;
   private String gcpProject;
+  private String slackToken;
+  private String slackCatchall;
 
   /**
    * Determine if {@link AlertIO} should be established in composite transform
@@ -109,6 +111,42 @@ public class AlertConfiguration implements Serializable {
    */
   public void setGcpProject(String gcpProject) {
     this.gcpProject = gcpProject;
+  }
+
+  /**
+   * Get slack bot token
+   *
+   * @return Slack bot token string
+   */
+  public String getSlackToken() {
+    return slackToken;
+  }
+
+  /**
+   * Set slack bot token
+   *
+   * @param slackToken Slack bot token string
+   */
+  public void setSlackToken(String slackToken) {
+    this.slackToken = slackToken;
+  }
+
+  /**
+   * Get slack catchall channel id
+   *
+   * @return Slack catchall Channel ID string
+   */
+  public String getSlackCatchall() {
+    return slackCatchall;
+  }
+
+  /**
+   * Set slack catchall channel id
+   *
+   * @param slackCatchall Slack catchall Channel ID string
+   */
+  public void setSlackCatchall(String slackCatchall) {
+    this.slackCatchall = slackCatchall;
   }
 
   /** Create new empty {@link AlertConfiguration} */
