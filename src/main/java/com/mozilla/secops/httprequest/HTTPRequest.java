@@ -112,7 +112,7 @@ public class HTTPRequest implements Serializable {
         }
       }
       filter.addRule(rule);
-      return col.apply(ParDo.of(new ParserDoFn())).apply(EventFilter.getTransform(filter));
+      return col.apply(ParDo.of(new ParserDoFn().withInlineEventFilter(filter)));
     }
   }
 

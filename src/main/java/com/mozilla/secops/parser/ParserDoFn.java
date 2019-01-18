@@ -12,6 +12,19 @@ public class ParserDoFn extends DoFn<String, Event> {
   private Parser ep;
   private Long parseCount;
 
+  private EventFilter inlineFilter;
+
+  /**
+   * Install an inline {@link EventFilter} in this transform
+   *
+   * <p>If an inline filter is present in the transform, the transform will only emit events that
+   * match the filter.
+   */
+  public ParserDoFn withInlineEventFilter(EventFilter inlineFilter) {
+    this.inlineFilter = inlineFilter;
+    return this;
+  }
+
   @Setup
   public void setup() {
     ep = new Parser();
@@ -34,6 +47,16 @@ public class ParserDoFn extends DoFn<String, Event> {
   public void processElement(ProcessContext c) {
     Event e = ep.parse(c.element());
     if (e != null) {
+      if (inlineFilter != null) {
+        if (!(inlineFilter.matches(e))) {
+          return;
+        }
+        if (inlineFilter.getOutputWithTimestamp()) {
+          parseCount++;
+          c.outputWithTimestamp(e, e.getTimestamp().toInstant());
+          return;
+        }
+      }
       parseCount++;
       c.output(e);
     }
