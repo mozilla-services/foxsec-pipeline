@@ -68,6 +68,15 @@ public class EventFilterTest {
                 new EventFilterPayload(Raw.class)
                     .withStringMatch(EventFilterPayload.StringProperty.RAW_RAW, "nomatch")));
 
+    EventFilter nrFilter = new EventFilter();
+    assertNotNull(nrFilter);
+    nFilter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.RAW)
+            .addPayloadFilter(
+                new EventFilterPayload(Raw.class)
+                    .withStringRegexMatch(EventFilterPayload.StringProperty.RAW_RAW, "\\wesr")));
+
     Parser p = new Parser();
     assertNotNull(p);
     Event e = p.parse("test");
@@ -78,6 +87,7 @@ public class EventFilterTest {
     assertTrue(prFilter.matches(e));
     assertFalse(nFilter.matches(e));
     assertFalse(icFilter.matches(e));
+    assertFalse(nrFilter.matches(e));
   }
 
   @Test
