@@ -10,7 +10,6 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Instant;
@@ -41,7 +40,6 @@ public class TestEndpointAbuse1 {
     PCollection<Alert> results =
         input
             .apply(new HTTPRequest.Parse(options))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixedFireEarly())
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
@@ -84,7 +82,6 @@ public class TestEndpointAbuse1 {
     PCollection<Event> events =
         input
             .apply(new HTTPRequest.Parse(options))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor(options)))
             .apply(new HTTPRequest.WindowForFixedFireEarly());
 
     PCollection<Alert> results = events.apply(new HTTPRequest.EndpointAbuseAnalysis(options));

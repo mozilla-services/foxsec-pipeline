@@ -47,7 +47,6 @@ public class TestErrorRate1 {
     PCollection<Event> events =
         input
             .apply(new HTTPRequest.Parse(getTestOptions()))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixed());
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
@@ -72,7 +71,6 @@ public class TestErrorRate1 {
     PCollection<KV<String, Long>> counts =
         input
             .apply(new HTTPRequest.Parse(getTestOptions()))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountErrorsInWindow());
 
@@ -90,7 +88,6 @@ public class TestErrorRate1 {
     PCollection<Alert> results =
         input
             .apply(new HTTPRequest.Parse(getTestOptions()))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountErrorsInWindow())
             .apply(ParDo.of(new HTTPRequest.ErrorRateAnalysis(30L)));

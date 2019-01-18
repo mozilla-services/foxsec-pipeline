@@ -7,10 +7,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /** Base class for payloads */
 @JsonTypeInfo(
-  use = JsonTypeInfo.Id.NAME,
-  include = JsonTypeInfo.As.PROPERTY,
-  property = "type_descriptor"
-)
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type_descriptor")
 @JsonSubTypes({
   @Type(value = SecEvent.class, name = "secevent"),
   @Type(value = Raw.class, name = "raw"),
@@ -59,6 +58,16 @@ public abstract class PayloadBase {
    * @return String value or null
    */
   public String eventStringValue(EventFilterPayload.StringProperty property) {
+    return null;
+  }
+
+  /**
+   * Return a given Integer payload field value based on the supplied field identifier
+   *
+   * @param property {@link EventFilterPayload.IntegerProperty}
+   * @return Integer value or null
+   */
+  public Integer eventIntegerValue(EventFilterPayload.IntegerProperty property) {
     return null;
   }
 }

@@ -146,4 +146,194 @@ public class EventFilterTest {
     filter.addRule(new EventFilterRule().wantStackdriverProject("nonexistent"));
     assertFalse(filter.matches(e));
   }
+
+  @Test
+  public void testEventFilterMultitypeMatch() throws Exception {
+    String buf =
+        "{\"httpRequest\":{\"referer\":\"https://send.firefox.com/\",\"remoteIp\":"
+            + "\"127.0.0.1\",\"requestMethod\":\"GET\",\"requestSize\":\"43\",\"requestUrl\":\"htt"
+            + "ps://send.firefox.com/public/locales/en-US/send.js?test=test\",\"responseSize\":\"2692\","
+            + "\"serverIp\":\"10.8.0.3\",\"status\":200,\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel M"
+            + "ac OS X 10_13_3)"
+            + "\"},\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"@type\":\"type.googleapis.com/"
+            + "google.cloud.loadbalancing.type.LoadBalancerLogEntry\",\"statusDetails\":\"response_sent"
+            + "_by_backend\"},\"logName\":\"projects/moz/logs/requests\",\"receiveTim"
+            + "estamp\":\"2018-09-28T18:55:12.840306467Z\",\"resource\":{\"labels\":{\"backend_service_"
+            + "name\":\"\",\"forwarding_rule_name\":\"k8s-fws-prod-"
+            + "6cb3697\",\"project_id\":\"test\",\"target_proxy_name\":\"k8s-tps-prod-"
+            + "97\",\"url_map_name\":\"k8s-um-prod"
+            + "-app-1\",\"zone\":\"global\"},\"type\":\"http_load_balancer\"}"
+            + ",\"severity\":\"INFO\",\"spanId\":\"AAAAAAAAAAAAAAAA\",\"timestamp\":\"2018-09-28T18:55:"
+            + "12.469373944Z\",\"trace\":\"projects/moz/traces/AAAAAAAAAAAAAAAAAAAAAA"
+            + "AAAAAAAAAA\"}";
+    Parser p = new Parser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.GLB, e.getPayloadType());
+
+    EventFilter filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .addPayloadFilter(
+                new EventFilterPayload(GLB.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")
+                    .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200)));
+    assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .addPayloadFilter(
+                new EventFilterPayload(GLB.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")
+                    .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 201)
+                    .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200)));
+    assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    EventFilterRule rule =
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .addPayloadFilter(
+                new EventFilterPayload(GLB.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET"));
+    rule.addPayloadFilter(
+        new EventFilterPayload(GLB.class)
+            .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200));
+    filter.addRule(rule);
+    assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    rule =
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .addPayloadFilter(
+                new EventFilterPayload(GLB.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET"));
+    rule.addPayloadFilter(
+        new EventFilterPayload(GLB.class)
+            .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 201));
+    filter.addRule(rule);
+    assertFalse(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .addPayloadFilter(
+                new EventFilterPayload(GLB.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")
+                    .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 201)));
+    assertFalse(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .addPayloadFilter(
+                new EventFilterPayload(GLB.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "POST")));
+    assertFalse(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .addPayloadFilter(
+                new EventFilterPayload(GLB.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "POST")));
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .addPayloadFilter(
+                new EventFilterPayload(GLB.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")));
+    assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.RAW)
+            .addPayloadFilter(
+                new EventFilterPayload(Raw.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.RAW_RAW, "test")));
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .addPayloadFilter(
+                new EventFilterPayload(GLB.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")));
+    assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .except(
+                new EventFilterRule()
+                    .wantSubtype(Payload.PayloadType.GLB)
+                    .addPayloadFilter(
+                        new EventFilterPayload(GLB.class)
+                            .withStringMatch(
+                                EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "POST"))));
+    assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .except(
+                new EventFilterRule()
+                    .wantSubtype(Payload.PayloadType.GLB)
+                    .addPayloadFilter(
+                        new EventFilterPayload(GLB.class)
+                            .withStringMatch(
+                                EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "POST")))
+            .except(new EventFilterRule().wantStackdriverProject("project")));
+    assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .except(
+                new EventFilterRule()
+                    .wantSubtype(Payload.PayloadType.GLB)
+                    .addPayloadFilter(
+                        new EventFilterPayload(GLB.class)
+                            .withStringMatch(
+                                EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "POST")))
+            .except(new EventFilterRule().wantStackdriverProject("project"))
+            .except(new EventFilterRule().wantStackdriverProject("test")));
+    assertFalse(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.GLB)
+            .except(
+                new EventFilterRule()
+                    .wantSubtype(Payload.PayloadType.GLB)
+                    .addPayloadFilter(
+                        new EventFilterPayload(GLB.class)
+                            .withStringMatch(
+                                EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET"))));
+    assertFalse(filter.matches(e));
+  }
 }

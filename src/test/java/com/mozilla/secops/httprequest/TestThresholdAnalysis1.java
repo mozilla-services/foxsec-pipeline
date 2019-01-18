@@ -17,7 +17,6 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -52,7 +51,6 @@ public class TestThresholdAnalysis1 {
     PCollection<Event> events =
         input
             .apply(new HTTPRequest.Parse(getTestOptions()))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixed());
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
@@ -90,7 +88,6 @@ public class TestThresholdAnalysis1 {
     PCollection<KV<String, Long>> counts =
         input
             .apply(new HTTPRequest.Parse(getTestOptions()))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountInWindow());
 
@@ -110,7 +107,6 @@ public class TestThresholdAnalysis1 {
     PCollection<Alert> results =
         input
             .apply(new HTTPRequest.Parse(options))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
             .apply(new HTTPRequest.WindowForFixed())
             .apply(new HTTPRequest.CountInWindow())
             .apply(new HTTPRequest.ThresholdAnalysis(options));
@@ -149,10 +145,7 @@ public class TestThresholdAnalysis1 {
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
 
     PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(options))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
@@ -197,10 +190,7 @@ public class TestThresholdAnalysis1 {
     options.setRequiredMinimumAverage(250.0);
 
     PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(options))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
@@ -227,10 +217,7 @@ public class TestThresholdAnalysis1 {
     options.setRequiredMinimumClients(500L);
 
     PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(options))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
@@ -256,10 +243,7 @@ public class TestThresholdAnalysis1 {
     options.setClampThresholdMaximum(1.0);
 
     PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(options))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
