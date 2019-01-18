@@ -28,14 +28,12 @@ import org.apache.beam.sdk.state.StateSpecs;
 import org.apache.beam.sdk.state.ValueState;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
@@ -46,7 +44,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptors;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
@@ -434,12 +431,7 @@ public class HTTPRequest implements Serializable {
     public PCollection<Alert> expand(PCollection<Event> col) {
       if (natView == null) {
         // If natView was not set then we just create an empty view for use as the side input
-        natView =
-            col.getPipeline()
-                .apply(
-                    Create.empty(
-                        TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
-                .apply(View.<String, Boolean>asMap());
+        natView = DetectNat.getEmptyView(col.getPipeline());
       }
 
       // Count per source address
