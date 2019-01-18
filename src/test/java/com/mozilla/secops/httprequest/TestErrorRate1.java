@@ -8,16 +8,12 @@ import static org.junit.Assert.assertThat;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
-import java.util.ArrayList;
-import java.util.Arrays;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Instant;
 import org.junit.Rule;
@@ -62,26 +58,6 @@ public class TestErrorRate1 {
   }
 
   @Test
-  public void countInWindowTest() throws Exception {
-    ArrayList<KV<String, Long>> expect =
-        new ArrayList<KV<String, Long>>(
-            Arrays.asList(KV.of("10.0.0.1", 60L), KV.of("10.0.0.2", 60L)));
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
-
-    PCollection<KV<String, Long>> counts =
-        input
-            .apply(new HTTPRequest.Parse(getTestOptions()))
-            .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.CountErrorsInWindow());
-
-    PAssert.that(counts)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(expect);
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
   public void errorRateTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
 
@@ -89,8 +65,7 @@ public class TestErrorRate1 {
         input
             .apply(new HTTPRequest.Parse(getTestOptions()))
             .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.CountErrorsInWindow())
-            .apply(ParDo.of(new HTTPRequest.ErrorRateAnalysis(30L)));
+            .apply(new HTTPRequest.ErrorRateAnalysis(30L));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());

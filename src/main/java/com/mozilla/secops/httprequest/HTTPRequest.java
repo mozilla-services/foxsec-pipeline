@@ -147,42 +147,8 @@ public class HTTPRequest implements Serializable {
     }
   }
 
-  /**
-   * Composite transform which given a set of windowed {@link Event} types, emits a set of {@link
-   * KV} objects where the key is the source address of the request and the value is the number of
-   * client errors for that source within the window.
-   */
-  public static class CountErrorsInWindow
-      extends PTransform<PCollection<Event>, PCollection<KV<String, Long>>> {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public PCollection<KV<String, Long>> expand(PCollection<Event> col) {
-      class GetAddressErrors extends DoFn<Event, String> {
-        private static final long serialVersionUID = 1L;
-
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-          GLB g = c.element().getPayload();
-          Integer status = g.getStatus();
-          if (status == null) {
-            return;
-          }
-          if (status >= 400 && status < 500) {
-            c.output(g.getSourceAddress());
-          }
-        }
-      }
-
-      return col.apply(ParDo.of(new GetAddressErrors())).apply(Count.<String>perElement());
-    }
-  }
-
-  /**
-   * {@link DoFn} to analyze key value pairs of source address and error count and emit a {@link
-   * Alert} for each address that exceeds the maximum client error rate
-   */
-  public static class ErrorRateAnalysis extends DoFn<KV<String, Long>, Alert> {
+  /** Transform for analysis of error rates per client within a given window. */
+  public static class ErrorRateAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
     private final Long maxErrorRate;
 
@@ -195,19 +161,50 @@ public class HTTPRequest implements Serializable {
       this.maxErrorRate = maxErrorRate;
     }
 
-    @ProcessElement
-    public void processElement(ProcessContext c, BoundedWindow w) {
-      if (c.element().getValue() <= maxErrorRate) {
-        return;
-      }
-      Alert a = new Alert();
-      a.setCategory("httprequest");
-      a.addMetadata("category", "error_rate");
-      a.addMetadata("sourceaddress", c.element().getKey());
-      a.addMetadata("error_count", c.element().getValue().toString());
-      a.addMetadata("error_threshold", maxErrorRate.toString());
-      a.addMetadata("window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-      c.output(a);
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> input) {
+      return input
+          .apply(
+              "isolate client errors",
+              ParDo.of(
+                  new DoFn<Event, String>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      GLB g = c.element().getPayload();
+                      Integer status = g.getStatus();
+                      if (status == null) {
+                        return;
+                      }
+                      if (status >= 400 && status < 500) {
+                        c.output(g.getSourceAddress());
+                      }
+                    }
+                  }))
+          .apply(Count.<String>perElement())
+          .apply(
+              "per-client error rate analysis",
+              ParDo.of(
+                  new DoFn<KV<String, Long>, Alert>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c, BoundedWindow w) {
+                      if (c.element().getValue() <= maxErrorRate) {
+                        return;
+                      }
+                      Alert a = new Alert();
+                      a.setCategory("httprequest");
+                      a.addMetadata("category", "error_rate");
+                      a.addMetadata("sourceaddress", c.element().getKey());
+                      a.addMetadata("error_count", c.element().getValue().toString());
+                      a.addMetadata("error_threshold", maxErrorRate.toString());
+                      a.addMetadata(
+                          "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                      c.output(a);
+                    }
+                  }));
     }
   }
 
@@ -676,10 +673,8 @@ public class HTTPRequest implements Serializable {
       resultsList =
           resultsList.and(
               fwEvents
-                  .apply("cerr per client", new CountErrorsInWindow())
                   .apply(
-                      "error rate analysis",
-                      ParDo.of(new ErrorRateAnalysis(options.getMaxClientErrorRate())))
+                      "error rate analysis", new ErrorRateAnalysis(options.getMaxClientErrorRate()))
                   .apply("output format", ParDo.of(new AlertFormatter(options))));
     }
 
