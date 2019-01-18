@@ -7,9 +7,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /** Base class for payloads */
 @JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type_descriptor")
+  use = JsonTypeInfo.Id.NAME,
+  include = JsonTypeInfo.As.PROPERTY,
+  property = "type_descriptor"
+)
 @JsonSubTypes({
   @Type(value = SecEvent.class, name = "secevent"),
   @Type(value = Raw.class, name = "raw"),
