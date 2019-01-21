@@ -9,17 +9,13 @@ import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.joda.time.Instant;
@@ -34,6 +30,7 @@ public class TestThresholdAnalysis1 {
   private HTTPRequest.HTTPRequestOptions getTestOptions() {
     HTTPRequest.HTTPRequestOptions ret =
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
+    ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setAnalysisThresholdModifier(1.0);
     return ret;
   }
@@ -50,8 +47,7 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.Parse(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.Parse(getTestOptions()))
             .apply(new HTTPRequest.WindowForFixed());
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
@@ -67,51 +63,16 @@ public class TestThresholdAnalysis1 {
   }
 
   @Test
-  public void countInWindowTest() throws Exception {
-    ArrayList<KV<String, Long>> expect =
-        new ArrayList<KV<String, Long>>(
-            Arrays.asList(
-                KV.of("192.168.1.1", 60L),
-                KV.of("192.168.1.2", 60L),
-                KV.of("192.168.1.3", 60L),
-                KV.of("192.168.1.4", 60L),
-                KV.of("192.168.1.5", 60L),
-                KV.of("192.168.1.6", 60L),
-                KV.of("192.168.1.7", 60L),
-                KV.of("192.168.1.8", 60L),
-                KV.of("192.168.1.9", 60L),
-                KV.of("192.168.1.10", 60L),
-                KV.of("10.0.0.1", 900L),
-                KV.of("10.0.0.2", 900L)));
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
-
-    PCollection<KV<String, Long>> counts =
-        input
-            .apply(new HTTPRequest.Parse(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.CountInWindow());
-
-    PAssert.that(counts)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(expect);
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
   public void thresholdAnalysisTest() throws Exception {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
 
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
     PCollection<Alert> results =
         input
-            .apply(new HTTPRequest.Parse(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.Parse(options))
             .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.CountInWindow())
-            .apply(new HTTPRequest.ThresholdAnalysis(getTestOptions()));
+            .apply(new HTTPRequest.ThresholdAnalysis(options));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
@@ -144,18 +105,14 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+
     PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
-    PCollection<Alert> results =
-        events
-            .apply(new HTTPRequest.CountInWindow())
-            .apply(new HTTPRequest.ThresholdAnalysis(getTestOptions(), natView));
+    PCollection<Alert> results = events.apply(new HTTPRequest.ThresholdAnalysis(options, natView));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
@@ -188,21 +145,16 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
-    PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
-
-    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     // Set a minimum average well above what we will calculate with the test data set
     options.setRequiredMinimumAverage(250.0);
-    PCollection<Alert> results =
-        events
-            .apply(new HTTPRequest.CountInWindow())
-            .apply(new HTTPRequest.ThresholdAnalysis(options, natView));
+
+    PCollection<Event> events =
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+
+    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
+
+    PCollection<Alert> results = events.apply(new HTTPRequest.ThresholdAnalysis(options, natView));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
@@ -217,21 +169,16 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
-    PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
-
-    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     // Set a required minimum above what we have in the test data set
     options.setRequiredMinimumClients(500L);
-    PCollection<Alert> results =
-        events
-            .apply(new HTTPRequest.CountInWindow())
-            .apply(new HTTPRequest.ThresholdAnalysis(options, natView));
+
+    PCollection<Event> events =
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+
+    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
+
+    PCollection<Alert> results = events.apply(new HTTPRequest.ThresholdAnalysis(options, natView));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
@@ -246,20 +193,15 @@ public class TestThresholdAnalysis1 {
     PCollection<String> input =
         TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
 
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setClampThresholdMaximum(1.0);
+
     PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
 
     PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
 
-    HTTPRequest.HTTPRequestOptions options = getTestOptions();
-    options.setClampThresholdMaximum(1.0);
-    PCollection<Alert> results =
-        events
-            .apply(new HTTPRequest.CountInWindow())
-            .apply(new HTTPRequest.ThresholdAnalysis(options));
+    PCollection<Alert> results = events.apply(new HTTPRequest.ThresholdAnalysis(options));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());

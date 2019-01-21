@@ -2,11 +2,11 @@ package com.mozilla.secops.httprequest;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.parser.Event;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Instant;
@@ -18,14 +18,20 @@ public class TestProjectFilter {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
+  private HTTPRequest.HTTPRequestOptions getTestOptions() {
+    HTTPRequest.HTTPRequestOptions ret =
+        PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
+    ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
+    return ret;
+  }
+
   @Test
   public void noFilterTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_projectfilter.txt", p);
 
     PCollection<Event> events =
         input
-            .apply(new HTTPRequest.Parse(true))
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
+            .apply(new HTTPRequest.Parse(getTestOptions()))
             .apply(new HTTPRequest.WindowForFixed());
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
@@ -41,13 +47,10 @@ public class TestProjectFilter {
   public void withFilterTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_projectfilter.txt", p);
 
-    HTTPRequest.Parse pw = new HTTPRequest.Parse(true);
-    pw.withStackdriverProjectFilter("test");
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setStackdriverProjectFilter("test");
     PCollection<Event> events =
-        input
-            .apply(pw)
-            .apply(ParDo.of(new HTTPRequest.Preprocessor()))
-            .apply(new HTTPRequest.WindowForFixed());
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 

@@ -61,4 +61,14 @@ public abstract class PayloadBase {
   public String eventStringValue(EventFilterPayload.StringProperty property) {
     return null;
   }
+
+  /**
+   * Return a given Integer payload field value based on the supplied field identifier
+   *
+   * @param property {@link EventFilterPayload.IntegerProperty}
+   * @return Integer value or null
+   */
+  public Integer eventIntegerValue(EventFilterPayload.IntegerProperty property) {
+    return null;
+  }
 }

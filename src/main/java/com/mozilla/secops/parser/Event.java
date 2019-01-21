@@ -28,6 +28,7 @@ public class Event implements Serializable {
   private DateTime timestamp;
   private Normalized normalized;
   private Mozlog mozlog;
+  private String stackdriverProject;
 
   /**
    * Create a new {@link Event} object.
@@ -113,6 +114,25 @@ public class Event implements Serializable {
    */
   public void setMozlog(Mozlog mozlog) {
     this.mozlog = mozlog;
+  }
+
+  /**
+   * Set Stackdriver project name
+   *
+   * @param project Project string
+   */
+  public void setStackdriverProject(String project) {
+    stackdriverProject = project;
+  }
+
+  /**
+   * Get Stackdriver project name
+   *
+   * @return Stackdriver project name, or null if was not present
+   */
+  @JsonProperty("stackdriver_project")
+  public String getStackdriverProject() {
+    return stackdriverProject;
   }
 
   /**

@@ -9,7 +9,10 @@ public class EventFilterRule implements Serializable {
 
   private Payload.PayloadType wantSubtype;
   private Normalized.Type wantNormalizedType;
+  private String wantStackdriverProject;
   private ArrayList<EventFilterPayload> payloadFilters;
+
+  private ArrayList<EventFilterRule> exceptRules;
 
   /**
    * Test if event matches rule
@@ -18,6 +21,12 @@ public class EventFilterRule implements Serializable {
    * @return True if event matches
    */
   public Boolean matches(Event e) {
+    if (wantStackdriverProject != null) {
+      String p = e.getStackdriverProject();
+      if ((p == null) || !(p.equals(wantStackdriverProject))) {
+        return false;
+      }
+    }
     if (wantSubtype != null) {
       if (e.getPayloadType() != wantSubtype) {
         return false;
@@ -33,7 +42,30 @@ public class EventFilterRule implements Serializable {
         return false;
       }
     }
+
+    // If we got here the event matches the rule so far, so apply the negation
+    // list
+    for (EventFilterRule r : exceptRules) {
+      if (r.matches(e)) {
+        return false;
+      }
+    }
+
     return true;
+  }
+
+  /**
+   * Install negation rules for this filter rule
+   *
+   * <p>Even if the filter rule matches, if the event also matches anything in the negation list it
+   * will not match the rule.
+   *
+   * @param r {@link EventFilterRule} to add to negation list
+   * @return EventFilterRule for chaining
+   */
+  public EventFilterRule except(EventFilterRule r) {
+    exceptRules.add(r);
+    return this;
   }
 
   /**
@@ -82,6 +114,20 @@ public class EventFilterRule implements Serializable {
   }
 
   /**
+   * Add match criteria for Stackdriver project
+   *
+   * <p>If this rule is installed, an event will only match if it is an event from Stackdriver and
+   * the project matches the supplied argument.
+   *
+   * @param project Project name to match against
+   * @return EventFilterRule for chaining
+   */
+  public EventFilterRule wantStackdriverProject(String project) {
+    wantStackdriverProject = project;
+    return this;
+  }
+
+  /**
    * Add match criteria for a normalized event type
    *
    * @param n Normalized event type
@@ -95,5 +141,6 @@ public class EventFilterRule implements Serializable {
   /** Create new empty {@link EventFilterRule} */
   public EventFilterRule() {
     payloadFilters = new ArrayList<EventFilterPayload>();
+    exceptRules = new ArrayList<EventFilterRule>();
   }
 }

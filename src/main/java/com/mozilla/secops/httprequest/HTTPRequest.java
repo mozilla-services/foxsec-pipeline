@@ -8,6 +8,7 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.EventFilterPayload;
 import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.GLB;
 import com.mozilla.secops.parser.ParserDoFn;
@@ -27,14 +28,12 @@ import org.apache.beam.sdk.state.StateSpecs;
 import org.apache.beam.sdk.state.ValueState;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
@@ -45,7 +44,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptors;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
@@ -62,43 +60,56 @@ public class HTTPRequest implements Serializable {
    * Composite transform to parse a {@link PCollection} containing events as strings and emit a
    * {@link PCollection} of {@link Event} objects.
    *
-   * <p>This function discards events that are not considered HTTP requests.
+   * <p>This transform currently discards events that are not {@link GLB} events.
    */
   public static class Parse extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
     private final Boolean emitEventTimestamps;
-    private String stackdriverProjectFilter;
-
-    /**
-     * Only emit parsed Stackdriver events that are associated with specified project
-     *
-     * @param project Project name
-     */
-    public void withStackdriverProjectFilter(String project) {
-      stackdriverProjectFilter = project;
-    }
+    private final String stackdriverProjectFilter;
+    private final String[] filterRequestPath;
 
     /**
      * Static initializer for {@link Parse} transform
      *
-     * @param emitEventTimestamps If true, attempt to use the timestamp in the Event
+     * @param options Pipeline options
      */
-    public Parse(Boolean emitEventTimestamps) {
-      this.emitEventTimestamps = emitEventTimestamps;
+    public Parse(HTTPRequestOptions options) {
+      emitEventTimestamps = options.getUseEventTimestamp();
+      stackdriverProjectFilter = options.getStackdriverProjectFilter();
+      filterRequestPath = options.getFilterRequestPath();
     }
 
     @Override
     public PCollection<Event> expand(PCollection<String> col) {
       EventFilter filter =
           new EventFilter().setWantUTC(true).setOutputWithTimestamp(emitEventTimestamps);
-      filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.GLB));
-
-      ParserDoFn fn = new ParserDoFn();
+      EventFilterRule rule = new EventFilterRule().wantSubtype(Payload.PayloadType.GLB);
       if (stackdriverProjectFilter != null) {
-        fn = fn.withStackdriverProjectFilter(stackdriverProjectFilter);
+        rule.wantStackdriverProject(stackdriverProjectFilter);
       }
-      return col.apply(ParDo.of(fn)).apply(EventFilter.getTransform(filter));
+      if (filterRequestPath != null) {
+        for (String s : filterRequestPath) {
+          String[] parts = s.split(":");
+          if (parts.length != 2) {
+            throw new IllegalArgumentException(
+                "invalid format for filter path, must be <method>:<path>");
+          }
+          rule.except(
+              new EventFilterRule()
+                  .wantSubtype(Payload.PayloadType.GLB)
+                  .addPayloadFilter(
+                      new EventFilterPayload(GLB.class)
+                          .withStringMatch(
+                              EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, parts[0])
+                          .withStringMatch(
+                              EventFilterPayload.StringProperty.GLB_URLREQUESTPATH, parts[1])
+                          // XXX This should likely be a range (e.g., >= 200 < 300)
+                          .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200)));
+        }
+      }
+      filter.addRule(rule);
+      return col.apply(ParDo.of(new ParserDoFn().withInlineEventFilter(filter)));
     }
   }
 
@@ -136,133 +147,8 @@ public class HTTPRequest implements Serializable {
     }
   }
 
-  /**
-   * Additional event preprocessing for {@link HTTPRequest} analysis components
-   *
-   * <p>DoFn to apply additional processing to the event stream prior to events being pushed into
-   * the analysis components of the pipeline.
-   */
-  public static class Preprocessor extends DoFn<Event, Event> {
-    private static final long serialVersionUID = 1L;
-
-    private String[] filterRequestPath;
-
-    /** Static initializer for {@link Preprocessor} */
-    public Preprocessor() {
-      filterRequestPath = null;
-    }
-
-    /**
-     * Static initializer for {@link Preprocessor}
-     *
-     * @param options Pipeline options
-     */
-    public Preprocessor(HTTPRequestOptions options) {
-      this();
-      filterRequestPath = options.getFilterRequestPath();
-    }
-
-    @ProcessElement
-    public void processElement(ProcessContext c) {
-      if (filterRequestPath == null) {
-        c.output(c.element());
-        return;
-      }
-      Event e = c.element();
-      GLB g = e.getPayload();
-      Integer status = g.getStatus();
-      if (status == null || status != 200) {
-        // Always emit errors
-        c.output(e);
-        return;
-      }
-      String method = g.getRequestMethod();
-      URL u = g.getParsedUrl();
-      if (u == null) {
-        c.output(e);
-        return;
-      }
-      String path = u.getPath();
-      if (path == null) {
-        c.output(e);
-        return;
-      }
-      for (String s : filterRequestPath) {
-        String[] parts = s.split(":");
-        if (parts.length != 2) {
-          throw new IllegalArgumentException(
-              "invalid format for filter path, must be <method>:<path>");
-        }
-        if (parts[0].equals(method) && parts[1].equals(path)) {
-          // Match, so just drop the event
-          return;
-        }
-      }
-      c.output(e);
-    }
-  }
-
-  /**
-   * Composite transform which given a set of windowed {@link Event} types, emits a set of {@link
-   * KV} objects where the key is the source address of the request and the value is the number of
-   * requests for that source within the window.
-   */
-  public static class CountInWindow
-      extends PTransform<PCollection<Event>, PCollection<KV<String, Long>>> {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public PCollection<KV<String, Long>> expand(PCollection<Event> col) {
-      class GetSourceAddress extends DoFn<Event, String> {
-        private static final long serialVersionUID = 1L;
-
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-          GLB g = c.element().getPayload();
-          c.output(g.getSourceAddress());
-        }
-      }
-
-      return col.apply(ParDo.of(new GetSourceAddress())).apply(Count.<String>perElement());
-    }
-  }
-
-  /**
-   * Composite transform which given a set of windowed {@link Event} types, emits a set of {@link
-   * KV} objects where the key is the source address of the request and the value is the number of
-   * client errors for that source within the window.
-   */
-  public static class CountErrorsInWindow
-      extends PTransform<PCollection<Event>, PCollection<KV<String, Long>>> {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public PCollection<KV<String, Long>> expand(PCollection<Event> col) {
-      class GetAddressErrors extends DoFn<Event, String> {
-        private static final long serialVersionUID = 1L;
-
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-          GLB g = c.element().getPayload();
-          Integer status = g.getStatus();
-          if (status == null) {
-            return;
-          }
-          if (status >= 400 && status < 500) {
-            c.output(g.getSourceAddress());
-          }
-        }
-      }
-
-      return col.apply(ParDo.of(new GetAddressErrors())).apply(Count.<String>perElement());
-    }
-  }
-
-  /**
-   * {@link DoFn} to analyze key value pairs of source address and error count and emit a {@link
-   * Alert} for each address that exceeds the maximum client error rate
-   */
-  public static class ErrorRateAnalysis extends DoFn<KV<String, Long>, Alert> {
+  /** Transform for analysis of error rates per client within a given window. */
+  public static class ErrorRateAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
     private final Long maxErrorRate;
 
@@ -275,19 +161,50 @@ public class HTTPRequest implements Serializable {
       this.maxErrorRate = maxErrorRate;
     }
 
-    @ProcessElement
-    public void processElement(ProcessContext c, BoundedWindow w) {
-      if (c.element().getValue() <= maxErrorRate) {
-        return;
-      }
-      Alert a = new Alert();
-      a.setCategory("httprequest");
-      a.addMetadata("category", "error_rate");
-      a.addMetadata("sourceaddress", c.element().getKey());
-      a.addMetadata("error_count", c.element().getValue().toString());
-      a.addMetadata("error_threshold", maxErrorRate.toString());
-      a.addMetadata("window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-      c.output(a);
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> input) {
+      return input
+          .apply(
+              "isolate client errors",
+              ParDo.of(
+                  new DoFn<Event, String>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      GLB g = c.element().getPayload();
+                      Integer status = g.getStatus();
+                      if (status == null) {
+                        return;
+                      }
+                      if (status >= 400 && status < 500) {
+                        c.output(g.getSourceAddress());
+                      }
+                    }
+                  }))
+          .apply(Count.<String>perElement())
+          .apply(
+              "per-client error rate analysis",
+              ParDo.of(
+                  new DoFn<KV<String, Long>, Alert>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c, BoundedWindow w) {
+                      if (c.element().getValue() <= maxErrorRate) {
+                        return;
+                      }
+                      Alert a = new Alert();
+                      a.setCategory("httprequest");
+                      a.addMetadata("category", "error_rate");
+                      a.addMetadata("sourceaddress", c.element().getKey());
+                      a.addMetadata("error_count", c.element().getValue().toString());
+                      a.addMetadata("error_threshold", maxErrorRate.toString());
+                      a.addMetadata(
+                          "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                      c.output(a);
+                    }
+                  }));
     }
   }
 
@@ -470,10 +387,8 @@ public class HTTPRequest implements Serializable {
 
   /**
    * Composite transform that conducts threshold analysis using the configured threshold modifier
-   * across a set of KV objects as returned by {@link CountInWindow}.
    */
-  public static class ThresholdAnalysis
-      extends PTransform<PCollection<KV<String, Long>>, PCollection<Alert>> {
+  public static class ThresholdAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
     private final Double thresholdModifier;
@@ -510,26 +425,40 @@ public class HTTPRequest implements Serializable {
     }
 
     @Override
-    public PCollection<Alert> expand(PCollection<KV<String, Long>> col) {
+    public PCollection<Alert> expand(PCollection<Event> col) {
       if (natView == null) {
         // If natView was not set then we just create an empty view for use as the side input
-        natView =
-            col.getPipeline()
-                .apply(
-                    Create.empty(
-                        TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
-                .apply(View.<String, Boolean>asMap());
+        natView = DetectNat.getEmptyView(col.getPipeline());
       }
 
+      // Count per source address
+      PCollection<KV<String, Long>> clientCounts =
+          col.apply(
+                  "calculate per client count",
+                  ParDo.of(
+                      new DoFn<Event, String>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @ProcessElement
+                        public void processElement(ProcessContext c) {
+                          GLB g = c.element().getPayload();
+                          c.output(g.getSourceAddress());
+                        }
+                      }))
+              .apply(Count.<String>perElement());
+
+      // Calculate the number of unique clients in the collection
       PCollectionView<Long> uniqueClients =
-          col.apply(Keys.<String>create())
+          clientCounts
+              .apply(Keys.<String>create())
               .apply(
-                  "Unique client count",
+                  "unique client count",
                   Combine.globally(Count.<String>combineFn()).withoutDefaults().asSingletonView());
 
+      // For each client, extract the request count
       PCollection<Long> counts =
-          col.apply(
-              "Extract counts",
+          clientCounts.apply(
+              "extract counts",
               ParDo.of(
                   new DoFn<KV<String, Long>, Long>() {
                     private static final long serialVersionUID = 1L;
@@ -539,94 +468,98 @@ public class HTTPRequest implements Serializable {
                       c.output(c.element().getValue());
                     }
                   }));
+      // Obtain statistics on the client count population for use as a side input
       final PCollectionView<Stats.StatsOutput> wStats = Stats.getView(counts);
 
-      PCollection<Alert> ret =
-          col.apply(
-              ParDo.of(
-                      new DoFn<KV<String, Long>, Alert>() {
-                        private static final long serialVersionUID = 1L;
-                        private Boolean warningLogged;
-                        private Boolean clampMaximumLogged;
-                        private Boolean statsLogged;
+      return clientCounts.apply(
+          ParDo.of(
+                  new DoFn<KV<String, Long>, Alert>() {
+                    private static final long serialVersionUID = 1L;
 
-                        @StartBundle
-                        public void startBundle() {
-                          warningLogged = false;
-                          clampMaximumLogged = false;
-                          statsLogged = false;
-                        }
+                    private Boolean warningLogged;
+                    private Boolean clampMaximumLogged;
+                    private Boolean statsLogged;
 
-                        @ProcessElement
-                        public void processElement(ProcessContext c, BoundedWindow w) {
-                          Stats.StatsOutput sOutput = c.sideInput(wStats);
-                          Long uc = c.sideInput(uniqueClients);
-                          Map<String, Boolean> nv = c.sideInput(natView);
-                          Double cMean = sOutput.getMean();
-                          if (!statsLogged) {
-                            log.info(
-                                "{}: statistics: mean/{} unique_clients/{} threshold/{}",
-                                w.toString(),
-                                cMean,
-                                uc,
-                                cMean * thresholdModifier);
-                            statsLogged = true;
-                          }
-                          if (uc < requiredMinimumClients) {
-                            if (!warningLogged) {
-                              log.warn(
-                                  "{}: ignoring events as window does not meet minimum clients",
-                                  w.toString());
-                              warningLogged = true;
-                            }
-                            return;
-                          }
-                          if (cMean < requiredMinimumAverage) {
-                            if (!warningLogged) {
-                              log.warn(
-                                  "{}: ignoring events as window does not meet minimum average",
-                                  w.toString());
-                              warningLogged = true;
-                            }
-                            return;
-                          }
-                          if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
-                            if (!clampMaximumLogged) {
-                              log.info(
-                                  "{}: clamping calculated mean {} to maximum {}",
-                                  w.toString(),
-                                  cMean,
-                                  clampThresholdMaximum);
-                              clampMaximumLogged = true;
-                            }
-                            cMean = clampThresholdMaximum;
-                          }
-                          if (c.element().getValue() >= (cMean * thresholdModifier)) {
-                            Boolean isNat = nv.get(c.element().getKey());
-                            if (isNat != null && isNat) {
-                              log.info(
-                                  "{}: detectnat: skipping result emission for {}",
-                                  w.toString(),
-                                  c.element().getKey());
-                              return;
-                            }
-                            log.info(
-                                "{}: emitting alert for {}", w.toString(), c.element().getKey());
-                            Alert a = new Alert();
-                            a.setCategory("httprequest");
-                            a.addMetadata("category", "threshold_analysis");
-                            a.addMetadata("sourceaddress", c.element().getKey());
-                            a.addMetadata("mean", sOutput.getMean().toString());
-                            a.addMetadata("count", c.element().getValue().toString());
-                            a.addMetadata("threshold_modifier", thresholdModifier.toString());
-                            a.addMetadata(
-                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-                            c.output(a);
-                          }
+                    @StartBundle
+                    public void startBundle() {
+                      warningLogged = false;
+                      clampMaximumLogged = false;
+                      statsLogged = false;
+                    }
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c, BoundedWindow w) {
+                      Stats.StatsOutput sOutput = c.sideInput(wStats);
+                      Long uc = c.sideInput(uniqueClients);
+                      Map<String, Boolean> nv = c.sideInput(natView);
+
+                      Double cMean = sOutput.getMean();
+                      if (!statsLogged) {
+                        log.info(
+                            "{}: statistics: mean/{} unique_clients/{} threshold/{}",
+                            w.toString(),
+                            cMean,
+                            uc,
+                            cMean * thresholdModifier);
+                        statsLogged = true;
+                      }
+
+                      if (uc < requiredMinimumClients) {
+                        if (!warningLogged) {
+                          log.warn(
+                              "{}: ignoring events as window does not meet minimum clients",
+                              w.toString());
+                          warningLogged = true;
                         }
-                      })
-                  .withSideInputs(wStats, natView, uniqueClients));
-      return ret;
+                        return;
+                      }
+
+                      if (cMean < requiredMinimumAverage) {
+                        if (!warningLogged) {
+                          log.warn(
+                              "{}: ignoring events as window does not meet minimum average",
+                              w.toString());
+                          warningLogged = true;
+                        }
+                        return;
+                      }
+
+                      if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
+                        if (!clampMaximumLogged) {
+                          log.info(
+                              "{}: clamping calculated mean {} to maximum {}",
+                              w.toString(),
+                              cMean,
+                              clampThresholdMaximum);
+                          clampMaximumLogged = true;
+                        }
+                        cMean = clampThresholdMaximum;
+                      }
+
+                      if (c.element().getValue() >= (cMean * thresholdModifier)) {
+                        Boolean isNat = nv.get(c.element().getKey());
+                        if (isNat != null && isNat) {
+                          log.info(
+                              "{}: detectnat: skipping result emission for {}",
+                              w.toString(),
+                              c.element().getKey());
+                          return;
+                        }
+                        log.info("{}: emitting alert for {}", w.toString(), c.element().getKey());
+                        Alert a = new Alert();
+                        a.setCategory("httprequest");
+                        a.addMetadata("category", "threshold_analysis");
+                        a.addMetadata("sourceaddress", c.element().getKey());
+                        a.addMetadata("mean", sOutput.getMean().toString());
+                        a.addMetadata("count", c.element().getValue().toString());
+                        a.addMetadata("threshold_modifier", thresholdModifier.toString());
+                        a.addMetadata(
+                            "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                        c.output(a);
+                      }
+                    }
+                  })
+              .withSideInputs(wStats, natView, uniqueClients));
     }
   }
 
@@ -687,7 +620,7 @@ public class HTTPRequest implements Serializable {
 
     void setNatDetection(Boolean value);
 
-    @Description("Filter any Stackdriver events that do not match project name")
+    @Description("Only inspect Stackdriver events generated for specified project identifier")
     String getStackdriverProjectFilter();
 
     void setStackdriverProjectFilter(String value);
@@ -702,19 +635,20 @@ public class HTTPRequest implements Serializable {
     String[] getFilterRequestPath();
 
     void setFilterRequestPath(String[] value);
+
+    @Description("Use timestamp parsed from event instead of timestamp set in input transform")
+    @Default.Boolean(false)
+    Boolean getUseEventTimestamp();
+
+    void setUseEventTimestamp(Boolean value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
     Pipeline p = Pipeline.create(options);
 
-    Parse pw = new Parse(false);
-    if (options.getStackdriverProjectFilter() != null) {
-      pw.withStackdriverProjectFilter(options.getStackdriverProjectFilter());
-    }
     PCollection<Event> events =
         p.apply("input", options.getInputType().read(p, options))
-            .apply("parse", pw)
-            .apply("preprocess", ParDo.of(new Preprocessor(options)));
+            .apply("parse", new Parse(options));
 
     PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
     PCollection<Event> efEvents =
@@ -731,7 +665,6 @@ public class HTTPRequest implements Serializable {
       resultsList =
           resultsList.and(
               fwEvents
-                  .apply("per-client", new CountInWindow())
                   .apply("threshold analysis", new ThresholdAnalysis(options, natView))
                   .apply("output format", ParDo.of(new AlertFormatter(options))));
     }
@@ -740,10 +673,8 @@ public class HTTPRequest implements Serializable {
       resultsList =
           resultsList.and(
               fwEvents
-                  .apply("cerr per client", new CountErrorsInWindow())
                   .apply(
-                      "error rate analysis",
-                      ParDo.of(new ErrorRateAnalysis(options.getMaxClientErrorRate())))
+                      "error rate analysis", new ErrorRateAnalysis(options.getMaxClientErrorRate()))
                   .apply("output format", ParDo.of(new AlertFormatter(options))));
     }
 

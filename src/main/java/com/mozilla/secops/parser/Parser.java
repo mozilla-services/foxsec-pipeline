@@ -35,8 +35,6 @@ public class Parser {
 
   private IdentityManager idmanager;
 
-  private String stackdriverProjectFilter;
-
   /**
    * Parse an ISO8601 date string and return a {@link DateTime} object.
    *
@@ -48,33 +46,19 @@ public class Parser {
     return fmt.parseDateTime(in);
   }
 
-  public void installStackdriverProjectFilter(String project) {
-    stackdriverProjectFilter = project;
-  }
-
-  private Boolean applyStackdriverProjectFilter(LogEntry entry) {
-    // Return true if the message should be filtered due to any existing Stackdriver project
-    // filter configuration
-    if (stackdriverProjectFilter == null) {
-      return false;
+  private String getStackdriverProject(LogEntry entry) {
+    if (entry == null) {
+      return null;
     }
     MonitoredResource mr = entry.getResource();
     if (mr == null) {
-      // Ignore a LogEntry without a resource section if a filter is applied
-      return true;
+      return null;
     }
     Map<String, String> labels = mr.getLabels();
     if (labels == null) {
-      return true;
+      return null;
     }
-    String thisProject = labels.get("project_id");
-    if (thisProject == null) {
-      return true;
-    }
-    if (stackdriverProjectFilter.equals(thisProject)) {
-      return false;
-    }
-    return true;
+    return labels.get("project_id");
   }
 
   private String stripStackdriverEncapsulation(Event e, String input, ParserState state) {
@@ -82,9 +66,7 @@ public class Parser {
       JsonParser jp = jf.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
 
-      if (applyStackdriverProjectFilter(entry)) {
-        return null;
-      }
+      e.setStackdriverProject(getStackdriverProject(entry));
 
       // We were able to deserialize the LogEntry so store it as a hint in the state
       state.setLogEntryHint(entry);

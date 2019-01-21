@@ -30,12 +30,21 @@ public class EventFilterPayload implements Serializable {
     CLOUDTRAIL_EVENTNAME,
     CLOUDTRAIL_EVENTSOURCE,
     CLOUDTRAIL_INVOKEDBY,
-    CLOUDTRAIL_MFA
+    CLOUDTRAIL_MFA,
+
+    GLB_REQUESTMETHOD,
+    GLB_URLREQUESTPATH
+  }
+
+  /** Properties match integers from various payload event types */
+  public enum IntegerProperty {
+    GLB_STATUS
   }
 
   private Class<? extends PayloadBase> ptype;
   private Map<StringProperty, String> stringMatchers;
   private Map<StringProperty, Pattern> stringRegexMatchers;
+  private Map<IntegerProperty, Integer> integerMatchers;
 
   private ArrayList<StringProperty> stringSelectors;
 
@@ -65,6 +74,15 @@ public class EventFilterPayload implements Serializable {
       }
       Matcher mat = entry.getValue().matcher(value);
       if (!(mat.matches())) {
+        return false;
+      }
+    }
+    for (Map.Entry<IntegerProperty, Integer> entry : integerMatchers.entrySet()) {
+      Integer value = e.getPayload().eventIntegerValue(entry.getKey());
+      if (value == null) {
+        return false;
+      }
+      if (!(value.equals(entry.getValue()))) {
         return false;
       }
     }
@@ -124,6 +142,18 @@ public class EventFilterPayload implements Serializable {
   }
 
   /**
+   * Add a new simple integer match to the payload filter
+   *
+   * @param property {@link EventFilterPayload.IntegerProperty}
+   * @param i Integer to match against
+   * @return EventFilterPayload for chaining
+   */
+  public EventFilterPayload withIntegerMatch(IntegerProperty property, Integer i) {
+    integerMatchers.put(property, i);
+    return this;
+  }
+
+  /**
    * Add a string selector for filter keying operations
    *
    * @param property Property to extract for key
@@ -148,6 +178,7 @@ public class EventFilterPayload implements Serializable {
   public EventFilterPayload() {
     stringMatchers = new HashMap<StringProperty, String>();
     stringRegexMatchers = new HashMap<StringProperty, Pattern>();
+    integerMatchers = new HashMap<IntegerProperty, Integer>();
     stringSelectors = new ArrayList<StringProperty>();
   }
 }

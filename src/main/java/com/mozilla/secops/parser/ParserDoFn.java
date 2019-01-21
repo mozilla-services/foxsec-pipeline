@@ -12,19 +12,16 @@ public class ParserDoFn extends DoFn<String, Event> {
   private Parser ep;
   private Long parseCount;
 
-  private String stackdriverProjectFilter;
+  private EventFilter inlineFilter;
 
   /**
-   * Return a parser that filters any Stackdriver LogEntry message that does not originate from the
-   * specified project
+   * Install an inline {@link EventFilter} in this transform
    *
-   * <p>Any events that are seen that are not Stackdriver events will just be passed as is.
-   *
-   * @param project Project name
-   * @return Parser DoFn
+   * <p>If an inline filter is present in the transform, the transform will only emit events that
+   * match the filter.
    */
-  public ParserDoFn withStackdriverProjectFilter(String project) {
-    stackdriverProjectFilter = project;
+  public ParserDoFn withInlineEventFilter(EventFilter inlineFilter) {
+    this.inlineFilter = inlineFilter;
     return this;
   }
 
@@ -33,10 +30,6 @@ public class ParserDoFn extends DoFn<String, Event> {
     ep = new Parser();
     log = LoggerFactory.getLogger(ParserDoFn.class);
     log.info("initialized new parser");
-    if (stackdriverProjectFilter != null) {
-      log.info("installing stackdriver project filter for {}", stackdriverProjectFilter);
-      ep.installStackdriverProjectFilter(stackdriverProjectFilter);
-    }
   }
 
   @StartBundle
@@ -54,6 +47,16 @@ public class ParserDoFn extends DoFn<String, Event> {
   public void processElement(ProcessContext c) {
     Event e = ep.parse(c.element());
     if (e != null) {
+      if (inlineFilter != null) {
+        if (!(inlineFilter.matches(e))) {
+          return;
+        }
+        if (inlineFilter.getOutputWithTimestamp()) {
+          parseCount++;
+          c.outputWithTimestamp(e, e.getTimestamp().toInstant());
+          return;
+        }
+      }
       parseCount++;
       c.output(e);
     }

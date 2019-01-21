@@ -43,14 +43,6 @@ public class EventFilter implements Serializable {
                   public void processElement(ProcessContext c) {
                     Event e = c.element();
                     if (filter.matches(e)) {
-                      // If wantUTC is set, drop any event that has a timestamp with a
-                      // non-UTC timezone
-                      if (filter.getWantUTC()) {
-                        if (!e.getTimestamp().getZone().getID().equals("Etc/UTC")) {
-                          return;
-                        }
-                      }
-
                       if (filter.getOutputWithTimestamp()) {
                         c.outputWithTimestamp(e, e.getTimestamp().toInstant());
                       } else {
@@ -107,6 +99,11 @@ public class EventFilter implements Serializable {
   public Boolean matches(Event e) {
     if (matchAny) {
       return true;
+    }
+    if (wantUTC) {
+      if (!e.getTimestamp().getZone().getID().equals("Etc/UTC")) {
+        return false;
+      }
     }
     for (EventFilterRule r : rules) {
       if (r.matches(e)) {

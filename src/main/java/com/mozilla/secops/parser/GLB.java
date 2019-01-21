@@ -111,6 +111,29 @@ public class GLB extends PayloadBase implements Serializable {
     }
   }
 
+  @Override
+  public String eventStringValue(EventFilterPayload.StringProperty property) {
+    switch (property) {
+      case GLB_REQUESTMETHOD:
+        return requestMethod;
+      case GLB_URLREQUESTPATH:
+        if (parsedUrl == null) {
+          return null;
+        }
+        return parsedUrl.getPath();
+    }
+    return null;
+  }
+
+  @Override
+  public Integer eventIntegerValue(EventFilterPayload.IntegerProperty property) {
+    switch (property) {
+      case GLB_STATUS:
+        return status;
+    }
+    return null;
+  }
+
   /**
    * Get parsed URL object
    *

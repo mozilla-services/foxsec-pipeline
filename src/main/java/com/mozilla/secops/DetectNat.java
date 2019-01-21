@@ -4,7 +4,9 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.GLB;
 import com.mozilla.secops.parser.Payload;
 import java.util.Map;
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -13,6 +15,7 @@ import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptors;
 
 /**
  * Provides a basic NAT detection transform
@@ -29,6 +32,19 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
   private static final long serialVersionUID = 1L;
 
   private static final Long UAMARKPROBABLE = 2L;
+
+  /**
+   * Return an empty NAT view, suitable as a placeholder if NAT detection is not desired
+   *
+   * @param p Pipeline to create view for
+   * @return Empty {@link PCollectionView}
+   */
+  public static PCollectionView<Map<String, Boolean>> getEmptyView(Pipeline p) {
+    return p.apply(
+            Create.empty(
+                TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
+        .apply(View.<String, Boolean>asMap());
+  }
 
   /**
    * Execute the transform returning a {@link PCollectionView} suitable for use as a side input
