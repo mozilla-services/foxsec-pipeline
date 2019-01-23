@@ -63,7 +63,8 @@ public class AlertIO {
                   .triggering(
                       Repeatedly.forever(
                           AfterProcessingTime.pastFirstElementInPane()
-                              .plusDelayOf(Duration.standardMinutes(1)))))
+                              .plusDelayOf(Duration.standardMinutes(1))))
+                  .discardingFiredPanes())
           .apply(
               ParDo.of(
                   new DoFn<String, KV<String, Alert>>() {
