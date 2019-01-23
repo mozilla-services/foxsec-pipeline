@@ -92,6 +92,11 @@ public class AlertIO {
       }
       log.info("processing alert: {}", raw);
 
+      if (!a.hasCorrectFields()) {
+        log.warn("dropping incorrectly formatted alert: {}", raw);
+        return;
+      }
+
       if (mailer != null) {
         if (cfg.getEmailCatchall() != null) {
           // Configured catchall address always recieves a copy of the alert

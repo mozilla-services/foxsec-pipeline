@@ -191,6 +191,10 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
       alert.addMetadata("customs_sample_truncated", sampleTruncated.toString());
     }
 
+    if (!alert.hasCorrectFields()) {
+      throw new IllegalArgumentException("alert has invalid field configuration");
+    }
+
     alert.setSeverity(severity);
     c.output(KV.of(key, alert));
   }

@@ -232,6 +232,9 @@ public class AuthProfile implements Serializable {
         }
 
         sm.set(state);
+        if (!alert.hasCorrectFields()) {
+          throw new IllegalArgumentException("alert has invalid field configuration");
+        }
         c.output(alert);
       }
     }

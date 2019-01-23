@@ -209,6 +209,9 @@ public class HTTPRequest implements Serializable {
                       a.addMetadata("error_threshold", maxErrorRate.toString());
                       a.addMetadata(
                           "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                      if (!a.hasCorrectFields()) {
+                        throw new IllegalArgumentException("alert has invalid field configuration");
+                      }
                       c.output(a);
                     }
                   }));
@@ -387,6 +390,10 @@ public class HTTPRequest implements Serializable {
                         a.addMetadata("useragent", userAgent);
                         a.addMetadata(
                             "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                        if (!a.hasCorrectFields()) {
+                          throw new IllegalArgumentException(
+                              "alert has invalid field configuration");
+                        }
                         c.output(a);
                       }
                     }
@@ -580,6 +587,10 @@ public class HTTPRequest implements Serializable {
                         a.addMetadata("threshold_modifier", thresholdModifier.toString());
                         a.addMetadata(
                             "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                        if (!a.hasCorrectFields()) {
+                          throw new IllegalArgumentException(
+                              "alert has invalid field configuration");
+                        }
                         c.output(a);
                       }
                     }
