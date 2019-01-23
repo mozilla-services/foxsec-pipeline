@@ -33,6 +33,7 @@ public class TestErrorRate1 {
     HTTPRequest.HTTPRequestOptions ret =
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
+    ret.setMaxClientErrorRate(30L);
     return ret;
   }
 
@@ -61,11 +62,12 @@ public class TestErrorRate1 {
   public void errorRateTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
 
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
     PCollection<Alert> results =
         input
-            .apply(new HTTPRequest.Parse(getTestOptions()))
+            .apply(new HTTPRequest.Parse(options))
             .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.ErrorRateAnalysis(30L));
+            .apply(new HTTPRequest.ErrorRateAnalysis(options));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());

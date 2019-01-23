@@ -157,8 +157,8 @@ public class HTTPRequest implements Serializable {
      *
      * @param maxErrorRate Maximum client error rate per window
      */
-    public ErrorRateAnalysis(Long maxErrorRate) {
-      this.maxErrorRate = maxErrorRate;
+    public ErrorRateAnalysis(HTTPRequestOptions options) {
+      maxErrorRate = options.getMaxClientErrorRate();
     }
 
     @Override
@@ -673,8 +673,7 @@ public class HTTPRequest implements Serializable {
       resultsList =
           resultsList.and(
               fwEvents
-                  .apply(
-                      "error rate analysis", new ErrorRateAnalysis(options.getMaxClientErrorRate()))
+                  .apply("error rate analysis", new ErrorRateAnalysis(options))
                   .apply("output format", ParDo.of(new AlertFormatter(options))));
     }
 
