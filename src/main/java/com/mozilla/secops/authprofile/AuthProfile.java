@@ -181,7 +181,7 @@ public class AuthProfile implements Serializable {
           // Address was new
           isUnknown = true;
           log.info("{}: escalating alert criteria for new source: {}", username, address);
-          summary = summary + " from new source, " + summaryIndicator;
+          summary = summary + " from new source " + summaryIndicator;
           alert.setSeverity(Alert.AlertSeverity.WARNING);
           alert.setTemplateName("authprofile.ftlh");
 
