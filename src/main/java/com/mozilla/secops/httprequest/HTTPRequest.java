@@ -150,7 +150,9 @@ public class HTTPRequest implements Serializable {
   /** Transform for analysis of error rates per client within a given window. */
   public static class ErrorRateAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
+
     private final Long maxErrorRate;
+    private final String monitoredResource;
 
     /**
      * Static initializer for {@link ErrorRateAnalysis}
@@ -159,6 +161,7 @@ public class HTTPRequest implements Serializable {
      */
     public ErrorRateAnalysis(HTTPRequestOptions options) {
       maxErrorRate = options.getMaxClientErrorRate();
+      monitoredResource = options.getMonitoredResourceIndicator();
     }
 
     @Override
@@ -195,6 +198,10 @@ public class HTTPRequest implements Serializable {
                         return;
                       }
                       Alert a = new Alert();
+                      a.setSummary(
+                          String.format(
+                              "%s httprequest error_rate %s %d",
+                              monitoredResource, c.element().getKey(), c.element().getValue()));
                       a.setCategory("httprequest");
                       a.addMetadata("category", "error_rate");
                       a.addMetadata("sourceaddress", c.element().getKey());
@@ -222,6 +229,7 @@ public class HTTPRequest implements Serializable {
     private Logger log;
 
     private final Map<String[], Integer> endpoints;
+    private final String monitoredResource;
 
     /**
      * Static initializer for {@link EndpointAbuseAnalysis}
@@ -230,6 +238,9 @@ public class HTTPRequest implements Serializable {
      */
     public EndpointAbuseAnalysis(HTTPRequestOptions options) {
       log = LoggerFactory.getLogger(EndpointAbuseAnalysis.class);
+
+      monitoredResource = options.getMonitoredResourceIndicator();
+
       endpoints = new HashMap<String[], Integer>();
       for (String endpoint : options.getEndpointAbusePath()) {
         String[] parts = endpoint.split(":");
@@ -359,6 +370,14 @@ public class HTTPRequest implements Serializable {
                         }
 
                         Alert a = new Alert();
+                        a.setSummary(
+                            String.format(
+                                "%s httprequest endpoint_abuse %s %s %s %d",
+                                monitoredResource,
+                                remoteAddress,
+                                compareMethod,
+                                comparePath,
+                                count));
                         a.setCategory("httprequest");
                         a.addMetadata("category", "endpoint_abuse");
                         a.addMetadata("sourceaddress", remoteAddress);
@@ -395,6 +414,7 @@ public class HTTPRequest implements Serializable {
     private final Double requiredMinimumAverage;
     private final Long requiredMinimumClients;
     private final Double clampThresholdMaximum;
+    private final String monitoredResource;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
     private Logger log;
@@ -409,6 +429,7 @@ public class HTTPRequest implements Serializable {
       this.requiredMinimumAverage = options.getRequiredMinimumAverage();
       this.requiredMinimumClients = options.getRequiredMinimumClients();
       this.clampThresholdMaximum = options.getClampThresholdMaximum();
+      this.monitoredResource = options.getMonitoredResourceIndicator();
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
@@ -547,6 +568,10 @@ public class HTTPRequest implements Serializable {
                         }
                         log.info("{}: emitting alert for {}", w.toString(), c.element().getKey());
                         Alert a = new Alert();
+                        a.setSummary(
+                            String.format(
+                                "%s httprequest threshold_analysis %s %d",
+                                monitoredResource, c.element().getKey(), c.element().getValue()));
                         a.setCategory("httprequest");
                         a.addMetadata("category", "threshold_analysis");
                         a.addMetadata("sourceaddress", c.element().getKey());

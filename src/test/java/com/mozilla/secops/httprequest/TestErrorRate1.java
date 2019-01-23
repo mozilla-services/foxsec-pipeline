@@ -32,6 +32,7 @@ public class TestErrorRate1 {
   private HTTPRequest.HTTPRequestOptions getTestOptions() {
     HTTPRequest.HTTPRequestOptions ret =
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
+    ret.setMonitoredResourceIndicator("test");
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setMaxClientErrorRate(30L);
     return ret;
@@ -83,6 +84,10 @@ public class TestErrorRate1 {
                 assertThat(
                     a.getMetadataValue("sourceaddress"),
                     anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
+                String summary =
+                    String.format(
+                        "test httprequest error_rate %s 60", a.getMetadataValue("sourceaddress"));
+                assertEquals(summary, a.getSummary());
                 assertEquals(a.getMetadataValue("category"), "error_rate");
                 assertEquals(60L, Long.parseLong(a.getMetadataValue("error_count"), 10));
                 assertEquals(30L, Long.parseLong(a.getMetadataValue("error_threshold"), 10));

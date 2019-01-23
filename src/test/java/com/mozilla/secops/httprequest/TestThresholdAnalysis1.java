@@ -32,6 +32,7 @@ public class TestThresholdAnalysis1 {
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setAnalysisThresholdModifier(1.0);
+    ret.setMonitoredResourceIndicator("test");
     return ret;
   }
 
@@ -88,6 +89,11 @@ public class TestThresholdAnalysis1 {
                 assertThat(
                     a.getMetadataValue("sourceaddress"),
                     anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
+                String summary =
+                    String.format(
+                        "test httprequest threshold_analysis %s 900",
+                        a.getMetadataValue("sourceaddress"));
+                assertEquals(summary, a.getSummary());
                 assertEquals(900L, Long.parseLong(a.getMetadataValue("count"), 10));
                 assertEquals(180.0, Double.parseDouble(a.getMetadataValue("mean")), 0.1);
                 assertEquals(
