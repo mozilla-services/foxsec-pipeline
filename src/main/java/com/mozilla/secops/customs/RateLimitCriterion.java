@@ -24,6 +24,7 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
 
   private final Alert.AlertSeverity severity;
   private final String customsMeta;
+  private final String monitoredResource;
   private final Long limit;
   private final PCollectionView<Map<String, Iterable<Event>>> eventView;
 
@@ -40,11 +41,13 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
       Alert.AlertSeverity severity,
       String customsMeta,
       Long limit,
-      PCollectionView<Map<String, Iterable<Event>>> eventView) {
+      PCollectionView<Map<String, Iterable<Event>>> eventView,
+      String monitoredResource) {
     this.severity = severity;
     this.customsMeta = customsMeta;
     this.limit = limit;
     this.eventView = eventView;
+    this.monitoredResource = monitoredResource;
   }
 
   @Setup
@@ -120,6 +123,11 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     alert.addMetadata("customs_count", valueCount.toString());
     alert.addMetadata("customs_threshold", limit.toString());
 
+    // Set an alert summary
+    alert.setSummary(
+        String.format(
+            "%s customs %s %s %d %d", monitoredResource, customsMeta, key, valueCount, limit));
+
     // If all of the in-scope events in the alert pertain to the same account ID, include this
     // unique account ID value as metadata.
     if (uniqueAttribute(
@@ -181,6 +189,10 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     if (sample.size() > 0) {
       alert.addMetadata("customs_sample", Event.iterableToJson(sample));
       alert.addMetadata("customs_sample_truncated", sampleTruncated.toString());
+    }
+
+    if (!alert.hasCorrectFields()) {
+      throw new IllegalArgumentException("alert has invalid field configuration");
     }
 
     alert.setSeverity(severity);

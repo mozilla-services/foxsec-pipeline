@@ -10,6 +10,7 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
 import java.util.ArrayList;
 import java.util.Collection;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
@@ -23,6 +24,12 @@ import org.junit.Test;
 
 public class TestCustoms {
   @Rule public final transient TestPipeline p = TestPipeline.create();
+
+  private Customs.CustomsOptions getTestOptions() {
+    Customs.CustomsOptions ret = PipelineOptionsFactory.as(Customs.CustomsOptions.class);
+    ret.setMonitoredResourceIndicator("test");
+    return ret;
+  }
 
   public TestCustoms() {}
 
@@ -55,7 +62,7 @@ public class TestCustoms {
     cfg.setTimestampOverride(true);
 
     PCollection<Alert> alerts =
-        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg));
+        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg, getTestOptions()));
 
     ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();
     windows.add(new IntervalWindow(new Instant(3600000L), new Instant(4500000L)));
@@ -74,6 +81,10 @@ public class TestCustoms {
                 assertEquals(
                     "rl_login_failure_sourceaddress_accountid",
                     a[0].getMetadataValue("customs_category"));
+                assertEquals(
+                    "test customs rl_login_failure_sourceaddress_accountid"
+                        + " 10.0.0.1+picard@uss.enterprise 3 3",
+                    a[0].getSummary());
                 assertEquals("3", a[0].getMetadataValue("customs_threshold"));
                 assertEquals("3", a[0].getMetadataValue("customs_count"));
                 assertEquals(
@@ -121,6 +132,8 @@ public class TestCustoms {
                     assertEquals(
                         "worf@uss.enterprise",
                         ta.getMetadataValue("customs_unique_actor_accountid"));
+                    assertEquals(
+                        "test customs rl_sms_accountid worf@uss.enterprise 6 5", ta.getSummary());
                   } else {
                     fail("invalid customs category: " + cc);
                   }
@@ -142,7 +155,7 @@ public class TestCustoms {
     cfg.setTimestampOverride(true);
 
     PCollection<Alert> alerts =
-        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg));
+        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg, getTestOptions()));
 
     ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();
     windows.add(new IntervalWindow(new Instant(1800000L), new Instant(2700000L)));
@@ -195,7 +208,7 @@ public class TestCustoms {
     cfg.setTimestampOverride(true);
 
     PCollection<Alert> alerts =
-        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg));
+        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg, getTestOptions()));
 
     PCollection<Long> count =
         alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());

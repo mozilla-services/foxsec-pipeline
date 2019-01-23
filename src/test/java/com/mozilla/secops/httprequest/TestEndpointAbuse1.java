@@ -25,6 +25,7 @@ public class TestEndpointAbuse1 {
     HTTPRequest.HTTPRequestOptions ret =
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
+    ret.setMonitoredResourceIndicator("test");
     return ret;
   }
 
@@ -56,6 +57,8 @@ public class TestEndpointAbuse1 {
             i -> {
               for (Alert a : i) {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals(
+                    "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));

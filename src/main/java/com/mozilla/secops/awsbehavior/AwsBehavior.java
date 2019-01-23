@@ -118,6 +118,10 @@ public class AwsBehavior implements Serializable {
                         alert.addMetadata("resource", ct.getResource(cm.getResource()));
                       }
 
+                      if (!alert.hasCorrectFields()) {
+                        throw new IllegalArgumentException("alert has invalid field configuration");
+                      }
+
                       c.output(alert);
                     }
                   }));

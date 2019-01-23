@@ -1,8 +1,10 @@
 package com.mozilla.secops.alert;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.mozilla.secops.Violation;
 import java.util.UUID;
@@ -158,5 +160,14 @@ public class TestAlert {
   public void alertFromBadJson() throws Exception {
     Alert a = Alert.fromJSON("{{{");
     assertNull(a);
+  }
+
+  @Test
+  public void testCorrectFields() throws Exception {
+    Alert a = new Alert();
+    assertNotNull(a);
+    assertFalse(a.hasCorrectFields());
+    a.setSummary("test alert");
+    assertTrue(a.hasCorrectFields());
   }
 }

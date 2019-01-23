@@ -100,7 +100,7 @@ public class TestAuthProfile {
                   assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                   assertNull(a.getMetadataValue("notify_email_direct"));
                 } else if (actualSummary.equals(
-                    "riker authenticated to emit-bastion from new source" + ", Milton/US")) {
+                    "riker authenticated to emit-bastion from new source Milton/US")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                   assertEquals(

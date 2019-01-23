@@ -33,6 +33,7 @@ public class Customs implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String detectorName;
+    private final String monitoredResource;
     private final Long threshold;
     private final Long windowLength;
     private final Long windowSlides;
@@ -47,7 +48,7 @@ public class Customs implements Serializable {
      * @param detectorName Descriptive name for detector instance
      * @param cfg Configuration for detector
      */
-    public Detector(String detectorName, CustomsCfgEntry cfg) {
+    public Detector(String detectorName, CustomsCfgEntry cfg, String monitoredResource) {
       log = LoggerFactory.getLogger(Detector.class);
       log.info("initializing new detector, {}", detectorName);
       this.filter = null;
@@ -56,6 +57,7 @@ public class Customs implements Serializable {
       this.windowLength = cfg.getSlidingWindowLength();
       this.windowSlides = cfg.getSlidingWindowSlides();
       this.suppressLength = cfg.getAlertSuppressionLength();
+      this.monitoredResource = monitoredResource;
       try {
         this.filter = cfg.getEventFilterCfg().getEventFilter("default");
       } catch (IOException exc) {
@@ -67,7 +69,7 @@ public class Customs implements Serializable {
     public PCollection<Alert> expand(PCollection<Event> col) {
       return col.apply(
           RateLimitAnalyzer.getTransform(
-              new RateLimitAnalyzer(detectorName)
+              new RateLimitAnalyzer(detectorName, monitoredResource)
                   .setFilter(filter)
                   .setAlertCriteria(threshold, Alert.AlertSeverity.INFORMATIONAL)
                   .setAnalysisWindow(windowLength, windowSlides)
@@ -80,14 +82,16 @@ public class Customs implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final CustomsCfg cfg;
+    private final String monitoredResource;
 
     /**
      * Initialize new flattening detectors instance
      *
      * @param cfg Customs configuration
      */
-    public Detectors(CustomsCfg cfg) {
+    public Detectors(CustomsCfg cfg, CustomsOptions options) {
       this.cfg = cfg;
+      monitoredResource = options.getMonitoredResourceIndicator();
     }
 
     @Override
@@ -96,7 +100,10 @@ public class Customs implements Serializable {
       for (Map.Entry<String, CustomsCfgEntry> entry : cfg.getDetectors().entrySet()) {
         String detectorName = entry.getKey();
         CustomsCfgEntry detectorCfg = entry.getValue();
-        alerts = alerts.and(col.apply(detectorName, new Detector(detectorName, detectorCfg)));
+        alerts =
+            alerts.and(
+                col.apply(
+                    detectorName, new Detector(detectorName, detectorCfg, monitoredResource)));
       }
       PCollection<Alert> ret = alerts.apply(Flatten.<Alert>pCollections());
       return ret;
@@ -121,7 +128,7 @@ public class Customs implements Serializable {
         p.apply("input", options.getInputType().read(p, options))
             .apply("parse", ParDo.of(new ParserDoFn()));
 
-    PCollection<Alert> alerts = input.apply(new Detectors(cfg));
+    PCollection<Alert> alerts = input.apply(new Detectors(cfg, options));
 
     alerts
         .apply(ParDo.of(new AlertFormatter(options)))

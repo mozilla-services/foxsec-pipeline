@@ -47,6 +47,21 @@ public class Alert implements Serializable {
   }
 
   /**
+   * Determine if an alert has all mandatory fields set correctly
+   *
+   * <p>Pipelines should call this on any {@link Alert} object that is going to be submitted to
+   * ensure it will not be dropped by the output transforms.
+   *
+   * @return True if alert has correct fields
+   */
+  public Boolean hasCorrectFields() {
+    if (summary == null || summary.isEmpty()) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Assemble a complete payload buffer that contains alert metadata information in addition to the
    * alert payload.
    *
