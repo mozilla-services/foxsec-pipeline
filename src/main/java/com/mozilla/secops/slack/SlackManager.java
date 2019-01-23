@@ -157,6 +157,7 @@ public class SlackManager {
       Optional<String> retryAfter = Optional.ofNullable(exc.getResponse().header("Retry-After"));
       if (retryAfter.isPresent()) {
         Integer wait = Integer.parseInt(retryAfter.get());
+        log.info("waiting {} seconds for slack rate limit to expire.", wait);
         try {
           Thread.sleep(wait * 1000);
         } catch (InterruptedException ie) {
