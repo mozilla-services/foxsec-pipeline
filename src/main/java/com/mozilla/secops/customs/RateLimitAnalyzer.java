@@ -27,6 +27,7 @@ public class RateLimitAnalyzer implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String identifier;
+  private String monitoredResource;
 
   private EventFilter filter;
 
@@ -73,7 +74,8 @@ public class RateLimitAnalyzer implements Serializable {
                             analyzer.getAlertCriteriaSeverity(),
                             analyzer.getIdentifier(),
                             analyzer.getAlertCriteriaLimit(),
-                            eventView))
+                            eventView,
+                            analyzer.getMonitoredResource()))
                     .withSideInputs(eventView))
             .apply(
                 "suppression windows",
@@ -97,6 +99,15 @@ public class RateLimitAnalyzer implements Serializable {
    */
   public String getIdentifier() {
     return identifier;
+  }
+
+  /**
+   * Get monitored resource value
+   *
+   * @return Monitored resource value
+   */
+  public String getMonitoredResource() {
+    return monitoredResource;
   }
 
   /**
@@ -206,7 +217,8 @@ public class RateLimitAnalyzer implements Serializable {
    *
    * @param identifier Identifier for this particular analyzer instance
    */
-  public RateLimitAnalyzer(String identifier) {
+  public RateLimitAnalyzer(String identifier, String monitoredResource) {
     this.identifier = identifier;
+    this.monitoredResource = monitoredResource;
   }
 }
