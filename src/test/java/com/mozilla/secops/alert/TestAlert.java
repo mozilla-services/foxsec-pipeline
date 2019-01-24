@@ -22,6 +22,18 @@ public class TestAlert {
   }
 
   @Test
+  public void alertMergeKeyTest() throws Exception {
+    Alert a = new Alert();
+    assertNotNull(a);
+    a.setSummary("test");
+    a.setNotifyMergeKey("key");
+    a = Alert.fromJSON(a.toJSON());
+    assertNotNull(a);
+    assertEquals("key", a.getNotifyMergeKey());
+    assertEquals("key", a.getMetadataValue("notify_merge"));
+  }
+
+  @Test
   public void alertToJsonTest() throws Exception {
     String expect =
         "{\"severity\":\"info\",\"id\":\"d14277bb-8d69-4cd8-b83d-3ccdaf17c7b9\","

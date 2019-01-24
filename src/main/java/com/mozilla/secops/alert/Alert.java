@@ -101,6 +101,28 @@ public class Alert implements Serializable {
   }
 
   /**
+   * Set alert merge key for notifications in metadata
+   *
+   * <p>If a merge key is set in metadata for an alert, some output transforms will utilize this key
+   * to group any other alerts with the same key together to minimize generation of
+   * similar/duplicate alerts.
+   *
+   * @param key Merge key for alert notifications
+   */
+  public void setNotifyMergeKey(String key) {
+    addMetadata("notify_merge", key);
+  }
+
+  /**
+   * Get alert merge key for notifications from metadata
+   *
+   * @return Merge key for alert notifications
+   */
+  public String getNotifyMergeKey() {
+    return getMetadataValue("notify_merge");
+  }
+
+  /**
    * Set alert severity
    *
    * @param severity Severity
