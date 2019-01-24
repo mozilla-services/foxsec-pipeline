@@ -157,7 +157,7 @@ public class HTTPRequest implements Serializable {
     /**
      * Static initializer for {@link ErrorRateAnalysis}
      *
-     * @param maxErrorRate Maximum client error rate per window
+     * @param options Pipeline options
      */
     public ErrorRateAnalysis(HTTPRequestOptions options) {
       maxErrorRate = options.getMaxClientErrorRate();
