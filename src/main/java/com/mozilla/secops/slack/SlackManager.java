@@ -14,10 +14,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SlackManager {
   private String apiToken;
   private Slack slack;
+  private final Logger log;
 
   /**
    * Construct new slack manager object
@@ -25,6 +29,7 @@ public class SlackManager {
    * @param apiToken Slack api token
    */
   public SlackManager(String apiToken) {
+    log = LoggerFactory.getLogger(SlackManager.class);
     this.apiToken = apiToken;
     slack = Slack.getInstance();
   }
@@ -40,14 +45,8 @@ public class SlackManager {
    */
   public ChatPostMessageResponse sendMessageToChannel(String channelId, String message)
       throws IOException, SlackApiException {
-    return slack
-        .methods()
-        .chatPostMessage(
-            ChatPostMessageRequest.builder()
-                .token(apiToken)
-                .channel(channelId)
-                .text(message)
-                .build());
+    return sendChatPostMessageRequest(
+        ChatPostMessageRequest.builder().token(apiToken).channel(channelId).text(message).build());
   }
 
   /**
@@ -102,15 +101,13 @@ public class SlackManager {
    */
   public ChatPostMessageResponse sendConfirmationRequestToUser(
       String userId, String alertId, String message) throws IOException, SlackApiException {
-    return slack
-        .methods()
-        .chatPostMessage(
-            ChatPostMessageRequest.builder()
-                .token(apiToken)
-                .channel(userId)
-                .text(message)
-                .attachments(createAuthConfirmationButtons(alertId))
-                .build());
+    return sendChatPostMessageRequest(
+        ChatPostMessageRequest.builder()
+            .token(apiToken)
+            .channel(userId)
+            .text(message)
+            .attachments(createAuthConfirmationButtons(alertId))
+            .build());
   }
 
   private List<Attachment> createAuthConfirmationButtons(String alertId) {
@@ -150,5 +147,28 @@ public class SlackManager {
             .build());
 
     return attachments;
+  }
+
+  private ChatPostMessageResponse sendChatPostMessageRequest(ChatPostMessageRequest request)
+      throws IOException, SlackApiException {
+    try {
+      return slack.methods().chatPostMessage(request);
+    } catch (SlackApiException exc) {
+      Optional<String> retryAfter = Optional.ofNullable(exc.getResponse().header("Retry-After"));
+      if (retryAfter.isPresent()) {
+        Integer wait = Integer.parseInt(retryAfter.get());
+        log.info("waiting {} seconds for slack rate limit to expire.", wait);
+        try {
+          Thread.sleep(wait * 1000);
+        } catch (InterruptedException ie) {
+          log.error("waiting for rate limit to expire was interrupted.");
+          log.error("stack trace: ", ie);
+          Thread.currentThread().interrupt();
+          throw exc;
+        }
+        return sendChatPostMessageRequest(request);
+      }
+      throw exc;
+    }
   }
 }
