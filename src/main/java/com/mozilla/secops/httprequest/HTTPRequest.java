@@ -690,42 +690,42 @@ public class HTTPRequest implements Serializable {
         p.apply("input", options.getInputType().read(p, options))
             .apply("parse", new Parse(options));
 
-    PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
-    PCollection<Event> efEvents =
-        events.apply("window for fixed fire early", new WindowForFixedFireEarly());
+    if (options.getEnableThresholdAnalysis() || options.getEnableErrorRateAnalysis()) {
+      PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
 
-    PCollectionView<Map<String, Boolean>> natView = null;
-    if (options.getNatDetection()) {
-      natView = DetectNat.getView(fwEvents);
-    }
+      PCollectionList<String> resultsList = PCollectionList.empty(p);
 
-    PCollectionList<String> resultsList = PCollectionList.empty(p);
+      if (options.getEnableThresholdAnalysis()) {
+        PCollectionView<Map<String, Boolean>> natView = null;
+        if (options.getNatDetection()) {
+          natView = DetectNat.getView(fwEvents);
+        }
+        resultsList =
+            resultsList.and(
+                fwEvents
+                    .apply("threshold analysis", new ThresholdAnalysis(options, natView))
+                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+      }
 
-    if (options.getEnableThresholdAnalysis()) {
-      resultsList =
-          resultsList.and(
-              fwEvents
-                  .apply("threshold analysis", new ThresholdAnalysis(options, natView))
-                  .apply("output format", ParDo.of(new AlertFormatter(options))));
-    }
+      if (options.getEnableErrorRateAnalysis()) {
+        resultsList =
+            resultsList.and(
+                fwEvents
+                    .apply("error rate analysis", new ErrorRateAnalysis(options))
+                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+      }
 
-    if (options.getEnableErrorRateAnalysis()) {
-      resultsList =
-          resultsList.and(
-              fwEvents
-                  .apply("error rate analysis", new ErrorRateAnalysis(options))
-                  .apply("output format", ParDo.of(new AlertFormatter(options))));
+      PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
+      results.apply("output", OutputOptions.compositeOutput(options));
     }
 
     if (options.getEnableEndpointAbuseAnalysis()) {
-      efEvents
+      events
+          .apply("window for fixed fire early", new WindowForFixedFireEarly())
           .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
           .apply("output format", ParDo.of(new AlertFormatter(options)))
           .apply("output", OutputOptions.compositeOutput(options));
     }
-
-    PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
-    results.apply("output", OutputOptions.compositeOutput(options));
 
     p.run();
   }
