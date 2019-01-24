@@ -241,10 +241,11 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/customs/RateLimitCriterion.html#RateLimitCriterion-com.mozilla.secops.alert.Alert.AlertSeverity-java.lang.String-java.lang.Long-org.apache.beam.sdk.values.PCollectionView-">RateLimitCriterion</a></span>(<a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a>&nbsp;severity,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/customs/RateLimitCriterion.html#RateLimitCriterion-com.mozilla.secops.alert.Alert.AlertSeverity-java.lang.String-java.lang.Long-org.apache.beam.sdk.values.PCollectionView-java.lang.String-">RateLimitCriterion</a></span>(<a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a>&nbsp;severity,
                   <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;customsMeta,
                   <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;limit,
-                  org.apache.beam.sdk.values.PCollectionView&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt;&gt;&nbsp;eventView)</code>
+                  org.apache.beam.sdk.values.PCollectionView&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt;&gt;&nbsp;eventView,
+                  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;monitoredResource)</code>
 <div class="block"><a href="../../../../../com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs"><code>RateLimitCriterion</code></a> static initializer</div>
 </td>
 </tr>
@@ -264,7 +265,15 @@
 <tbody>
 <tr class="altColor">
 <td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">HTTPRequest.ParseAndWindow.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.ParseAndWindow.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;col)</code>&nbsp;</td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.WindowForFixed.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.WindowForFixed.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.WindowForFixedFireEarly.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.WindowForFixedFireEarly.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.Parse.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.Parse.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;col)</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>
@@ -276,12 +285,24 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">HTTPRequest.CountInWindow.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.CountInWindow.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;col)</code>&nbsp;</td>
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.WindowForFixed.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.WindowForFixed.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">HTTPRequest.CountErrorsInWindow.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.CountErrorsInWindow.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;col)</code>&nbsp;</td>
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.WindowForFixedFireEarly.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.WindowForFixedFireEarly.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.ErrorRateAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.EndpointAbuseAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.ThresholdAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;col)</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>

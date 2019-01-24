@@ -11,5 +11,6 @@ com.mozilla.secops.parser.eventfiltercfg
 com.mozilla.secops.parser.models.cloudtrail
 com.mozilla.secops.parser.models.duopull
 com.mozilla.secops.parser.models.secevent
+com.mozilla.secops.slack
 com.mozilla.secops.state
 com.mozilla.secops.workshop

@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":6,"i13":6,"i14":6,"i15":6,"i16":6,"i17":6,"i18":6,"i19":6,"i20":6,"i21":6,"i22":6,"i23":6,"i24":6,"i25":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.OutputFormat.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.Parse.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" target="_top">Frames</a></li>
@@ -161,44 +161,100 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getClampThresholdMaximum--">getClampThresholdMaximum</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getMaxClientErrorRate--">getMaxClientErrorRate</a></span>()</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getEnableEndpointAbuseAnalysis--">getEnableEndpointAbuseAnalysis</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getNatDetection--">getNatDetection</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getEnableErrorRateAnalysis--">getEnableErrorRateAnalysis</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getEnableThresholdAnalysis--">getEnableThresholdAnalysis</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getEndpointAbusePath--">getEndpointAbusePath</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getFilterRequestPath--">getFilterRequestPath</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getMaxClientErrorRate--">getMaxClientErrorRate</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getNatDetection--">getNatDetection</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getRequiredMinimumAverage--">getRequiredMinimumAverage</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getRequiredMinimumClients--">getRequiredMinimumClients</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i11" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getStackdriverProjectFilter--">getStackdriverProjectFilter</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i12" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#getUseEventTimestamp--">getUseEventTimestamp</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setAnalysisThresholdModifier-java.lang.Double-">setAnalysisThresholdModifier</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setClampThresholdMaximum-java.lang.Double-">setClampThresholdMaximum</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i15" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setEnableEndpointAbuseAnalysis-java.lang.Boolean-">setEnableEndpointAbuseAnalysis</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i16" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setEnableErrorRateAnalysis-java.lang.Boolean-">setEnableErrorRateAnalysis</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i17" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setEnableThresholdAnalysis-java.lang.Boolean-">setEnableThresholdAnalysis</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i18" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setEndpointAbusePath-java.lang.String:A-">setEndpointAbusePath</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i19" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setFilterRequestPath-java.lang.String:A-">setFilterRequestPath</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setMaxClientErrorRate-java.lang.Long-">setMaxClientErrorRate</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setNatDetection-java.lang.Boolean-">setNatDetection</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i22" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setRequiredMinimumAverage-java.lang.Double-">setRequiredMinimumAverage</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i23" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setRequiredMinimumClients-java.lang.Long-">setRequiredMinimumClients</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i24" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setStackdriverProjectFilter-java.lang.String-">setStackdriverProjectFilter</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i25" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html#setUseEventTimestamp-java.lang.Boolean-">setUseEventTimestamp</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -248,7 +304,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a></h3>
-<code><a href="../../../../com/mozilla/secops/OutputOptions.html#compositeOutput-com.mozilla.secops.OutputOptions-">compositeOutput</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailCatchall--">getOutputAlertEmailCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailFrom--">getOutputAlertEmailFrom</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpCredentials--">getOutputAlertSmtpCredentials</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpRelay--">getOutputAlertSmtpRelay</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputBigQuery--">getOutputBigQuery</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputFile--">getOutputFile</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepd--">getOutputIprepd</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdApikey--">getOutputIprepdApikey</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailCatchall-java.lang.String-">setOutputAlertEmailCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailFrom-java.lang.String-">setOutputAlertEmailFrom</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpCredentials-java.lang.String-">setOutputAlertSmtpCredentials</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpRelay-java.lang.String-">setOutputAlertSmtpRelay</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputBigQuery-java.lang.String-">setOutputBigQuery</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputFile-java.lang.String-">setOutputFile</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepd-java.lang.String-">setOutputIprepd</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdApikey-java.lang.String-">setOutputIprepdApikey</a></code></li>
+<code><a href="../../../../com/mozilla/secops/OutputOptions.html#compositeOutput-com.mozilla.secops.OutputOptions-">compositeOutput</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getMonitoredResourceIndicator--">getMonitoredResourceIndicator</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailCatchall--">getOutputAlertEmailCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailFrom--">getOutputAlertEmailFrom</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackCatchall--">getOutputAlertSlackCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackToken--">getOutputAlertSlackToken</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpCredentials--">getOutputAlertSmtpCredentials</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpRelay--">getOutputAlertSmtpRelay</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputBigQuery--">getOutputBigQuery</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputFile--">getOutputFile</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepd--">getOutputIprepd</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdApikey--">getOutputIprepdApikey</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setMonitoredResourceIndicator-java.lang.String-">setMonitoredResourceIndicator</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailCatchall-java.lang.String-">setOutputAlertEmailCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailFrom-java.lang.String-">setOutputAlertEmailFrom</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackCatchall-java.lang.String-">setOutputAlertSlackCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackToken-java.lang.String-">setOutputAlertSlackToken</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpCredentials-java.lang.String-">setOutputAlertSmtpCredentials</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpRelay-java.lang.String-">setOutputAlertSmtpRelay</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputBigQuery-java.lang.String-">setOutputBigQuery</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputFile-java.lang.String-">setOutputFile</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepd-java.lang.String-">setOutputIprepd</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdApikey-java.lang.String-">setOutputIprepdApikey</a></code></li>
 </ul>
 </li>
 </ul>
@@ -264,6 +320,63 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="getEnableThresholdAnalysis--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getEnableThresholdAnalysis</h4>
+<pre>@Default.Boolean(value=false)
+<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;getEnableThresholdAnalysis()</pre>
+</li>
+</ul>
+<a name="setEnableThresholdAnalysis-java.lang.Boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setEnableThresholdAnalysis</h4>
+<pre>void&nbsp;setEnableThresholdAnalysis(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getEnableErrorRateAnalysis--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getEnableErrorRateAnalysis</h4>
+<pre>@Default.Boolean(value=false)
+<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;getEnableErrorRateAnalysis()</pre>
+</li>
+</ul>
+<a name="setEnableErrorRateAnalysis-java.lang.Boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setEnableErrorRateAnalysis</h4>
+<pre>void&nbsp;setEnableErrorRateAnalysis(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getEnableEndpointAbuseAnalysis--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getEnableEndpointAbuseAnalysis</h4>
+<pre>@Default.Boolean(value=false)
+<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;getEnableEndpointAbuseAnalysis()</pre>
+</li>
+</ul>
+<a name="setEnableEndpointAbuseAnalysis-java.lang.Boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setEnableEndpointAbuseAnalysis</h4>
+<pre>void&nbsp;setEnableEndpointAbuseAnalysis(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</pre>
+</li>
+</ul>
 <a name="getAnalysisThresholdModifier--">
 <!--   -->
 </a>
@@ -371,10 +484,83 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <a name="setNatDetection-java.lang.Boolean-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>setNatDetection</h4>
 <pre>void&nbsp;setNatDetection(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getStackdriverProjectFilter--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getStackdriverProjectFilter</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getStackdriverProjectFilter()</pre>
+</li>
+</ul>
+<a name="setStackdriverProjectFilter-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setStackdriverProjectFilter</h4>
+<pre>void&nbsp;setStackdriverProjectFilter(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getEndpointAbusePath--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getEndpointAbusePath</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;getEndpointAbusePath()</pre>
+</li>
+</ul>
+<a name="setEndpointAbusePath-java.lang.String:A-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setEndpointAbusePath</h4>
+<pre>void&nbsp;setEndpointAbusePath(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getFilterRequestPath--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getFilterRequestPath</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;getFilterRequestPath()</pre>
+</li>
+</ul>
+<a name="setFilterRequestPath-java.lang.String:A-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setFilterRequestPath</h4>
+<pre>void&nbsp;setFilterRequestPath(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getUseEventTimestamp--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getUseEventTimestamp</h4>
+<pre>@Default.Boolean(value=false)
+<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;getUseEventTimestamp()</pre>
+</li>
+</ul>
+<a name="setUseEventTimestamp-java.lang.Boolean-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>setUseEventTimestamp</h4>
+<pre>void&nbsp;setUseEventTimestamp(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</pre>
 </li>
 </ul>
 </li>
@@ -406,7 +592,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.OutputFormat.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.Parse.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" target="_top">Frames</a></li>

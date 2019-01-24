@@ -157,6 +157,19 @@
 </tbody>
 </table>
 <table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
+<caption><span>Methods in <a href="../../../../../com/mozilla/secops/alert/package-summary.html">com.mozilla.secops.alert</a> that return types with arguments of type <a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">AlertIO.AlertNotifyMerge.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/alert/AlertIO.AlertNotifyMerge.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;col)</code>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
 <caption><span>Methods in <a href="../../../../../com/mozilla/secops/alert/package-summary.html">com.mozilla.secops.alert</a> with parameters of type <a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a></span><span class="tabEnd">&nbsp;</span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
@@ -164,10 +177,23 @@
 </tr>
 <tbody>
 <tr class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><span class="typeNameLabel">AlertSlack.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/alert/AlertSlack.html#confirmationAlert-com.mozilla.secops.alert.Alert-java.lang.String-">confirmationAlert</a></span>(<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&nbsp;a,
+                 <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;userId)</code>
+<div class="block">Send an alert to a user asking them if it was caused by them.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><span class="typeNameLabel">AlertMailer.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/alert/AlertMailer.html#sendToAddress-com.mozilla.secops.alert.Alert-java.lang.String-">sendToAddress</a></span>(<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&nbsp;a,
              <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;address)</code>
 <div class="block">Send email alert to specified address</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><span class="typeNameLabel">AlertSlack.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/alert/AlertSlack.html#sendToCatchall-com.mozilla.secops.alert.Alert-">sendToCatchall</a></span>(<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&nbsp;a)</code>
+<div class="block">Send alert to slack catchall channel</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -240,7 +266,15 @@
 <tbody>
 <tr class="altColor">
 <td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">HTTPRequest.ThresholdAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;&nbsp;col)</code>&nbsp;</td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.ErrorRateAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.EndpointAbuseAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.ThresholdAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;col)</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>

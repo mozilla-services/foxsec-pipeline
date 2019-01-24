@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -165,24 +165,36 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html#except-com.mozilla.secops.parser.EventFilterRule-">except</a></span>(<a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a>&nbsp;r)</code>
+<div class="block">Install negation rules for this filter rule</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html#getKeys-com.mozilla.secops.parser.Event-">getKeys</a></span>(<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
 <div class="block">Return extracted keys from event based on string selectors</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html#matches-com.mozilla.secops.parser.Event-">matches</a></span>(<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
 <div class="block">Test if event matches rule</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html#wantNormalizedType-com.mozilla.secops.parser.Normalized.Type-">wantNormalizedType</a></span>(<a href="../../../../com/mozilla/secops/parser/Normalized.Type.html" title="enum in com.mozilla.secops.parser">Normalized.Type</a>&nbsp;n)</code>
 <div class="block">Add match criteria for a normalized event type</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html#wantStackdriverProject-java.lang.String-">wantStackdriverProject</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;project)</code>
+<div class="block">Add match criteria for Stackdriver project</div>
+</td>
+</tr>
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html#wantSubtype-com.mozilla.secops.parser.Payload.PayloadType-">wantSubtype</a></span>(<a href="../../../../com/mozilla/secops/parser/Payload.PayloadType.html" title="enum in com.mozilla.secops.parser">Payload.PayloadType</a>&nbsp;p)</code>
 <div class="block">Add match criteria for a payload subtype</div>
@@ -244,6 +256,25 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </dl>
 </li>
 </ul>
+<a name="except-com.mozilla.secops.parser.EventFilterRule-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>except</h4>
+<pre>public&nbsp;<a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a>&nbsp;except(<a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a>&nbsp;r)</pre>
+<div class="block">Install negation rules for this filter rule
+
+ <p>Even if the filter rule matches, if the event also matches anything in the negation list it
+ will not match the rule.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>r</code> - <a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser"><code>EventFilterRule</code></a> to add to negation list</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>EventFilterRule for chaining</dd>
+</dl>
+</li>
+</ul>
 <a name="getKeys-com.mozilla.secops.parser.Event-">
 <!--   -->
 </a>
@@ -287,6 +318,25 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>p</code> - Payload type</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>EventFilterRule for chaining</dd>
+</dl>
+</li>
+</ul>
+<a name="wantStackdriverProject-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>wantStackdriverProject</h4>
+<pre>public&nbsp;<a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a>&nbsp;wantStackdriverProject(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;project)</pre>
+<div class="block">Add match criteria for Stackdriver project
+
+ <p>If this rule is installed, an event will only match if it is an event from Stackdriver and
+ the project matches the supplied argument.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>project</code> - Project name to match against</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>EventFilterRule for chaining</dd>
 </dl>

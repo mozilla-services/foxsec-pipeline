@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.CountErrorsInWindow.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/httprequest/HTTPRequest.html" target="_top">Frames</a></li>
@@ -142,40 +142,26 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.CountErrorsInWindow.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.CountErrorsInWindow</a></span></code>
-<div class="block">Composite transform which given a set of windowed <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser"><code>Event</code></a> types, emits a set of <code>KV</code> objects where the key is the source address of the request and the value is the number of
- client errors for that source within the window.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.EndpointAbuseAnalysis</a></span></code>
+<div class="block">Transform for detection of a single source endpoint making excessive requests of a specific
+ endpoint path solely.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.CountInWindow.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.CountInWindow</a></span></code>
-<div class="block">Composite transform which given a set of windowed <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser"><code>Event</code></a> types, emits a set of <code>KV</code> objects where the key is the source address of the request and the value is the number of
- requests for that source within the window.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.ErrorRateAnalysis</a></span></code>
+<div class="block">Transform for analysis of error rates per client within a given window.</div>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.ErrorRateAnalysis</a></span></code>
-<div class="block"><code>DoFn</code> to analyze key value pairs of source address and error count and emit a <a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a> for each address that exceeds the maximum client error rate</div>
-</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><code>static interface&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a></span></code>
 <div class="block">Runtime options for <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest</code></a> pipeline.</div>
 </td>
 </tr>
-<tr class="altColor">
-<td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.OutputFormat.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.OutputFormat</a></span></code>
-<div class="block"><code>DoFn</code> to transform any generated <a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a> objects into JSON for consumption by
- output transforms.</div>
-</td>
-</tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ParseAndWindow.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.ParseAndWindow</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.Parse.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.Parse</a></span></code>
 <div class="block">Composite transform to parse a <code>PCollection</code> containing events as strings and emit a
  <code>PCollection</code> of <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser"><code>Event</code></a> objects.</div>
 </td>
@@ -183,8 +169,19 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <tr class="altColor">
 <td class="colFirst"><code>static class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.ThresholdAnalysis</a></span></code>
-<div class="block">Composite transform that conducts threshold analysis using the configured threshold modifier
- across a set of KV objects as returned by <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.CountInWindow.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.CountInWindow</code></a>.</div>
+<div class="block">Composite transform that conducts threshold analysis using the configured threshold modifier</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.WindowForFixed.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.WindowForFixed</a></span></code>
+<div class="block">Window events into fixed one minute windows</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.WindowForFixedFireEarly.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.WindowForFixedFireEarly</a></span></code>
+<div class="block">Window events into fixed ten minute windows with early firings</div>
 </td>
 </tr>
 </table>
@@ -307,7 +304,7 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.CountErrorsInWindow.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/httprequest/HTTPRequest.html" target="_top">Frames</a></li>

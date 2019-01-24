@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -161,18 +161,24 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#eventIntegerValue-com.mozilla.secops.parser.EventFilterPayload.IntegerProperty-">eventIntegerValue</a></span>(<a href="../../../../com/mozilla/secops/parser/EventFilterPayload.IntegerProperty.html" title="enum in com.mozilla.secops.parser">EventFilterPayload.IntegerProperty</a>&nbsp;property)</code>
+<div class="block">Return a given Integer payload field value based on the supplied field identifier</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#eventStringValue-com.mozilla.secops.parser.EventFilterPayload.StringProperty-">eventStringValue</a></span>(<a href="../../../../com/mozilla/secops/parser/EventFilterPayload.StringProperty.html" title="enum in com.mozilla.secops.parser">EventFilterPayload.StringProperty</a>&nbsp;property)</code>
 <div class="block">Return a given String payload field value based on the supplied field identifier</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/Payload.PayloadType.html" title="enum in com.mozilla.secops.parser">Payload.PayloadType</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#getType--">getType</a></span>()</code>
 <div class="block">Get payload type.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/PayloadBase.html#matcher-java.lang.String-com.mozilla.secops.parser.ParserState-">matcher</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
        com.mozilla.secops.parser.ParserState&nbsp;state)</code>
@@ -271,7 +277,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <a name="eventStringValue-com.mozilla.secops.parser.EventFilterPayload.StringProperty-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>eventStringValue</h4>
 <pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;eventStringValue(<a href="../../../../com/mozilla/secops/parser/EventFilterPayload.StringProperty.html" title="enum in com.mozilla.secops.parser">EventFilterPayload.StringProperty</a>&nbsp;property)</pre>
@@ -281,6 +287,22 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <dd><code>property</code> - <a href="../../../../com/mozilla/secops/parser/EventFilterPayload.StringProperty.html" title="enum in com.mozilla.secops.parser"><code>EventFilterPayload.StringProperty</code></a></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>String value or null</dd>
+</dl>
+</li>
+</ul>
+<a name="eventIntegerValue-com.mozilla.secops.parser.EventFilterPayload.IntegerProperty-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>eventIntegerValue</h4>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a>&nbsp;eventIntegerValue(<a href="../../../../com/mozilla/secops/parser/EventFilterPayload.IntegerProperty.html" title="enum in com.mozilla.secops.parser">EventFilterPayload.IntegerProperty</a>&nbsp;property)</pre>
+<div class="block">Return a given Integer payload field value based on the supplied field identifier</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>property</code> - <a href="../../../../com/mozilla/secops/parser/EventFilterPayload.IntegerProperty.html" title="enum in com.mozilla.secops.parser"><code>EventFilterPayload.IntegerProperty</code></a></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Integer value or null</dd>
 </dl>
 </li>
 </ul>

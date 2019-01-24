@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.CountInWindow.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -74,7 +74,7 @@ var activeTableTab = "activeTableTab";
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.classes.inherited.from.class.org.apache.beam.sdk.transforms.DoFn">Nested</a>&nbsp;|&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
@@ -100,7 +100,7 @@ var activeTableTab = "activeTableTab";
 <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</li>
+<li>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</li>
 <li>
 <ul class="inheritance">
 <li>com.mozilla.secops.httprequest.HTTPRequest.ErrorRateAnalysis</li>
@@ -123,8 +123,8 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public static class <span class="typeNameLabel">HTTPRequest.ErrorRateAnalysis</span>
-extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</pre>
-<div class="block"><code>DoFn</code> to analyze key value pairs of source address and error count and emit a <a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert"><code>Alert</code></a> for each address that exceeds the maximum client error rate</div>
+extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</pre>
+<div class="block">Transform for analysis of error rates per client within a given window.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../serialized-form.html#com.mozilla.secops.httprequest.HTTPRequest.ErrorRateAnalysis">Serialized Form</a></dd>
@@ -135,21 +135,6 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
-<!-- ======== NESTED CLASS SUMMARY ======== -->
-<ul class="blockList">
-<li class="blockList"><a name="nested.class.summary">
-<!--   -->
-</a>
-<h3>Nested Class Summary</h3>
-<ul class="blockList">
-<li class="blockList"><a name="nested.classes.inherited.from.class.org.apache.beam.sdk.transforms.DoFn">
-<!--   -->
-</a>
-<h3>Nested classes/interfaces inherited from class&nbsp;org.apache.beam.sdk.transforms.DoFn</h3>
-<code>org.apache.beam.sdk.transforms.DoFn.BoundedPerElement, org.apache.beam.sdk.transforms.DoFn.Element, org.apache.beam.sdk.transforms.DoFn.FieldAccess, org.apache.beam.sdk.transforms.DoFn.FinishBundle, org.apache.beam.sdk.transforms.DoFn.FinishBundleContext, org.apache.beam.sdk.transforms.DoFn.GetInitialRestriction, org.apache.beam.sdk.transforms.DoFn.GetRestrictionCoder, org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver, org.apache.beam.sdk.transforms.DoFn.NewTracker, org.apache.beam.sdk.transforms.DoFn.OnTimer, org.apache.beam.sdk.transforms.DoFn.OnTimerContext, org.apache.beam.sdk.transforms.DoFn.OnWindowExpiration, org.apache.beam.sdk.transforms.DoFn.OutputReceiver&lt;T&gt;, org.apache.beam.sdk.transforms.DoFn.ProcessContext, org.apache.beam.sdk.transforms.DoFn.ProcessContinuation, org.apache.beam.sdk.transforms.DoFn.ProcessElement, org.apache.beam.sdk.transforms.DoFn.RequiresStableInput, org.apache.beam.sdk.transforms.DoFn.Setup, org.apache.beam.sdk.transforms.DoFn.SplitRestriction, org.apache.beam.sdk.transforms.DoFn.StartBundle, org.apache.beam.sdk.transforms.DoFn.StartBundleContext, org.apache.beam.sdk.transforms.DoFn.StateId, org.apache.beam.sdk.transforms.DoFn.Teardown, org.apache.beam.sdk.transforms.DoFn.TimerId, org.apache.beam.sdk.transforms.DoFn.Timestamp, org.apache.beam.sdk.transforms.DoFn.UnboundedPerElement, org.apache.beam.sdk.transforms.DoFn.WindowedContext</code></li>
-</ul>
-</li>
-</ul>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.summary">
@@ -162,7 +147,7 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html#ErrorRateAnalysis-java.lang.Long-">ErrorRateAnalysis</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;maxErrorRate)</code>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html#ErrorRateAnalysis-com.mozilla.secops.httprequest.HTTPRequest.HTTPRequestOptions-">ErrorRateAnalysis</a></span>(<a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>&nbsp;options)</code>
 <div class="block">Static initializer for <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.ErrorRateAnalysis</code></a></div>
 </td>
 </tr>
@@ -182,24 +167,23 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-org.apache.beam.sdk.transforms.windowing.BoundedWindow-">processElement</a></span>(org.apache.beam.sdk.transforms.DoFn.ProcessContext&nbsp;c,
-              org.apache.beam.sdk.transforms.windowing.BoundedWindow&nbsp;w)</code>&nbsp;</td>
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
-<li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.transforms.DoFn">
+<li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.transforms.PTransform">
 <!--   -->
 </a>
-<h3>Methods inherited from class&nbsp;org.apache.beam.sdk.transforms.DoFn</h3>
-<code>getAllowedTimestampSkew, getInputTypeDescriptor, getOutputTypeDescriptor, populateDisplayData, prepareForProcessing</code></li>
+<h3>Methods inherited from class&nbsp;org.apache.beam.sdk.transforms.PTransform</h3>
+<code>compose, getAdditionalInputs, getDefaultOutputCoder, getName, populateDisplayData, toString, validate</code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></h3>
-<code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#equals-java.lang.Object-" title="class or interface in java.lang">equals</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#getClass--" title="class or interface in java.lang">getClass</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#hashCode--" title="class or interface in java.lang">hashCode</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notify--" title="class or interface in java.lang">notify</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notifyAll--" title="class or interface in java.lang">notifyAll</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#toString--" title="class or interface in java.lang">toString</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait--" title="class or interface in java.lang">wait</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-" title="class or interface in java.lang">wait</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-int-" title="class or interface in java.lang">wait</a></code></li>
+<code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#equals-java.lang.Object-" title="class or interface in java.lang">equals</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#getClass--" title="class or interface in java.lang">getClass</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#hashCode--" title="class or interface in java.lang">hashCode</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notify--" title="class or interface in java.lang">notify</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notifyAll--" title="class or interface in java.lang">notifyAll</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait--" title="class or interface in java.lang">wait</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-" title="class or interface in java.lang">wait</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-int-" title="class or interface in java.lang">wait</a></code></li>
 </ul>
 </li>
 </ul>
@@ -215,17 +199,17 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="ErrorRateAnalysis-java.lang.Long-">
+<a name="ErrorRateAnalysis-com.mozilla.secops.httprequest.HTTPRequest.HTTPRequestOptions-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>ErrorRateAnalysis</h4>
-<pre>public&nbsp;ErrorRateAnalysis(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;maxErrorRate)</pre>
+<pre>public&nbsp;ErrorRateAnalysis(<a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>&nbsp;options)</pre>
 <div class="block">Static initializer for <a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest"><code>HTTPRequest.ErrorRateAnalysis</code></a></div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>maxErrorRate</code> - Maximum client error rate per window</dd>
+<dd><code>options</code> - Pipeline options</dd>
 </dl>
 </li>
 </ul>
@@ -237,15 +221,17 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-org.apache.beam.sdk.transforms.windowing.BoundedWindow-">
+<a name="expand-org.apache.beam.sdk.values.PCollection-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>processElement</h4>
-<pre>@DoFn.ProcessElement
-public&nbsp;void&nbsp;processElement(org.apache.beam.sdk.transforms.DoFn.ProcessContext&nbsp;c,
-                                                org.apache.beam.sdk.transforms.windowing.BoundedWindow&nbsp;w)</pre>
+<h4>expand</h4>
+<pre>public&nbsp;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&nbsp;expand(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code>expand</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</code></dd>
+</dl>
 </li>
 </ul>
 </li>
@@ -276,7 +262,7 @@ public&nbsp;void&nbsp;processElement(org.apache.beam.sdk.transforms.DoFn.Process
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.CountInWindow.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -301,7 +287,7 @@ public&nbsp;void&nbsp;processElement(org.apache.beam.sdk.transforms.DoFn.Process
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.classes.inherited.from.class.org.apache.beam.sdk.transforms.DoFn">Nested</a>&nbsp;|&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>

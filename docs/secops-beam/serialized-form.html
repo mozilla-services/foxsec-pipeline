@@ -256,9 +256,17 @@
 <h4>emailFrom</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> emailFrom</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
 <h4>gcpProject</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> gcpProject</pre>
+</li>
+<li class="blockList">
+<h4>slackToken</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> slackToken</pre>
+</li>
+<li class="blockListLast">
+<h4>slackCatchall</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> slackCatchall</pre>
 </li>
 </ul>
 </li>
@@ -268,6 +276,26 @@
 <!--   -->
 </a>
 <h3>Class <a href="com/mozilla/secops/alert/AlertFormatter.html" title="class in com.mozilla.secops.alert">com.mozilla.secops.alert.AlertFormatter</a> extends org.apache.beam.sdk.transforms.DoFn&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt; implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>monitoredResourceIndicator</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResourceIndicator</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.alert.AlertIO.AlertNotifyMerge">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/alert/AlertIO.AlertNotifyMerge.html" title="class in com.mozilla.secops.alert">com.mozilla.secops.alert.AlertIO.AlertNotifyMerge</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt; implements Serializable</h3>
 <dl class="nameValue">
 <dt>serialVersionUID:</dt>
 <dd>1L</dd>
@@ -546,6 +574,10 @@
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> detectorName</pre>
 </li>
 <li class="blockList">
+<h4>monitoredResource</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
+</li>
+<li class="blockList">
 <h4>threshold</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> threshold</pre>
 </li>
@@ -585,9 +617,13 @@
 <li class="blockList">
 <h3>Serialized Fields</h3>
 <ul class="blockList">
-<li class="blockListLast">
+<li class="blockList">
 <h4>cfg</h4>
 <pre><a href="com/mozilla/secops/customs/CustomsCfg.html" title="class in com.mozilla.secops.customs">CustomsCfg</a> cfg</pre>
+</li>
+<li class="blockListLast">
+<h4>monitoredResource</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
 </li>
 </ul>
 </li>
@@ -666,6 +702,10 @@
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> identifier</pre>
 </li>
 <li class="blockList">
+<h4>monitoredResource</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
+</li>
+<li class="blockList">
 <h4>filter</h4>
 <pre><a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a> filter</pre>
 </li>
@@ -716,6 +756,10 @@
 <li class="blockList">
 <h4>customsMeta</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> customsMeta</pre>
+</li>
+<li class="blockList">
+<h4>monitoredResource</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
 </li>
 <li class="blockList">
 <h4>limit</h4>
@@ -771,28 +815,38 @@
 <dd>1L</dd>
 </dl>
 </li>
-<li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.CountErrorsInWindow">
+<li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.EndpointAbuseAnalysis">
 <!--   -->
 </a>
-<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.CountErrorsInWindow.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.CountErrorsInWindow</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;&gt; implements Serializable</h3>
+<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.EndpointAbuseAnalysis</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt; implements Serializable</h3>
 <dl class="nameValue">
 <dt>serialVersionUID:</dt>
 <dd>1L</dd>
 </dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>log</h4>
+<pre>org.slf4j.Logger log</pre>
 </li>
-<li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.CountInWindow">
-<!--   -->
-</a>
-<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.CountInWindow.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.CountInWindow</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;&gt; implements Serializable</h3>
-<dl class="nameValue">
-<dt>serialVersionUID:</dt>
-<dd>1L</dd>
-</dl>
+<li class="blockList">
+<h4>endpoints</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">K</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">V</a>&gt; endpoints</pre>
+</li>
+<li class="blockListLast">
+<h4>monitoredResource</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 <li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.ErrorRateAnalysis">
 <!--   -->
 </a>
-<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.ErrorRateAnalysis</a> extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;,<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt; implements Serializable</h3>
+<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.ErrorRateAnalysis</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt; implements Serializable</h3>
 <dl class="nameValue">
 <dt>serialVersionUID:</dt>
 <dd>1L</dd>
@@ -801,27 +855,22 @@
 <li class="blockList">
 <h3>Serialized Fields</h3>
 <ul class="blockList">
-<li class="blockListLast">
+<li class="blockList">
 <h4>maxErrorRate</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> maxErrorRate</pre>
 </li>
-</ul>
+<li class="blockListLast">
+<h4>monitoredResource</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
 </li>
 </ul>
 </li>
-<li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.OutputFormat">
-<!--   -->
-</a>
-<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.OutputFormat.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.OutputFormat</a> extends org.apache.beam.sdk.transforms.DoFn&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt; implements Serializable</h3>
-<dl class="nameValue">
-<dt>serialVersionUID:</dt>
-<dd>1L</dd>
-</dl>
+</ul>
 </li>
-<li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.ParseAndWindow">
+<li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.Parse">
 <!--   -->
 </a>
-<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.ParseAndWindow.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.ParseAndWindow</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt; implements Serializable</h3>
+<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.Parse.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.Parse</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt; implements Serializable</h3>
 <dl class="nameValue">
 <dt>serialVersionUID:</dt>
 <dd>1L</dd>
@@ -830,9 +879,17 @@
 <li class="blockList">
 <h3>Serialized Fields</h3>
 <ul class="blockList">
-<li class="blockListLast">
+<li class="blockList">
 <h4>emitEventTimestamps</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a> emitEventTimestamps</pre>
+</li>
+<li class="blockList">
+<h4>stackdriverProjectFilter</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> stackdriverProjectFilter</pre>
+</li>
+<li class="blockListLast">
+<h4>filterRequestPath</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[] filterRequestPath</pre>
 </li>
 </ul>
 </li>
@@ -841,7 +898,7 @@
 <li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.ThresholdAnalysis">
 <!--   -->
 </a>
-<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.ThresholdAnalysis</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt; implements Serializable</h3>
+<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.ThresholdAnalysis</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt; implements Serializable</h3>
 <dl class="nameValue">
 <dt>serialVersionUID:</dt>
 <dd>1L</dd>
@@ -867,6 +924,10 @@
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a> clampThresholdMaximum</pre>
 </li>
 <li class="blockList">
+<h4>monitoredResource</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
+</li>
+<li class="blockList">
 <h4>natView</h4>
 <pre>org.apache.beam.sdk.values.PCollectionView&lt;T&gt; natView</pre>
 </li>
@@ -877,6 +938,24 @@
 </ul>
 </li>
 </ul>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.WindowForFixed">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.WindowForFixed.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.WindowForFixed</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt; implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.WindowForFixedFireEarly">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.WindowForFixedFireEarly.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.WindowForFixedFireEarly</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt; implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
 </li>
 </ul>
 </li>
@@ -963,9 +1042,13 @@
 <h4>normalized</h4>
 <pre><a href="com/mozilla/secops/parser/Normalized.html" title="class in com.mozilla.secops.parser">Normalized</a> normalized</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
 <h4>mozlog</h4>
 <pre><a href="com/mozilla/secops/parser/Mozlog.html" title="class in com.mozilla.secops.parser">Mozlog</a> mozlog</pre>
+</li>
+<li class="blockListLast">
+<h4>stackdriverProject</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> stackdriverProject</pre>
 </li>
 </ul>
 </li>
@@ -1035,6 +1118,10 @@
 <h4>stringRegexMatchers</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">K</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">V</a>&gt; stringRegexMatchers</pre>
 </li>
+<li class="blockList">
+<h4>integerMatchers</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">K</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">V</a>&gt; integerMatchers</pre>
+</li>
 <li class="blockListLast">
 <h4>stringSelectors</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">E</a>&gt; stringSelectors</pre>
@@ -1063,9 +1150,17 @@
 <h4>wantNormalizedType</h4>
 <pre><a href="com/mozilla/secops/parser/Normalized.Type.html" title="enum in com.mozilla.secops.parser">Normalized.Type</a> wantNormalizedType</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
+<h4>wantStackdriverProject</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> wantStackdriverProject</pre>
+</li>
+<li class="blockList">
 <h4>payloadFilters</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">E</a>&gt; payloadFilters</pre>
+</li>
+<li class="blockListLast">
+<h4>exceptRules</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">E</a>&gt; exceptRules</pre>
 </li>
 </ul>
 </li>
@@ -1127,9 +1222,13 @@
 <h4>sourceAddress</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> sourceAddress</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
 <h4>status</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a> status</pre>
+</li>
+<li class="blockListLast">
+<h4>parsedUrl</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/net/URL.html?is-external=true" title="class or interface in java.net">URL</a> parsedUrl</pre>
 </li>
 </ul>
 </li>
@@ -1303,9 +1402,13 @@
 <h4>ep</h4>
 <pre><a href="com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser">Parser</a> ep</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
 <h4>parseCount</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> parseCount</pre>
+</li>
+<li class="blockListLast">
+<h4>inlineFilter</h4>
+<pre><a href="com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a> inlineFilter</pre>
 </li>
 </ul>
 </li>
