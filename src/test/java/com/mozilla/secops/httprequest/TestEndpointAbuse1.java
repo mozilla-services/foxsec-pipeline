@@ -59,6 +59,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
+                assertEquals("endpoint_abuse-192.168.1.2", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
