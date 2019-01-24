@@ -1,5 +1,6 @@
 package com.mozilla.secops.alert;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -118,6 +119,7 @@ public class Alert implements Serializable {
    *
    * @return Merge key for alert notifications
    */
+  @JsonIgnore
   public String getNotifyMergeKey() {
     return getMetadataValue("notify_merge");
   }
