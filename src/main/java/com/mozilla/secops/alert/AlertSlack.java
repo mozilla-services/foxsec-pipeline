@@ -36,7 +36,7 @@ public class AlertSlack {
   public Boolean sendToCatchall(Alert a) {
     log.info("generating catchall slack for {} (channel id)", cfg.getSlackCatchall());
 
-    String text = String.format("%s\nAlert Id: %s", a.getSummary(), a.getAlertId());
+    String text = String.format("%s (%s)", a.getSummary(), a.getAlertId());
     try {
       return handleSlackResponse(slackManager.sendMessageToChannel(cfg.getSlackCatchall(), text));
     } catch (IOException exc) {
