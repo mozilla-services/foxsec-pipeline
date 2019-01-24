@@ -93,10 +93,10 @@ public class TestAwsBehavior {
                 assertEquals("awsbehavior", a.getCategory());
                 assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                 String actualSummary = a.getSummary();
-                if (actualSummary.equals("IAM action from console without mfa")) {
+                if (actualSummary.equals("IAM action from console without mfa by picard")) {
                   cnt++;
                   assertEquals("picard", a.getMetadataValue("user"));
-                } else if (actualSummary.equals("access key created")) {
+                } else if (actualSummary.equals("access key created by uhura for guinan")) {
                   cnt++;
                   assertEquals("uhura", a.getMetadataValue("user"));
                   if (a.getMetadataValue("resource") != null) {

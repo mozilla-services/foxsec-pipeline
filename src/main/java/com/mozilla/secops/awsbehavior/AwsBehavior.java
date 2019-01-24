@@ -109,14 +109,19 @@ public class AwsBehavior implements Serializable {
                       Alert alert = new Alert();
 
                       alert.setSeverity(Alert.AlertSeverity.CRITICAL);
-                      alert.setSummary(cm.getDescription());
                       alert.setCategory("awsbehavior");
 
                       Cloudtrail ct = e.getPayload();
+                      String alertSummary =
+                          String.format("%s by %s", cm.getDescription(), ct.getUser());
                       alert.addMetadata("user", ct.getUser());
                       if (cm.getResource() != null) {
+                        alertSummary =
+                            String.format(
+                                "%s for %s", alertSummary, ct.getResource(cm.getResource()));
                         alert.addMetadata("resource", ct.getResource(cm.getResource()));
                       }
+                      alert.setSummary(alertSummary);
 
                       if (!alert.hasCorrectFields()) {
                         throw new IllegalArgumentException("alert has invalid field configuration");
