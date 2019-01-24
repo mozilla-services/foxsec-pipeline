@@ -3,4 +3,3 @@
 *.swp
 *.pyc
 /*.json
-/deploy*sh
