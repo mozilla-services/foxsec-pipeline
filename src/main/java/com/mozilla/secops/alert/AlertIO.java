@@ -1,7 +1,7 @@
 package com.mozilla.secops.alert;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
@@ -77,21 +77,26 @@ public class AlertIO {
                       if (alerts == null) {
                         return;
                       }
-                      Alert[] a = ((Collection<Alert>) alerts).toArray(new Alert[0]);
-                      if (a.length < 1) {
+                      ArrayList<Alert> alist = new ArrayList<>();
+                      for (Alert a : alerts) {
+                        alist.add(a);
+                      }
+                      if (alist.size() < 1) {
                         return;
-                      } else if (a.length == 1) {
-                        c.output(a[0]);
+                      } else if (alist.size() == 1) {
+                        c.output(alist.get(0));
                         return;
                       }
-                      a[0].addMetadata("notify_merged_count", Integer.toString(a.length));
+                      Alert tosend = alist.get(0);
+                      tosend.addMetadata("notify_merged_count", Integer.toString(alist.size()));
 
                       // Also include the number of merged alerts at the end of the summary being
                       // sent for the notification
-                      a[0].setSummary(
-                          a[0].getSummary() + String.format(" (%d similar alerts)", a.length - 1));
+                      tosend.setSummary(
+                          tosend.getSummary()
+                              + String.format(" (%d similar alerts)", alist.size() - 1));
 
-                      c.output(a[0]);
+                      c.output(tosend);
                     }
                   }));
     }
