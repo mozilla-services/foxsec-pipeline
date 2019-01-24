@@ -54,8 +54,8 @@ public class TestAlertMerge {
                   case "test4":
                     assertNull(b.getMetadataValue("notify_merged_count"));
                     break;
-                  case "test1":
-                  case "test3":
+                  case "test1 (1 similar alerts)":
+                  case "test3 (1 similar alerts)":
                     assertEquals("2", b.getMetadataValue("notify_merged_count"));
                     break;
                   default:

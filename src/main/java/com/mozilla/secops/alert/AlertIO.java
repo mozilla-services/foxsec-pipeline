@@ -85,6 +85,12 @@ public class AlertIO {
                         return;
                       }
                       a[0].addMetadata("notify_merged_count", Integer.toString(a.length));
+
+                      // Also include the number of merged alerts at the end of the summary being
+                      // sent for the notification
+                      a[0].setSummary(
+                          a[0].getSummary() + String.format(" (%d similar alerts)", a.length - 1));
+
                       c.output(a[0]);
                     }
                   }));
