@@ -20,7 +20,7 @@ public class AlertConfiguration implements Serializable {
    * @return True if configuration indicates {@link AlertIO} should run
    */
   public Boolean isConfigured() {
-    return (smtpCredentials != null);
+    return (smtpCredentials != null || slackToken != null);
   }
 
   /**
