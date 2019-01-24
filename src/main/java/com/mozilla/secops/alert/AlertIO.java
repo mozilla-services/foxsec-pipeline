@@ -30,6 +30,68 @@ public class AlertIO {
   }
 
   /**
+   * Merge related alerts together using any set alert notify merge metadata prior to emitting
+   * notifications.
+   */
+  public static class AlertNotifyMerge extends PTransform<PCollection<String>, PCollection<Alert>> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public PCollection<Alert> expand(PCollection<String> col) {
+      return col.apply(
+              Window.<String>into(new GlobalWindows())
+                  .triggering(
+                      Repeatedly.forever(
+                          AfterProcessingTime.pastFirstElementInPane()
+                              .plusDelayOf(Duration.standardMinutes(1))))
+                  .discardingFiredPanes())
+          .apply(
+              "extract merge keys",
+              ParDo.of(
+                  new DoFn<String, KV<String, Alert>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Alert a = Alert.fromJSON(c.element());
+                      if (a == null) {
+                        return;
+                      }
+                      String key = a.getNotifyMergeKey();
+                      if (key == null) {
+                        key = UUID.randomUUID().toString();
+                      }
+                      c.output(KV.of(key, a));
+                    }
+                  }))
+          .apply(GroupByKey.<String, Alert>create())
+          .apply(
+              "merge alerts",
+              ParDo.of(
+                  new DoFn<KV<String, Iterable<Alert>>, Alert>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Iterable<Alert> alerts = c.element().getValue();
+                      if (alerts == null) {
+                        return;
+                      }
+                      Alert[] a = ((Collection<Alert>) alerts).toArray(new Alert[0]);
+                      if (a.length < 1) {
+                        return;
+                      } else if (a.length == 1) {
+                        c.output(a[0]);
+                        return;
+                      }
+                      a[0].addMetadata("notify_merged_count", Integer.toString(a.length));
+                      c.output(a[0]);
+                    }
+                  }));
+    }
+  }
+
+  /**
    * Handle alerting output based on the contents of the alerting messages such as included metadata
    * and severity.
    */
@@ -57,56 +119,7 @@ public class AlertIO {
 
     @Override
     public PDone expand(PCollection<String> input) {
-      input
-          .apply(
-              Window.<String>into(new GlobalWindows())
-                  .triggering(
-                      Repeatedly.forever(
-                          AfterProcessingTime.pastFirstElementInPane()
-                              .plusDelayOf(Duration.standardMinutes(1))))
-                  .discardingFiredPanes())
-          .apply(
-              ParDo.of(
-                  new DoFn<String, KV<String, Alert>>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @ProcessElement
-                    public void processElement(ProcessContext c) {
-                      Alert a = Alert.fromJSON(c.element());
-                      if (a == null) {
-                        return;
-                      }
-                      String key = a.getNotifyMergeKey();
-                      if (key == null) {
-                        key = UUID.randomUUID().toString();
-                      }
-                      c.output(KV.of(key, a));
-                    }
-                  }))
-          .apply(GroupByKey.<String, Alert>create())
-          .apply(
-              ParDo.of(
-                  new DoFn<KV<String, Iterable<Alert>>, Alert>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @ProcessElement
-                    public void processElement(ProcessContext c) {
-                      Iterable<Alert> alerts = c.element().getValue();
-                      if (alerts == null) {
-                        return;
-                      }
-                      Alert[] a = ((Collection<Alert>) alerts).toArray(new Alert[0]);
-                      if (a.length < 1) {
-                        return;
-                      } else if (a.length == 1) {
-                        c.output(a[0]);
-                        return;
-                      }
-                      a[0].addMetadata("notify_merged_count", Integer.toString(a.length));
-                      c.output(a[0]);
-                    }
-                  }))
-          .apply(ParDo.of(new WriteFn(this)));
+      input.apply(new AlertNotifyMerge()).apply(ParDo.of(new WriteFn(this)));
       return PDone.in(input.getPipeline());
     }
   }
