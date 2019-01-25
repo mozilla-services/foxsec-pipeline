@@ -558,10 +558,9 @@ public class ParserTest {
     assertEquals(Payload.PayloadType.GCPAUDIT, e.getPayloadType());
     GcpAudit d = e.getPayload();
     assertNotNull(d);
-    assertNotNull(d.getAuditLog());
-    assertNotNull(d.getAuditLog().getAuthenticationInfo());
-    assertEquals(
-        "laforge@mozilla.com", d.getAuditLog().getAuthenticationInfo().getPrincipalEmail());
+    assertEquals("laforge@mozilla.com", d.getPrincipalEmail());
+    assertEquals("projects/test", d.getResource());
+    assertEquals("216.160.83.56", d.getCallerIp());
 
     Normalized n = e.getNormalized();
     assertNotNull(n);

@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.json.JsonParser;
@@ -21,7 +22,62 @@ public class GcpAudit extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private final JacksonFactory jfmatcher;
-  private AuditLog auditLog;
+
+  private String principalEmail;
+  private String resource;
+  private String callerIp;
+  private String callerIpCity;
+  private String callerIpCountry;
+
+  /**
+   * Get principal email
+   *
+   * @return Principal email
+   */
+  @JsonProperty("principal_email")
+  public String getPrincipalEmail() {
+    return principalEmail;
+  }
+
+  /**
+   * Get resource
+   *
+   * @return Resource
+   */
+  @JsonProperty("resource")
+  public String getResource() {
+    return resource;
+  }
+
+  /**
+   * Get caller IP address
+   *
+   * @return Caller IP address
+   */
+  @JsonProperty("caller_ip")
+  public String getCallerIp() {
+    return callerIp;
+  }
+
+  /**
+   * Get caller IP city
+   *
+   * @return Caller IP cityl
+   */
+  @JsonProperty("caller_ip_city")
+  public String getCallerIpCity() {
+    return callerIpCity;
+  }
+
+  /**
+   * Get caller IP country
+   *
+   * @return Caller IP country
+   */
+  @JsonProperty("caller_ip_country")
+  public String getCallerIpCountry() {
+    return callerIpCountry;
+  }
 
   @Override
   public Boolean matcher(String input, ParserState state) {
@@ -53,15 +109,6 @@ public class GcpAudit extends PayloadBase implements Serializable {
   @Override
   public Payload.PayloadType getType() {
     return Payload.PayloadType.GCPAUDIT;
-  }
-
-  /**
-   * Return processed AuditLog object
-   *
-   * @return AuditLog or null if not set
-   */
-  public AuditLog getAuditLog() {
-    return auditLog;
   }
 
   /** Construct matcher object. */
@@ -101,6 +148,7 @@ public class GcpAudit extends PayloadBase implements Serializable {
     if (pbuf == null) {
       return;
     }
+    AuditLog auditLog;
     try {
       auditLog = (new JacksonFactory()).createJsonParser(pbuf).parse(AuditLog.class);
     } catch (IOException exc) {
@@ -110,40 +158,42 @@ public class GcpAudit extends PayloadBase implements Serializable {
     Normalized n = e.getNormalized();
 
     AuthenticationInfo authen = auditLog.getAuthenticationInfo();
-    String subj = null;
     if (authen != null) {
-      subj = authen.getPrincipalEmail();
+      principalEmail = authen.getPrincipalEmail();
     }
 
     RequestMetadata rm = auditLog.getRequestMetadata();
-    String sourceAddr = null;
     if (rm != null) {
-      sourceAddr = rm.getCallerIp();
+      callerIp = rm.getCallerIp();
+
+      if (callerIp != null) {
+        CityResponse cr = state.getParser().geoIp(callerIp);
+        if (cr != null) {
+          callerIpCity = cr.getCity().getName();
+          callerIpCountry = cr.getCountry().getIsoCode();
+        }
+      }
     }
 
     String obj = null;
     List<AuthorizationInfo> author = auditLog.getAuthorizationInfo();
     if (author != null && author.size() >= 1) {
-      obj = author.get(0).getResource();
+      resource = author.get(0).getResource();
     }
 
-    if (subj != null && sourceAddr != null && obj != null) {
+    if (principalEmail != null && callerIp != null && resource != null) {
       n.addType(Normalized.Type.AUTH_SESSION);
-      n.setSubjectUser(subj);
-      n.setSourceAddress(sourceAddr);
-      n.setObject(obj);
-
-      CityResponse cr = state.getParser().geoIp(sourceAddr);
-      if (cr != null) {
-        n.setSourceAddressCity(cr.getCity().getName());
-        n.setSourceAddressCountry(cr.getCountry().getIsoCode());
-      }
+      n.setSubjectUser(principalEmail);
+      n.setSourceAddress(callerIp);
+      n.setObject(resource);
+      n.setSourceAddressCity(callerIpCity);
+      n.setSourceAddressCountry(callerIpCountry);
 
       // If we have an instance of IdentityManager in the parser, see if we can
       // also set the resolved subject identity
       IdentityManager mgr = state.getParser().getIdentityManager();
       if (mgr != null) {
-        String resId = mgr.lookupAlias(subj);
+        String resId = mgr.lookupAlias(principalEmail);
         if (resId != null) {
           n.setSubjectUserIdentity(resId);
         }
