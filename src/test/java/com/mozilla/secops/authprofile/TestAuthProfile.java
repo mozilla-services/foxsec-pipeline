@@ -109,16 +109,22 @@ public class TestAuthProfile {
                 if (actualSummary.equals("riker authenticated to emit-bastion from Milton/US")) {
                   infoCnt++;
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                  assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                  assertNull(a.getTemplateName());
                   assertNull(a.getMetadataValue("notify_email_direct"));
                 } else if (actualSummary.equals(
                     "riker authenticated to emit-bastion from new source Milton/US")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  assertEquals("authprofile.ftlh", a.getTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
-                  assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                 }
+                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                assertEquals("riker", a.getMetadataValue("username"));
+                assertEquals("emit-bastion", a.getMetadataValue("object"));
+                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
+                assertEquals("US", a.getMetadataValue("sourceaddress_country"));
               }
               assertEquals(1L, newCnt);
               assertEquals(4L, infoCnt);
