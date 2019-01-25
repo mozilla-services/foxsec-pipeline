@@ -19,7 +19,8 @@ public class DatastoreStateInterface implements StateInterface {
   private final String namespace;
 
   public void deleteAll() throws StateException {
-    StructuredQuery<Entity> query = Query.newEntityQueryBuilder().setKind(kind).build();
+    StructuredQuery<Entity> query =
+        Query.newEntityQueryBuilder().setNamespace(namespace).setKind(kind).build();
     QueryResults<Entity> results = datastore.run(query);
 
     while (results.hasNext()) {
