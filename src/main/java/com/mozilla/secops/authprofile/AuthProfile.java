@@ -51,7 +51,7 @@ public class AuthProfile implements Serializable {
    * {@link PCollection} of {@link KV} objects where the key is a particular username and the value
    * is a list of authentication events seen for that user within the window.
    *
-   * <p>The output is windowed in the global window with a trigger which fires every 30 seconds.
+   * <p>The output is windowed in the global window with a trigger which fires every 60 seconds.
    */
   public static class ParseAndWindow
       extends PTransform<PCollection<String>, PCollection<KV<String, Iterable<Event>>>> {
@@ -61,6 +61,7 @@ public class AuthProfile implements Serializable {
     public PCollection<KV<String, Iterable<Event>>> expand(PCollection<String> col) {
       EventFilter filter = new EventFilter();
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
+      filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH_SESSION));
       filter.addKeyingSelector(
           new EventFilterRule()
               .addPayloadFilter(
@@ -75,8 +76,7 @@ public class AuthProfile implements Serializable {
                   .triggering(
                       Repeatedly.forever(
                           AfterProcessingTime.pastFirstElementInPane()
-                              .plusDelayOf(Duration.standardSeconds(30))))
-                  .withAllowedLateness(Duration.standardSeconds(30))
+                              .plusDelayOf(Duration.standardSeconds(60))))
                   .discardingFiredPanes())
           .apply(GroupByKey.<String, Event>create());
     }
