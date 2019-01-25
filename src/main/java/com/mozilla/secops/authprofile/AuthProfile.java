@@ -8,7 +8,6 @@ import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
-import com.mozilla.secops.parser.EventFilterPayload;
 import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserDoFn;
@@ -57,20 +56,58 @@ public class AuthProfile implements Serializable {
       extends PTransform<PCollection<String>, PCollection<KV<String, Iterable<Event>>>> {
     private static final long serialVersionUID = 1L;
 
+    private Logger log;
+    private String idmanagerPath;
+
+    public ParseAndWindow(AuthProfileOptions options) {
+      idmanagerPath = options.getIdentityManagerPath();
+      log = LoggerFactory.getLogger(ParseAndWindow.class);
+    }
+
     @Override
     public PCollection<KV<String, Iterable<Event>>> expand(PCollection<String> col) {
       EventFilter filter = new EventFilter();
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH_SESSION));
-      filter.addKeyingSelector(
-          new EventFilterRule()
-              .addPayloadFilter(
-                  new EventFilterPayload()
-                      .withStringSelector(
-                          EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER)));
 
-      return col.apply(ParDo.of(new ParserDoFn()))
-          .apply(EventFilter.getKeyingTransform(filter))
+      return col.apply(ParDo.of(new ParserDoFn().withInlineEventFilter(filter)))
+          .apply(
+              ParDo.of(
+                  new DoFn<Event, KV<String, Event>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    private IdentityManager idmanager;
+
+                    @Setup
+                    public void setup() throws IOException {
+                      if (idmanagerPath == null) {
+                        idmanager = IdentityManager.loadFromResource();
+                      } else {
+                        idmanager = IdentityManager.loadFromResource(idmanagerPath);
+                      }
+                    }
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Event e = c.element();
+                      Normalized n = e.getNormalized();
+
+                      if (n.getSubjectUser() == null) {
+                        return;
+                      }
+
+                      String identityKey = idmanager.lookupAlias(n.getSubjectUser());
+                      if (identityKey != null) {
+                        log.info("{}: resolved identity to {}", n.getSubjectUser(), identityKey);
+                        c.output(KV.of(identityKey, e));
+                      } else {
+                        log.info(
+                            "{}: username does not map to any known identity or alias",
+                            n.getSubjectUser());
+                        c.output(KV.of(n.getSubjectUser(), e));
+                      }
+                    }
+                  }))
           .apply(
               Window.<KV<String, Event>>into(new GlobalWindows())
                   .triggering(
@@ -141,30 +178,19 @@ public class AuthProfile implements Serializable {
     @ProcessElement
     public void processElement(ProcessContext c) throws StateException {
       Iterable<Event> events = c.element().getValue();
-      String username = c.element().getKey();
-
-      Identity identity = null;
-      String identityKey = idmanager.lookupAlias(username);
-      String stateKey = username;
-      if (identityKey != null) {
-        log.info("{}: resolved identity to {}", username, identityKey);
-        identity = idmanager.getIdentity(identityKey);
-        // If we were able to resolve an identity, use that for the state key instead of the
-        // event username
-        stateKey = identityKey;
-      } else {
-        log.warn("{}: username does not map to any known identity or alias", username);
-      }
+      String userIdentity = c.element().getKey();
+      Identity identity = idmanager.getIdentity(userIdentity);
 
       for (Event e : events) {
         Normalized n = e.getNormalized();
         String address = n.getSourceAddress();
         String destination = n.getObject();
+        String eventUsername = n.getSubjectUser();
         Boolean isUnknown = false;
 
-        StateModel sm = StateModel.get(stateKey, state);
+        StateModel sm = StateModel.get(userIdentity, state);
         if (sm == null) {
-          sm = new StateModel(stateKey);
+          sm = new StateModel(userIdentity);
         }
 
         String city = n.getSourceAddressCity();
@@ -176,11 +202,11 @@ public class AuthProfile implements Serializable {
 
         Alert alert = new Alert();
 
-        String summary = String.format("%s authenticated to %s", username, destination);
+        String summary = String.format("%s authenticated to %s", eventUsername, destination);
         if (sm.updateEntry(address)) {
           // Address was new
           isUnknown = true;
-          log.info("{}: escalating alert criteria for new source: {}", username, address);
+          log.info("{}: escalating alert criteria for new source: {}", userIdentity, address);
           summary = summary + " from new source " + summaryIndicator;
           alert.setSeverity(Alert.AlertSeverity.WARNING);
           alert.setTemplateName("authprofile.ftlh");
@@ -189,33 +215,33 @@ public class AuthProfile implements Serializable {
               String.format(
                   "An authentication event for user %s was detected "
                       + "to access %s, and this event occurred from a source address unknown to the system.",
-                  username, destination));
+                  eventUsername, destination));
         } else {
           // Known source
-          log.info("{}: access from known source: {}", username, address);
+          log.info("{}: access from known source: {}", userIdentity, address);
           summary = summary + " from " + summaryIndicator;
           alert.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
           alert.addToPayload(
               String.format(
                   "An authentication event for user %s was detected "
                       + "to access %s. This occurred from a known source address.",
-                  username, destination));
+                  eventUsername, destination));
         }
         alert.setSummary(summary);
         alert.setCategory("authprofile");
 
         alert.addMetadata("object", destination);
         alert.addMetadata("sourceaddress", address);
-        alert.addMetadata("username", username);
-        if (identityKey != null) {
-          alert.addMetadata("identity_key", identityKey);
+        alert.addMetadata("username", eventUsername);
+        if (identity != null) {
+          alert.addMetadata("identity_key", userIdentity);
           // If new, set direct notification in the metadata so the alert is also forwarded
           // to the user.
           if (isUnknown) {
             String dnot = identity.getEmailNotifyDirect(idmanager.getDefaultNotification());
             if (dnot != null) {
               log.info(
-                  "{}: adding direct email notification metadata route to {}", identityKey, dnot);
+                  "{}: adding direct email notification metadata route to {}", userIdentity, dnot);
               alert.addMetadata("notify_email_direct", dnot);
             }
           }
@@ -231,7 +257,11 @@ public class AuthProfile implements Serializable {
           alert.addMetadata("sourceaddress_country", "unknown");
         }
 
-        sm.set(state);
+        try {
+          sm.set(state);
+        } catch (StateException exc) {
+          log.error("{}: error updating state: {}", userIdentity, exc.getMessage());
+        }
         if (!alert.hasCorrectFields()) {
           throw new IllegalArgumentException("alert has invalid field configuration");
         }
@@ -273,7 +303,7 @@ public class AuthProfile implements Serializable {
     Pipeline p = Pipeline.create(options);
 
     p.apply("input", options.getInputType().read(p, options))
-        .apply("parse and window", new ParseAndWindow())
+        .apply("parse and window", new ParseAndWindow(options))
         .apply(ParDo.of(new Analyze(options)))
         .apply("output format", ParDo.of(new AlertFormatter(options)))
         .apply("output", OutputOptions.compositeOutput(options));
