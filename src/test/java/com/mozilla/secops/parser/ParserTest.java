@@ -562,6 +562,15 @@ public class ParserTest {
     assertNotNull(d.getAuditLog().getAuthenticationInfo());
     assertEquals(
         "laforge@mozilla.com", d.getAuditLog().getAuthenticationInfo().getPrincipalEmail());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH_SESSION));
+    assertEquals("laforge@mozilla.com", n.getSubjectUser());
+    assertEquals("projects/test", n.getObject());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
   }
 
   @Test

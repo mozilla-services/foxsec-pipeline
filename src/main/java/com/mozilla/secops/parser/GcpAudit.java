@@ -6,8 +6,14 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.servicecontrol.v1.model.AuditLog;
+import com.google.api.services.servicecontrol.v1.model.AuthenticationInfo;
+import com.google.api.services.servicecontrol.v1.model.AuthorizationInfo;
+import com.google.api.services.servicecontrol.v1.model.RequestMetadata;
+import com.maxmind.geoip2.model.CityResponse;
+import com.mozilla.secops.identity.IdentityManager;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 /** Payload parser for GCP audit log data. */
@@ -99,6 +105,49 @@ public class GcpAudit extends PayloadBase implements Serializable {
       auditLog = (new JacksonFactory()).createJsonParser(pbuf).parse(AuditLog.class);
     } catch (IOException exc) {
       return;
+    }
+
+    Normalized n = e.getNormalized();
+
+    AuthenticationInfo authen = auditLog.getAuthenticationInfo();
+    String subj = null;
+    if (authen != null) {
+      subj = authen.getPrincipalEmail();
+    }
+
+    RequestMetadata rm = auditLog.getRequestMetadata();
+    String sourceAddr = null;
+    if (rm != null) {
+      sourceAddr = rm.getCallerIp();
+    }
+
+    String obj = null;
+    List<AuthorizationInfo> author = auditLog.getAuthorizationInfo();
+    if (author != null && author.size() >= 1) {
+      obj = author.get(0).getResource();
+    }
+
+    if (subj != null && sourceAddr != null && obj != null) {
+      n.addType(Normalized.Type.AUTH_SESSION);
+      n.setSubjectUser(subj);
+      n.setSourceAddress(sourceAddr);
+      n.setObject(obj);
+
+      CityResponse cr = state.getParser().geoIp(sourceAddr);
+      if (cr != null) {
+        n.setSourceAddressCity(cr.getCity().getName());
+        n.setSourceAddressCountry(cr.getCountry().getIsoCode());
+      }
+
+      // If we have an instance of IdentityManager in the parser, see if we can
+      // also set the resolved subject identity
+      IdentityManager mgr = state.getParser().getIdentityManager();
+      if (mgr != null) {
+        String resId = mgr.lookupAlias(subj);
+        if (resId != null) {
+          n.setSubjectUserIdentity(resId);
+        }
+      }
     }
   }
 }

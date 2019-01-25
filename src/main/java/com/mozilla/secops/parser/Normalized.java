@@ -10,7 +10,9 @@ public class Normalized implements Serializable {
   /** Normalized event types */
   public enum Type {
     /** Authentication event */
-    AUTH
+    AUTH,
+    /** Indicates an authenticated session, where authentication may have occurred in the past */
+    AUTH_SESSION
   }
 
   private EnumSet<Type> types;
