@@ -158,6 +158,25 @@ public class TestAuthProfile {
                 } else {
                   infoCnt++;
                 }
+
+                String iKey = a.getMetadataValue("identity_key");
+                if (a.getMetadataValue("username").equals("laforge@mozilla.com")) {
+                  // Identity lookup should have failed
+                  assertNull(iKey);
+                  assertNull(a.getMetadataValue("notify_email_direct"));
+
+                  assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  assertEquals("127.0.0.1", a.getMetadataValue("sourceaddress"));
+                  assertEquals("laforge@mozilla.com", a.getMetadataValue("username"));
+                } else if ((iKey != null) && (iKey.equals("wriker@mozilla.com"))) {
+                  if (a.getMetadataValue("username").equals("riker@mozilla.com")) {
+                    // GcpAudit event should have generated a warning
+                    assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                    assertEquals(
+                        "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                    assertEquals("authprofile.ftlh", a.getTemplateName());
+                  }
+                }
               }
               assertEquals(3L, newCnt);
               assertEquals(5L, infoCnt);
