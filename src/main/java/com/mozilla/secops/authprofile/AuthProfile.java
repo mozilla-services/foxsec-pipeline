@@ -272,16 +272,11 @@ public class AuthProfile implements Serializable {
   private static void runAuthProfile(AuthProfileOptions options) throws IllegalArgumentException {
     Pipeline p = Pipeline.create(options);
 
-    PCollection<KV<String, Iterable<Event>>> events =
-        p.apply("input", options.getInputType().read(p, options))
-            .apply("parse and window", new ParseAndWindow());
-
-    PCollection<String> alerts =
-        events
-            .apply(ParDo.of(new Analyze(options)))
-            .apply("output format", ParDo.of(new AlertFormatter(options)));
-
-    alerts.apply("output", OutputOptions.compositeOutput(options));
+    p.apply("input", options.getInputType().read(p, options))
+        .apply("parse and window", new ParseAndWindow())
+        .apply(ParDo.of(new Analyze(options)))
+        .apply("output format", ParDo.of(new AlertFormatter(options)))
+        .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();
   }
