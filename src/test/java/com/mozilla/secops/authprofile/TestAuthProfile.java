@@ -63,11 +63,12 @@ public class TestAuthProfile {
     testEnv();
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer1.txt", p);
 
-    PCollection<KV<String, Iterable<Event>>> res = input.apply(new AuthProfile.ParseAndWindow());
+    PCollection<KV<String, Iterable<Event>>> res =
+        input.apply(new AuthProfile.ParseAndWindow(getTestOptions()));
     PAssert.thatMap(res)
         .satisfies(
             results -> {
-              Iterable<Event> edata = results.get("riker");
+              Iterable<Event> edata = results.get("wriker@mozilla.com");
               assertNotNull(edata);
               assertTrue(edata instanceof Collection);
 
@@ -94,7 +95,7 @@ public class TestAuthProfile {
 
     PCollection<Alert> res =
         input
-            .apply(new AuthProfile.ParseAndWindow())
+            .apply(new AuthProfile.ParseAndWindow(options))
             .apply(ParDo.of(new AuthProfile.Analyze(options)));
 
     PAssert.that(res)
@@ -121,6 +122,39 @@ public class TestAuthProfile {
               }
               assertEquals(1L, newCnt);
               assertEquals(4L, infoCnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void analyzeMixedTest() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
+
+    PCollection<Alert> res =
+        input
+            .apply(new AuthProfile.ParseAndWindow(options))
+            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long newCnt = 0;
+              long infoCnt = 0;
+              for (Alert a : results) {
+                assertEquals("authprofile", a.getCategory());
+                String actualSummary = a.getSummary();
+                if (actualSummary.contains("from new source")) {
+                  newCnt++;
+                } else {
+                  infoCnt++;
+                }
+              }
+              assertEquals(3L, newCnt);
+              assertEquals(5L, infoCnt);
               return null;
             });
 
