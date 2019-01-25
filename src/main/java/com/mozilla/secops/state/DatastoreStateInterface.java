@@ -7,6 +7,9 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.KeyFactory;
+import com.google.cloud.datastore.Query;
+import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.StructuredQuery;
 
 /** Utilize GCP Datastore for centralized state storage */
 public class DatastoreStateInterface implements StateInterface {
@@ -14,6 +17,15 @@ public class DatastoreStateInterface implements StateInterface {
   private KeyFactory keyFactory;
   private final String kind;
   private final String namespace;
+
+  public void deleteAll() throws StateException {
+    StructuredQuery<Entity> query = Query.newEntityQueryBuilder().setKind(kind).build();
+    QueryResults<Entity> results = datastore.run(query);
+
+    while (results.hasNext()) {
+      datastore.delete(results.next().getKey());
+    }
+  }
 
   public String getObject(String s) {
     Key nk = keyFactory.newKey(s);

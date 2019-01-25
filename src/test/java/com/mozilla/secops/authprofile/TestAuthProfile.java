@@ -9,6 +9,8 @@ import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
+import com.mozilla.secops.state.DatastoreStateInterface;
+import com.mozilla.secops.state.State;
 import java.util.Collection;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
@@ -23,14 +25,22 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
 public class TestAuthProfile {
   @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
-  private void testEnv() {
+  private void testEnv() throws Exception {
     environmentVariables.set("DATASTORE_EMULATOR_HOST", "localhost:8081");
     environmentVariables.set("DATASTORE_EMULATOR_HOST_PATH", "localhost:8081/datastore");
     environmentVariables.set("DATASTORE_HOST", "http://localhost:8081");
     environmentVariables.set("DATASTORE_PROJECT_ID", "foxsec-pipeline");
+    clearState();
   }
 
   public TestAuthProfile() {}
+
+  public void clearState() throws Exception {
+    State state = new State(new DatastoreStateInterface("authprofile", "testauthprofileanalyze"));
+    state.initialize();
+    state.deleteAll();
+    state.done();
+  }
 
   private AuthProfile.AuthProfileOptions getTestOptions() {
     AuthProfile.AuthProfileOptions ret =
@@ -50,6 +60,7 @@ public class TestAuthProfile {
 
   @Test
   public void parseAndWindowTest() throws Exception {
+    testEnv();
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer1.txt", p);
 
     PCollection<KV<String, Iterable<Event>>> res = input.apply(new AuthProfile.ParseAndWindow());

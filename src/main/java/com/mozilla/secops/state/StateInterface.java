@@ -10,6 +10,9 @@ public interface StateInterface {
    */
   public String getObject(String s) throws StateException;
 
+  /** Delete all keys from state */
+  public void deleteAll() throws StateException;
+
   /**
    * Save object to state
    *

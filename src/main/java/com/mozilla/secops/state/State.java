@@ -50,6 +50,12 @@ public class State {
     si.initialize();
   }
 
+  /** Delete all keys */
+  public void deleteAll() throws StateException {
+    log.info("deleting all existing keys in state");
+    si.deleteAll();
+  }
+
   /**
    * Get a state value
    *
