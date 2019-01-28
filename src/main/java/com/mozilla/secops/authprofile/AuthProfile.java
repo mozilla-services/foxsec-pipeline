@@ -57,8 +57,13 @@ public class AuthProfile implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Logger log;
-    private String idmanagerPath;
+    private final String idmanagerPath;
 
+    /**
+     * Static initializer for {@link ParseAndWindow} using specified pipeline options
+     *
+     * @param options Pipeline options
+     */
     public ParseAndWindow(AuthProfileOptions options) {
       idmanagerPath = options.getIdentityManagerPath();
       log = LoggerFactory.getLogger(ParseAndWindow.class);
@@ -67,6 +72,9 @@ public class AuthProfile implements Serializable {
     @Override
     public PCollection<KV<String, Iterable<Event>>> expand(PCollection<String> col) {
       EventFilter filter = new EventFilter();
+
+      // We are interested in both AUTH here (which indicates an authentication activity) and
+      // in AUTH_SESSION (which indicates on-going use of an already authenticated session)
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH_SESSION));
 
@@ -185,6 +193,9 @@ public class AuthProfile implements Serializable {
         Normalized n = e.getNormalized();
         String address = n.getSourceAddress();
         String destination = n.getObject();
+        // The element key will be the possibly resolved identity of the user if we were able
+        // to look the user up using identity manager. Grab the original username from the source
+        // event as well.
         String eventUsername = n.getSubjectUser();
         Boolean isUnknown = false;
 

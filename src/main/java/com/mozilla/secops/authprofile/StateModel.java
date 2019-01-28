@@ -10,7 +10,11 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
 
-/** Manages and stores state for a given user */
+/**
+ * Manages and stores state for a given user
+ *
+ * <p>Used by {@link AuthProfile}.
+ */
 public class StateModel {
   private final Long DEFAULTPRUNEAGE = 604800L; // 7 days
 
@@ -51,7 +55,7 @@ public class StateModel {
   /**
    * Prune entries with timestamp older than specified duration from state model
    *
-   * @param age Prune entries older than specific seconds
+   * @param age Prune entries older than specified seconds
    */
   public void pruneState(Long age) {
     Iterator<?> it = entries.entrySet().iterator();
