@@ -198,6 +198,7 @@ public class Parser {
     jf = new JacksonFactory();
     payloads = new ArrayList<PayloadBase>();
     payloads.add(new GLB());
+    payloads.add(new Nginx());
     payloads.add(new SecEvent());
     payloads.add(new Cloudtrail());
     payloads.add(new GcpAudit());

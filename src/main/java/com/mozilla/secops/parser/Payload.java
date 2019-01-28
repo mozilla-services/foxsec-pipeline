@@ -20,6 +20,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     SECEVENT,
     /** GcpAudit */
     GCPAUDIT,
+    /** Nginx */
+    NGINX,
     /** Raw */
     RAW
   }
