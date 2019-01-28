@@ -402,6 +402,39 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseXForwardedFor() throws Exception {
+    String[] result = Parser.parseXForwardedFor("0.0.0.0");
+    assertEquals(1, result.length);
+    assertEquals("0.0.0.0", result[0]);
+
+    result = Parser.parseXForwardedFor("0.0.0.0,1.1.1.1");
+    assertEquals(2, result.length);
+    assertEquals("0.0.0.0", result[0]);
+    assertEquals("1.1.1.1", result[1]);
+
+    result = Parser.parseXForwardedFor("0.0.0.0, 1.1.1.1, 2.2.2.2");
+    assertEquals(3, result.length);
+    assertEquals("0.0.0.0", result[0]);
+    assertEquals("1.1.1.1", result[1]);
+    assertEquals("2.2.2.2", result[2]);
+
+    result = Parser.parseXForwardedFor("");
+    assertEquals(0, result.length);
+
+    result = Parser.parseXForwardedFor(null);
+    assertNull(result);
+
+    result = Parser.parseXForwardedFor("0.0.0.0, test");
+    assertNull(result);
+
+    result = Parser.parseXForwardedFor("test");
+    assertNull(result);
+
+    result = Parser.parseXForwardedFor("0.0.0.0, 1.2.3.999");
+    assertNull(result);
+  }
+
+  @Test
   public void testCloudtrailRawAction() throws Exception {
     String buf =
         "{\"eventVersion\": \"1.02\",\"userIdentity\": {\"type\": "

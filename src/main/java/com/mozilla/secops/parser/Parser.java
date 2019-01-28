@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -44,6 +45,29 @@ public class Parser {
   public static DateTime parseISO8601(String in) {
     DateTimeFormatter fmt = ISODateTimeFormat.dateTimeParser();
     return fmt.parseDateTime(in);
+  }
+
+  /**
+   * Process the value of an X-Forwarded-For header, returning an array of each address in the
+   * header or null if invalid
+   *
+   * @param in Input string
+   * @return Array of addresses, beginning from the left-most, or null on failure
+   */
+  public static String[] parseXForwardedFor(String in) {
+    if (in == null) {
+      return null;
+    } else if (in.isEmpty()) {
+      return new String[0];
+    }
+    String[] v = in.split(", ?");
+    InetAddressValidator iav = new InetAddressValidator();
+    for (String t : v) {
+      if (!(iav.isValid(t))) {
+        return null;
+      }
+    }
+    return v;
   }
 
   private String getStackdriverProject(LogEntry entry) {
