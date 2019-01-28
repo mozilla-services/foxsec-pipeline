@@ -33,12 +33,17 @@ public class EventFilterPayload implements Serializable {
     CLOUDTRAIL_MFA,
 
     GLB_REQUESTMETHOD,
-    GLB_URLREQUESTPATH
+    GLB_URLREQUESTPATH,
+
+    NGINX_REQUESTMETHOD,
+    NGINX_URLREQUESTPATH
   }
 
   /** Properties match integers from various payload event types */
   public enum IntegerProperty {
-    GLB_STATUS
+    GLB_STATUS,
+
+    NGINX_STATUS
   }
 
   private Class<? extends PayloadBase> ptype;
