@@ -10,7 +10,7 @@
         },
 
         "wriker@mozilla.com": {
-            "aliases": [ "numberone", "riker" ],
+            "aliases": [ "numberone", "riker", "riker@mozilla.com" ],
             "fragment": "riker",
             "notify": {
                 "direct_email_notify_format": "holodeck-%s@mozilla.com"

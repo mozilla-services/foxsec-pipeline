@@ -11,6 +11,10 @@ public class MemcachedStateInterface implements StateInterface {
   private final int memcachedPort;
   private MemcachedClient memclient;
 
+  public void deleteAll() throws StateException {
+    memclient.flush();
+  }
+
   public String getObject(String s) throws StateException {
     try {
       return (String) memclient.get(s);

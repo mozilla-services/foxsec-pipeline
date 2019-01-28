@@ -9,6 +9,8 @@ import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
+import com.mozilla.secops.state.DatastoreStateInterface;
+import com.mozilla.secops.state.State;
 import java.util.Collection;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
@@ -23,14 +25,22 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
 public class TestAuthProfile {
   @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
-  private void testEnv() {
+  private void testEnv() throws Exception {
     environmentVariables.set("DATASTORE_EMULATOR_HOST", "localhost:8081");
     environmentVariables.set("DATASTORE_EMULATOR_HOST_PATH", "localhost:8081/datastore");
     environmentVariables.set("DATASTORE_HOST", "http://localhost:8081");
     environmentVariables.set("DATASTORE_PROJECT_ID", "foxsec-pipeline");
+    clearState();
   }
 
   public TestAuthProfile() {}
+
+  public void clearState() throws Exception {
+    State state = new State(new DatastoreStateInterface("authprofile", "testauthprofileanalyze"));
+    state.initialize();
+    state.deleteAll();
+    state.done();
+  }
 
   private AuthProfile.AuthProfileOptions getTestOptions() {
     AuthProfile.AuthProfileOptions ret =
@@ -50,13 +60,15 @@ public class TestAuthProfile {
 
   @Test
   public void parseAndWindowTest() throws Exception {
+    testEnv();
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer1.txt", p);
 
-    PCollection<KV<String, Iterable<Event>>> res = input.apply(new AuthProfile.ParseAndWindow());
+    PCollection<KV<String, Iterable<Event>>> res =
+        input.apply(new AuthProfile.ParseAndWindow(getTestOptions()));
     PAssert.thatMap(res)
         .satisfies(
             results -> {
-              Iterable<Event> edata = results.get("riker");
+              Iterable<Event> edata = results.get("wriker@mozilla.com");
               assertNotNull(edata);
               assertTrue(edata instanceof Collection);
 
@@ -83,7 +95,7 @@ public class TestAuthProfile {
 
     PCollection<Alert> res =
         input
-            .apply(new AuthProfile.ParseAndWindow())
+            .apply(new AuthProfile.ParseAndWindow(options))
             .apply(ParDo.of(new AuthProfile.Analyze(options)));
 
     PAssert.that(res)
@@ -97,19 +109,77 @@ public class TestAuthProfile {
                 if (actualSummary.equals("riker authenticated to emit-bastion from Milton/US")) {
                   infoCnt++;
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                  assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                  assertNull(a.getTemplateName());
                   assertNull(a.getMetadataValue("notify_email_direct"));
                 } else if (actualSummary.equals(
                     "riker authenticated to emit-bastion from new source Milton/US")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  assertEquals("authprofile.ftlh", a.getTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
-                  assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                 }
+                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                assertEquals("riker", a.getMetadataValue("username"));
+                assertEquals("emit-bastion", a.getMetadataValue("object"));
+                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
+                assertEquals("US", a.getMetadataValue("sourceaddress_country"));
               }
               assertEquals(1L, newCnt);
               assertEquals(4L, infoCnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void analyzeMixedTest() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
+
+    PCollection<Alert> res =
+        input
+            .apply(new AuthProfile.ParseAndWindow(options))
+            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long newCnt = 0;
+              long infoCnt = 0;
+              for (Alert a : results) {
+                assertEquals("authprofile", a.getCategory());
+                String actualSummary = a.getSummary();
+                if (actualSummary.contains("from new source")) {
+                  newCnt++;
+                } else {
+                  infoCnt++;
+                }
+
+                String iKey = a.getMetadataValue("identity_key");
+                if (a.getMetadataValue("username").equals("laforge@mozilla.com")) {
+                  // Identity lookup should have failed
+                  assertNull(iKey);
+                  assertNull(a.getMetadataValue("notify_email_direct"));
+
+                  assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  assertEquals("127.0.0.1", a.getMetadataValue("sourceaddress"));
+                  assertEquals("laforge@mozilla.com", a.getMetadataValue("username"));
+                } else if ((iKey != null) && (iKey.equals("wriker@mozilla.com"))) {
+                  if (a.getMetadataValue("username").equals("riker@mozilla.com")) {
+                    // GcpAudit event should have generated a warning
+                    assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                    assertEquals(
+                        "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                    assertEquals("authprofile.ftlh", a.getTemplateName());
+                  }
+                }
+              }
+              assertEquals(3L, newCnt);
+              assertEquals(5L, infoCnt);
               return null;
             });
 

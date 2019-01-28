@@ -558,10 +558,18 @@ public class ParserTest {
     assertEquals(Payload.PayloadType.GCPAUDIT, e.getPayloadType());
     GcpAudit d = e.getPayload();
     assertNotNull(d);
-    assertNotNull(d.getAuditLog());
-    assertNotNull(d.getAuditLog().getAuthenticationInfo());
-    assertEquals(
-        "laforge@mozilla.com", d.getAuditLog().getAuthenticationInfo().getPrincipalEmail());
+    assertEquals("laforge@mozilla.com", d.getPrincipalEmail());
+    assertEquals("projects/test", d.getResource());
+    assertEquals("216.160.83.56", d.getCallerIp());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH_SESSION));
+    assertEquals("laforge@mozilla.com", n.getSubjectUser());
+    assertEquals("projects/test", n.getObject());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
   }
 
   @Test
