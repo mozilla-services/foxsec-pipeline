@@ -175,7 +175,6 @@ public class GcpAudit extends PayloadBase implements Serializable {
       }
     }
 
-    String obj = null;
     List<AuthorizationInfo> author = auditLog.getAuthorizationInfo();
     if (author != null && author.size() >= 1) {
       resource = author.get(0).getResource();
