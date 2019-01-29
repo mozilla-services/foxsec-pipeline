@@ -37,7 +37,6 @@ public class Alert implements Serializable {
   private DateTime timestamp;
   private ArrayList<AlertMeta> metadata;
   private AlertSeverity severity;
-  private String templateName;
 
   /** Construct new alert object */
   public Alert() {
@@ -247,7 +246,7 @@ public class Alert implements Serializable {
    * @param templateName Freemarker template name with file extension
    */
   public void setTemplateName(String templateName) {
-    this.templateName = templateName;
+    addMetadata("template_name", templateName);
   }
 
   /**
@@ -255,9 +254,9 @@ public class Alert implements Serializable {
    *
    * @return Freemarker template name with file extension or null if not set.
    */
-  @JsonProperty("template_name")
+  @JsonIgnore
   public String getTemplateName() {
-    return templateName;
+    return getMetadataValue("template_name");
   }
 
   /**
