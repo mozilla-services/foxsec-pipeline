@@ -17,6 +17,7 @@ import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -189,6 +190,9 @@ public class AuthProfile implements Serializable {
       String userIdentity = c.element().getKey();
       Identity identity = idmanager.getIdentity(userIdentity);
 
+      ArrayList<String> seenNew = new ArrayList<>();
+      ArrayList<String> seenKnown = new ArrayList<>();
+
       for (Event e : events) {
         Normalized n = e.getNormalized();
         String address = n.getSourceAddress();
@@ -216,6 +220,19 @@ public class AuthProfile implements Serializable {
         String summary = String.format("%s authenticated to %s", eventUsername, destination);
         if (sm.updateEntry(address)) {
           // Address was new
+          Boolean wasSeen = false;
+          for (String s : seenNew) {
+            if (s.equals(address)) {
+              wasSeen = true;
+            }
+          }
+          // If we have already reported this as new once during this window, just ignore
+          // this event
+          if (wasSeen) {
+            continue;
+          }
+          seenNew.add(address);
+
           isUnknown = true;
           log.info("{}: escalating alert criteria for new source: {}", userIdentity, address);
           summary = summary + " from new source " + summaryIndicator;
@@ -229,6 +246,19 @@ public class AuthProfile implements Serializable {
                   eventUsername, destination));
         } else {
           // Known source
+          Boolean wasSeen = false;
+          for (String s : seenKnown) {
+            if (s.equals(address)) {
+              wasSeen = true;
+            }
+          }
+          // If we have already reported this as new once during this window, just ignore
+          // this event
+          if (wasSeen) {
+            continue;
+          }
+          seenKnown.add(address);
+
           log.info("{}: access from known source: {}", userIdentity, address);
           summary = summary + " from " + summaryIndicator;
           alert.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
