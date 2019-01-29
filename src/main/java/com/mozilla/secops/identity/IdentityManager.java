@@ -93,6 +93,11 @@ public class IdentityManager {
    * @return Resolved global identity string
    */
   public String lookupAlias(String username) {
+    // If the username matches a global identity value, just return that directly
+    if (identities.get(username) != null) {
+      return username;
+    }
+
     for (Map.Entry<String, Identity> entry : identities.entrySet()) {
       Identity ival = entry.getValue();
       for (String alias : ival.getAliases()) {
