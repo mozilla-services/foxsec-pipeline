@@ -73,7 +73,7 @@ public class TestAuthProfile {
               assertTrue(edata instanceof Collection);
 
               Event[] e = ((Collection<Event>) edata).toArray(new Event[0]);
-              assertEquals(e.length, 5);
+              assertEquals(5, e.length);
 
               Normalized n = e[0].getNormalized();
               assertNotNull(n);
@@ -127,7 +127,9 @@ public class TestAuthProfile {
                 assertEquals("US", a.getMetadataValue("sourceaddress_country"));
               }
               assertEquals(1L, newCnt);
-              assertEquals(4L, infoCnt);
+              // Should have one informational since the rest of the duplicates will be
+              // filtered in window since they were already seen
+              assertEquals(1L, infoCnt);
               return null;
             });
 
@@ -179,7 +181,9 @@ public class TestAuthProfile {
                 }
               }
               assertEquals(3L, newCnt);
-              assertEquals(5L, infoCnt);
+              // Should have one informational since the rest of the duplicates will be
+              // filtered in window since they were already seen
+              assertEquals(1L, infoCnt);
               return null;
             });
 
