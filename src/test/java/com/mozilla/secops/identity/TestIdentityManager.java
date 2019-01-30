@@ -17,6 +17,7 @@ public class TestIdentityManager {
 
     assertEquals("testuser@mozilla.com", mgr.lookupAlias("testuser"));
     assertNull(mgr.lookupAlias("unknown"));
+    assertEquals("testuser@mozilla.com", mgr.lookupAlias("testuser@mozilla.com"));
 
     assertNull(mgr.getIdentity("worf@mozilla.com"));
     assertNotNull(mgr.getIdentity("testuser@mozilla.com"));
