@@ -239,6 +239,15 @@ public class ParserTest {
     assertEquals(200, (int) g.getStatus());
     assertEquals("/public/locales/en-US/send.js", g.getParsedUrl().getPath());
     assertEquals("test=test", g.getParsedUrl().getQuery());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.HTTP_REQUEST));
+    assertEquals("GET", n.getRequestMethod());
+    assertEquals(200, (int) n.getRequestStatus());
+    assertEquals(
+        "https://send.firefox.com/public/locales/en-US/send.js?test=test", n.getRequestUrl());
+    assertEquals("/public/locales/en-US/send.js", n.getUrlRequestPath());
   }
 
   @Test

@@ -109,6 +109,17 @@ public class GLB extends PayloadBase implements Serializable {
         // pass
       }
     }
+
+    Normalized n = e.getNormalized();
+    n.addType(Normalized.Type.HTTP_REQUEST);
+    n.setSourceAddress(sourceAddress);
+    n.setUserAgent(userAgent);
+    n.setRequestMethod(requestMethod);
+    n.setRequestStatus(status);
+    n.setRequestUrl(requestUrl);
+    if (parsedUrl != null) {
+      n.setUrlRequestPath(parsedUrl.getPath());
+    }
   }
 
   @Override
