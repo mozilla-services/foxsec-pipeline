@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -8,6 +9,8 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -29,6 +32,7 @@ public class Event implements Serializable {
   private Normalized normalized;
   private Mozlog mozlog;
   private String stackdriverProject;
+  private Map<String, String> stackdriverLabels;
 
   /**
    * Create a new {@link Event} object.
@@ -133,6 +137,48 @@ public class Event implements Serializable {
   @JsonProperty("stackdriver_project")
   public String getStackdriverProject() {
     return stackdriverProject;
+  }
+
+  /**
+   * Set Stackdriver labels
+   *
+   * @param labels Labels
+   */
+  public void setStackdriverLabels(Map<String, String> labels) {
+    if (labels == null) {
+      return;
+    }
+    // Convert to HashMap, avoids
+    // java.io.NotSerializableException: com.google.api.client.util.ArrayMap
+    // on map returned from LogEntry
+    stackdriverLabels = new HashMap<String, String>();
+    for (Map.Entry<String, String> entry : labels.entrySet()) {
+      stackdriverLabels.put(entry.getKey(), entry.getValue());
+    }
+  }
+
+  /**
+   * Get Stackdriver labels
+   *
+   * @return Labels, null if not present
+   */
+  @JsonProperty("stackdriver_labels")
+  public Map<String, String> getStackdriverLabels() {
+    return stackdriverLabels;
+  }
+
+  /**
+   * Get specific Stackdriver label value
+   *
+   * @param key Label key to return value for
+   * @return Value if present, null if not found
+   */
+  @JsonIgnore
+  public String getStackdriverLabel(String key) {
+    if (stackdriverLabels == null) {
+      return null;
+    }
+    return stackdriverLabels.get(key);
   }
 
   /**

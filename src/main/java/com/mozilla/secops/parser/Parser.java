@@ -91,6 +91,7 @@ public class Parser {
       LogEntry entry = jp.parse(LogEntry.class);
 
       e.setStackdriverProject(getStackdriverProject(entry));
+      e.setStackdriverLabels(entry.getLabels());
 
       // We were able to deserialize the LogEntry so store it as a hint in the state
       state.setLogEntryHint(entry);

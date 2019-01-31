@@ -148,6 +148,57 @@ public class EventFilterTest {
   }
 
   @Test
+  public void testEventFilterStackdriverLabelFilter() throws Exception {
+    String buf =
+        "{\"insertId\":\"AAAAAAAAAAAA\",\"jsonPayload\":{\"agent\":\"Mozilla/5.0\",\"bytes_sent\""
+            + ":\"97\",\"cache_status\":\"-\",\"code\":\"200\",\"gzip_ratio\":\"0.68\",\"referrer\":\"h"
+            + "ttps://bugzilla.mozilla.org/show_bug.cgi?id=0\",\"remote_ip\":\"216.160.83.56\",\"req_ti"
+            + "me\":\"0.136\",\"request\":\"POST /rest/bug_user_last_visit/000000?t=t HTTP/1.1\",\"res_"
+            + "time\":\"0.136\"},\"labels\":{\"application\":\"bugzilla\",\"ec2.amazonaws.com/resource_"
+            + "name\":\"ip1.us-west-2.compute.internal\",\"env\":\"test\",\"stack\":\"app\",\"type\":\""
+            + "app\"},\"logName\":\"projects/test/logs/test\",\"receiveTimestamp\":\"2019-01-31T17:49:5"
+            + "9.539710898Z\",\"resource\":{\"labels\":{\"aws_account\":\"000000000000\",\"instance_id\""
+            + ":\"i-00000000000000000\",\"project_id\":\"test\",\"region\":\"aws:us-west-2c\"},\"type\":"
+            + "\"aws_ec2_instance\"},\"timestamp\":\"2019-01-31T17:49:57Z\"}";
+    Parser p = new Parser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.NGINX, e.getPayloadType());
+
+    EventFilter filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(new EventFilterRule().wantStackdriverLabel("application", "bugzilla"));
+    assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(new EventFilterRule().wantStackdriverLabel("application", "nonexistent"));
+    assertFalse(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(new EventFilterRule().wantStackdriverLabel("nonexistent", "bugzilla"));
+    assertFalse(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantStackdriverLabel("application", "bugzilla")
+            .wantStackdriverLabel("env", "testing"));
+    assertFalse(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .wantStackdriverLabel("application", "bugzilla")
+            .wantStackdriverLabel("env", "test"));
+    assertTrue(filter.matches(e));
+  }
+
+  @Test
   public void testEventFilterMultitypeMatch() throws Exception {
     String buf =
         "{\"httpRequest\":{\"referer\":\"https://send.firefox.com/\",\"remoteIp\":"
