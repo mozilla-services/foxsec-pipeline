@@ -606,7 +606,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseNginxStackdriver() {
+  public void testParseNginxStackdriverVariant1() {
     String buf =
         "{\"insertId\":\"XXXXXXXXXXXXX\",\"jsonPayload\":{\"x_forwarded_proto\":\"https\",\"remote_"
             + "addr\":\"216.160.83.56\",\"user_agent\":\"Mozilla\",\"referrer\":\"https://mozilla.org/\",\""
@@ -638,6 +638,34 @@ public class ParserTest {
     assertEquals("POST", d.getRequestMethod());
     assertEquals("/test/endpoint?t=t", d.getRequestUrl());
     assertEquals("/test/endpoint", d.getRequestPath());
+  }
+
+  @Test
+  public void testParseNginxStackdriverVariant2() {
+    String buf =
+        "{\"insertId\":\"AAAAAAAAAAAA\",\"jsonPayload\":{\"agent\":\"Mozilla/5.0\",\"bytes_sent\""
+            + ":\"97\",\"cache_status\":\"-\",\"code\":\"200\",\"gzip_ratio\":\"0.68\",\"referrer\":\"h"
+            + "ttps://bugzilla.mozilla.org/show_bug.cgi?id=0\",\"remote_ip\":\"216.160.83.56\",\"req_ti"
+            + "me\":\"0.136\",\"request\":\"POST /rest/bug_user_last_visit/000000?t=t HTTP/1.1\",\"res_"
+            + "time\":\"0.136\"},\"labels\":{\"application\":\"bugzilla\",\"ec2.amazonaws.com/resource_"
+            + "name\":\"ip1.us-west-2.compute.internal\",\"env\":\"test\",\"stack\":\"app\",\"type\":\""
+            + "app\"},\"logName\":\"projects/test/logs/test\",\"receiveTimestamp\":\"2019-01-31T17:49:5"
+            + "9.539710898Z\",\"resource\":{\"labels\":{\"aws_account\":\"000000000000\",\"instance_id\""
+            + ":\"i-00000000000000000\",\"project_id\":\"test\",\"region\":\"aws:us-west-2c\"},\"type\":"
+            + "\"aws_ec2_instance\"},\"timestamp\":\"2019-01-31T17:49:57Z\"}";
+    Parser p = new Parser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.NGINX, e.getPayloadType());
+    Nginx d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(200, (int) d.getStatus());
+    assertEquals("https://bugzilla.mozilla.org/show_bug.cgi?id=0", d.getReferrer());
+    assertEquals("POST /rest/bug_user_last_visit/000000?t=t HTTP/1.1", d.getRequest());
+    assertEquals("POST", d.getRequestMethod());
+    assertEquals("/rest/bug_user_last_visit/000000?t=t", d.getRequestUrl());
+    assertEquals("/rest/bug_user_last_visit/000000", d.getRequestPath());
   }
 
   @Test

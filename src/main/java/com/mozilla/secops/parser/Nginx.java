@@ -36,6 +36,23 @@ public class Nginx extends PayloadBase implements Serializable {
   private String requestUrl;
   private String requestPath;
 
+  private Boolean matchesStackdriverVariant1(Map<String, Object> m) {
+    // Variant 1, GCP Stackdriver nginx stdout native
+    return ((m.get("remote_addr") != null)
+        && (m.get("request") != null)
+        && (m.get("bytes_sent") != null)
+        && (m.get("request_time") != null));
+  }
+
+  private Boolean matchesStackdriverVariant2(Map<String, Object> m) {
+    // Variant 2, Stackdriver nginx ec2
+    return ((m.get("remote_ip") != null)
+        && (m.get("referrer") != null)
+        && (m.get("req_time") != null)
+        && (m.get("agent") != null)
+        && (m.get("request") != null));
+  }
+
   @Override
   public Boolean matcher(String input, ParserState state) {
     try {
@@ -56,10 +73,7 @@ public class Nginx extends PayloadBase implements Serializable {
       // XXX This is not very efficient but there is otherwise no way to determine the
       // JSON payload type, as no field exists to indicate the type of log message. Check if
       // we have a few of the fields we want and indicate true of they are present.
-      if ((m.get("remote_addr") != null)
-          && (m.get("request") != null)
-          && (m.get("bytes_sent") != null)
-          && (m.get("request_time") != null)) {
+      if (matchesStackdriverVariant1(m) || matchesStackdriverVariant2(m)) {
         return true;
       }
     } catch (IOException exc) {
@@ -118,27 +132,51 @@ public class Nginx extends PayloadBase implements Serializable {
       return;
     }
 
-    com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriver nginxs;
-    try {
-      ObjectMapper mapper = new ObjectMapper();
-      nginxs =
-          mapper.readValue(
-              pbuf, com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriver.class);
-    } catch (IOException exc) {
+    if (matchesStackdriverVariant1(m)) {
+      com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriverVariant1 nginxs;
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        nginxs =
+            mapper.readValue(
+                pbuf,
+                com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriverVariant1.class);
+      } catch (IOException exc) {
+        return;
+      }
+
+      xForwardedProto = nginxs.getXForwardedProto();
+      remoteAddr = nginxs.getRemoteAddr();
+      userAgent = nginxs.getUserAgent();
+      referrer = nginxs.getReferrer();
+      request = nginxs.getRequest();
+      remoteUser = nginxs.getRemoteUser();
+      requestTime = nginxs.getRequestTime();
+      bytesSent = nginxs.getBytesSent();
+      trace = nginxs.getTrace();
+      status = new Integer(nginxs.getStatus());
+      xForwardedFor = nginxs.getXForwardedFor();
+    } else if (matchesStackdriverVariant2(m)) {
+      com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriverVariant2 nginxs;
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        nginxs =
+            mapper.readValue(
+                pbuf,
+                com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriverVariant2.class);
+      } catch (IOException exc) {
+        return;
+      }
+
+      remoteAddr = nginxs.getRemoteIp();
+      userAgent = nginxs.getUserAgent();
+      referrer = nginxs.getReferrer();
+      request = nginxs.getRequest();
+      requestTime = new Double(nginxs.getRequestTime());
+      bytesSent = new Integer(nginxs.getBytesSent());
+      status = new Integer(nginxs.getCode());
+    } else {
       return;
     }
-
-    xForwardedProto = nginxs.getXForwardedProto();
-    remoteAddr = nginxs.getRemoteAddr();
-    userAgent = nginxs.getUserAgent();
-    referrer = nginxs.getReferrer();
-    request = nginxs.getRequest();
-    remoteUser = nginxs.getRemoteUser();
-    requestTime = nginxs.getRequestTime();
-    bytesSent = nginxs.getBytesSent();
-    trace = nginxs.getTrace();
-    status = new Integer(nginxs.getStatus());
-    xForwardedFor = nginxs.getXForwardedFor();
 
     if (request != null) {
       String[] parts = request.split(" ");
