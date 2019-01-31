@@ -189,4 +189,39 @@ public class TestAuthProfile {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void analyzeMixedIgnoreTest() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+    options.setIgnoreUserRegex(new String[] {"^laforge@.*"});
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
+
+    PCollection<Alert> res =
+        input
+            .apply(new AuthProfile.ParseAndWindow(options))
+            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long newCnt = 0;
+              long infoCnt = 0;
+              for (Alert a : results) {
+                assertEquals("authprofile", a.getCategory());
+                String actualSummary = a.getSummary();
+                if (actualSummary.contains("from new source")) {
+                  newCnt++;
+                } else {
+                  infoCnt++;
+                }
+              }
+              assertEquals(2L, newCnt);
+              // Should have one informational since the rest of the duplicates will be
+              // filtered in window since they were already seen
+              assertEquals(1L, infoCnt);
+              return null;
+            });
+    p.run().waitUntilFinish();
+  }
 }
