@@ -647,6 +647,14 @@ public class ParserTest {
     assertEquals("POST", d.getRequestMethod());
     assertEquals("/test/endpoint?t=t", d.getRequestUrl());
     assertEquals("/test/endpoint", d.getRequestPath());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.HTTP_REQUEST));
+    assertEquals("POST", n.getRequestMethod());
+    assertEquals(200, (int) n.getRequestStatus());
+    assertEquals("/test/endpoint?t=t", n.getRequestUrl());
+    assertEquals("/test/endpoint", n.getUrlRequestPath());
   }
 
   @Test
@@ -675,6 +683,14 @@ public class ParserTest {
     assertEquals("POST", d.getRequestMethod());
     assertEquals("/rest/bug_user_last_visit/000000?t=t", d.getRequestUrl());
     assertEquals("/rest/bug_user_last_visit/000000", d.getRequestPath());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.HTTP_REQUEST));
+    assertEquals("POST", n.getRequestMethod());
+    assertEquals(200, (int) n.getRequestStatus());
+    assertEquals("/rest/bug_user_last_visit/000000?t=t", n.getRequestUrl());
+    assertEquals("/rest/bug_user_last_visit/000000", n.getUrlRequestPath());
   }
 
   @Test

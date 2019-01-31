@@ -194,6 +194,13 @@ public class Nginx extends PayloadBase implements Serializable {
         requestPath = requestUrl;
       }
     }
+
+    Normalized n = e.getNormalized();
+    n.addType(Normalized.Type.HTTP_REQUEST);
+    n.setRequestMethod(requestMethod);
+    n.setRequestStatus(status);
+    n.setRequestUrl(requestUrl);
+    n.setUrlRequestPath(requestPath);
   }
 
   @Override
