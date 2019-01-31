@@ -108,6 +108,26 @@ public class EventFilterTest {
     assertNotNull(filter);
     filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
     assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .addPayloadFilter(
+                new EventFilterPayload()
+                    .withStringMatch(
+                        EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER, "riker")));
+    assertTrue(filter.matches(e));
+
+    filter = new EventFilter();
+    assertNotNull(filter);
+    filter.addRule(
+        new EventFilterRule()
+            .addPayloadFilter(
+                new EventFilterPayload()
+                    .withStringMatch(
+                        EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER, "test")));
+    assertFalse(filter.matches(e));
   }
 
   @Test
