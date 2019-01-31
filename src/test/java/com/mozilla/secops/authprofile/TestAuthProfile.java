@@ -106,13 +106,16 @@ public class TestAuthProfile {
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
                 String actualSummary = a.getSummary();
-                if (actualSummary.equals("riker authenticated to emit-bastion from Milton/US")) {
+                if (actualSummary.equals(
+                    "authentication event observed riker to emit-bastion, "
+                        + "known source 216.160.83.56 [Milton/US]")) {
                   infoCnt++;
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                   assertNull(a.getTemplateName());
                   assertNull(a.getMetadataValue("notify_email_direct"));
                 } else if (actualSummary.equals(
-                    "riker authenticated to emit-bastion from new source Milton/US")) {
+                    "authentication event observed riker to emit-bastion, "
+                        + "new source 216.160.83.56 [Milton/US]")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                   assertEquals("authprofile.ftlh", a.getTemplateName());
@@ -155,7 +158,7 @@ public class TestAuthProfile {
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
                 String actualSummary = a.getSummary();
-                if (actualSummary.contains("from new source")) {
+                if (actualSummary.contains("new source")) {
                   newCnt++;
                 } else {
                   infoCnt++;
@@ -210,7 +213,7 @@ public class TestAuthProfile {
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
                 String actualSummary = a.getSummary();
-                if (actualSummary.contains("from new source")) {
+                if (actualSummary.contains("new source")) {
                   newCnt++;
                 } else {
                   infoCnt++;

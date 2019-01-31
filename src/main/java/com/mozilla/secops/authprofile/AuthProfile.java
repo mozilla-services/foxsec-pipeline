@@ -232,12 +232,13 @@ public class AuthProfile implements Serializable {
         String country = n.getSourceAddressCountry();
         String summaryIndicator = address;
         if (city != null && country != null) {
-          summaryIndicator = String.format("%s/%s", city, country);
+          summaryIndicator = summaryIndicator + String.format(" [%s/%s]", city, country);
         }
 
         Alert alert = new Alert();
 
-        String summary = String.format("%s authenticated to %s", eventUsername, destination);
+        String summary =
+            String.format("authentication event observed %s to %s", eventUsername, destination);
         if (sm.updateEntry(address)) {
           // Address was new
           Boolean wasSeen = false;
@@ -255,7 +256,7 @@ public class AuthProfile implements Serializable {
 
           isUnknown = true;
           log.info("{}: escalating alert criteria for new source: {}", userIdentity, address);
-          summary = summary + " from new source " + summaryIndicator;
+          summary = summary + ", new source " + summaryIndicator;
           alert.setSeverity(Alert.AlertSeverity.WARNING);
           alert.setTemplateName("authprofile.ftlh");
 
@@ -280,7 +281,7 @@ public class AuthProfile implements Serializable {
           seenKnown.add(address);
 
           log.info("{}: access from known source: {}", userIdentity, address);
-          summary = summary + " from " + summaryIndicator;
+          summary = summary + ", known source " + summaryIndicator;
           alert.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
           alert.addToPayload(
               String.format(
