@@ -106,13 +106,16 @@ public class TestAuthProfile {
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
                 String actualSummary = a.getSummary();
-                if (actualSummary.equals("riker authenticated to emit-bastion from Milton/US")) {
+                if (actualSummary.equals(
+                    "authentication event observed riker to emit-bastion, "
+                        + "known source 216.160.83.56 [Milton/US]")) {
                   infoCnt++;
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                   assertNull(a.getTemplateName());
                   assertNull(a.getMetadataValue("notify_email_direct"));
                 } else if (actualSummary.equals(
-                    "riker authenticated to emit-bastion from new source Milton/US")) {
+                    "authentication event observed riker to emit-bastion, "
+                        + "new source 216.160.83.56 [Milton/US]")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                   assertEquals("authprofile.ftlh", a.getTemplateName());
@@ -155,7 +158,7 @@ public class TestAuthProfile {
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
                 String actualSummary = a.getSummary();
-                if (actualSummary.contains("from new source")) {
+                if (actualSummary.contains("new source")) {
                   newCnt++;
                 } else {
                   infoCnt++;
@@ -187,6 +190,41 @@ public class TestAuthProfile {
               return null;
             });
 
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void analyzeMixedIgnoreTest() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+    options.setIgnoreUserRegex(new String[] {"^laforge@.*"});
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
+
+    PCollection<Alert> res =
+        input
+            .apply(new AuthProfile.ParseAndWindow(options))
+            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long newCnt = 0;
+              long infoCnt = 0;
+              for (Alert a : results) {
+                assertEquals("authprofile", a.getCategory());
+                String actualSummary = a.getSummary();
+                if (actualSummary.contains("new source")) {
+                  newCnt++;
+                } else {
+                  infoCnt++;
+                }
+              }
+              assertEquals(2L, newCnt);
+              // Should have one informational since the rest of the duplicates will be
+              // filtered in window since they were already seen
+              assertEquals(1L, infoCnt);
+              return null;
+            });
     p.run().waitUntilFinish();
   }
 }

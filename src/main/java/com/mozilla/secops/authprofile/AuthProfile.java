@@ -18,6 +18,7 @@ import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -59,6 +60,7 @@ public class AuthProfile implements Serializable {
 
     private Logger log;
     private final String idmanagerPath;
+    private final String[] ignoreUserRegex;
 
     /**
      * Static initializer for {@link ParseAndWindow} using specified pipeline options
@@ -68,6 +70,7 @@ public class AuthProfile implements Serializable {
     public ParseAndWindow(AuthProfileOptions options) {
       idmanagerPath = options.getIdentityManagerPath();
       log = LoggerFactory.getLogger(ParseAndWindow.class);
+      ignoreUserRegex = options.getIgnoreUserRegex();
     }
 
     @Override
@@ -86,6 +89,7 @@ public class AuthProfile implements Serializable {
                     private static final long serialVersionUID = 1L;
 
                     private IdentityManager idmanager;
+                    private Pattern[] ignoreUsers;
 
                     @Setup
                     public void setup() throws IOException {
@@ -93,6 +97,13 @@ public class AuthProfile implements Serializable {
                         idmanager = IdentityManager.loadFromResource();
                       } else {
                         idmanager = IdentityManager.loadFromResource(idmanagerPath);
+                      }
+
+                      if (ignoreUserRegex != null) {
+                        ignoreUsers = new Pattern[ignoreUserRegex.length];
+                        for (int i = 0; i < ignoreUserRegex.length; i++) {
+                          ignoreUsers[i] = Pattern.compile(ignoreUserRegex[i]);
+                        }
                       }
                     }
 
@@ -103,6 +114,15 @@ public class AuthProfile implements Serializable {
 
                       if (n.getSubjectUser() == null) {
                         return;
+                      }
+
+                      if (ignoreUsers != null) {
+                        for (Pattern p : ignoreUsers) {
+                          if (p.matcher(n.getSubjectUser()).matches()) {
+                            log.info("{}: ignoring event for ignored user", n.getSubjectUser());
+                            return;
+                          }
+                        }
                       }
 
                       String identityKey = idmanager.lookupAlias(n.getSubjectUser());
@@ -212,12 +232,13 @@ public class AuthProfile implements Serializable {
         String country = n.getSourceAddressCountry();
         String summaryIndicator = address;
         if (city != null && country != null) {
-          summaryIndicator = String.format("%s/%s", city, country);
+          summaryIndicator = summaryIndicator + String.format(" [%s/%s]", city, country);
         }
 
         Alert alert = new Alert();
 
-        String summary = String.format("%s authenticated to %s", eventUsername, destination);
+        String summary =
+            String.format("authentication event observed %s to %s", eventUsername, destination);
         if (sm.updateEntry(address)) {
           // Address was new
           Boolean wasSeen = false;
@@ -235,7 +256,7 @@ public class AuthProfile implements Serializable {
 
           isUnknown = true;
           log.info("{}: escalating alert criteria for new source: {}", userIdentity, address);
-          summary = summary + " from new source " + summaryIndicator;
+          summary = summary + ", new source " + summaryIndicator;
           alert.setSeverity(Alert.AlertSeverity.WARNING);
           alert.setTemplateName("authprofile.ftlh");
 
@@ -260,7 +281,7 @@ public class AuthProfile implements Serializable {
           seenKnown.add(address);
 
           log.info("{}: access from known source: {}", userIdentity, address);
-          summary = summary + " from " + summaryIndicator;
+          summary = summary + ", known source " + summaryIndicator;
           alert.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
           alert.addToPayload(
               String.format(
@@ -338,6 +359,11 @@ public class AuthProfile implements Serializable {
     String getIdentityManagerPath();
 
     void setIdentityManagerPath(String value);
+
+    @Description("Ignore events for any usernames match regex (multiple allowed)")
+    String[] getIgnoreUserRegex();
+
+    void setIgnoreUserRegex(String[] value);
   }
 
   private static void runAuthProfile(AuthProfileOptions options) throws IllegalArgumentException {

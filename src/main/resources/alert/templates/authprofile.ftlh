@@ -109,7 +109,7 @@
                       <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;">
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        We noticed a login for ${username} into ${object} at ${alert.timestamp?datetime.iso_m_nz} from a new location.
+                        We noticed a login for ${username} to ${object} at ${alert.timestamp?datetime.iso_m_nz} from a new location.
                         </p>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
@@ -121,18 +121,8 @@
                         </p>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        These alerts are sent when a user logs into a jump host, AWS console, or assumes a role in AWS from an “unknown IP”. The inactivity expiry for IP’s is 10 days.
+                        These alerts are sent when a user logs into a monitored service from an “unknown IP”. The inactivity expiry for IPs is 10 days.
                         </p>
-
-                        <#if current_entries??>
-                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        Below are the IPs that are currently whitelisted for ${username} based on previous use:
-                        </p>
-
-                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        ${current_entries}
-                        </p>
-                        </#if>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
                         If you have any questions about this notification, email us at secops@mozilla.com
