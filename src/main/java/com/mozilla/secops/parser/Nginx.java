@@ -187,6 +187,13 @@ public class Nginx extends PayloadBase implements Serializable {
       return;
     }
 
+    if ((remoteAddr != null) && (remoteAddr.equals("-"))) {
+      remoteAddr = null;
+    }
+    if ((referrer != null) && (referrer.equals("-"))) {
+      referrer = null;
+    }
+
     if (request != null) {
       String[] parts = request.split(" ");
       if (parts.length == 3) {

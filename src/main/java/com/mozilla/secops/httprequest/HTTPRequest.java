@@ -192,6 +192,9 @@ public class HTTPRequest implements Serializable {
                       if (status == null) {
                         return;
                       }
+                      if (n.getSourceAddress() == null) {
+                        return;
+                      }
                       if (status >= 400 && status < 500) {
                         c.output(n.getSourceAddress());
                       }
@@ -481,6 +484,9 @@ public class HTTPRequest implements Serializable {
                         @ProcessElement
                         public void processElement(ProcessContext c) {
                           Normalized n = c.element().getNormalized();
+                          if (n.getSourceAddress() == null) {
+                            return;
+                          }
                           c.output(n.getSourceAddress());
                         }
                       }))
