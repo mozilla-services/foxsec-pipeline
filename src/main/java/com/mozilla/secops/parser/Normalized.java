@@ -54,6 +54,8 @@ public class Normalized implements Serializable {
         return getRequestUrl();
       case NORMALIZED_URLREQUESTPATH:
         return getUrlRequestPath();
+      case NORMALIZED_SOURCEADDRESS:
+        return getSourceAddress();
     }
     return null;
   }
