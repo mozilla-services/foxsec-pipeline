@@ -201,6 +201,7 @@ public class Nginx extends PayloadBase implements Serializable {
     n.setRequestStatus(status);
     n.setRequestUrl(requestUrl);
     n.setUrlRequestPath(requestPath);
+    n.setSourceAddress(remoteAddr);
   }
 
   @Override

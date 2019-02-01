@@ -655,6 +655,7 @@ public class ParserTest {
     assertEquals(200, (int) n.getRequestStatus());
     assertEquals("/test/endpoint?t=t", n.getRequestUrl());
     assertEquals("/test/endpoint", n.getUrlRequestPath());
+    assertEquals("216.160.83.56", n.getSourceAddress());
   }
 
   @Test
@@ -691,6 +692,7 @@ public class ParserTest {
     assertEquals(200, (int) n.getRequestStatus());
     assertEquals("/rest/bug_user_last_visit/000000?t=t", n.getRequestUrl());
     assertEquals("/rest/bug_user_last_visit/000000", n.getUrlRequestPath());
+    assertEquals("216.160.83.56", n.getSourceAddress());
   }
 
   @Test
