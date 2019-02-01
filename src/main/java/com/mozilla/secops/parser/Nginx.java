@@ -8,6 +8,7 @@ import com.google.api.services.logging.v2.model.LogEntry;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
+import org.joda.time.DateTime;
 
 /**
  * Payload parser for nginx log data
@@ -119,6 +120,14 @@ public class Nginx extends PayloadBase implements Serializable {
     Map<String, Object> m = entry.getJsonPayload();
     if (m == null) {
       return;
+    }
+
+    String ets = entry.getTimestamp();
+    if (ets != null) {
+      DateTime d = Parser.parseISO8601(ets);
+      if (d != null) {
+        e.setTimestamp(d);
+      }
     }
 
     String pbuf = null;
