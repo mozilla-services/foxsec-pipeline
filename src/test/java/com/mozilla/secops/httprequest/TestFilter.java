@@ -13,8 +13,8 @@ import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class TestProjectFilter {
-  public TestProjectFilter() {}
+public class TestFilter {
+  public TestFilter() {}
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
@@ -26,8 +26,8 @@ public class TestProjectFilter {
   }
 
   @Test
-  public void noFilterTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_projectfilter.txt", p);
+  public void noProjectFilterTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
 
     PCollection<Event> events =
         input
@@ -38,14 +38,14 @@ public class TestProjectFilter {
 
     PAssert.that(count)
         .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(2L);
+        .containsInAnyOrder(3L);
 
     p.run().waitUntilFinish();
   }
 
   @Test
-  public void withFilterTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_projectfilter.txt", p);
+  public void withProjectFilterTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setStackdriverProjectFilter("test");
@@ -57,6 +57,40 @@ public class TestProjectFilter {
     PAssert.that(count)
         .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
         .containsInAnyOrder(1L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void withLabelFilterTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setStackdriverLabelFilters(new String[] {"env:holodeck"});
+    PCollection<Event> events =
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+    PCollection<Long> count =
+        events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
+
+    PAssert.that(count)
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .containsInAnyOrder(2L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void withNoMatchLabelFilterTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setStackdriverLabelFilters(new String[] {"env:hydroponicsbay"});
+    PCollection<Event> events =
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+    PCollection<Long> count =
+        events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
+
+    PAssert.that(count).inWindow(new IntervalWindow(new Instant(0L), new Instant(60000))).empty();
 
     p.run().waitUntilFinish();
   }

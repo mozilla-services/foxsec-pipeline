@@ -67,6 +67,7 @@ public class HTTPRequest implements Serializable {
     private final Boolean emitEventTimestamps;
     private final String stackdriverProjectFilter;
     private final String[] filterRequestPath;
+    private final String[] stackdriverLabelFilters;
 
     /**
      * Static initializer for {@link Parse} transform
@@ -76,6 +77,7 @@ public class HTTPRequest implements Serializable {
     public Parse(HTTPRequestOptions options) {
       emitEventTimestamps = options.getUseEventTimestamp();
       stackdriverProjectFilter = options.getStackdriverProjectFilter();
+      stackdriverLabelFilters = options.getStackdriverLabelFilters();
       filterRequestPath = options.getFilterRequestPath();
     }
 
@@ -86,6 +88,16 @@ public class HTTPRequest implements Serializable {
       EventFilterRule rule = new EventFilterRule().wantNormalizedType(Normalized.Type.HTTP_REQUEST);
       if (stackdriverProjectFilter != null) {
         rule.wantStackdriverProject(stackdriverProjectFilter);
+      }
+      if (stackdriverLabelFilters != null) {
+        for (String labelFilter : stackdriverLabelFilters) {
+          String parts[] = labelFilter.split(":");
+          if (parts.length != 2) {
+            throw new IllegalArgumentException(
+                "invalid format for Stackdriver label filter, must be <key>:<value>");
+          }
+          rule.wantStackdriverLabel(parts[0], parts[1]);
+        }
       }
       if (filterRequestPath != null) {
         for (String s : filterRequestPath) {
@@ -661,6 +673,11 @@ public class HTTPRequest implements Serializable {
     String getStackdriverProjectFilter();
 
     void setStackdriverProjectFilter(String value);
+
+    @Description("Only inspect Stackdriver events that have the provided labels; key:value")
+    String[] getStackdriverLabelFilters();
+
+    void setStackdriverLabelFilters(String[] value);
 
     @Description(
         "Endpoint abuse analysis paths for monitoring (multiple allowed); e.g., threshold:method:/path")
