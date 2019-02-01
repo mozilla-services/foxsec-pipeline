@@ -337,6 +337,40 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseBmoAuditCreateBugStackdriver() {
+    String buf =
+        "{\"insertId\":\"AAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":2,\"Field"
+            + "s\":{\"msg\":\"spock@mozilla.com <216.160.83.56> created bug 0000000\",\""
+            + "remote_ip\":\"216.160.83.56\",\"request_id\":\"AAAAAAAA\",\"user_id\":\"0"
+            + "00000\"},\"Hostname\":\"ip-172.us-west-2.compute.internal\",\"Logger\":\""
+            + "CEREAL\",\"Pid\":\"264\",\"Severity\":5,\"Timestamp\":1.548956906e+18,\"T"
+            + "ype\":\"audit\"},\"labels\":{\"application\":\"bugzilla\",\"ec2.amazonaws"
+            + ".com/resource_name\":\"ip-172.us-west-2.compute.internal\",\"env\":\"prod"
+            + "\",\"stack\":\"app\",\"type\":\"app\"},\"logName\":\"projects/prod/logs/d"
+            + "ocker.bugzilla\",\"receiveTimestamp\":\"2019-01-31T17:48:29.488536026Z\",\""
+            + "resource\":{\"labels\":{\"aws_account\":\"000000000000\",\"instance_id\":\""
+            + "i-0\",\"project_id\":\"prod\",\"region\":\"aws:us-west-2a\"},\"type\":\"aws"
+            + "_ec2_instance\"},\"timestamp\":\"2019-01-31T17:48:26.593764735Z\"}";
+    Parser p = new Parser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.BMOAUDIT, e.getPayloadType());
+    BmoAudit b = e.getPayload();
+    assertEquals("216.160.83.56", b.getRemoteIp());
+    assertEquals("AAAAAAAA", b.getRequestId());
+    assertEquals(BmoAudit.AuditType.CREATEBUG, b.getAuditType());
+    assertEquals("spock@mozilla.com", b.getUser());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH_SESSION));
+    assertEquals("spock@mozilla.com", n.getSubjectUser());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
+  }
+
+  @Test
   public void testParseMozlogDuopullBypass() {
     String buf =
         "{\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Fields\": "

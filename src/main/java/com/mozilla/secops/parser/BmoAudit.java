@@ -16,10 +16,13 @@ public class BmoAudit extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private final String reLogin = "^successful login of (\\S+) from (\\S+) using \"([^\"]+)\",.*";
+  private final String reCreate = "^(\\S+) <([^>]+)> created bug.*";
 
   public enum AuditType {
     /** Login event */
-    LOGIN
+    LOGIN,
+    /** Bug creation */
+    CREATEBUG
   }
 
   private String msg;
@@ -117,6 +120,8 @@ public class BmoAudit extends PayloadBase implements Serializable {
       String msg = fields.get("msg");
       if (Pattern.compile(reLogin).matcher(msg).matches()) {
         return true;
+      } else if (Pattern.compile(reCreate).matcher(msg).matches()) {
+        return true;
       }
     }
     return false;
@@ -170,6 +175,21 @@ public class BmoAudit extends PayloadBase implements Serializable {
       userAgent = mat.group(3);
 
       n.addType(Normalized.Type.AUTH);
+      n.setSubjectUser(user);
+      n.setSourceAddress(remoteIp);
+      n.setSourceAddressCity(remoteIpCity);
+      n.setSourceAddressCountry(remoteIpCountry);
+      n.setObject("bugzilla"); // Just hardcode to application here
+      return;
+    }
+
+    mat = Pattern.compile(reCreate).matcher(msg);
+    if (mat.matches()) {
+      type = AuditType.CREATEBUG;
+      user = mat.group(1);
+      // Prefer the soruce address in the fields to the msg entry, so just ignore that group
+      // here for now.
+      n.addType(Normalized.Type.AUTH_SESSION); // Existing authenticated session
       n.setSubjectUser(user);
       n.setSourceAddress(remoteIp);
       n.setSourceAddressCity(remoteIpCity);
