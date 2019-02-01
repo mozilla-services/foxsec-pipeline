@@ -303,6 +303,40 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseBmoAuditStackdriver() {
+    String buf =
+        "{\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":2,\"Fields\":{\"msg\""
+            + ":\"successful login of spock@mozilla.com from 216.160.83.56 using \\\"Mozilla/5.0\\\", auth"
+            + "enticated by Bugzilla::Auth::Login::CGI\",\"remote_ip\":\"216.160.83.56\",\"request_id\""
+            + ":\"00000000\"},\"Hostname\":\"ip-172.us-west-2.compute.internal\",\"Logger\":\"CEREAL\","
+            + "\"Pid\":\"282\",\"Severity\":5,\"Timestamp\":1.548956727e+18,\"Type\":\"audit\"},\"label"
+            + "s\":{\"application\":\"bugzilla\",\"ec2.amazonaws.com/resource_name\":\"ip-172.us-west-2"
+            + ".compute.internal\",\"env\":\"prod\",\"stack\":\"app\",\"type\":\"app\"},\"logName\":\"p"
+            + "rojects/prod/logs/docker.bugzilla\",\"receiveTimestamp\":\"2019-01-31T17:45:27.655836432"
+            + "Z\",\"resource\":{\"labels\":{\"aws_account\":\"000000000000\",\"instance_id\":\"i-0\","
+            + "\"project_id\":\"prod\",\"region\":\"aws:us-west-2a\"},\"type\":\"aws_ec2_instance\"},\""
+            + "timestamp\":\"2019-01-31T17:45:27.478007784Z\"}";
+    Parser p = new Parser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.BMOAUDIT, e.getPayloadType());
+    BmoAudit b = e.getPayload();
+    assertEquals("216.160.83.56", b.getRemoteIp());
+    assertEquals("00000000", b.getRequestId());
+    assertEquals(BmoAudit.AuditType.LOGIN, b.getAuditType());
+    assertEquals("spock@mozilla.com", b.getUser());
+    assertEquals("Mozilla/5.0", b.getUserAgent());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("spock@mozilla.com", n.getSubjectUser());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
+  }
+
+  @Test
   public void testParseMozlogDuopullBypass() {
     String buf =
         "{\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Fields\": "

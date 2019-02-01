@@ -22,6 +22,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     GCPAUDIT,
     /** Nginx */
     NGINX,
+    /** BmoAudit */
+    BMOAUDIT,
     /** Raw */
     RAW
   }
