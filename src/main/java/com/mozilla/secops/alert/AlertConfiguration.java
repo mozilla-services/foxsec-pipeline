@@ -1,5 +1,8 @@
 package com.mozilla.secops.alert;
 
+import com.mozilla.secops.state.DatastoreStateInterface;
+import com.mozilla.secops.state.MemcachedStateInterface;
+import com.mozilla.secops.state.State;
 import java.io.Serializable;
 
 /** Configuration for {@link AlertIO} */
@@ -13,6 +16,7 @@ public class AlertConfiguration implements Serializable {
   private String gcpProject;
   private String slackToken;
   private String slackCatchall;
+  private State state;
 
   /**
    * Determine if {@link AlertIO} should be established in composite transform
@@ -147,6 +151,30 @@ public class AlertConfiguration implements Serializable {
    */
   public void setSlackCatchall(String slackCatchall) {
     this.slackCatchall = slackCatchall;
+  }
+
+  /**
+   * Get {@link State} obj
+   *
+   * @return State obj
+   */
+  public State getState() {
+    return state;
+  }
+
+  /**
+   * Set {@link State} using {@link MemcachedStateInterface}
+   *
+   * @param host Hostname of memcached instance
+   * @param port Port of memcached instance
+   */
+  public void setMemcachedState(String host, Integer port) {
+    this.state = new State(new MemcachedStateInterface(host, port));
+  }
+
+  /** Set {@link State} using {@link DatastoreStateInterface} */
+  public void setDatastoreState() {
+    this.state = new State(new DatastoreStateInterface("alerts", "alerts"));
   }
 
   /** Create new empty {@link AlertConfiguration} */

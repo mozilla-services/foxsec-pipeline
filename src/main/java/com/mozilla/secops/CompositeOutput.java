@@ -11,6 +11,8 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link CompositeOutput} provides a standardized composite output transform for use in pipelines.
@@ -32,6 +34,7 @@ public abstract class CompositeOutput {
     final String outputIprepd = options.getOutputIprepd();
     final String outputIprepdApikey = options.getOutputIprepdApikey();
     final String project = options.getProject();
+    Logger log = LoggerFactory.getLogger(CompositeOutput.class);
 
     AlertConfiguration alertcfg = new AlertConfiguration();
     alertcfg.setSmtpCredentials(options.getOutputAlertSmtpCredentials());
@@ -41,6 +44,16 @@ public abstract class CompositeOutput {
     alertcfg.setGcpProject(project);
     alertcfg.setSlackToken(options.getOutputAlertSlackToken());
     alertcfg.setSlackCatchall(options.getOutputAlertSlackCatchall());
+
+    if (options.getMemcachedEnabled()) {
+      log.info("using memcached for alert state management");
+      alertcfg.setMemcachedState(options.getMemcachedHost(), options.getMemcachedPort());
+    } else if (options.getDatastoreEnabled()) {
+      log.info("using datastore for alert state management");
+      alertcfg.setDatastoreState();
+    } else {
+      log.info("no alert state management configured");
+    }
 
     return new PTransform<PCollection<String>, PDone>() {
       private static final long serialVersionUID = 1L;

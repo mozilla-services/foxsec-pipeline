@@ -1,6 +1,7 @@
 package com.mozilla.secops;
 
 import org.apache.beam.sdk.extensions.gcp.options.GcpOptions;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.Validation;
@@ -70,6 +71,27 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
   String getMonitoredResourceIndicator();
 
   void setMonitoredResourceIndicator(String value);
+
+  @Description("Use memcached state; hostname of memcached server")
+  String getMemcachedHost();
+
+  void setMemcachedHost(String value);
+
+  @Description("Use memcached state; port of memcached server")
+  @Default.Integer(11211)
+  Integer getMemcachedPort();
+
+  void setMemcachedPort(Integer value);
+
+  @Description("Use memcached for state management")
+  Boolean getMemcachedEnabled();
+
+  void setMemcachedEnabled(Boolean value);
+
+  @Description("Use datastore for state management")
+  Boolean getDatastoreEnabled();
+
+  void setDatastoreEnabled(Boolean value);
 
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);

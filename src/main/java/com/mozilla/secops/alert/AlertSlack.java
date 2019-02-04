@@ -4,6 +4,7 @@ import com.github.seratch.jslack.api.methods.SlackApiException;
 import com.github.seratch.jslack.api.methods.SlackApiResponse;
 import com.mozilla.secops.crypto.RuntimeSecrets;
 import com.mozilla.secops.slack.SlackManager;
+import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import java.util.HashMap;
 import org.slf4j.Logger;
@@ -56,6 +57,16 @@ public class AlertSlack {
    */
   public Boolean confirmationAlert(Alert a, String userId) {
     if (a == null || userId == null) {
+      return false;
+    }
+
+    log.info("storing state of alert for {}", userId);
+
+    try {
+      a.addMetadata("status", "NEW");
+      cfg.getState().set(a.getAlertId().toString(), a);
+    } catch (StateException exc) {
+      log.error("error saving alert state (StateException): {}", exc.getMessage());
       return false;
     }
 
