@@ -6,6 +6,7 @@ import com.google.api.services.logging.v2.model.LogEntry;
 class ParserState {
   private final Parser parser;
   private LogEntry logEntryHint;
+  private Mozlog mozLogHint;
 
   /**
    * Get LogEntry hint
@@ -23,6 +24,24 @@ class ParserState {
    */
   public void setLogEntryHint(LogEntry entry) {
     logEntryHint = entry;
+  }
+
+  /**
+   * Get Mozlog hint
+   *
+   * @return hint or null of it has not been set
+   */
+  public Mozlog getMozlogHint() {
+    return mozLogHint;
+  }
+
+  /**
+   * Set Mozlog hint
+   *
+   * @param entry Mozlog to store as hint
+   */
+  public void setMozlogHint(Mozlog entry) {
+    mozLogHint = entry;
   }
 
   /**

@@ -1,5 +1,7 @@
 package com.mozilla.secops.parser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
@@ -120,10 +122,37 @@ public class Parser {
     return input;
   }
 
-  private String stripMozlog(Event e, String input) {
+  private String stripMozlog(Event e, String input, ParserState state) {
+    LogEntry entry = state.getLogEntryHint();
+    if (entry != null) {
+      // If we have an existing LogEntry hint, attempt to treat a present jsonPayload
+      // as Mozlog
+      Map<String, Object> jsonPayload = entry.getJsonPayload();
+      String jbuf = null;
+      if (jsonPayload != null) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(
+            com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        try {
+          jbuf = mapper.writeValueAsString(jsonPayload);
+        } catch (JsonProcessingException exc) {
+          // pass
+        }
+      }
+      if (jbuf != null) {
+        Mozlog m = Mozlog.fromJSON(jbuf);
+        if (m != null) {
+          e.setMozlog(m);
+          state.setMozlogHint(m);
+          return m.getFieldsAsJson();
+        }
+      }
+    }
+
     Mozlog m = Mozlog.fromJSON(input);
     if (m != null) {
       e.setMozlog(m);
+      state.setMozlogHint(m);
       return m.getFieldsAsJson();
     }
     return input;
@@ -136,7 +165,7 @@ public class Parser {
     if (input == null) {
       return null;
     }
-    input = stripMozlog(e, input);
+    input = stripMozlog(e, input, state);
     return input;
   }
 
@@ -227,6 +256,7 @@ public class Parser {
     payloads.add(new SecEvent());
     payloads.add(new Cloudtrail());
     payloads.add(new GcpAudit());
+    payloads.add(new BmoAudit());
     payloads.add(new OpenSSH());
     payloads.add(new Duopull());
     payloads.add(new Raw());
