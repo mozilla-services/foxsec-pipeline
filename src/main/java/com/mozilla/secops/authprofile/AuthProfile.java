@@ -61,6 +61,7 @@ public class AuthProfile implements Serializable {
     private Logger log;
     private final String idmanagerPath;
     private final String[] ignoreUserRegex;
+    private final Boolean ignoreUnknownIdentities;
 
     /**
      * Static initializer for {@link ParseAndWindow} using specified pipeline options
@@ -71,6 +72,7 @@ public class AuthProfile implements Serializable {
       idmanagerPath = options.getIdentityManagerPath();
       log = LoggerFactory.getLogger(ParseAndWindow.class);
       ignoreUserRegex = options.getIgnoreUserRegex();
+      ignoreUnknownIdentities = options.getIgnoreUnknownIdentities();
     }
 
     @Override
@@ -133,6 +135,9 @@ public class AuthProfile implements Serializable {
                         log.info(
                             "{}: username does not map to any known identity or alias",
                             n.getSubjectUser());
+                        if (ignoreUnknownIdentities) {
+                          return;
+                        }
                         c.output(KV.of(n.getSubjectUser(), e));
                       }
                     }
@@ -395,6 +400,12 @@ public class AuthProfile implements Serializable {
     String[] getIgnoreUserRegex();
 
     void setIgnoreUserRegex(String[] value);
+
+    @Description("If true, never create informational alerts for unknown identities")
+    @Default.Boolean(false)
+    Boolean getIgnoreUnknownIdentities();
+
+    void setIgnoreUnknownIdentities(Boolean value);
   }
 
   private static void runAuthProfile(AuthProfileOptions options) throws IllegalArgumentException {
