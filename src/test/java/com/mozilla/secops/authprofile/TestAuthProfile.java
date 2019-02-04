@@ -47,6 +47,7 @@ public class TestAuthProfile {
         PipelineOptionsFactory.as(AuthProfile.AuthProfileOptions.class);
     ret.setDatastoreNamespace("testauthprofileanalyze");
     ret.setDatastoreKind("authprofile");
+    ret.setDatastoreEnabled(true);
     ret.setIdentityManagerPath("/testdata/identitymanager.json");
     return ret;
   }

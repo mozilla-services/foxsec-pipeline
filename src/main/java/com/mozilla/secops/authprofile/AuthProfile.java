@@ -191,10 +191,10 @@ public class AuthProfile implements Serializable {
         idmanager = IdentityManager.loadFromResource(idmanagerPath);
       }
 
-      if (memcachedEnabled) {
+      if (memcachedEnabled != null && memcachedEnabled) {
         log.info("using memcached for state management");
         state = new State(new MemcachedStateInterface(memcachedHost, memcachedPort));
-      } else if (datastoreEnabled) {
+      } else if (datastoreEnabled != null && datastoreEnabled) {
         log.info("using datastore for state management");
         state = new State(new DatastoreStateInterface(datastoreKind, datastoreNamespace));
       } else {
