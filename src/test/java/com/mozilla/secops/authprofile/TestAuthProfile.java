@@ -1,8 +1,10 @@
 package com.mozilla.secops.authprofile;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.mozilla.secops.TestUtil;
@@ -107,14 +109,14 @@ public class TestAuthProfile {
                 assertEquals("authprofile", a.getCategory());
                 String actualSummary = a.getSummary();
                 if (actualSummary.equals(
-                    "authentication event observed riker to emit-bastion, "
-                        + "known source 216.160.83.56 [Milton/US]")) {
+                    "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                        + "216.160.83.56 [Milton/US]")) {
                   infoCnt++;
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                   assertNull(a.getTemplateName());
                   assertNull(a.getMetadataValue("notify_email_direct"));
                 } else if (actualSummary.equals(
-                    "authentication event observed riker to emit-bastion, "
+                    "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                         + "new source 216.160.83.56 [Milton/US]")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
@@ -170,9 +172,11 @@ public class TestAuthProfile {
                   assertNull(iKey);
                   assertNull(a.getMetadataValue("notify_email_direct"));
 
-                  assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  // Severity should be informational since it is an untracked identity
+                  assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                   assertEquals("127.0.0.1", a.getMetadataValue("sourceaddress"));
                   assertEquals("laforge@mozilla.com", a.getMetadataValue("username"));
+                  assertThat(a.getSummary(), containsString("untracked"));
                 } else if ((iKey != null) && (iKey.equals("wriker@mozilla.com"))) {
                   if (a.getMetadataValue("username").equals("riker@mozilla.com")) {
                     // GcpAudit event should have generated a warning
@@ -183,10 +187,10 @@ public class TestAuthProfile {
                   }
                 }
               }
-              assertEquals(3L, newCnt);
-              // Should have one informational since the rest of the duplicates will be
+              assertEquals(2L, newCnt);
+              // Should have two informational since the rest of the duplicates will be
               // filtered in window since they were already seen
-              assertEquals(1L, infoCnt);
+              assertEquals(2L, infoCnt);
               return null;
             });
 
