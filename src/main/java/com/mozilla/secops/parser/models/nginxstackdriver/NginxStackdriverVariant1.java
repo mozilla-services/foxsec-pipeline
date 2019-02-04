@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
-/** Describes format of nginx log encapsulated in Stackdriver jsonPayload */
+/** Describes format of nginx log encapsulated in Stackdriver jsonPayload, variant 1 */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NginxStackdriver implements Serializable {
+public class NginxStackdriverVariant1 implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String xForwardedProto;
@@ -131,5 +131,5 @@ public class NginxStackdriver implements Serializable {
     return xForwardedFor;
   }
 
-  public NginxStackdriver() {}
+  public NginxStackdriverVariant1() {}
 }

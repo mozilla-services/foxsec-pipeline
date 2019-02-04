@@ -2,6 +2,8 @@ package com.mozilla.secops.parser;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /** Rule within an event filter */
 public class EventFilterRule implements Serializable {
@@ -10,6 +12,7 @@ public class EventFilterRule implements Serializable {
   private Payload.PayloadType wantSubtype;
   private Normalized.Type wantNormalizedType;
   private String wantStackdriverProject;
+  private Map<String, String> wantStackdriverLabel;
   private ArrayList<EventFilterPayload> payloadFilters;
 
   private ArrayList<EventFilterRule> exceptRules;
@@ -25,6 +28,21 @@ public class EventFilterRule implements Serializable {
       String p = e.getStackdriverProject();
       if ((p == null) || !(p.equals(wantStackdriverProject))) {
         return false;
+      }
+    }
+    if (!(wantStackdriverLabel.isEmpty())) {
+      for (Map.Entry<String, String> entry : wantStackdriverLabel.entrySet()) {
+        String wantKey = entry.getKey();
+        String wantValue = entry.getValue();
+
+        String hasValue = e.getStackdriverLabel(wantKey);
+        if (hasValue == null) {
+          // Label isn't found
+          return false;
+        }
+        if (!(hasValue.equals(wantValue))) {
+          return false;
+        }
       }
     }
     if (wantSubtype != null) {
@@ -128,6 +146,21 @@ public class EventFilterRule implements Serializable {
   }
 
   /**
+   * Add match criteria for a Stackdriver label
+   *
+   * <p>If this rule is installed, an event will only match if it is an event from Stackdriver and
+   * has a label with the specified key and value.
+   *
+   * @param key Label key
+   * @param value Label value
+   * @return EventFilterRule for chaining
+   */
+  public EventFilterRule wantStackdriverLabel(String key, String value) {
+    wantStackdriverLabel.put(key, value);
+    return this;
+  }
+
+  /**
    * Add match criteria for a normalized event type
    *
    * @param n Normalized event type
@@ -142,5 +175,6 @@ public class EventFilterRule implements Serializable {
   public EventFilterRule() {
     payloadFilters = new ArrayList<EventFilterPayload>();
     exceptRules = new ArrayList<EventFilterRule>();
+    wantStackdriverLabel = new HashMap<String, String>();
   }
 }

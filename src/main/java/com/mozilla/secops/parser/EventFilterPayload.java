@@ -15,6 +15,10 @@ public class EventFilterPayload implements Serializable {
   /** Properties match strings from various payload event types */
   public enum StringProperty {
     NORMALIZED_SUBJECTUSER,
+    NORMALIZED_REQUESTMETHOD,
+    NORMALIZED_REQUESTURL,
+    NORMALIZED_URLREQUESTPATH,
+    NORMALIZED_SOURCEADDRESS,
 
     SECEVENT_ACTION,
     SECEVENT_SOURCEADDRESS,
@@ -41,6 +45,8 @@ public class EventFilterPayload implements Serializable {
 
   /** Properties match integers from various payload event types */
   public enum IntegerProperty {
+    NORMALIZED_REQUESTSTATUS,
+
     GLB_STATUS,
 
     NGINX_STATUS
@@ -64,7 +70,15 @@ public class EventFilterPayload implements Serializable {
       return false;
     }
     for (Map.Entry<StringProperty, String> entry : stringMatchers.entrySet()) {
-      String value = e.getPayload().eventStringValue(entry.getKey());
+      String value = null;
+      if (entry.getKey().name().startsWith("NORMALIZED_")) {
+        Normalized n = e.getNormalized();
+        if (n != null) {
+          value = n.eventStringValue(entry.getKey());
+        }
+      } else {
+        value = e.getPayload().eventStringValue(entry.getKey());
+      }
       if (value == null) {
         return false;
       }
@@ -73,7 +87,15 @@ public class EventFilterPayload implements Serializable {
       }
     }
     for (Map.Entry<StringProperty, Pattern> entry : stringRegexMatchers.entrySet()) {
-      String value = e.getPayload().eventStringValue(entry.getKey());
+      String value = null;
+      if (entry.getKey().name().startsWith("NORMALIZED_")) {
+        Normalized n = e.getNormalized();
+        if (n != null) {
+          value = n.eventStringValue(entry.getKey());
+        }
+      } else {
+        value = e.getPayload().eventStringValue(entry.getKey());
+      }
       if (value == null) {
         return false;
       }
@@ -83,7 +105,15 @@ public class EventFilterPayload implements Serializable {
       }
     }
     for (Map.Entry<IntegerProperty, Integer> entry : integerMatchers.entrySet()) {
-      Integer value = e.getPayload().eventIntegerValue(entry.getKey());
+      Integer value = null;
+      if (entry.getKey().name().startsWith("NORMALIZED_")) {
+        Normalized n = e.getNormalized();
+        if (n != null) {
+          value = n.eventIntegerValue(entry.getKey());
+        }
+      } else {
+        value = e.getPayload().eventIntegerValue(entry.getKey());
+      }
       if (value == null) {
         return false;
       }

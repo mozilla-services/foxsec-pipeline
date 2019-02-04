@@ -10,11 +10,9 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterPayload;
 import com.mozilla.secops.parser.EventFilterRule;
-import com.mozilla.secops.parser.GLB;
+import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserDoFn;
-import com.mozilla.secops.parser.Payload;
 import java.io.Serializable;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +58,8 @@ public class HTTPRequest implements Serializable {
    * Composite transform to parse a {@link PCollection} containing events as strings and emit a
    * {@link PCollection} of {@link Event} objects.
    *
-   * <p>This transform currently discards events that are not {@link GLB} events.
+   * <p>This transform currently discards events that do not contain the HTTP_REQUEST normalized
+   * field.
    */
   public static class Parse extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
@@ -68,6 +67,7 @@ public class HTTPRequest implements Serializable {
     private final Boolean emitEventTimestamps;
     private final String stackdriverProjectFilter;
     private final String[] filterRequestPath;
+    private final String[] stackdriverLabelFilters;
 
     /**
      * Static initializer for {@link Parse} transform
@@ -77,6 +77,7 @@ public class HTTPRequest implements Serializable {
     public Parse(HTTPRequestOptions options) {
       emitEventTimestamps = options.getUseEventTimestamp();
       stackdriverProjectFilter = options.getStackdriverProjectFilter();
+      stackdriverLabelFilters = options.getStackdriverLabelFilters();
       filterRequestPath = options.getFilterRequestPath();
     }
 
@@ -84,9 +85,19 @@ public class HTTPRequest implements Serializable {
     public PCollection<Event> expand(PCollection<String> col) {
       EventFilter filter =
           new EventFilter().setWantUTC(true).setOutputWithTimestamp(emitEventTimestamps);
-      EventFilterRule rule = new EventFilterRule().wantSubtype(Payload.PayloadType.GLB);
+      EventFilterRule rule = new EventFilterRule().wantNormalizedType(Normalized.Type.HTTP_REQUEST);
       if (stackdriverProjectFilter != null) {
         rule.wantStackdriverProject(stackdriverProjectFilter);
+      }
+      if (stackdriverLabelFilters != null) {
+        for (String labelFilter : stackdriverLabelFilters) {
+          String parts[] = labelFilter.split(":");
+          if (parts.length != 2) {
+            throw new IllegalArgumentException(
+                "invalid format for Stackdriver label filter, must be <key>:<value>");
+          }
+          rule.wantStackdriverLabel(parts[0], parts[1]);
+        }
       }
       if (filterRequestPath != null) {
         for (String s : filterRequestPath) {
@@ -97,15 +108,16 @@ public class HTTPRequest implements Serializable {
           }
           rule.except(
               new EventFilterRule()
-                  .wantSubtype(Payload.PayloadType.GLB)
+                  .wantNormalizedType(Normalized.Type.HTTP_REQUEST)
                   .addPayloadFilter(
-                      new EventFilterPayload(GLB.class)
+                      new EventFilterPayload()
                           .withStringMatch(
-                              EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, parts[0])
+                              EventFilterPayload.StringProperty.NORMALIZED_REQUESTMETHOD, parts[0])
                           .withStringMatch(
-                              EventFilterPayload.StringProperty.GLB_URLREQUESTPATH, parts[1])
+                              EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTPATH, parts[1])
                           // XXX This should likely be a range (e.g., >= 200 < 300)
-                          .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200)));
+                          .withIntegerMatch(
+                              EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS, 200)));
         }
       }
       filter.addRule(rule);
@@ -175,13 +187,16 @@ public class HTTPRequest implements Serializable {
 
                     @ProcessElement
                     public void processElement(ProcessContext c) {
-                      GLB g = c.element().getPayload();
-                      Integer status = g.getStatus();
+                      Normalized n = c.element().getNormalized();
+                      Integer status = n.getRequestStatus();
                       if (status == null) {
                         return;
                       }
+                      if (n.getSourceAddress() == null) {
+                        return;
+                      }
                       if (status >= 400 && status < 500) {
-                        c.output(g.getSourceAddress());
+                        c.output(n.getSourceAddress());
                       }
                     }
                   }))
@@ -270,24 +285,21 @@ public class HTTPRequest implements Serializable {
 
                     @ProcessElement
                     public void processElement(ProcessContext c) {
-                      GLB g = c.element().getPayload();
+                      Normalized n = c.element().getNormalized();
 
-                      String sourceAddress = g.getSourceAddress();
-                      String requestMethod = g.getRequestMethod();
-                      String userAgent = g.getUserAgent();
-                      if (sourceAddress == null || requestMethod == null) {
+                      String sourceAddress = n.getSourceAddress();
+                      String requestMethod = n.getRequestMethod();
+                      String userAgent = n.getUserAgent();
+                      String rpath = n.getUrlRequestPath();
+                      if (sourceAddress == null || requestMethod == null || rpath == null) {
                         return;
                       }
                       if (userAgent == null) {
                         userAgent = "unknown";
                       }
-                      URL u = g.getParsedUrl();
-                      if (u == null) {
-                        return;
-                      }
                       ArrayList<String> v = new ArrayList<>();
                       v.add(requestMethod);
-                      v.add(u.getPath());
+                      v.add(rpath);
                       v.add(userAgent);
                       c.output(KV.of(sourceAddress, v));
                     }
@@ -471,8 +483,11 @@ public class HTTPRequest implements Serializable {
 
                         @ProcessElement
                         public void processElement(ProcessContext c) {
-                          GLB g = c.element().getPayload();
-                          c.output(g.getSourceAddress());
+                          Normalized n = c.element().getNormalized();
+                          if (n.getSourceAddress() == null) {
+                            return;
+                          }
+                          c.output(n.getSourceAddress());
                         }
                       }))
               .apply(Count.<String>perElement());
@@ -664,6 +679,11 @@ public class HTTPRequest implements Serializable {
     String getStackdriverProjectFilter();
 
     void setStackdriverProjectFilter(String value);
+
+    @Description("Only inspect Stackdriver events that have the provided labels; key:value")
+    String[] getStackdriverLabelFilters();
+
+    void setStackdriverLabelFilters(String[] value);
 
     @Description(
         "Endpoint abuse analysis paths for monitoring (multiple allowed); e.g., threshold:method:/path")

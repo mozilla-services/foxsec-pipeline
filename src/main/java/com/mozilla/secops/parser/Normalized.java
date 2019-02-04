@@ -12,7 +12,9 @@ public class Normalized implements Serializable {
     /** Authentication event */
     AUTH,
     /** Indicates an authenticated session, where authentication may have occurred in the past */
-    AUTH_SESSION
+    AUTH_SESSION,
+    /** Indicates an HTTP request, from something like a web server or a load balancer log */
+    HTTP_REQUEST
   }
 
   private EnumSet<Type> types;
@@ -22,6 +24,11 @@ public class Normalized implements Serializable {
   private String sourceAddressCity;
   private String sourceAddressCountry;
   private String object;
+  private String requestMethod;
+  private String requestUrl;
+  private String urlRequestPath; // Extracted request path component
+  private Integer requestStatus;
+  private String userAgent;
 
   /* Following can typically only be set if the parser has been configured
    * to use an identity manager for lookups */
@@ -41,6 +48,28 @@ public class Normalized implements Serializable {
     switch (property) {
       case NORMALIZED_SUBJECTUSER:
         return getSubjectUser();
+      case NORMALIZED_REQUESTMETHOD:
+        return getRequestMethod();
+      case NORMALIZED_REQUESTURL:
+        return getRequestUrl();
+      case NORMALIZED_URLREQUESTPATH:
+        return getUrlRequestPath();
+      case NORMALIZED_SOURCEADDRESS:
+        return getSourceAddress();
+    }
+    return null;
+  }
+
+  /**
+   * Return a given normalized payload field based on the supplied field identifier
+   *
+   * @param property {@link EventFilterPayload.IntegerProperty}
+   * @return Integer value or null
+   */
+  public Integer eventIntegerValue(EventFilterPayload.IntegerProperty property) {
+    switch (property) {
+      case NORMALIZED_REQUESTSTATUS:
+        return requestStatus;
     }
     return null;
   }
@@ -179,5 +208,95 @@ public class Normalized implements Serializable {
    */
   public void setSourceAddressCountry(String sourceAddressCountry) {
     this.sourceAddressCountry = sourceAddressCountry;
+  }
+
+  /**
+   * Get request method field
+   *
+   * @return Request method string
+   */
+  public String getRequestMethod() {
+    return requestMethod;
+  }
+
+  /**
+   * Set request method field
+   *
+   * @param requestMethod Request method
+   */
+  public void setRequestMethod(String requestMethod) {
+    this.requestMethod = requestMethod;
+  }
+
+  /**
+   * Get request URL field
+   *
+   * @return Request URL field
+   */
+  public String getRequestUrl() {
+    return requestUrl;
+  }
+
+  /**
+   * Set request URL field
+   *
+   * @param requestUrl Request URL
+   */
+  public void setRequestUrl(String requestUrl) {
+    this.requestUrl = requestUrl;
+  }
+
+  /**
+   * Get extracted URL request path field
+   *
+   * @return Request path field
+   */
+  public String getUrlRequestPath() {
+    return urlRequestPath;
+  }
+
+  /**
+   * Set extracted URL request path field
+   *
+   * @param urlRequestPath Extracted request path
+   */
+  public void setUrlRequestPath(String urlRequestPath) {
+    this.urlRequestPath = urlRequestPath;
+  }
+
+  /**
+   * Get request status
+   *
+   * @return Request status field
+   */
+  public Integer getRequestStatus() {
+    return requestStatus;
+  }
+
+  /**
+   * Set request status
+   *
+   * @param requestStatus Request status
+   */
+  public void setRequestStatus(Integer requestStatus) {
+    this.requestStatus = requestStatus;
+  }
+
+  /**
+   * Get user agent
+   *
+   * @return User agent field
+   */
+  public String getUserAgent() {
+    return userAgent;
+  }
+
+  /**
+   * Set user agent
+   *
+   * @param userAgent User agent
+   */
+  public void setUserAgent(String userAgent) {
+    this.userAgent = userAgent;
   }
 }
