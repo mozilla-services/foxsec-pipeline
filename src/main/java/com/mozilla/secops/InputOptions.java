@@ -20,4 +20,9 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   String[] getInput();
 
   void setInput(String[] value);
+
+  @Description("Path to load Maxmind database; resource path, gcs path")
+  String getMaxmindDbPath();
+
+  void setMaxmindDbPath(String value);
 }

@@ -14,7 +14,7 @@ public class TestIdentityManager {
 
   @Test
   public void identityManagerFromResourceTest() throws Exception {
-    IdentityManager mgr = IdentityManager.loadFromResource("/testdata/identitymanager.json");
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
     assertNotNull(mgr);
 
     assertEquals("testuser@mozilla.com", mgr.lookupAlias("testuser"));
@@ -27,7 +27,7 @@ public class TestIdentityManager {
 
   @Test
   public void identityManagerNotifyTest() throws Exception {
-    IdentityManager mgr = IdentityManager.loadFromResource("/testdata/identitymanager.json");
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
     assertNotNull(mgr);
 
     // Test standard case, identity with fragment and aliases
@@ -58,7 +58,7 @@ public class TestIdentityManager {
 
   @Test
   public void identityManagerAwsAccountMapLookupTest() throws Exception {
-    IdentityManager mgr = IdentityManager.loadFromResource("/testdata/identitymanager.json");
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
     assertNotNull(mgr);
 
     Map<String, String> m = mgr.getAwsAccountMap();

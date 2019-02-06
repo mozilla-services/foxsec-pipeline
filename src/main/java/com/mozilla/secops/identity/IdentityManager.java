@@ -2,6 +2,7 @@ package com.mozilla.secops.identity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mozilla.secops.GcsUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -25,11 +26,16 @@ public class IdentityManager {
   /**
    * Load identity manager configuration from a resource file
    *
-   * @param resourcePath Resource path to load JSON file from
+   * @param path Path to load JSON file from, resource path or GCS URL
    * @return {@link IdentityManager}
    */
-  public static IdentityManager loadFromResource(String resourcePath) throws IOException {
-    InputStream in = IdentityManager.class.getResourceAsStream(resourcePath);
+  public static IdentityManager load(String path) throws IOException {
+    InputStream in;
+    if (GcsUtil.isGcsUrl(path)) {
+      in = GcsUtil.fetchInputStreamContent(path);
+    } else {
+      in = IdentityManager.class.getResourceAsStream(path);
+    }
     if (in == null) {
       throw new IOException("identity manager resource not found");
     }
@@ -42,8 +48,8 @@ public class IdentityManager {
    *
    * @return {@link IdentityManager}
    */
-  public static IdentityManager loadFromResource() throws IOException {
-    return loadFromResource(DEFAULT_RESOURCE_PATH);
+  public static IdentityManager load() throws IOException {
+    return load(DEFAULT_RESOURCE_PATH);
   }
 
   /**
