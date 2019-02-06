@@ -3,6 +3,7 @@ package com.mozilla.secops.parser;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
+import com.mozilla.secops.GcsUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -10,8 +11,8 @@ import java.net.InetAddress;
 /**
  * GeoIP resolution
  *
- * <p>Upon initialization, a {@link GeoIP} object will attempt to load database files from specific
- * resource paths in the following order.
+ * <p>Upon initialization, if the constructor is called with no arguments the object will attempt to
+ * load database files from specific resource paths in the following order.
  *
  * <p>
  *
@@ -60,17 +61,30 @@ public class GeoIP {
     return initializingWithTest;
   }
 
-  /** Initialize new {@link GeoIP} */
-  public GeoIP() {
+  /**
+   * Initialize new {@link GeoIP}, load database from specified path
+   *
+   * @param path Resource or GCS path to load database from
+   */
+  public GeoIP(String path) {
     InputStream in;
 
-    in = GeoIP.class.getResourceAsStream(GEOIP_DBPATH);
-    if (in == null) {
-      initializingWithTest = true;
-      in = GeoIP.class.getResourceAsStream(GEOIP_TESTDBPATH);
+    // If the specified path was null, try to load the database from the default path locations
+    if (path == null) {
+      in = GeoIP.class.getResourceAsStream(GEOIP_DBPATH);
       if (in == null) {
-        return;
+        initializingWithTest = true;
+        in = GeoIP.class.getResourceAsStream(GEOIP_TESTDBPATH);
       }
+    } else {
+      if (GcsUtil.isGcsUrl(path)) {
+        in = GcsUtil.fetchInputStreamContent(path);
+      } else {
+        in = GeoIP.class.getResourceAsStream(path);
+      }
+    }
+    if (in == null) {
+      return;
     }
 
     try {
@@ -79,5 +93,10 @@ public class GeoIP {
     } catch (IOException exc) {
       // pass
     }
+  }
+
+  /** Initialize new {@link GeoIP}, load database from default paths */
+  public GeoIP() {
+    this(null);
   }
 }
