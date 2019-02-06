@@ -96,9 +96,9 @@ public class AuthProfile implements Serializable {
                     @Setup
                     public void setup() throws IOException {
                       if (idmanagerPath == null) {
-                        idmanager = IdentityManager.loadFromResource();
+                        idmanager = IdentityManager.load();
                       } else {
-                        idmanager = IdentityManager.loadFromResource(idmanagerPath);
+                        idmanager = IdentityManager.load(idmanagerPath);
                       }
 
                       if (ignoreUserRegex != null) {
@@ -187,9 +187,9 @@ public class AuthProfile implements Serializable {
       log = LoggerFactory.getLogger(Analyze.class);
 
       if (idmanagerPath == null) {
-        idmanager = IdentityManager.loadFromResource();
+        idmanager = IdentityManager.load();
       } else {
-        idmanager = IdentityManager.loadFromResource(idmanagerPath);
+        idmanager = IdentityManager.load(idmanagerPath);
       }
 
       if (memcachedHost != null && memcachedPort != null) {
