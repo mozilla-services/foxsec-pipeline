@@ -80,6 +80,24 @@ public class TestFilter {
   }
 
   @Test
+  public void withCidrFilterTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setCidrExclusionList("/testdata/cidrutil2.txt");
+    PCollection<Event> events =
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+    PCollection<Long> count =
+        events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
+
+    PAssert.that(count)
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .containsInAnyOrder(2L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void withNoMatchLabelFilterTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
 

@@ -1,5 +1,6 @@
 package com.mozilla.secops.httprequest;
 
+import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
@@ -68,6 +69,7 @@ public class HTTPRequest implements Serializable {
     private final String stackdriverProjectFilter;
     private final String[] filterRequestPath;
     private final String[] stackdriverLabelFilters;
+    private final String cidrExclusionList;
 
     /**
      * Static initializer for {@link Parse} transform
@@ -79,6 +81,7 @@ public class HTTPRequest implements Serializable {
       stackdriverProjectFilter = options.getStackdriverProjectFilter();
       stackdriverLabelFilters = options.getStackdriverLabelFilters();
       filterRequestPath = options.getFilterRequestPath();
+      cidrExclusionList = options.getCidrExclusionList();
     }
 
     @Override
@@ -121,7 +124,14 @@ public class HTTPRequest implements Serializable {
         }
       }
       filter.addRule(rule);
-      return col.apply(ParDo.of(new ParserDoFn().withInlineEventFilter(filter)));
+      PCollection<Event> parsed =
+          col.apply(ParDo.of(new ParserDoFn().withInlineEventFilter(filter)));
+      if (cidrExclusionList != null) {
+        return parsed.apply(
+            "cidr exclusion",
+            ParDo.of(CidrUtil.excludeNormalizedSourceAddresses(cidrExclusionList)));
+      }
+      return parsed;
     }
   }
 
@@ -701,6 +711,11 @@ public class HTTPRequest implements Serializable {
     Boolean getUseEventTimestamp();
 
     void setUseEventTimestamp(Boolean value);
+
+    @Description("Load CIDR exclusion list; resource path")
+    String getCidrExclusionList();
+
+    void setCidrExclusionList(String value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
