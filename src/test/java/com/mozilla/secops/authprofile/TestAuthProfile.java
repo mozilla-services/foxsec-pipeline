@@ -11,6 +11,7 @@ import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
+import com.mozilla.secops.parser.ParserTest;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import java.util.Collection;
@@ -50,6 +51,7 @@ public class TestAuthProfile {
     ret.setDatastoreNamespace("testauthprofileanalyze");
     ret.setDatastoreKind("authprofile");
     ret.setIdentityManagerPath("/testdata/identitymanager.json");
+    ret.setMaxmindDbPath(ParserTest.TEST_GEOIP_DBPATH);
     return ret;
   }
 
