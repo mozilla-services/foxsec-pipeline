@@ -1,20 +1,21 @@
 package com.mozilla.secops.alert;
 
 import com.github.seratch.jslack.api.methods.SlackApiException;
-import com.github.seratch.jslack.api.methods.SlackApiResponse;
 import com.mozilla.secops.crypto.RuntimeSecrets;
 import com.mozilla.secops.slack.SlackManager;
+import com.mozilla.secops.state.DatastoreStateInterface;
+import com.mozilla.secops.state.MemcachedStateInterface;
+import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateException;
 import java.io.IOException;
-import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AlertSlack {
   private final AlertConfiguration cfg;
   private SlackManager slackManager;
-  private HashMap<String, String> emailToSlackUserId;
   private final Logger log;
+  private State state;
 
   /** Construct new alert slack object */
   public AlertSlack(AlertConfiguration cfg) {
@@ -26,6 +27,13 @@ public class AlertSlack {
       log.error("failed to get slack token: {}", exc.getMessage());
     }
     this.cfg = cfg;
+
+    if (cfg.getMemcachedEnabled()) {
+      this.state =
+          new State(new MemcachedStateInterface(cfg.getMemcachedHost(), cfg.getMemcachedPort()));
+    } else if (cfg.getDatastoreEnabled()) {
+      this.state = new State(new DatastoreStateInterface("alerts", "alerts"));
+    }
   }
 
   /**
@@ -39,7 +47,8 @@ public class AlertSlack {
 
     String text = String.format("%s (%s)", a.getSummary(), a.getAlertId());
     try {
-      return handleSlackResponse(slackManager.sendMessageToChannel(cfg.getSlackCatchall(), text));
+      return slackManager.handleSlackResponse(
+          slackManager.sendMessageToChannel(cfg.getSlackCatchall(), text));
     } catch (IOException exc) {
       log.error("error sending slack alert (IOException): {}", exc.getMessage());
     } catch (SlackApiException exc) {
@@ -64,7 +73,8 @@ public class AlertSlack {
 
     try {
       a.addMetadata("status", "NEW");
-      cfg.getState().set(a.getAlertId().toString(), a);
+      state.initialize();
+      state.set(a.getAlertId().toString(), a);
     } catch (StateException exc) {
       log.error("error saving alert state (StateException): {}", exc.getMessage());
       return false;
@@ -77,7 +87,7 @@ public class AlertSlack {
             "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
             a.getSummary(), a.assemblePayload(), a.getAlertId());
     try {
-      return handleSlackResponse(
+      return slackManager.handleSlackResponse(
           slackManager.sendConfirmationRequestToUser(userId, a.getAlertId().toString(), text));
     } catch (IOException exc) {
       log.error("error sending slack alert (IOException): {}", exc.getMessage());
@@ -94,32 +104,15 @@ public class AlertSlack {
    * @return User's slack user id
    */
   public String getUserId(String email) {
-    if (emailToSlackUserId == null) {
-      // TODO: Move this to IdentityManager
-      try {
-        emailToSlackUserId = slackManager.getEmailToUserIdMapping();
-      } catch (IOException exc) {
-        log.error("error getting user list from slack (IOException): {}", exc.getMessage());
-      } catch (SlackApiException exc) {
-        log.error("error getting user list from slack (SlackApiException): {}", exc.getMessage());
-      }
+    try {
+      String userId = slackManager.lookupUserIdByEmail(email);
+      return userId;
+    } catch (IOException exc) {
+      log.error("error getting user id from slack (IOException): {}", exc.getMessage());
+    } catch (SlackApiException exc) {
+      log.error("error getting user id from slack (SlackApiException): {}", exc.getMessage());
+    }
 
-      emailToSlackUserId = null;
-      return null;
-    }
-    return emailToSlackUserId.get(email);
-  }
-
-  private Boolean handleSlackResponse(SlackApiResponse resp) {
-    if (resp.isOk()) {
-      return true;
-    }
-    if (resp.getError() != null && resp.getError() != "") {
-      log.error("error sending slack alert: {}", resp.getError());
-    }
-    if (resp.getWarning() != null && resp.getWarning() != "") {
-      log.warn("warning from sending slack alert: {}", resp.getWarning());
-    }
-    return false;
+    return null;
   }
 }

@@ -84,11 +84,13 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
   void setMemcachedPort(Integer value);
 
   @Description("Use memcached for state management")
+  @Default.Boolean(false)
   Boolean getMemcachedEnabled();
 
   void setMemcachedEnabled(Boolean value);
 
   @Description("Use datastore for state management")
+  @Default.Boolean(false)
   Boolean getDatastoreEnabled();
 
   void setDatastoreEnabled(Boolean value);

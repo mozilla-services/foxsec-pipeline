@@ -47,10 +47,12 @@ public abstract class CompositeOutput {
 
     if (options.getMemcachedEnabled()) {
       log.info("using memcached for alert state management");
-      alertcfg.setMemcachedState(options.getMemcachedHost(), options.getMemcachedPort());
+      alertcfg.setMemcachedEnabled(true);
+      alertcfg.setMemcachedHost(options.getMemcachedHost());
+      alertcfg.setMemcachedPort(options.getMemcachedPort());
     } else if (options.getDatastoreEnabled()) {
       log.info("using datastore for alert state management");
-      alertcfg.setDatastoreState();
+      alertcfg.setDatastoreEnabled(true);
     } else {
       log.info("no alert state management configured");
     }

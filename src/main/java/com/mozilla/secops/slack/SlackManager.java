@@ -2,8 +2,11 @@ package com.mozilla.secops.slack;
 
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.methods.SlackApiException;
+import com.github.seratch.jslack.api.methods.SlackApiResponse;
 import com.github.seratch.jslack.api.methods.request.chat.ChatPostMessageRequest;
 import com.github.seratch.jslack.api.methods.request.users.UsersListRequest;
+import com.github.seratch.jslack.api.methods.request.users.UsersLookupByEmailRequest;
+import com.github.seratch.jslack.api.methods.response.channels.UsersLookupByEmailResponse;
 import com.github.seratch.jslack.api.methods.response.chat.ChatPostMessageResponse;
 import com.github.seratch.jslack.api.methods.response.users.UsersListResponse;
 import com.github.seratch.jslack.api.model.Action;
@@ -49,6 +52,19 @@ public class SlackManager {
         ChatPostMessageRequest.builder().token(apiToken).channel(channelId).text(message).build());
   }
 
+  public String lookupUserIdByEmail(String email) throws IOException, SlackApiException {
+    UsersLookupByEmailResponse resp =
+        slack
+            .methods()
+            .usersLookupByEmail(
+                UsersLookupByEmailRequest.builder().token(apiToken).email(email).build());
+
+    if (handleSlackResponse(resp)) {
+      return resp.getUser().getId();
+    }
+    return null;
+  }
+
   /**
    * Get map where the key is user's emails and the corresponding value is their slack id.
    *
@@ -70,7 +86,13 @@ public class SlackManager {
    */
   public List<User> getUserList() throws IOException, SlackApiException {
     ArrayList<User> users = new ArrayList<User>();
-    UsersListResponse resp = slack.methods().usersList(UsersListRequest.builder().build());
+    UsersListResponse resp =
+        slack.methods().usersList(UsersListRequest.builder().token(apiToken).build());
+    Boolean isOk = handleSlackResponse(resp);
+    if (isOk == false) {
+      log.error("failed to get user list from slack.");
+      return null;
+    }
     users.addAll(resp.getMembers());
 
     while (true) {
@@ -80,6 +102,7 @@ public class SlackManager {
                 .methods()
                 .usersList(
                     UsersListRequest.builder()
+                        .token(apiToken)
                         .cursor(resp.getResponseMetadata().getNextCursor())
                         .build());
         users.addAll(resp.getMembers());
@@ -170,5 +193,18 @@ public class SlackManager {
       }
       throw exc;
     }
+  }
+
+  public Boolean handleSlackResponse(SlackApiResponse resp) {
+    if (resp.getError() != null && resp.getError() != "") {
+      log.error("error sending slack request: {}", resp.getError());
+    }
+    if (resp.getWarning() != null && resp.getWarning() != "") {
+      log.warn("warning from sending slack request: {}", resp.getWarning());
+    }
+    if (resp.isOk()) {
+      return true;
+    }
+    return false;
   }
 }

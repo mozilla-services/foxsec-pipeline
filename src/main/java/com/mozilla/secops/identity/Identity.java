@@ -54,13 +54,13 @@ public class Identity {
       if (notify.getDirectEmailNotify() != null && notify.getDirectEmailNotify() == false) {
         // Explicitly disabled for identity, no notification
         return null;
-      } else if (notify == null) {
-        // Unset, consult global setting
-        if (defaultNotification.getDirectEmailNotify() != null
-            && defaultNotification.getDirectEmailNotify() == false) {
-          // Also disabled globally, no notification
-          return null;
-        }
+      }
+    } else if (notify == null) {
+      // Unset, consult global setting
+      if (defaultNotification.getDirectEmailNotify() != null
+          && defaultNotification.getDirectEmailNotify() == false) {
+        // Also disabled globally, no notification
+        return null;
       }
     }
 
@@ -76,5 +76,19 @@ public class Identity {
       return null;
     }
     return String.format(fstring, fragment);
+  }
+
+  public Boolean getSlackNotifyDirect(Notify defaultNotification) {
+    if (notify != null) {
+      if (notify.getDirectSlackNotify() != null && notify.getDirectSlackNotify() == false) {
+        return false;
+      }
+    } else if (notify == null) {
+      if (defaultNotification.getDirectSlackNotify() != null
+          && defaultNotification.getDirectSlackNotify() == false) {
+        return false;
+      }
+    }
+    return true;
   }
 }

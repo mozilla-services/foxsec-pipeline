@@ -191,10 +191,10 @@ public class AuthProfile implements Serializable {
         idmanager = IdentityManager.loadFromResource(idmanagerPath);
       }
 
-      if (memcachedEnabled != null && memcachedEnabled) {
+      if (memcachedEnabled) {
         log.info("using memcached for state management");
         state = new State(new MemcachedStateInterface(memcachedHost, memcachedPort));
-      } else if (datastoreEnabled != null && datastoreEnabled) {
+      } else if (datastoreEnabled) {
         log.info("using datastore for state management");
         state = new State(new DatastoreStateInterface(datastoreKind, datastoreNamespace));
       } else {
@@ -309,6 +309,11 @@ public class AuthProfile implements Serializable {
               log.info(
                   "{}: adding direct email notification metadata route to {}", userIdentity, dnot);
               alert.addMetadata("notify_email_direct", dnot);
+            }
+
+            if (identity.getSlackNotifyDirect(idmanager.getDefaultNotification())) {
+              log.info("{}: adding direct slack notification", userIdentity);
+              alert.addMetadata("notify_slack_direct", userIdentity);
             }
           }
         }

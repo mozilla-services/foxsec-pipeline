@@ -1,8 +1,5 @@
 package com.mozilla.secops.alert;
 
-import com.mozilla.secops.state.DatastoreStateInterface;
-import com.mozilla.secops.state.MemcachedStateInterface;
-import com.mozilla.secops.state.State;
 import java.io.Serializable;
 
 /** Configuration for {@link AlertIO} */
@@ -16,7 +13,10 @@ public class AlertConfiguration implements Serializable {
   private String gcpProject;
   private String slackToken;
   private String slackCatchall;
-  private State state;
+  private Boolean memcachedEnabled;
+  private String memcachedHost;
+  private Integer memcachedPort;
+  private Boolean datastoreEnabled;
 
   /**
    * Determine if {@link AlertIO} should be established in composite transform
@@ -154,27 +154,75 @@ public class AlertConfiguration implements Serializable {
   }
 
   /**
-   * Get {@link State} obj
+   * Set memcached enabled boolean for alert state management
    *
-   * @return State obj
+   * @param memcachedEnabled Boolean, true if alert state management should use memcached.
    */
-  public State getState() {
-    return state;
+  public void setMemcachedEnabled(Boolean memcachedEnabled) {
+    this.memcachedEnabled = memcachedEnabled;
   }
 
   /**
-   * Set {@link State} using {@link MemcachedStateInterface}
+   * Get memcached enabled boolean
    *
-   * @param host Hostname of memcached instance
-   * @param port Port of memcached instance
+   * @return Boolean, true if alert state management should use memcached.
    */
-  public void setMemcachedState(String host, Integer port) {
-    this.state = new State(new MemcachedStateInterface(host, port));
+  public Boolean getMemcachedEnabled() {
+    return memcachedEnabled;
   }
 
-  /** Set {@link State} using {@link DatastoreStateInterface} */
-  public void setDatastoreState() {
-    this.state = new State(new DatastoreStateInterface("alerts", "alerts"));
+  /**
+   * Set memcached host
+   *
+   * @param memcachedHost memcached host
+   */
+  public void setMemcachedHost(String memcachedHost) {
+    this.memcachedHost = memcachedHost;
+  }
+
+  /**
+   * Get memcached host
+   *
+   * @return memcached host
+   */
+  public String getMemcachedHost() {
+    return memcachedHost;
+  }
+
+  /**
+   * Set memcached port
+   *
+   * @param memcachedPort memcached port
+   */
+  public void setMemcachedPort(Integer memcachedPort) {
+    this.memcachedPort = memcachedPort;
+  }
+
+  /**
+   * Get memcached port
+   *
+   * @return memcached port
+   */
+  public Integer getMemcachedPort() {
+    return memcachedPort;
+  }
+
+  /**
+   * Set datastore enabled boolean for alert state management
+   *
+   * @param datastoreEnabled Boolean, true if alert state management should use datastore.
+   */
+  public void setDatastoreEnabled(Boolean datastoreEnabled) {
+    this.datastoreEnabled = datastoreEnabled;
+  }
+
+  /**
+   * Get datastore enabled boolean
+   *
+   * @return Boolean, true if alert state management should use memcached.
+   */
+  public Boolean getDatastoreEnabled() {
+    return datastoreEnabled;
   }
 
   /** Create new empty {@link AlertConfiguration} */
