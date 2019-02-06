@@ -2,7 +2,10 @@ package com.mozilla.secops;
 
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,19 +38,50 @@ public final class GcsUtil {
   }
 
   /**
-   * Fetch content from specified storage URL
+   * Fetch byte array from specified storage URL
    *
    * @param inputUrl Input URL, e.g., gs://bucket/path
-   * @return Trimmed string or null if not found or an error occurs
+   * @return Byte array or null of not found or an error occurs
    */
-  public static String fetchStringContent(String inputUrl) {
+  public static byte[] fetchContent(String inputUrl) {
     Storage storage = StorageOptions.getDefaultInstance().getService();
     BlobId bid = blobIdFromUrl(inputUrl);
     if (bid == null) {
       return null;
     }
-    byte[] content = storage.readAllBytes(bid);
-    return new String(content).trim();
+    try {
+      return storage.readAllBytes(bid);
+    } catch (StorageException exc) {
+      return null;
+    }
+  }
+
+  /**
+   * Fetch string content from specified storage URL
+   *
+   * @param inputUrl Input URL, e.g., gs://bucket/path
+   * @return Trimmed string or null if not found or an error occurs
+   */
+  public static String fetchStringContent(String inputUrl) {
+    byte[] buf = fetchContent(inputUrl);
+    if (buf == null) {
+      return null;
+    }
+    return new String(buf).trim();
+  }
+
+  /**
+   * Fetch InputStream from specified storage URL
+   *
+   * @param inputUrl Input URL, e.g., gs://bucket/path
+   * @return InputStream or null if not found or an error occurs
+   */
+  public static InputStream fetchInputStreamContent(String inputUrl) {
+    byte[] buf = fetchContent(inputUrl);
+    if (buf == null) {
+      return null;
+    }
+    return new ByteArrayInputStream(buf);
   }
 
   GcsUtil() {}
