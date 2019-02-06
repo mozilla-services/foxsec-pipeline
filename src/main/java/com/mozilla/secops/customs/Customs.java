@@ -124,9 +124,12 @@ public class Customs implements Serializable {
 
     CustomsCfg cfg = CustomsCfg.loadFromResource(options.getConfigurationResourcePath());
 
+    ParserDoFn fn = new ParserDoFn();
+    if (options.getMaxmindDbPath() != null) {
+      fn = fn.withGeoIP(options.getMaxmindDbPath());
+    }
     PCollection<Event> input =
-        p.apply("input", options.getInputType().read(p, options))
-            .apply("parse", ParDo.of(new ParserDoFn()));
+        p.apply("input", options.getInputType().read(p, options)).apply("parse", ParDo.of(fn));
 
     PCollection<Alert> alerts = input.apply(new Detectors(cfg, options));
 

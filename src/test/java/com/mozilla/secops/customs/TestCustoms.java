@@ -8,6 +8,7 @@ import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
+import com.mozilla.secops.parser.ParserTest;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -28,6 +29,7 @@ public class TestCustoms {
   private Customs.CustomsOptions getTestOptions() {
     Customs.CustomsOptions ret = PipelineOptionsFactory.as(Customs.CustomsOptions.class);
     ret.setMonitoredResourceIndicator("test");
+    ret.setMaxmindDbPath(ParserTest.TEST_GEOIP_DBPATH);
     return ret;
   }
 
@@ -62,7 +64,9 @@ public class TestCustoms {
     cfg.setTimestampOverride(true);
 
     PCollection<Alert> alerts =
-        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg, getTestOptions()));
+        input
+            .apply(ParDo.of(new ParserDoFn().withGeoIP(ParserTest.TEST_GEOIP_DBPATH)))
+            .apply(new Customs.Detectors(cfg, getTestOptions()));
 
     ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();
     windows.add(new IntervalWindow(new Instant(3600000L), new Instant(4500000L)));
@@ -155,7 +159,9 @@ public class TestCustoms {
     cfg.setTimestampOverride(true);
 
     PCollection<Alert> alerts =
-        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg, getTestOptions()));
+        input
+            .apply(ParDo.of(new ParserDoFn().withGeoIP(ParserTest.TEST_GEOIP_DBPATH)))
+            .apply(new Customs.Detectors(cfg, getTestOptions()));
 
     ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();
     windows.add(new IntervalWindow(new Instant(1800000L), new Instant(2700000L)));
@@ -208,7 +214,9 @@ public class TestCustoms {
     cfg.setTimestampOverride(true);
 
     PCollection<Alert> alerts =
-        input.apply(ParDo.of(new ParserDoFn())).apply(new Customs.Detectors(cfg, getTestOptions()));
+        input
+            .apply(ParDo.of(new ParserDoFn().withGeoIP(ParserTest.TEST_GEOIP_DBPATH)))
+            .apply(new Customs.Detectors(cfg, getTestOptions()));
 
     PCollection<Long> count =
         alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());

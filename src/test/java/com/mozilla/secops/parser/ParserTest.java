@@ -10,6 +10,8 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 public class ParserTest {
+  public static final String TEST_GEOIP_DBPATH = "/testdata/GeoIP2-City-Test.mmdb";
+
   public ParserTest() {}
 
   @Test
@@ -183,8 +185,8 @@ public class ParserTest {
             + "216.160.83.56 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"timestamp"
             + "\":\"2018-09-18T22:15:38Z\"}";
     Parser p = new Parser();
+    p.enableGeoIp(TEST_GEOIP_DBPATH);
     assertNotNull(p);
-    assertTrue(p.geoIpUsingTest());
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.OPENSSH, e.getPayloadType());
@@ -326,6 +328,7 @@ public class ParserTest {
             + "\"project_id\":\"prod\",\"region\":\"aws:us-west-2a\"},\"type\":\"aws_ec2_instance\"},\""
             + "timestamp\":\"2019-01-31T17:45:27.478007784Z\"}";
     Parser p = new Parser();
+    p.enableGeoIp(TEST_GEOIP_DBPATH);
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -361,6 +364,7 @@ public class ParserTest {
             + "i-0\",\"project_id\":\"prod\",\"region\":\"aws:us-west-2a\"},\"type\":\"aws"
             + "_ec2_instance\"},\"timestamp\":\"2019-01-31T17:48:26.593764735Z\"}";
     Parser p = new Parser();
+    p.enableGeoIp(TEST_GEOIP_DBPATH);
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -662,6 +666,7 @@ public class ParserTest {
             + "CE\",\"logName\":\"projects/test/logs/cloudaudit.googleapis.com%2Factivity\",\"rece"
             + "iveTimestamp\":\"2019-01-03T20:52:05.807173206Z\"}";
     Parser p = new Parser();
+    p.enableGeoIp(TEST_GEOIP_DBPATH);
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -787,8 +792,8 @@ public class ParserTest {
   @Test
   public void testGeoIp() throws Exception {
     Parser p = new Parser();
+    p.enableGeoIp(TEST_GEOIP_DBPATH);
     assertNotNull(p);
-    assertTrue(p.geoIpUsingTest());
     CityResponse resp = p.geoIp("216.160.83.56");
     assertNotNull(resp);
     assertEquals("US", resp.getCountry().getIsoCode());

@@ -8,28 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
-/**
- * GeoIP resolution
- *
- * <p>Upon initialization, if the constructor is called with no arguments the object will attempt to
- * load database files from specific resource paths in the following order.
- *
- * <p>
- *
- * <ul>
- *   <li>/GeoLite2-City.mmdb
- *   <li>/testdata/GeoIP2-City-Test.mmdb
- * </ul>
- *
- * <p>If the test database is used, the usingTest function will return true.
- */
+/** GeoIP resolution */
 public class GeoIP {
-  private final String GEOIP_TESTDBPATH = "/testdata/GeoIP2-City-Test.mmdb";
-  private final String GEOIP_DBPATH = "/GeoLite2-City.mmdb";
-
   private DatabaseReader geoipDb;
   private Boolean initialized = false;
-  private Boolean initializingWithTest = false;
 
   /**
    * Lookup city/country from IP address string
@@ -53,15 +35,6 @@ public class GeoIP {
   }
 
   /**
-   * Indicate if {@link GeoIP} initialized with testing database
-   *
-   * @return True if testing database is configured
-   */
-  public Boolean usingTest() {
-    return initializingWithTest;
-  }
-
-  /**
    * Initialize new {@link GeoIP}, load database from specified path
    *
    * @param path Resource or GCS path to load database from
@@ -69,19 +42,10 @@ public class GeoIP {
   public GeoIP(String path) {
     InputStream in;
 
-    // If the specified path was null, try to load the database from the default path locations
-    if (path == null) {
-      in = GeoIP.class.getResourceAsStream(GEOIP_DBPATH);
-      if (in == null) {
-        initializingWithTest = true;
-        in = GeoIP.class.getResourceAsStream(GEOIP_TESTDBPATH);
-      }
+    if (GcsUtil.isGcsUrl(path)) {
+      in = GcsUtil.fetchInputStreamContent(path);
     } else {
-      if (GcsUtil.isGcsUrl(path)) {
-        in = GcsUtil.fetchInputStreamContent(path);
-      } else {
-        in = GeoIP.class.getResourceAsStream(path);
-      }
+      in = GeoIP.class.getResourceAsStream(path);
     }
     if (in == null) {
       return;
@@ -93,10 +57,5 @@ public class GeoIP {
     } catch (IOException exc) {
       // pass
     }
-  }
-
-  /** Initialize new {@link GeoIP}, load database from default paths */
-  public GeoIP() {
-    this(null);
   }
 }
