@@ -21,7 +21,7 @@ public class ParserIdentityTest {
             + "textPayload\":\"Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from 12"
             + "7.0.0.1 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"timestamp"
             + "\":\"2018-09-18T22:15:38Z\"}";
-    IdentityManager mgr = IdentityManager.loadFromResource("/testdata/identitymanager.json");
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
     Parser p = new Parser();
     p.setIdentityManager(mgr);
     assertNotNull(p);
@@ -61,7 +61,7 @@ public class ParserIdentityTest {
             + "\"2018-10-11T18:41:09.542038318Z\", \"logName\": \"projects/sandbox/logs/ctstreamer\", "
             + "\"receiveTimestamp\": \"2018-10-11T18:41:12.665161934Z\"}";
 
-    IdentityManager mgr = IdentityManager.loadFromResource("/testdata/identitymanager.json");
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
     Parser p = new Parser();
     p.setIdentityManager(mgr);
     assertNotNull(p);
