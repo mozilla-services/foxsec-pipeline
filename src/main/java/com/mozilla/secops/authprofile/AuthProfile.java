@@ -61,6 +61,7 @@ public class AuthProfile implements Serializable {
     private Logger log;
     private final String idmanagerPath;
     private final String[] ignoreUserRegex;
+    private final Boolean ignoreUnknownIdentities;
 
     /**
      * Static initializer for {@link ParseAndWindow} using specified pipeline options
@@ -71,6 +72,7 @@ public class AuthProfile implements Serializable {
       idmanagerPath = options.getIdentityManagerPath();
       log = LoggerFactory.getLogger(ParseAndWindow.class);
       ignoreUserRegex = options.getIgnoreUserRegex();
+      ignoreUnknownIdentities = options.getIgnoreUnknownIdentities();
     }
 
     @Override
@@ -133,6 +135,9 @@ public class AuthProfile implements Serializable {
                         log.info(
                             "{}: username does not map to any known identity or alias",
                             n.getSubjectUser());
+                        if (ignoreUnknownIdentities) {
+                          return;
+                        }
                         c.output(KV.of(n.getSubjectUser(), e));
                       }
                     }
@@ -204,130 +209,161 @@ public class AuthProfile implements Serializable {
       state.done();
     }
 
+    /**
+     * Create a base {@link Alert} using information from the event
+     *
+     * @param e Event
+     * @return Base alert object
+     */
+    private Alert createBaseAlert(Event e) {
+      Alert a = new Alert();
+
+      Normalized n = e.getNormalized();
+      a.addMetadata("object", n.getObject());
+      a.addMetadata("username", n.getSubjectUser());
+      a.addMetadata("sourceaddress", n.getSourceAddress());
+      a.setCategory("authprofile");
+
+      String city = n.getSourceAddressCity();
+      if (city != null) {
+        a.addMetadata("sourceaddress_city", city);
+      } else {
+        a.addMetadata("sourceaddress_city", "unknown");
+      }
+      String country = n.getSourceAddressCountry();
+      if (city != null) {
+        a.addMetadata("sourceaddress_country", country);
+      } else {
+        a.addMetadata("sourceaddress_country", "unknown");
+      }
+
+      return a;
+    }
+
+    private Boolean ignoreDuplicateSourceAddress(Event e, ArrayList<String> list) {
+      for (String s : list) {
+        if (s.equals(e.getNormalized().getSourceAddress())) {
+          return true;
+        }
+      }
+      list.add(e.getNormalized().getSourceAddress());
+      return false;
+    }
+
+    private void addEscalationMetadata(Alert a, Identity identity) {
+      String dnote = identity.getEmailNotifyDirect(idmanager.getDefaultNotification());
+      if (dnote != null) {
+        log.info(
+            "{}: adding direct email notification metadata route to {}",
+            a.getMetadataValue("identity_key"),
+            dnote);
+        a.addMetadata("notify_email_direct", dnote);
+      }
+    }
+
+    private void buildAlertSummary(Event e, Alert a) {
+      String summary =
+          String.format(
+              "authentication event observed %s [%s] to %s, ",
+              e.getNormalized().getSubjectUser(),
+              a.getMetadataValue("identity_key") != null
+                  ? a.getMetadataValue("identity_key")
+                  : "untracked",
+              e.getNormalized().getObject());
+      if (a.getSeverity().equals(Alert.AlertSeverity.WARNING)) {
+        summary = summary + "new source ";
+      }
+      summary =
+          summary
+              + String.format(
+                  "%s [%s/%s]",
+                  a.getMetadataValue("sourceaddress"),
+                  a.getMetadataValue("sourceaddress_city"),
+                  a.getMetadataValue("sourceaddress_country"));
+      a.setSummary(summary);
+    }
+
+    private void buildAlertPayload(Alert a) {
+      String payload =
+          String.format(
+              "An authentication event for user %s was detected to access %s.",
+              a.getMetadataValue("username"), a.getMetadataValue("object"));
+      if (a.getMetadataValue("identity_key") != null) {
+        if (a.getSeverity().equals(Alert.AlertSeverity.WARNING)) {
+          payload = payload + " This occurred from a source address unknown to the system.";
+        } else {
+          payload = payload + " This occurred from a known source address.";
+        }
+      } else {
+        payload = payload = " This event occurred for an untracked identity.";
+      }
+      a.addToPayload(payload);
+    }
+
     @ProcessElement
     public void processElement(ProcessContext c) throws StateException {
       Iterable<Event> events = c.element().getValue();
       String userIdentity = c.element().getKey();
       Identity identity = idmanager.getIdentity(userIdentity);
 
-      ArrayList<String> seenNew = new ArrayList<>();
-      ArrayList<String> seenKnown = new ArrayList<>();
+      ArrayList<String> seenNewAddresses = new ArrayList<>();
+      ArrayList<String> seenKnownAddresses = new ArrayList<>();
 
       for (Event e : events) {
-        Normalized n = e.getNormalized();
-        String address = n.getSourceAddress();
-        String destination = n.getObject();
-        // The element key will be the possibly resolved identity of the user if we were able
-        // to look the user up using identity manager. Grab the original username from the source
-        // event as well.
-        String eventUsername = n.getSubjectUser();
-        Boolean isUnknown = false;
+        Alert a = createBaseAlert(e);
 
-        StateModel sm = StateModel.get(userIdentity, state);
-        if (sm == null) {
-          sm = new StateModel(userIdentity);
-        }
-
-        String city = n.getSourceAddressCity();
-        String country = n.getSourceAddressCountry();
-        String summaryIndicator = address;
-        if (city != null && country != null) {
-          summaryIndicator = summaryIndicator + String.format(" [%s/%s]", city, country);
-        }
-
-        Alert alert = new Alert();
-
-        String summary =
-            String.format("authentication event observed %s to %s", eventUsername, destination);
-        if (sm.updateEntry(address)) {
-          // Address was new
-          Boolean wasSeen = false;
-          for (String s : seenNew) {
-            if (s.equals(address)) {
-              wasSeen = true;
-            }
-          }
-          // If we have already reported this as new once during this window, just ignore
-          // this event
-          if (wasSeen) {
+        if (identity == null) {
+          a.addMetadata("identity_untracked", "true");
+          // New/known do not apply for untracked, but just use the new address ignore list here
+          if (ignoreDuplicateSourceAddress(e, seenNewAddresses)) {
             continue;
           }
-          seenNew.add(address);
-
-          isUnknown = true;
-          log.info("{}: escalating alert criteria for new source: {}", userIdentity, address);
-          summary = summary + ", new source " + summaryIndicator;
-          alert.setSeverity(Alert.AlertSeverity.WARNING);
-          alert.setTemplateName("authprofile.ftlh");
-
-          alert.addToPayload(
-              String.format(
-                  "An authentication event for user %s was detected "
-                      + "to access %s, and this event occurred from a source address unknown to the system.",
-                  eventUsername, destination));
         } else {
-          // Known source
-          Boolean wasSeen = false;
-          for (String s : seenKnown) {
-            if (s.equals(address)) {
-              wasSeen = true;
+          a.addMetadata("identity_key", userIdentity);
+          // The event was for a tracked identity, initialize the state model
+          StateModel sm = StateModel.get(userIdentity, state);
+          if (sm == null) {
+            sm = new StateModel(userIdentity);
+          }
+
+          if (sm.updateEntry(e.getNormalized().getSourceAddress())) {
+            // Check new address ignore list
+            if (ignoreDuplicateSourceAddress(e, seenNewAddresses)) {
+              continue;
             }
-          }
-          // If we have already reported this as new once during this window, just ignore
-          // this event
-          if (wasSeen) {
-            continue;
-          }
-          seenKnown.add(address);
-
-          log.info("{}: access from known source: {}", userIdentity, address);
-          summary = summary + ", known source " + summaryIndicator;
-          alert.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
-          alert.addToPayload(
-              String.format(
-                  "An authentication event for user %s was detected "
-                      + "to access %s. This occurred from a known source address.",
-                  eventUsername, destination));
-        }
-        alert.setSummary(summary);
-        alert.setCategory("authprofile");
-
-        alert.addMetadata("object", destination);
-        alert.addMetadata("sourceaddress", address);
-        alert.addMetadata("username", eventUsername);
-        if (identity != null) {
-          alert.addMetadata("identity_key", userIdentity);
-          // If new, set direct notification in the metadata so the alert is also forwarded
-          // to the user.
-          if (isUnknown) {
-            String dnot = identity.getEmailNotifyDirect(idmanager.getDefaultNotification());
-            if (dnot != null) {
-              log.info(
-                  "{}: adding direct email notification metadata route to {}", userIdentity, dnot);
-              alert.addMetadata("notify_email_direct", dnot);
+            // Address was new
+            log.info(
+                "{}: escalating alert criteria for new source: {} {}",
+                userIdentity,
+                e.getNormalized().getSubjectUser(),
+                e.getNormalized().getSourceAddress());
+            a.setSeverity(Alert.AlertSeverity.WARNING);
+            a.setTemplateName("authprofile.ftlh");
+            addEscalationMetadata(a, identity);
+          } else {
+            // Check known address ignore list
+            if (ignoreDuplicateSourceAddress(e, seenKnownAddresses)) {
+              continue;
             }
+            // Address was known
+            log.info(
+                "{}: access from known source: {} {}",
+                userIdentity,
+                e.getNormalized().getSubjectUser(),
+                e.getNormalized().getSourceAddress());
+          }
+
+          // Update persistent state with new information
+          try {
+            sm.set(state);
+          } catch (StateException exc) {
+            log.error("{}: error updating state: {}", userIdentity, exc.getMessage());
           }
         }
-        if (city != null) {
-          alert.addMetadata("sourceaddress_city", city);
-        } else {
-          alert.addMetadata("sourceaddress_city", "unknown");
-        }
-        if (country != null) {
-          alert.addMetadata("sourceaddress_country", country);
-        } else {
-          alert.addMetadata("sourceaddress_country", "unknown");
-        }
 
-        try {
-          sm.set(state);
-        } catch (StateException exc) {
-          log.error("{}: error updating state: {}", userIdentity, exc.getMessage());
-        }
-        if (!alert.hasCorrectFields()) {
-          throw new IllegalArgumentException("alert has invalid field configuration");
-        }
-        c.output(alert);
+        buildAlertSummary(e, a);
+        buildAlertPayload(a);
+        c.output(a);
       }
     }
   }
@@ -364,6 +400,12 @@ public class AuthProfile implements Serializable {
     String[] getIgnoreUserRegex();
 
     void setIgnoreUserRegex(String[] value);
+
+    @Description("If true, never create informational alerts for unknown identities")
+    @Default.Boolean(false)
+    Boolean getIgnoreUnknownIdentities();
+
+    void setIgnoreUnknownIdentities(Boolean value);
   }
 
   private static void runAuthProfile(AuthProfileOptions options) throws IllegalArgumentException {
