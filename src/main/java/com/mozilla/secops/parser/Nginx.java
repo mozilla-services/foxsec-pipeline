@@ -194,6 +194,10 @@ public class Nginx extends PayloadBase implements Serializable {
       referrer = null;
     }
 
+    // If an HTTP address selector was configured in the parser, apply it to obtain the
+    // correct client address
+    remoteAddr = state.getParser().applyHttpMultiAddressSelector(remoteAddr);
+
     if (request != null) {
       String[] parts = request.split(" ");
       if (parts.length == 3) {

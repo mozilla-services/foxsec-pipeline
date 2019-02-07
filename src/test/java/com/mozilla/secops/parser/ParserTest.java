@@ -486,6 +486,41 @@ public class ParserTest {
   }
 
   @Test
+  public void testHTTPMultiAddressSelector() throws Exception {
+    ParserCfg cfg = new ParserCfg();
+
+    cfg.setHttpMultiAddressSelector(-1);
+    assertEquals("0.0.0.0", new Parser(cfg).applyHttpMultiAddressSelector("0.0.0.0"));
+    assertNull(new Parser(cfg).applyHttpMultiAddressSelector("test"));
+    assertNull(new Parser(cfg).applyHttpMultiAddressSelector("test, 0.0.0.0"));
+    assertEquals("0.0.0.0", new Parser(cfg).applyHttpMultiAddressSelector("::, 0.0.0.0"));
+
+    cfg.setHttpMultiAddressSelector(1);
+    assertEquals("::", new Parser(cfg).applyHttpMultiAddressSelector("::, 0.0.0.0"));
+
+    cfg.setHttpMultiAddressSelector(2);
+    assertEquals("0.0.0.0", new Parser(cfg).applyHttpMultiAddressSelector("::, 0.0.0.0"));
+
+    cfg.setHttpMultiAddressSelector(-3);
+    assertEquals("1.1.1.1", new Parser(cfg).applyHttpMultiAddressSelector("1.1.1.1, ::, 0.0.0.0"));
+
+    cfg.setHttpMultiAddressSelector(-4);
+    assertNull(new Parser(cfg).applyHttpMultiAddressSelector("1.1.1.1, ::, 0.0.0.0"));
+
+    cfg.setHttpMultiAddressSelector(4);
+    assertNull(new Parser(cfg).applyHttpMultiAddressSelector("1.1.1.1, ::, 0.0.0.0"));
+
+    Boolean f = false;
+    try {
+      cfg.setHttpMultiAddressSelector(0);
+      new Parser(cfg).applyHttpMultiAddressSelector("1.1.1.1");
+    } catch (IllegalArgumentException exc) {
+      f = true;
+    }
+    assertTrue(f);
+  }
+
+  @Test
   public void testParseXForwardedFor() throws Exception {
     String[] result = Parser.parseXForwardedFor("0.0.0.0");
     assertEquals(1, result.length);
@@ -784,7 +819,10 @@ public class ParserTest {
             + "9.539710898Z\",\"resource\":{\"labels\":{\"aws_account\":\"000000000000\",\"instance_id\""
             + ":\"i-00000000000000000\",\"project_id\":\"test\",\"region\":\"aws:us-west-2c\"},\"type\":"
             + "\"aws_ec2_instance\"},\"timestamp\":\"2019-01-31T17:49:57Z\"}";
-    Parser p = getTestParser();
+    ParserCfg cfg = new ParserCfg();
+    cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
+    cfg.setHttpMultiAddressSelector(-1);
+    Parser p = new Parser(cfg);
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);

@@ -47,6 +47,46 @@ public class Parser {
   }
 
   /**
+   * Apply any configured multi-address selector to the specified input string
+   *
+   * <p>If an HTTP multi-address selector was not configured in the parser configuration, the input
+   * is just returned as is.
+   *
+   * @param input Input string
+   * @return Results of address selector application
+   */
+  public String applyHttpMultiAddressSelector(String input) throws IllegalArgumentException {
+    if (input == null) {
+      return null;
+    }
+    Integer s = cfg.getHttpMultiAddressSelector();
+    if (s == null) {
+      // No selector specified, just return whatever the input was
+      return input;
+    }
+    if (s == 0) {
+      throw new IllegalArgumentException("http multi address selector must be <= -1 or >= 1");
+    }
+    String[] parts = parseXForwardedFor(input);
+    if (parts == null) {
+      // Input was not formatted correctly or was not an IP address
+      return null;
+    }
+    if (parts.length <= 1) {
+      // Just a single element, return the input as is
+      return input;
+    }
+    if (parts.length < Math.abs(s.intValue())) {
+      return null;
+    }
+    if (s >= 1) {
+      return parts[s.intValue() - 1];
+    } else {
+      return parts[parts.length + s.intValue()];
+    }
+  }
+
+  /**
    * Process the value of an X-Forwarded-For header, returning an array of each address in the
    * header or null if invalid
    *

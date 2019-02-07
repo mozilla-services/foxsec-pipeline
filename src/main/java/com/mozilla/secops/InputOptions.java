@@ -25,4 +25,9 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   String getMaxmindDbPath();
 
   void setMaxmindDbPath(String value);
+
+  @Description("Enable HTTP multi-address selector; <= -1 or >= 1")
+  Integer getHttpMultiAddressSelector();
+
+  void setHttpMultiAddressSelector(Integer value);
 }
