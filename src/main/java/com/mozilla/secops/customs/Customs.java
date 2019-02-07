@@ -6,6 +6,7 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.SecEvent;
 import java.io.IOException;
@@ -124,12 +125,11 @@ public class Customs implements Serializable {
 
     CustomsCfg cfg = CustomsCfg.loadFromResource(options.getConfigurationResourcePath());
 
-    ParserDoFn fn = new ParserDoFn();
-    if (options.getMaxmindDbPath() != null) {
-      fn = fn.withGeoIP(options.getMaxmindDbPath());
-    }
     PCollection<Event> input =
-        p.apply("input", options.getInputType().read(p, options)).apply("parse", ParDo.of(fn));
+        p.apply("input", options.getInputType().read(p, options))
+            .apply(
+                "parse",
+                ParDo.of(new ParserDoFn().withConfiguration(ParserCfg.fromInputOptions(options))));
 
     PCollection<Alert> alerts = input.apply(new Detectors(cfg, options));
 

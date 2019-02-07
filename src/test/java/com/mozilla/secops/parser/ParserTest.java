@@ -14,9 +14,15 @@ public class ParserTest {
 
   public ParserTest() {}
 
+  private Parser getTestParser() {
+    ParserCfg cfg = new ParserCfg();
+    cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
+    return new Parser(cfg);
+  }
+
   @Test
   public void testParseZeroLength() throws Exception {
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse("");
     assertNotNull(p);
@@ -28,7 +34,7 @@ public class ParserTest {
 
   @Test
   public void testParseNull() throws Exception {
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(null);
     assertNotNull(p);
@@ -41,7 +47,7 @@ public class ParserTest {
   @Test
   public void testParseBadJson() throws Exception {
     String buf = "{\"testdata\": \"testing\", ";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(p);
@@ -53,7 +59,7 @@ public class ParserTest {
 
   @Test
   public void testParseRaw() throws Exception {
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse("test");
     assertNotNull(e);
@@ -65,7 +71,7 @@ public class ParserTest {
 
   @Test
   public void testParserReuse() throws Exception {
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse("test");
     assertNotNull(e);
@@ -90,7 +96,7 @@ public class ParserTest {
             + ":\"2018-09-20T18:43:38.318580313Z\",\"resource\":{\"labels\":{\"instance_id\":\"99999999999999"
             + "99999\",\"project_id\":\"sandbox-00\",\"zone\":\"us-east1-b\"},\"type\":\"gce_instance\"},\"te"
             + "xtPayload\":\"test\",\"timestamp\":\"2018-09-18T22:15:38Z\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -108,7 +114,7 @@ public class ParserTest {
             + "\"Time\": \"2018-07-04T15:49:46Z\", \"Logger\": \"duopull\", \"Type\": \"app.log\", "
             + "\"Timestamp\": 1530719386349480000}";
     String expect = "{\"numeric\":3600,\"string\":\"testing\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -127,7 +133,7 @@ public class ParserTest {
     String buf =
         "Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from 12"
             + "7.0.0.1 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -155,7 +161,7 @@ public class ParserTest {
             + "textPayload\":\"Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from 12"
             + "7.0.0.1 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"timestamp"
             + "\":\"2018-09-18T22:15:38Z\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -184,8 +190,7 @@ public class ParserTest {
             + "textPayload\":\"Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from "
             + "216.160.83.56 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"timestamp"
             + "\":\"2018-09-18T22:15:38Z\"}";
-    Parser p = new Parser();
-    p.enableGeoIp(TEST_GEOIP_DBPATH);
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -225,7 +230,7 @@ public class ParserTest {
             + ",\"severity\":\"INFO\",\"spanId\":\"AAAAAAAAAAAAAAAA\",\"timestamp\":\"2018-09-28T18:55:"
             + "12.469373944Z\",\"trace\":\"projects/moz/traces/AAAAAAAAAAAAAAAAAAAAAA"
             + "AAAAAAAAAA\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -273,7 +278,7 @@ public class ParserTest {
             + ",\"severity\":\"INFO\",\"spanId\":\"AAAAAAAAAAAAAAAA\",\"timestamp\":\"2018-09-28T18:55:"
             + "12.469373944Z\",\"trace\":\"projects/moz/traces/AAAAAAAAAAAAAAAAAAAAAA"
             + "AAAAAAAAAA\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -299,7 +304,7 @@ public class ParserTest {
             + ",\"severity\":\"INFO\",\"spanId\":\"AAAAAAAAAAAAAAAA\",\"timestamp\":\"2018"
             + "-1-1\",\"trace\":\"projects/moz/traces/AAAAAAAAAAAAAAAAAAAAAA"
             + "AAAAAAAAAA\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -327,8 +332,7 @@ public class ParserTest {
             + "Z\",\"resource\":{\"labels\":{\"aws_account\":\"000000000000\",\"instance_id\":\"i-0\","
             + "\"project_id\":\"prod\",\"region\":\"aws:us-west-2a\"},\"type\":\"aws_ec2_instance\"},\""
             + "timestamp\":\"2019-01-31T17:45:27.478007784Z\"}";
-    Parser p = new Parser();
-    p.enableGeoIp(TEST_GEOIP_DBPATH);
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -363,8 +367,7 @@ public class ParserTest {
             + "resource\":{\"labels\":{\"aws_account\":\"000000000000\",\"instance_id\":\""
             + "i-0\",\"project_id\":\"prod\",\"region\":\"aws:us-west-2a\"},\"type\":\"aws"
             + "_ec2_instance\"},\"timestamp\":\"2019-01-31T17:48:26.593764735Z\"}";
-    Parser p = new Parser();
-    p.enableGeoIp(TEST_GEOIP_DBPATH);
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -396,7 +399,7 @@ public class ParserTest {
             + "\"event_description_auto_generated\": true, \"event_description_remaining_uses\": 1}, "
             + "\"Hostname\": \"test\", \"Pid\": 62312, \"Time\": \"2018-07-04T15:49:46Z\", "
             + "\"Logger\": \"duopull\", \"Type\": \"app.log\", \"Timestamp\": 1530719386349480000}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -419,7 +422,7 @@ public class ParserTest {
             + "\"event_description_bypass\": \"\", \"path\": \"/admin/v1/logs/administrator\", "
             + "\"msg\": \"duopull event\", \"event_action\": \"bypass_create\", "
             + "\"event_description_auto_generated\": true, \"event_description_remaining_uses\": 1}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -450,7 +453,7 @@ public class ParserTest {
             + "\\\", \\\"Pid\\\": 62312, \\\"Time\\\": \\\"2018-07-04T15:49:46Z\\\", \\\"Logger\\\": \\\"d"
             + "uopull\\\", \\\"Type\\\": \\\"app.log\\\", \\\"Timestamp\\\": 1530719386349480000}\",\"time"
             + "stamp\":\"2018-09-18T22:15:38Z\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -532,7 +535,7 @@ public class ParserTest {
             + "\"Jul 2, 2018 6:20:04 PM\"}},\"requestID\": \"8abc0444-7e24-11e8-f2fa-9d71c95ef006\","
             + "\"eventID\": \"55555343-132e-43bb-8d5d-23d0ef81178e\",\"eventType\": "
             + "\"AwsApiCall\",\"recipientAccountId\": \"1234567890\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -558,7 +561,7 @@ public class ParserTest {
             + "\"type\":\"IAMUser\",\"userName\":\"riker\",\"sessionContext\": {\"attributes\": "
             + "{\"mfaAuthenticated\": \"true\",\"creationDate\": \"2018-07-02T18:14:11Z\"}}}}";
 
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -588,7 +591,7 @@ public class ParserTest {
             + "\"127.0.0.1\",\"userAgent\": \"signin.amazonaws.com\",\"eventID\": "
             + "\"000000000-000000\",\"eventType\": \"AwsApiCall\",\"recipientAccountId\": \"XXXXXXXX\"}";
 
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -626,7 +629,7 @@ public class ParserTest {
             + "\"project\", \"labels\": {\"project_id\": \"sandbox\"}}, \"timestamp\": "
             + "\"2018-10-11T18:41:09.542038318Z\", \"logName\": \"projects/sandbox/logs/ctstreamer\", "
             + "\"receiveTimestamp\": \"2018-10-11T18:41:12.665161934Z\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -665,8 +668,7 @@ public class ParserTest {
             + "ject_id\":\"test\"}},\"timestamp\":\"2019-01-03T20:52:04.782Z\",\"severity\":\"NOTI"
             + "CE\",\"logName\":\"projects/test/logs/cloudaudit.googleapis.com%2Factivity\",\"rece"
             + "iveTimestamp\":\"2019-01-03T20:52:05.807173206Z\"}";
-    Parser p = new Parser();
-    p.enableGeoIp(TEST_GEOIP_DBPATH);
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -707,7 +709,7 @@ public class ParserTest {
             + "rnetes.io/version\":\"1.0.0\",\"app.kubernetes.io/component\":\"app\",\"app.kubernetes.io/i"
             + "nstance\":\"prod\",\"pod-template-hash\":\"000000000\",\"app.kubernetes.io/part-of\":\"test"
             + "\",\"fullname\":\"test\",\"jenkins-build-id\":\"0\",\"app.kubernetes.io/name\":\"test\"}}}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -744,7 +746,7 @@ public class ParserTest {
             + "9.539710898Z\",\"resource\":{\"labels\":{\"aws_account\":\"000000000000\",\"instance_id\""
             + ":\"i-00000000000000000\",\"project_id\":\"test\",\"region\":\"aws:us-west-2c\"},\"type\":"
             + "\"aws_ec2_instance\"},\"timestamp\":\"2019-01-31T17:49:57Z\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -769,11 +771,49 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseNginxStackdriverVariant2MultiRemote() {
+    // Test cases where the remote_ip field contains multiple addresses, e.g., XFF
+    String buf =
+        "{\"insertId\":\"AAAAAAAAAAAA\",\"jsonPayload\":{\"agent\":\"Mozilla/5.0\",\"bytes_sent\""
+            + ":\"97\",\"cache_status\":\"-\",\"code\":\"200\",\"gzip_ratio\":\"0.68\",\"referrer\":\"h"
+            + "ttps://bugzilla.mozilla.org/ping?id=0\",\"remote_ip\":\"10.0.0.1, 216.160.83.56\",\"req_ti"
+            + "me\":\"0.136\",\"request\":\"POST /rest/bug_user_last_visit/000000?t=t HTTP/1.1\",\"res_"
+            + "time\":\"0.136\"},\"labels\":{\"application\":\"bugzilla\",\"ec2.amazonaws.com/resource_"
+            + "name\":\"ip1.us-west-2.compute.internal\",\"env\":\"test\",\"stack\":\"app\",\"type\":\""
+            + "app\"},\"logName\":\"projects/test/logs/test\",\"receiveTimestamp\":\"2019-01-31T17:49:5"
+            + "9.539710898Z\",\"resource\":{\"labels\":{\"aws_account\":\"000000000000\",\"instance_id\""
+            + ":\"i-00000000000000000\",\"project_id\":\"test\",\"region\":\"aws:us-west-2c\"},\"type\":"
+            + "\"aws_ec2_instance\"},\"timestamp\":\"2019-01-31T17:49:57Z\"}";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.NGINX, e.getPayloadType());
+    Nginx d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(200, (int) d.getStatus());
+    assertEquals("https://bugzilla.mozilla.org/ping?id=0", d.getReferrer());
+    assertEquals("POST /rest/bug_user_last_visit/000000?t=t HTTP/1.1", d.getRequest());
+    assertEquals("POST", d.getRequestMethod());
+    assertEquals("/rest/bug_user_last_visit/000000?t=t", d.getRequestUrl());
+    assertEquals("/rest/bug_user_last_visit/000000", d.getRequestPath());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.HTTP_REQUEST));
+    assertEquals("POST", n.getRequestMethod());
+    assertEquals(200, (int) n.getRequestStatus());
+    assertEquals("/rest/bug_user_last_visit/000000?t=t", n.getRequestUrl());
+    assertEquals("/rest/bug_user_last_visit/000000", n.getUrlRequestPath());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+  }
+
+  @Test
   public void testParseSecEvent() {
     String buf =
         "{\"secevent_version\":\"secevent.model.1\",\"action\":\"loginFailure\""
             + ",\"account_id\":\"q@the-q-continuum\",\"timestamp\":\"1970-01-01T00:00:00+00:00\"}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -791,8 +831,7 @@ public class ParserTest {
 
   @Test
   public void testGeoIp() throws Exception {
-    Parser p = new Parser();
-    p.enableGeoIp(TEST_GEOIP_DBPATH);
+    Parser p = getTestParser();
     assertNotNull(p);
     CityResponse resp = p.geoIp("216.160.83.56");
     assertNotNull(resp);
@@ -802,7 +841,7 @@ public class ParserTest {
 
   @Test
   public void testParseJsonSerializeDeserializeRaw() throws Exception {
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse("test");
     assertNotNull(e);
@@ -835,7 +874,7 @@ public class ParserTest {
             + "\"event_description_auto_generated\": true, \"event_description_remaining_uses\": 1}, "
             + "\"Hostname\": \"test\", \"Pid\": 62312, \"Time\": \"2018-07-04T15:49:46Z\", "
             + "\"Logger\": \"duopull\", \"Type\": \"app.log\", \"Timestamp\": 1530719386349480000}";
-    Parser p = new Parser();
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);

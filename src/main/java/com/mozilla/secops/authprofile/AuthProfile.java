@@ -10,6 +10,7 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
+import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.MemcachedStateInterface;
@@ -62,7 +63,7 @@ public class AuthProfile implements Serializable {
     private final String idmanagerPath;
     private final String[] ignoreUserRegex;
     private final Boolean ignoreUnknownIdentities;
-    private final String maxmindDbPath;
+    private final ParserCfg cfg;
 
     /**
      * Static initializer for {@link ParseAndWindow} using specified pipeline options
@@ -74,7 +75,7 @@ public class AuthProfile implements Serializable {
       log = LoggerFactory.getLogger(ParseAndWindow.class);
       ignoreUserRegex = options.getIgnoreUserRegex();
       ignoreUnknownIdentities = options.getIgnoreUnknownIdentities();
-      maxmindDbPath = options.getMaxmindDbPath();
+      cfg = ParserCfg.fromInputOptions(options);
     }
 
     @Override
@@ -86,11 +87,8 @@ public class AuthProfile implements Serializable {
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH_SESSION));
 
-      ParserDoFn fn = new ParserDoFn().withInlineEventFilter(filter);
-      if (maxmindDbPath != null) {
-        fn = fn.withGeoIP(maxmindDbPath);
-      }
-      return col.apply(ParDo.of(fn))
+      return col.apply(
+              ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)))
           .apply(
               ParDo.of(
                   new DoFn<Event, KV<String, Event>>() {

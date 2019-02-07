@@ -30,6 +30,7 @@ public class Parser {
   private final List<PayloadBase> payloads;
   private final JacksonFactory jf;
   private final Logger log;
+  private final ParserCfg cfg;
   private GeoIP geoip;
 
   private IdentityManager idmanager;
@@ -181,15 +182,6 @@ public class Parser {
   }
 
   /**
-   * Enable GeoIP resolution in the parser
-   *
-   * @param dbpath Path to Maxmind database, resource path or GCS URL
-   */
-  public void enableGeoIp(String dbpath) {
-    geoip = new GeoIP(dbpath);
-  }
-
-  /**
    * Set an identity manager in the parser that can be used for lookups
    *
    * @param idmanager Initialized {@link IdentityManager}
@@ -246,10 +238,18 @@ public class Parser {
     return e;
   }
 
-  /** Create new parser instance */
-  public Parser() {
+  /**
+   * Create new parser instance with specified configuration
+   *
+   * @param cfg {@link ParserCfg}
+   */
+  public Parser(ParserCfg cfg) {
     log = LoggerFactory.getLogger(Parser.class);
     jf = new JacksonFactory();
+    this.cfg = cfg;
+    if (cfg.getMaxmindDbPath() != null) {
+      geoip = new GeoIP(cfg.getMaxmindDbPath());
+    }
     payloads = new ArrayList<PayloadBase>();
     payloads.add(new GLB());
     payloads.add(new Nginx());
@@ -260,5 +260,10 @@ public class Parser {
     payloads.add(new OpenSSH());
     payloads.add(new Duopull());
     payloads.add(new Raw());
+  }
+
+  /** Create new parser instance with default configuration */
+  public Parser() {
+    this(new ParserCfg());
   }
 }

@@ -13,7 +13,7 @@ public class ParserDoFn extends DoFn<String, Event> {
   private Long parseCount;
 
   private EventFilter inlineFilter;
-  private String geoIpDbPath;
+  private ParserCfg cfg;
 
   /**
    * Install an inline {@link EventFilter} in this transform
@@ -30,21 +30,22 @@ public class ParserDoFn extends DoFn<String, Event> {
   }
 
   /**
-   * Enable GeoIP resolution in this parser function
+   * Configure this function to use the specified configuration in the parser
    *
-   * @param geoIpDbPath Path to Maxmind DB
+   * @param cfg Parser configuration
    * @return ParserDoFn
    */
-  public ParserDoFn withGeoIP(String geoIpDbPath) {
-    this.geoIpDbPath = geoIpDbPath;
+  public ParserDoFn withConfiguration(ParserCfg cfg) {
+    this.cfg = cfg;
     return this;
   }
 
   @Setup
   public void setup() {
-    ep = new Parser();
-    if (geoIpDbPath != null) {
-      ep.enableGeoIp(geoIpDbPath);
+    if (cfg == null) {
+      ep = new Parser();
+    } else {
+      ep = new Parser(cfg);
     }
     log = LoggerFactory.getLogger(ParserDoFn.class);
     log.info("initialized new parser");

@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.ParserTest;
 import java.util.ArrayList;
@@ -65,7 +66,10 @@ public class TestCustoms {
 
     PCollection<Alert> alerts =
         input
-            .apply(ParDo.of(new ParserDoFn().withGeoIP(ParserTest.TEST_GEOIP_DBPATH)))
+            .apply(
+                ParDo.of(
+                    new ParserDoFn()
+                        .withConfiguration(ParserCfg.fromInputOptions(getTestOptions()))))
             .apply(new Customs.Detectors(cfg, getTestOptions()));
 
     ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();
@@ -160,7 +164,10 @@ public class TestCustoms {
 
     PCollection<Alert> alerts =
         input
-            .apply(ParDo.of(new ParserDoFn().withGeoIP(ParserTest.TEST_GEOIP_DBPATH)))
+            .apply(
+                ParDo.of(
+                    new ParserDoFn()
+                        .withConfiguration(ParserCfg.fromInputOptions(getTestOptions()))))
             .apply(new Customs.Detectors(cfg, getTestOptions()));
 
     ArrayList<IntervalWindow> windows = new ArrayList<IntervalWindow>();
@@ -215,7 +222,10 @@ public class TestCustoms {
 
     PCollection<Alert> alerts =
         input
-            .apply(ParDo.of(new ParserDoFn().withGeoIP(ParserTest.TEST_GEOIP_DBPATH)))
+            .apply(
+                ParDo.of(
+                    new ParserDoFn()
+                        .withConfiguration(ParserCfg.fromInputOptions(getTestOptions()))))
             .apply(new Customs.Detectors(cfg, getTestOptions()));
 
     PCollection<Long> count =

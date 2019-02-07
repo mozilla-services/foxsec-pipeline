@@ -8,6 +8,7 @@ import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
+import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class AwsBehavior implements Serializable {
   public static class ParseAndWindow extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
-    private final String maxmindDbPath;
+    private final ParserCfg cfg;
 
     /**
      * Static initializer for {@link ParseAndWindow} using specified pipeline options
@@ -53,7 +54,7 @@ public class AwsBehavior implements Serializable {
      * @param options Pipeline options
      */
     public ParseAndWindow(AwsBehaviorOptions options) {
-      maxmindDbPath = options.getMaxmindDbPath();
+      cfg = ParserCfg.fromInputOptions(options);
     }
 
     @Override
@@ -61,11 +62,7 @@ public class AwsBehavior implements Serializable {
       EventFilter filter = new EventFilter();
       filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.CLOUDTRAIL));
 
-      ParserDoFn fn = new ParserDoFn();
-      if (maxmindDbPath != null) {
-        fn = fn.withGeoIP(maxmindDbPath);
-      }
-      return col.apply(ParDo.of(fn))
+      return col.apply(ParDo.of(new ParserDoFn().withConfiguration(cfg)))
           .apply(EventFilter.getTransform(filter))
           .apply(
               Window.<Event>into(new GlobalWindows())
