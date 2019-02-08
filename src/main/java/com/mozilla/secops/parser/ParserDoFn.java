@@ -47,18 +47,18 @@ public class ParserDoFn extends DoFn<String, Event> {
       ep.enableGeoIp(geoIpDbPath);
     }
     log = LoggerFactory.getLogger(ParserDoFn.class);
-    log.info("initialized new parser");
   }
 
   @StartBundle
   public void StartBundle() {
-    log.info("processing new bundle");
     parseCount = 0L;
   }
 
   @FinishBundle
   public void FinishBundle() {
-    log.info("{} events processed in bundle", parseCount);
+    if (parseCount > 0L) {
+      log.info("{} events processed in bundle", parseCount);
+    }
   }
 
   @ProcessElement
