@@ -172,6 +172,32 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH));
     assertEquals("riker", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
+
+    buf =
+        "{\"insertId\":\"f8p4mz1a3ldcos1xz\",\"labels\":{\"compute.googleapis.com/resource_"
+            + "name\":\"emit-bastion\"},\"logName\":\"projects/sandbox-00/logs/syslog\",\"receiveTimestamp\""
+            + ":\"2018-09-20T18:43:38.318580313Z\",\"resource\":{\"labels\":{\"instance_id\":\"9999999999999"
+            + "999999\",\"project_id\":\"sandbox-00\",\"zone\":\"us-east1-b\"},\"type\":\"gce_instance\"},\""
+            + "textPayload\":\"Feb  8 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from 12"
+            + "7.0.0.1 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"timestamp"
+            + "\":\"2018-09-18T22:15:38Z\"}";
+    p = new Parser();
+    assertNotNull(p);
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.OPENSSH, e.getPayloadType());
+    o = e.getPayload();
+    assertNotNull(o);
+    assertEquals("riker", o.getUser());
+    assertEquals("publickey", o.getAuthMethod());
+    assertEquals("127.0.0.1", o.getSourceAddress());
+    assertNull(o.getSourceAddressCity());
+    assertNull(o.getSourceAddressCountry());
+    n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("riker", n.getSubjectUser());
+    assertEquals("127.0.0.1", n.getSourceAddress());
   }
 
   @Test
