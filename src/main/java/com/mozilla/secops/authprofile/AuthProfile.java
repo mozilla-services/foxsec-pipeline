@@ -138,9 +138,16 @@ public class AuthProfile implements Serializable {
                         log.info("{}: resolved identity to {}", n.getSubjectUser(), identityKey);
                         c.output(KV.of(identityKey, e));
                       } else {
-                        log.info(
-                            "{}: username does not map to any known identity or alias",
-                            n.getSubjectUser());
+                        // Don't bother logging for known Kubernetes system users
+                        if (!(n.getSubjectUser().equals("system:unsecured")
+                            || n.getSubjectUser().equals("cluster-autoscaler")
+                            || n.getSubjectUser()
+                                .equals("system:serviceaccount:kube-system:endpoint-controller")
+                            || n.getSubjectUser().equals("system:kube-proxy"))) {
+                          log.info(
+                              "{}: username does not map to any known identity or alias",
+                              n.getSubjectUser());
+                        }
                         if (ignoreUnknownIdentities) {
                           return;
                         }
