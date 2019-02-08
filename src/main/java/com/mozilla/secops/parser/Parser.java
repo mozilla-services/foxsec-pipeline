@@ -32,6 +32,8 @@ public class Parser {
   private final Logger log;
   private GeoIP geoip;
 
+  public static final String SYSLOG_TS_RE = "\\S{3} {1,2}\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}";
+
   private IdentityManager idmanager;
 
   /**
