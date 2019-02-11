@@ -9,6 +9,7 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.awsbehavior.AwsBehavior;
 import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.ParserTest;
 import com.mozilla.secops.parser.Payload;
 import java.io.IOException;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -28,6 +29,7 @@ public class TestAwsBehavior {
         PipelineOptionsFactory.as(AwsBehavior.AwsBehaviorOptions.class);
     ret.setIdentityManagerPath("/testdata/identitymanager.json");
     ret.setCloudtrailMatcherManagerPath("/testdata/event_matchers.json");
+    ret.setMaxmindDbPath(ParserTest.TEST_GEOIP_DBPATH);
     return ret;
   }
 
@@ -40,7 +42,7 @@ public class TestAwsBehavior {
   public void parseAndWindowTest() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/cloudtrail_buffer1.txt", p);
 
-    PCollection<Event> res = input.apply(new AwsBehavior.ParseAndWindow());
+    PCollection<Event> res = input.apply(new AwsBehavior.ParseAndWindow(getTestOptions()));
 
     PAssert.that(res)
         .satisfies(
@@ -68,7 +70,9 @@ public class TestAwsBehavior {
 
     try {
       PCollection<Alert> res =
-          input.apply(new AwsBehavior.ParseAndWindow()).apply(new AwsBehavior.Matchers(options));
+          input
+              .apply(new AwsBehavior.ParseAndWindow(options))
+              .apply(new AwsBehavior.Matchers(options));
       fail("Expected an IOException");
     } catch (IOException exc) {
       assertEquals(exc.getMessage(), "cloudtrail matcher manager resource not found");
@@ -83,7 +87,9 @@ public class TestAwsBehavior {
     PCollection<String> input = TestUtil.getTestInput("/testdata/cloudtrail_buffer1.txt", p);
 
     PCollection<Alert> res =
-        input.apply(new AwsBehavior.ParseAndWindow()).apply(new AwsBehavior.Matchers(options));
+        input
+            .apply(new AwsBehavior.ParseAndWindow(options))
+            .apply(new AwsBehavior.Matchers(options));
 
     PAssert.that(res)
         .satisfies(

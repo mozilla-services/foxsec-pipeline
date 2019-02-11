@@ -45,12 +45,27 @@ public class AwsBehavior implements Serializable {
   public static class ParseAndWindow extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
+    private final String maxmindDbPath;
+
+    /**
+     * Static initializer for {@link ParseAndWindow} using specified pipeline options
+     *
+     * @param options Pipeline options
+     */
+    public ParseAndWindow(AwsBehaviorOptions options) {
+      maxmindDbPath = options.getMaxmindDbPath();
+    }
+
     @Override
     public PCollection<Event> expand(PCollection<String> col) {
       EventFilter filter = new EventFilter();
       filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.CLOUDTRAIL));
 
-      return col.apply(ParDo.of(new ParserDoFn()))
+      ParserDoFn fn = new ParserDoFn();
+      if (maxmindDbPath != null) {
+        fn = fn.withGeoIP(maxmindDbPath);
+      }
+      return col.apply(ParDo.of(fn))
           .apply(EventFilter.getTransform(filter))
           .apply(
               Window.<Event>into(new GlobalWindows())
@@ -189,7 +204,7 @@ public class AwsBehavior implements Serializable {
 
     PCollection<Alert> alerts =
         p.apply("input", options.getInputType().read(p, options))
-            .apply("parse and window", new ParseAndWindow())
+            .apply("parse and window", new ParseAndWindow(options))
             .apply(new Matchers(options));
 
     alerts

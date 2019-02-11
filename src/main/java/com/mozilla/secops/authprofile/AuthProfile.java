@@ -62,6 +62,7 @@ public class AuthProfile implements Serializable {
     private final String idmanagerPath;
     private final String[] ignoreUserRegex;
     private final Boolean ignoreUnknownIdentities;
+    private final String maxmindDbPath;
 
     /**
      * Static initializer for {@link ParseAndWindow} using specified pipeline options
@@ -73,6 +74,7 @@ public class AuthProfile implements Serializable {
       log = LoggerFactory.getLogger(ParseAndWindow.class);
       ignoreUserRegex = options.getIgnoreUserRegex();
       ignoreUnknownIdentities = options.getIgnoreUnknownIdentities();
+      maxmindDbPath = options.getMaxmindDbPath();
     }
 
     @Override
@@ -84,7 +86,11 @@ public class AuthProfile implements Serializable {
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH_SESSION));
 
-      return col.apply(ParDo.of(new ParserDoFn().withInlineEventFilter(filter)))
+      ParserDoFn fn = new ParserDoFn().withInlineEventFilter(filter);
+      if (maxmindDbPath != null) {
+        fn = fn.withGeoIP(maxmindDbPath);
+      }
+      return col.apply(ParDo.of(fn))
           .apply(
               ParDo.of(
                   new DoFn<Event, KV<String, Event>>() {
@@ -132,9 +138,16 @@ public class AuthProfile implements Serializable {
                         log.info("{}: resolved identity to {}", n.getSubjectUser(), identityKey);
                         c.output(KV.of(identityKey, e));
                       } else {
-                        log.info(
-                            "{}: username does not map to any known identity or alias",
-                            n.getSubjectUser());
+                        // Don't bother logging for known Kubernetes system users
+                        if (!(n.getSubjectUser().equals("system:unsecured")
+                            || n.getSubjectUser().equals("cluster-autoscaler")
+                            || n.getSubjectUser()
+                                .equals("system:serviceaccount:kube-system:endpoint-controller")
+                            || n.getSubjectUser().equals("system:kube-proxy"))) {
+                          log.info(
+                              "{}: username does not map to any known identity or alias",
+                              n.getSubjectUser());
+                        }
                         if (ignoreUnknownIdentities) {
                           return;
                         }

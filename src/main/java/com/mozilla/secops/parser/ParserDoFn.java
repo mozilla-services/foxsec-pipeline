@@ -13,34 +13,52 @@ public class ParserDoFn extends DoFn<String, Event> {
   private Long parseCount;
 
   private EventFilter inlineFilter;
+  private String geoIpDbPath;
 
   /**
    * Install an inline {@link EventFilter} in this transform
    *
    * <p>If an inline filter is present in the transform, the transform will only emit events that
    * match the filter.
+   *
+   * @param inlineFilter Event filter to install
+   * @return ParserDoFn
    */
   public ParserDoFn withInlineEventFilter(EventFilter inlineFilter) {
     this.inlineFilter = inlineFilter;
     return this;
   }
 
+  /**
+   * Enable GeoIP resolution in this parser function
+   *
+   * @param geoIpDbPath Path to Maxmind DB
+   * @return ParserDoFn
+   */
+  public ParserDoFn withGeoIP(String geoIpDbPath) {
+    this.geoIpDbPath = geoIpDbPath;
+    return this;
+  }
+
   @Setup
   public void setup() {
     ep = new Parser();
+    if (geoIpDbPath != null) {
+      ep.enableGeoIp(geoIpDbPath);
+    }
     log = LoggerFactory.getLogger(ParserDoFn.class);
-    log.info("initialized new parser");
   }
 
   @StartBundle
   public void StartBundle() {
-    log.info("processing new bundle");
     parseCount = 0L;
   }
 
   @FinishBundle
   public void FinishBundle() {
-    log.info("{} events processed in bundle", parseCount);
+    if (parseCount > 0L) {
+      log.info("{} events processed in bundle", parseCount);
+    }
   }
 
   @ProcessElement

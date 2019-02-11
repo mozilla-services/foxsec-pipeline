@@ -7,13 +7,11 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.maxmind.geoip2.model.CityResponse;
-import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.identity.IdentityManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -25,10 +23,6 @@ import org.slf4j.LoggerFactory;
  * Event parser
  *
  * <p>{@link Parser} can be used to parse incoming events and generate {@link Event} objects.
- *
- * <p>On initialization the parser will also attempt to initialize the GeoIP parser that some
- * individual event parsers can utilize. See documentation for {@link GeoIP} on dependencies for
- * GeoIP lookup support.
  */
 public class Parser {
   private static final long serialVersionUID = 1L;
@@ -36,7 +30,9 @@ public class Parser {
   private final List<PayloadBase> payloads;
   private final JacksonFactory jf;
   private final Logger log;
-  private final GeoIP geoip;
+  private GeoIP geoip;
+
+  public static final String SYSLOG_TS_RE = "\\S{3} {1,2}\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}";
 
   private IdentityManager idmanager;
 
@@ -174,20 +170,25 @@ public class Parser {
   /**
    * Resolve GeoIP information from IP address string
    *
+   * <p>GeoIP resolution must be enabled in the parser, or this function will always return null.
+   *
    * @param ip IP address string
    * @return MaxmindDB {@link CityResponse}, or null if lookup fails
    */
   public CityResponse geoIp(String ip) {
+    if (geoip == null) {
+      return null;
+    }
     return geoip.lookup(ip);
   }
 
   /**
-   * Determine if GeoIP test database is being used
+   * Enable GeoIP resolution in the parser
    *
-   * @return True if test database is loaded by GeoIP submodule
+   * @param dbpath Path to Maxmind database, resource path or GCS URL
    */
-  public Boolean geoIpUsingTest() {
-    return geoip.usingTest();
+  public void enableGeoIp(String dbpath) {
+    geoip = new GeoIP(dbpath);
   }
 
   /**
@@ -247,19 +248,9 @@ public class Parser {
     return e;
   }
 
-  /** Create new parser instance using default values from {@link InputOptions} */
+  /** Create new parser instance */
   public Parser() {
-    this(PipelineOptionsFactory.as(InputOptions.class));
-  }
-
-  /**
-   * Create new parser based on any applicable configuration in {@link InputOptions}
-   *
-   * @param options InputOptions
-   */
-  public Parser(InputOptions options) {
     log = LoggerFactory.getLogger(Parser.class);
-    geoip = new GeoIP(options.getMaxmindDbPath());
     jf = new JacksonFactory();
     payloads = new ArrayList<PayloadBase>();
     payloads.add(new GLB());

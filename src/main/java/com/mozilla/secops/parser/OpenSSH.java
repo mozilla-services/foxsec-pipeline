@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class OpenSSH extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private final String matchRe = "^\\S{3} \\d{2} [\\d:]+ \\S+ \\S*sshd\\[\\d+\\]: .+";
+  private final String matchRe = "^" + Parser.SYSLOG_TS_RE + " \\S+ \\S*sshd\\[\\d+\\]: .+";
   private Pattern pattRe;
 
   private final String authAcceptedRe =
