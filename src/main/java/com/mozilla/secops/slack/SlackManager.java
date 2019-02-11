@@ -52,6 +52,12 @@ public class SlackManager {
         ChatPostMessageRequest.builder().token(apiToken).channel(channelId).text(message).build());
   }
 
+  /**
+   * Get slack user id from their email.
+   *
+   * @param email User's email
+   * @return User's slack user id
+   */
   public String lookupUserIdByEmail(String email) throws IOException, SlackApiException {
     UsersLookupByEmailResponse resp =
         slack
@@ -195,6 +201,13 @@ public class SlackManager {
     }
   }
 
+  /**
+   * Checks if the response contains an error or warning message, and returns true if the request
+   * was successful.
+   *
+   * @param resp Slack api response
+   * @return Boolean, true if request was successful
+   */
   public Boolean handleSlackResponse(SlackApiResponse resp) {
     if (resp.getError() != null && resp.getError() != "") {
       log.error("error sending slack request: {}", resp.getError());

@@ -78,6 +78,11 @@ public class Identity {
     return String.format(fstring, fragment);
   }
 
+  /**
+   * Returns boolean that is true if this identity should get a direct notification via Slack
+   *
+   * @param defaultNotification Default notification preferences if unset in identity
+   */
   public Boolean getSlackNotifyDirect(Notify defaultNotification) {
     if (notify != null) {
       if (notify.getDirectSlackNotify() != null && notify.getDirectSlackNotify() == false) {
