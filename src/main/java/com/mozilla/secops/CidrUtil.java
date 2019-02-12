@@ -7,11 +7,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.commons.net.util.SubnetUtils;
+import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
 /** CIDR matching utilities */
 public class CidrUtil {
-  private ArrayList<SubnetUtils> subnets;
+  private ArrayList<IpAddressMatcher> subnets;
 
   /**
    * Returns a DoFn that filters any events that have a normalized source address field that is
@@ -60,8 +60,8 @@ public class CidrUtil {
    * @return True if any loaded subnet contains the address
    */
   public Boolean contains(String addr) {
-    for (SubnetUtils s : subnets) {
-      if (s.getInfo().isInRange(addr)) {
+    for (IpAddressMatcher s : subnets) {
+      if (s.matches(addr)) {
         return true;
       }
     }
@@ -74,14 +74,12 @@ public class CidrUtil {
    * @param cidr Subnet to add
    */
   public void add(String cidr) {
-    SubnetUtils n = new SubnetUtils(cidr);
-    n.setInclusiveHostCount(true);
-    subnets.add(n);
+    subnets.add(new IpAddressMatcher(cidr));
   }
 
   /** Constructor for {@link CidrUtil}, initialize empty */
   public CidrUtil() {
-    subnets = new ArrayList<SubnetUtils>();
+    subnets = new ArrayList<IpAddressMatcher>();
   }
 
   /**

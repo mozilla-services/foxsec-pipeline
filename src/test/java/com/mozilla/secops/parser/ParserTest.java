@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.maxmind.geoip2.model.CityResponse;
+import java.util.ArrayList;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -489,35 +490,31 @@ public class ParserTest {
   public void testHTTPMultiAddressSelector() throws Exception {
     ParserCfg cfg = new ParserCfg();
 
-    cfg.setHttpMultiAddressSelector(-1);
-    assertEquals("0.0.0.0", new Parser(cfg).applyHttpMultiAddressSelector("0.0.0.0"));
-    assertNull(new Parser(cfg).applyHttpMultiAddressSelector("test"));
-    assertNull(new Parser(cfg).applyHttpMultiAddressSelector("test, 0.0.0.0"));
-    assertEquals("0.0.0.0", new Parser(cfg).applyHttpMultiAddressSelector("::, 0.0.0.0"));
+    assertEquals("1.1.1.1", new Parser(cfg).applyXffAddressSelector("1.1.1.1"));
+    assertNull(new Parser(cfg).applyXffAddressSelector("test"));
+    assertNull(new Parser(cfg).applyXffAddressSelector("test, 1.1.1.1"));
+    assertEquals("1.1.1.1", new Parser(cfg).applyXffAddressSelector("2.2.2.2, 1.1.1.1"));
 
-    cfg.setHttpMultiAddressSelector(1);
-    assertEquals("::", new Parser(cfg).applyHttpMultiAddressSelector("::, 0.0.0.0"));
+    ArrayList<String> n = new ArrayList<>();
+    n.add("1.1.1.0/24");
+    cfg.setXffAddressSelector(n);
 
-    cfg.setHttpMultiAddressSelector(2);
-    assertEquals("0.0.0.0", new Parser(cfg).applyHttpMultiAddressSelector("::, 0.0.0.0"));
+    assertEquals("2.2.2.2", new Parser(cfg).applyXffAddressSelector("2.2.2.2, 1.1.1.10"));
+    assertEquals(
+        "2.2.2.2", new Parser(cfg).applyXffAddressSelector("2.2.2.2, 1.1.1.200, 1.1.1.10"));
+    assertEquals(
+        "2.2.2.2", new Parser(cfg).applyXffAddressSelector("1.1.1.200, 2.2.2.2, 1.1.1.10"));
+    assertEquals("2.2.2.2", new Parser(cfg).applyXffAddressSelector("::1, 2.2.2.2, 1.1.1.10"));
+    // All match selector, return last
+    assertEquals(
+        "1.1.1.1", new Parser(cfg).applyXffAddressSelector("1.1.1.200, 1.1.1.10, 1.1.1.1"));
 
-    cfg.setHttpMultiAddressSelector(-3);
-    assertEquals("1.1.1.1", new Parser(cfg).applyHttpMultiAddressSelector("1.1.1.1, ::, 0.0.0.0"));
+    n.add("2001:db8:1234::/48");
+    cfg.setXffAddressSelector(n);
 
-    cfg.setHttpMultiAddressSelector(-4);
-    assertNull(new Parser(cfg).applyHttpMultiAddressSelector("1.1.1.1, ::, 0.0.0.0"));
-
-    cfg.setHttpMultiAddressSelector(4);
-    assertNull(new Parser(cfg).applyHttpMultiAddressSelector("1.1.1.1, ::, 0.0.0.0"));
-
-    Boolean f = false;
-    try {
-      cfg.setHttpMultiAddressSelector(0);
-      new Parser(cfg).applyHttpMultiAddressSelector("1.1.1.1");
-    } catch (IllegalArgumentException exc) {
-      f = true;
-    }
-    assertTrue(f);
+    assertEquals("2.2.2.2", new Parser(cfg).applyXffAddressSelector("2.2.2.2, 2001:db8:1234::1"));
+    assertEquals(
+        "2001:db8:1235::1", new Parser(cfg).applyXffAddressSelector("2.2.2.2, 2001:db8:1235::1"));
   }
 
   @Test
@@ -821,7 +818,6 @@ public class ParserTest {
             + "\"aws_ec2_instance\"},\"timestamp\":\"2019-01-31T17:49:57Z\"}";
     ParserCfg cfg = new ParserCfg();
     cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
-    cfg.setHttpMultiAddressSelector(-1);
     Parser p = new Parser(cfg);
     assertNotNull(p);
     Event e = p.parse(buf);

@@ -7,6 +7,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.maxmind.geoip2.model.CityResponse;
+import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.identity.IdentityManager;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,43 +48,45 @@ public class Parser {
   }
 
   /**
-   * Apply any configured multi-address selector to the specified input string
+   * Apply any configured XFF address selector to the specified input string
    *
-   * <p>If an HTTP multi-address selector was not configured in the parser configuration, the input
-   * is just returned as is.
+   * <p>If no XFF address selector has been configured in the parser configuration, and the input
+   * contains multiple XFF style addresses, the last address is returned.
    *
    * @param input Input string
    * @return Results of address selector application
    */
-  public String applyHttpMultiAddressSelector(String input) throws IllegalArgumentException {
+  public String applyXffAddressSelector(String input) throws IllegalArgumentException {
     if (input == null) {
       return null;
     }
-    Integer s = cfg.getHttpMultiAddressSelector();
-    if (s == null) {
-      // No selector specified, just return whatever the input was
-      return input;
-    }
-    if (s == 0) {
-      throw new IllegalArgumentException("http multi address selector must be <= -1 or >= 1");
-    }
+
+    CidrUtil c = cfg.getXffAddressSelectorAsCidrUtil();
+
     String[] parts = parseXForwardedFor(input);
     if (parts == null) {
       // Input was not formatted correctly or was not an IP address
       return null;
     }
+
     if (parts.length <= 1) {
       // Just a single element, return the input as is
       return input;
     }
-    if (parts.length < Math.abs(s.intValue())) {
-      return null;
+
+    if (c == null) {
+      // No selectors specified but we had multiple addresses, return the last one
+      return parts[parts.length - 1];
     }
-    if (s >= 1) {
-      return parts[s.intValue() - 1];
-    } else {
-      return parts[parts.length + s.intValue()];
+
+    for (int i = parts.length - 1; i >= 0; i--) {
+      if (c.contains(parts[i])) {
+        continue;
+      } else {
+        return parts[i];
+      }
     }
+    return parts[parts.length - 1];
   }
 
   /**

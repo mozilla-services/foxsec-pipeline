@@ -1,14 +1,17 @@
 package com.mozilla.secops.parser;
 
+import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.InputOptions;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /** Represents configuration data used to configure an instance of a {@link Parser} */
 public class ParserCfg implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String maxmindDbPath;
-  private Integer httpMultiAddressSelector;
+  private ArrayList<String> xffAddressSelectorSubnets;
 
   /**
    * Create a parser configuration from pipeline {@link InputOptions}
@@ -19,33 +22,58 @@ public class ParserCfg implements Serializable {
   public static ParserCfg fromInputOptions(InputOptions options) {
     ParserCfg cfg = new ParserCfg();
     cfg.setMaxmindDbPath(options.getMaxmindDbPath());
-    cfg.setHttpMultiAddressSelector(options.getHttpMultiAddressSelector());
+    if (options.getXffAddressSelector() != null) {
+      String parts[] = options.getXffAddressSelector().split(",");
+      if (parts.length > 0) {
+        cfg.setXffAddressSelector(new ArrayList<String>(Arrays.asList(parts)));
+      }
+    }
     return cfg;
   }
 
   /**
-   * Get HTTP multi-address selector value
+   * Set XFF address selectors
    *
-   * <p>The multi-address field if set is used to inform the parser which address is to be used as
-   * the client source address in cases where a parsed HTTP request has multiple source IP addresses
-   * (for example, an XFF chain).
+   * <p>The subnets parameter should be an ArrayList containing CIDR subnets that will be used as
+   * hints for selecting a real client IP address in the event parsers see an X-Forwarded-For style
+   * address list.
    *
-   * <p>The value should be <= -1, or >= 1. -1 indicates the rightmost address in the list. -2 the
-   * second rightmost, etc. 1 indicates the first address in the list, 2 the second, etc.
+   * <p>If any address in the log entry address list matches a subnet in the configured selector
+   * list, the address directly to the left will be used as the real client IP address.
    *
-   * @return Integer or null if not specified
+   * <p>If this value is not set, the rightmost address will always be used as the actual client IP
+   * address.
+   *
+   * <p>This option is intended to behave in a similar manner to the nginx realip module,
+   * https://nginx.org/en/docs/http/ngx_http_realip_module.html.
    */
-  public Integer getHttpMultiAddressSelector() {
-    return httpMultiAddressSelector;
+  public void setXffAddressSelector(ArrayList<String> subnets) {
+    xffAddressSelectorSubnets = subnets;
   }
 
   /**
-   * Set HTTP multi-address selector value
+   * Get any configured XFF address selectors
    *
-   * @param value Field selector
+   * @return {@link ArrayList} of subnets, or null if unset
    */
-  public void setHttpMultiAddressSelector(Integer value) {
-    httpMultiAddressSelector = value;
+  public ArrayList<String> getXffAddressSelector() {
+    return xffAddressSelectorSubnets;
+  }
+
+  /**
+   * Return any configured XFF address selectors as a {@link CidrUtil} object.
+   *
+   * @return CidrUtil or null if not set
+   */
+  public CidrUtil getXffAddressSelectorAsCidrUtil() {
+    if (xffAddressSelectorSubnets == null) {
+      return null;
+    }
+    CidrUtil ret = new CidrUtil();
+    for (String s : xffAddressSelectorSubnets) {
+      ret.add(s);
+    }
+    return ret;
   }
 
   /**

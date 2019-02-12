@@ -26,8 +26,8 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
 
   void setMaxmindDbPath(String value);
 
-  @Description("Enable HTTP multi-address selector; <= -1 or >= 1")
-  Integer getHttpMultiAddressSelector();
+  @Description("Enable XFF address selector; comma delimited list of trusted CIDR format subnets")
+  String getXffAddressSelector();
 
-  void setHttpMultiAddressSelector(Integer value);
+  void setXffAddressSelector(String value);
 }
