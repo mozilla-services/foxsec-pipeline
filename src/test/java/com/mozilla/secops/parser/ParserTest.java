@@ -497,6 +497,7 @@ public class ParserTest {
 
     ArrayList<String> n = new ArrayList<>();
     n.add("1.1.1.0/24");
+    n.add("10.0.0.1/32");
     cfg.setXffAddressSelector(n);
 
     assertEquals("2.2.2.2", new Parser(cfg).applyXffAddressSelector("2.2.2.2, 1.1.1.10"));
@@ -508,6 +509,9 @@ public class ParserTest {
     // All match selector, return last
     assertEquals(
         "1.1.1.1", new Parser(cfg).applyXffAddressSelector("1.1.1.200, 1.1.1.10, 1.1.1.1"));
+
+    assertEquals("2.2.2.2", new Parser(cfg).applyXffAddressSelector("2.2.2.2, 10.0.0.1"));
+    assertEquals("10.0.0.0", new Parser(cfg).applyXffAddressSelector("2.2.2.2, 10.0.0.0"));
 
     n.add("2001:db8:1234::/48");
     cfg.setXffAddressSelector(n);
