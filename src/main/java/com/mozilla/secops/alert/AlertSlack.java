@@ -20,14 +20,25 @@ public class AlertSlack {
   /** Construct new alert slack object */
   public AlertSlack(AlertConfiguration cfg) {
     log = LoggerFactory.getLogger(AlertSlack.class);
+    this.cfg = cfg;
+    configureState();
+
     try {
       String slackToken = RuntimeSecrets.interpretSecret(cfg.getSlackToken(), cfg.getGcpProject());
       slackManager = new SlackManager(slackToken);
     } catch (IOException exc) {
       log.error("failed to get slack token: {}", exc.getMessage());
     }
-    this.cfg = cfg;
+  }
 
+  public AlertSlack(AlertConfiguration cfg, SlackManager slackManager) {
+    log = LoggerFactory.getLogger(AlertSlack.class);
+    this.cfg = cfg;
+    configureState();
+    this.slackManager = slackManager;
+  }
+
+  private void configureState() {
     if (cfg.getMemcachedEnabled()) {
       this.state =
           new State(new MemcachedStateInterface(cfg.getMemcachedHost(), cfg.getMemcachedPort()));
