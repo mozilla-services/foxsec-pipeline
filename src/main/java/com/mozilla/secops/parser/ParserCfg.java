@@ -79,7 +79,7 @@ public class ParserCfg implements Serializable {
   /**
    * Get Maxmind database path
    *
-   * @return String of null if not specified
+   * @return String or null if not specified
    */
   public String getMaxmindDbPath() {
     return maxmindDbPath;
