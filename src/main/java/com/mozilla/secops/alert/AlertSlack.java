@@ -58,6 +58,34 @@ public class AlertSlack {
   }
 
   /**
+   * Send alert to a user.
+   *
+   * @param a Alert
+   * @param userId Slack user id
+   * @return Boolean on whether the alert was sent successfully
+   */
+  public Boolean sendToUser(Alert a, String userId) {
+    if (a == null || userId == null) {
+      return false;
+    }
+
+    log.info("generating slack message for {}", userId);
+
+    String text =
+        String.format(
+            "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
+            a.getSummary(), a.assemblePayload(), a.getAlertId());
+    try {
+      return slackManager.handleSlackResponse(slackManager.sendMessageToChannel(userId, text));
+    } catch (IOException exc) {
+      log.error("error sending slack alert (IOException): {}", exc.getMessage());
+    } catch (SlackApiException exc) {
+      log.error("error sending slack alert (SlackApiException): {}", exc.getMessage());
+    }
+    return false;
+  }
+
+  /**
    * Send an alert to a user asking them if it was caused by them. Used for AuthProfile
    *
    * @param a Alert
