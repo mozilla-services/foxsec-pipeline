@@ -25,4 +25,9 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   String getMaxmindDbPath();
 
   void setMaxmindDbPath(String value);
+
+  @Description("Enable XFF address selector; comma delimited list of trusted CIDR format subnets")
+  String getXffAddressSelector();
+
+  void setXffAddressSelector(String value);
 }

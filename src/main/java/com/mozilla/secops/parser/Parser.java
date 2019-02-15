@@ -7,6 +7,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.maxmind.geoip2.model.CityResponse;
+import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.identity.IdentityManager;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class Parser {
   private final List<PayloadBase> payloads;
   private final JacksonFactory jf;
   private final Logger log;
+  private final ParserCfg cfg;
   private GeoIP geoip;
 
   public static final String SYSLOG_TS_RE = "\\S{3} {1,2}\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}";
@@ -45,6 +47,48 @@ public class Parser {
   public static DateTime parseISO8601(String in) {
     DateTimeFormatter fmt = ISODateTimeFormat.dateTimeParser();
     return fmt.parseDateTime(in);
+  }
+
+  /**
+   * Apply any configured XFF address selector to the specified input string
+   *
+   * <p>If no XFF address selector has been configured in the parser configuration, and the input
+   * contains multiple XFF style addresses, the last address is returned.
+   *
+   * @param input Input string
+   * @return Results of address selector application
+   */
+  public String applyXffAddressSelector(String input) throws IllegalArgumentException {
+    if (input == null) {
+      return null;
+    }
+
+    CidrUtil c = cfg.getXffAddressSelectorAsCidrUtil();
+
+    String[] parts = parseXForwardedFor(input);
+    if (parts == null) {
+      // Input was not formatted correctly or was not an IP address
+      return null;
+    }
+
+    if (parts.length <= 1) {
+      // Just a single element, return the input as is
+      return input;
+    }
+
+    if (c == null) {
+      // No selectors specified but we had multiple addresses, return the last one
+      return parts[parts.length - 1];
+    }
+
+    for (int i = parts.length - 1; i >= 0; i--) {
+      if (c.contains(parts[i])) {
+        continue;
+      } else {
+        return parts[i];
+      }
+    }
+    return parts[parts.length - 1];
   }
 
   /**
@@ -183,15 +227,6 @@ public class Parser {
   }
 
   /**
-   * Enable GeoIP resolution in the parser
-   *
-   * @param dbpath Path to Maxmind database, resource path or GCS URL
-   */
-  public void enableGeoIp(String dbpath) {
-    geoip = new GeoIP(dbpath);
-  }
-
-  /**
    * Set an identity manager in the parser that can be used for lookups
    *
    * @param idmanager Initialized {@link IdentityManager}
@@ -248,10 +283,18 @@ public class Parser {
     return e;
   }
 
-  /** Create new parser instance */
-  public Parser() {
+  /**
+   * Create new parser instance with specified configuration
+   *
+   * @param cfg {@link ParserCfg}
+   */
+  public Parser(ParserCfg cfg) {
     log = LoggerFactory.getLogger(Parser.class);
     jf = new JacksonFactory();
+    this.cfg = cfg;
+    if (cfg.getMaxmindDbPath() != null) {
+      geoip = new GeoIP(cfg.getMaxmindDbPath());
+    }
     payloads = new ArrayList<PayloadBase>();
     payloads.add(new GLB());
     payloads.add(new Nginx());
@@ -262,5 +305,10 @@ public class Parser {
     payloads.add(new OpenSSH());
     payloads.add(new Duopull());
     payloads.add(new Raw());
+  }
+
+  /** Create new parser instance with default configuration */
+  public Parser() {
+    this(new ParserCfg());
   }
 }

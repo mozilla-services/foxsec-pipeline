@@ -12,6 +12,7 @@ import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterPayload;
 import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
+import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -70,6 +71,7 @@ public class HTTPRequest implements Serializable {
     private final String[] filterRequestPath;
     private final String[] stackdriverLabelFilters;
     private final String cidrExclusionList;
+    private ParserCfg cfg;
 
     /**
      * Static initializer for {@link Parse} transform
@@ -82,6 +84,7 @@ public class HTTPRequest implements Serializable {
       stackdriverLabelFilters = options.getStackdriverLabelFilters();
       filterRequestPath = options.getFilterRequestPath();
       cidrExclusionList = options.getCidrExclusionList();
+      cfg = ParserCfg.fromInputOptions(options);
     }
 
     @Override
@@ -125,7 +128,8 @@ public class HTTPRequest implements Serializable {
       }
       filter.addRule(rule);
       PCollection<Event> parsed =
-          col.apply(ParDo.of(new ParserDoFn().withInlineEventFilter(filter)));
+          col.apply(
+              ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)));
       if (cidrExclusionList != null) {
         return parsed.apply(
             "cidr exclusion",

@@ -7,17 +7,17 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.commons.net.util.SubnetUtils;
+import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
 /** CIDR matching utilities */
 public class CidrUtil {
-  private ArrayList<SubnetUtils> subnets;
+  private ArrayList<IpAddressMatcher> subnets;
 
   /**
    * Returns a DoFn that filters any events that have a normalized source address field that is
    * within subnets loaded from path.
    *
-   * @param path Resource path to load subnets from
+   * @param path Resource path or GCS URL to load subnets from
    * @return {@link DoFn}
    */
   public static DoFn<Event, Event> excludeNormalizedSourceAddresses(String path) {
@@ -60,8 +60,8 @@ public class CidrUtil {
    * @return True if any loaded subnet contains the address
    */
   public Boolean contains(String addr) {
-    for (SubnetUtils s : subnets) {
-      if (s.getInfo().isInRange(addr)) {
+    for (IpAddressMatcher s : subnets) {
+      if (s.matches(addr)) {
         return true;
       }
     }
@@ -74,26 +74,29 @@ public class CidrUtil {
    * @param cidr Subnet to add
    */
   public void add(String cidr) {
-    SubnetUtils n = new SubnetUtils(cidr);
-    n.setInclusiveHostCount(true);
-    subnets.add(n);
+    subnets.add(new IpAddressMatcher(cidr));
   }
 
   /** Constructor for {@link CidrUtil}, initialize empty */
   public CidrUtil() {
-    subnets = new ArrayList<SubnetUtils>();
+    subnets = new ArrayList<IpAddressMatcher>();
   }
 
   /**
    * Constructor for {@link CidrUtil} to load subnet list from resource
    *
-   * @param path Resource path to load CIDR subnet list from
+   * @param path Resource path or GCS URL to load CIDR subnet list from
    */
   public CidrUtil(String path) throws IOException {
     this();
-    InputStream in = CidrUtil.class.getResourceAsStream(path);
+    InputStream in;
+    if (GcsUtil.isGcsUrl(path)) {
+      in = GcsUtil.fetchInputStreamContent(path);
+    } else {
+      in = CidrUtil.class.getResourceAsStream(path);
+    }
     if (in == null) {
-      throw new IOException("failed to load cidr list from resource path");
+      throw new IOException("failed to load cidr list from specified path");
     }
     Scanner s = new Scanner(in);
     while (s.hasNext()) {
