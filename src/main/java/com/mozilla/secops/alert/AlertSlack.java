@@ -31,6 +31,7 @@ public class AlertSlack {
     }
   }
 
+  /** Construct new alert slack object, providing an already instantiated {@link SlackManager} */
   public AlertSlack(AlertConfiguration cfg, SlackManager slackManager) {
     log = LoggerFactory.getLogger(AlertSlack.class);
     this.cfg = cfg;
