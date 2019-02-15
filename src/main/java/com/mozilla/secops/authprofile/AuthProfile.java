@@ -400,13 +400,11 @@ public class AuthProfile implements Serializable {
     void setMemcachedPort(Integer value);
 
     @Description("Use Datastore state; namespace for entities")
-    @Default.String("authprofile")
     String getDatastoreNamespace();
 
     void setDatastoreNamespace(String value);
 
     @Description("Use Datastore state; kind for entities")
-    @Default.String("authprofile")
     String getDatastoreKind();
 
     void setDatastoreKind(String value);

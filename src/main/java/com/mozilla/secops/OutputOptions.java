@@ -84,13 +84,11 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
   void setAlertStateMemcachedPort(Integer value);
 
   @Description("Use datastore alert state; namespace for entities")
-  @Default.String("alerts")
   String getAlertStateDatastoreNamespace();
 
   void setAlertStateDatastoreNamespace(String value);
 
   @Description("Use datastore alert state; kind for entities")
-  @Default.String("alerts")
   String getAlertStateDatastoreKind();
 
   void setAlertStateDatastoreKind(String value);
