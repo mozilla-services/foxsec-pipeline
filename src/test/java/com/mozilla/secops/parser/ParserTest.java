@@ -873,6 +873,36 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseFxaAuth() {
+    String buf =
+        "{\"insertId\":\"AAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
+            + "\":{\"agent\":\"Mozilla/5.0\",\"email\":\"spock@mozilla.com\",\"errno\":103,\"ke"
+            + "ys\":true,\"lang\":\"en-US,en;q=0.5\",\"method\":\"post\",\"op\":\"request.summa"
+            + "ry\",\"path\":\"/v1/account/login\",\"reason\":\"signin\",\"remoteAddressChain\""
+            + ":\"[\\\"0.0.0.0\\\",\\\"1.1.1.1\\\",\\\"127.0.0.1\\\"]\",\"service\":\"sync\",\""
+            + "status\":400,\"t\":191,\"uid\":\"00\"},\"Logger\":\"fxa-auth-server\",\"Pid\":1,"
+            + "\"Severity\":6,\"Timestamp\":1550249793121000000,\"Type\":\"request.summary\"},\""
+            + "labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa"
+            + "\",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"auth_server\"},\"logName\":"
+            + "\"projects/test/logs/docker.fxa-auth\",\"receiveTimestamp\":\"2019-02-15T16:56:3"
+            + "7.313724705Z\",\"resource\":{\"labels\":{\"instance_id\":\"i-08\",\"project_id\""
+            + ":\"test\",\"zone\":\"us-west-2c\"},\"type\":\"gce_instance\"},\"timestamp\":\"20"
+            + "19-02-15T16:56:33.121592986Z\"}";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXAAUTH, e.getPayloadType());
+    FxaAuth d = e.getPayload();
+    assertNotNull(d);
+
+    com.mozilla.secops.parser.models.fxaauth.FxaAuth f = d.getFxaAuthData();
+    assertEquals("Mozilla/5.0", f.getAgent());
+    assertEquals("/v1/account/login", f.getPath());
+    assertEquals(400, (int) f.getStatus());
+  }
+
+  @Test
   public void testParseSecEvent() {
     String buf =
         "{\"secevent_version\":\"secevent.model.1\",\"action\":\"loginFailure\""
