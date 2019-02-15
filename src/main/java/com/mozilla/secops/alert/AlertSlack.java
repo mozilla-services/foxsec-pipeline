@@ -40,11 +40,15 @@ public class AlertSlack {
   }
 
   private void configureState() {
-    if (cfg.getMemcachedEnabled()) {
-      this.state =
-          new State(new MemcachedStateInterface(cfg.getMemcachedHost(), cfg.getMemcachedPort()));
-    } else if (cfg.getDatastoreEnabled()) {
-      this.state = new State(new DatastoreStateInterface("alerts", "alerts"));
+    String memcachedHost = cfg.getMemcachedHost();
+    Integer memcachedPort = cfg.getMemcachedPort();
+    String datastoreNamespace = cfg.getDatastoreNamespace();
+    String datastoreKind = cfg.getDatastoreKind();
+
+    if (memcachedHost != null && memcachedPort != null) {
+      this.state = new State(new MemcachedStateInterface(memcachedHost, memcachedPort));
+    } else if (datastoreNamespace != null && datastoreKind != null) {
+      this.state = new State(new DatastoreStateInterface(datastoreKind, datastoreNamespace));
     }
   }
 

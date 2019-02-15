@@ -23,7 +23,6 @@ public class TestAlertSlack {
 
   private AlertConfiguration getTestAlertCfg() {
     AlertConfiguration cfg = new AlertConfiguration();
-    cfg.setMemcachedEnabled(true);
     cfg.setMemcachedHost("127.0.0.1");
     cfg.setMemcachedPort(11211);
     cfg.setSlackToken("test");

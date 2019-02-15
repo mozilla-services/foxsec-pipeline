@@ -13,10 +13,10 @@ public class AlertConfiguration implements Serializable {
   private String gcpProject;
   private String slackToken;
   private String slackCatchall;
-  private Boolean memcachedEnabled;
   private String memcachedHost;
   private Integer memcachedPort;
-  private Boolean datastoreEnabled;
+  private String datastoreNamespace;
+  private String datastoreKind;
 
   /**
    * Determine if {@link AlertIO} should be established in composite transform
@@ -154,24 +154,6 @@ public class AlertConfiguration implements Serializable {
   }
 
   /**
-   * Set memcached enabled boolean for alert state management
-   *
-   * @param memcachedEnabled Boolean, true if alert state management should use memcached.
-   */
-  public void setMemcachedEnabled(Boolean memcachedEnabled) {
-    this.memcachedEnabled = memcachedEnabled;
-  }
-
-  /**
-   * Get memcached enabled boolean
-   *
-   * @return Boolean, true if alert state management should use memcached.
-   */
-  public Boolean getMemcachedEnabled() {
-    return memcachedEnabled;
-  }
-
-  /**
    * Set memcached host
    *
    * @param memcachedHost memcached host
@@ -208,21 +190,39 @@ public class AlertConfiguration implements Serializable {
   }
 
   /**
-   * Set datastore enabled boolean for alert state management
+   * Set datastore namespace
    *
-   * @param datastoreEnabled Boolean, true if alert state management should use datastore.
+   * @param datastoreNamepsace datastore namespace
    */
-  public void setDatastoreEnabled(Boolean datastoreEnabled) {
-    this.datastoreEnabled = datastoreEnabled;
+  public void setDatastoreNamespace(String datastoreNamespace) {
+    this.datastoreNamespace = datastoreNamespace;
   }
 
   /**
-   * Get datastore enabled boolean
+   * Get datastore namespace
    *
-   * @return Boolean, true if alert state management should use memcached.
+   * @return datastore namespace
    */
-  public Boolean getDatastoreEnabled() {
-    return datastoreEnabled;
+  public String getDatastoreNamespace() {
+    return datastoreNamespace;
+  }
+
+  /**
+   * Set datastore kind
+   *
+   * @param datastoreKind datastore kind
+   */
+  public void setDatastoreKind(String datastoreKind) {
+    this.datastoreKind = datastoreKind;
+  }
+
+  /**
+   * Get datastore kind
+   *
+   * @return datastore kind
+   */
+  public String getDatastoreKind() {
+    return datastoreKind;
   }
 
   /** Create new empty {@link AlertConfiguration} */

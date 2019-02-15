@@ -72,28 +72,28 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setMonitoredResourceIndicator(String value);
 
-  @Description("Use memcached state; hostname of memcached server")
-  String getMemcachedHost();
+  @Description("Use memcached alert state; hostname of memcached server")
+  String getAlertStateMemcachedHost();
 
-  void setMemcachedHost(String value);
+  void setAlertStateMemcachedHost(String value);
 
-  @Description("Use memcached state; port of memcached server")
+  @Description("Use memcached alert state; port of memcached server")
   @Default.Integer(11211)
-  Integer getMemcachedPort();
+  Integer getAlertStateMemcachedPort();
 
-  void setMemcachedPort(Integer value);
+  void setAlertStateMemcachedPort(Integer value);
 
-  @Description("Use memcached for state management")
-  @Default.Boolean(false)
-  Boolean getMemcachedEnabled();
+  @Description("Use datastore alert state; namespace for entities")
+  @Default.String("alerts")
+  String getAlertStateDatastoreNamespace();
 
-  void setMemcachedEnabled(Boolean value);
+  void setAlertStateDatastoreNamespace(String value);
 
-  @Description("Use datastore for state management")
-  @Default.Boolean(false)
-  Boolean getDatastoreEnabled();
+  @Description("Use datastore alert state; kind for entities")
+  @Default.String("alerts")
+  String getAlertStateDatastoreKind();
 
-  void setDatastoreEnabled(Boolean value);
+  void setAlertStateDatastoreKind(String value);
 
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);

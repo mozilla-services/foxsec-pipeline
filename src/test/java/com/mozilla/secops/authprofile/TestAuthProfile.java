@@ -50,7 +50,6 @@ public class TestAuthProfile {
         PipelineOptionsFactory.as(AuthProfile.AuthProfileOptions.class);
     ret.setDatastoreNamespace("testauthprofileanalyze");
     ret.setDatastoreKind("authprofile");
-    ret.setDatastoreEnabled(true);
     ret.setIdentityManagerPath("/testdata/identitymanager.json");
     ret.setMaxmindDbPath(ParserTest.TEST_GEOIP_DBPATH);
     return ret;

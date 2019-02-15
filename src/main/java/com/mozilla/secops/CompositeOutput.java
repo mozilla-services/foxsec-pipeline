@@ -45,14 +45,19 @@ public abstract class CompositeOutput {
     alertcfg.setSlackToken(options.getOutputAlertSlackToken());
     alertcfg.setSlackCatchall(options.getOutputAlertSlackCatchall());
 
-    if (options.getMemcachedEnabled()) {
+    String memcachedHost = options.getAlertStateMemcachedHost();
+    Integer memcachedPort = options.getAlertStateMemcachedPort();
+    String datastoreNamespace = options.getAlertStateDatastoreNamespace();
+    String datastoreKind = options.getAlertStateDatastoreKind();
+
+    if (memcachedHost != null && memcachedPort != null) {
       log.info("using memcached for alert state management");
-      alertcfg.setMemcachedEnabled(true);
-      alertcfg.setMemcachedHost(options.getMemcachedHost());
-      alertcfg.setMemcachedPort(options.getMemcachedPort());
-    } else if (options.getDatastoreEnabled()) {
+      alertcfg.setMemcachedHost(memcachedHost);
+      alertcfg.setMemcachedPort(memcachedPort);
+    } else if (datastoreNamespace != null && datastoreKind != null) {
       log.info("using datastore for alert state management");
-      alertcfg.setDatastoreEnabled(true);
+      alertcfg.setDatastoreNamespace(datastoreNamespace);
+      alertcfg.setDatastoreKind(datastoreKind);
     } else {
       log.info("no alert state management configured");
     }

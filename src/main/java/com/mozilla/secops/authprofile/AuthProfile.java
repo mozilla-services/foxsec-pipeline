@@ -175,10 +175,8 @@ public class AuthProfile implements Serializable {
 
     private final String memcachedHost;
     private final Integer memcachedPort;
-    private final Boolean memcachedEnabled;
     private final String datastoreNamespace;
     private final String datastoreKind;
-    private final Boolean datastoreEnabled;
     private final String idmanagerPath;
     private IdentityManager idmanager;
     private Logger log;
@@ -192,10 +190,8 @@ public class AuthProfile implements Serializable {
     public Analyze(AuthProfileOptions options) {
       memcachedHost = options.getMemcachedHost();
       memcachedPort = options.getMemcachedPort();
-      memcachedEnabled = options.getMemcachedEnabled();
       datastoreNamespace = options.getDatastoreNamespace();
       datastoreKind = options.getDatastoreKind();
-      datastoreEnabled = options.getDatastoreEnabled();
       idmanagerPath = options.getIdentityManagerPath();
     }
 
@@ -209,10 +205,10 @@ public class AuthProfile implements Serializable {
         idmanager = IdentityManager.load(idmanagerPath);
       }
 
-      if (memcachedEnabled) {
+      if (memcachedHost != null && memcachedPort != null) {
         log.info("using memcached for state management");
         state = new State(new MemcachedStateInterface(memcachedHost, memcachedPort));
-      } else if (datastoreEnabled) {
+      } else if (datastoreNamespace != null && datastoreKind != null) {
         log.info("using datastore for state management");
         state = new State(new DatastoreStateInterface(datastoreKind, datastoreNamespace));
       } else {
@@ -392,6 +388,17 @@ public class AuthProfile implements Serializable {
 
   /** Runtime options for {@link AuthProfile} pipeline. */
   public interface AuthProfileOptions extends PipelineOptions, InputOptions, OutputOptions {
+    @Description("Use memcached state; hostname of memcached server")
+    String getMemcachedHost();
+
+    void setMemcachedHost(String value);
+
+    @Description("Use memcached state; port of memcached server")
+    @Default.Integer(11211)
+    Integer getMemcachedPort();
+
+    void setMemcachedPort(Integer value);
+
     @Description("Use Datastore state; namespace for entities")
     @Default.String("authprofile")
     String getDatastoreNamespace();
