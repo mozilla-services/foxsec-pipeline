@@ -1,8 +1,10 @@
 package com.mozilla.secops.identity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 import org.junit.Test;
@@ -41,6 +43,7 @@ public class TestIdentityManager {
     id = mgr.getIdentity(testId);
     assertNotNull(id);
     assertNull(id.getEmailNotifyDirect(mgr.getDefaultNotification()));
+    assertFalse(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
     assertNull(id.getFragment());
 
     // Identity with direct email format override
@@ -50,6 +53,7 @@ public class TestIdentityManager {
     assertEquals(
         "holodeck-riker@mozilla.com", id.getEmailNotifyDirect(mgr.getDefaultNotification()));
     assertEquals("riker", id.getFragment());
+    assertTrue(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
   }
 
   @Test

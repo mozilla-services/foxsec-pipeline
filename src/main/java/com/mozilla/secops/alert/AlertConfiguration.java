@@ -13,6 +13,10 @@ public class AlertConfiguration implements Serializable {
   private String gcpProject;
   private String slackToken;
   private String slackCatchall;
+  private String memcachedHost;
+  private Integer memcachedPort;
+  private String datastoreNamespace;
+  private String datastoreKind;
 
   /**
    * Determine if {@link AlertIO} should be established in composite transform
@@ -147,6 +151,78 @@ public class AlertConfiguration implements Serializable {
    */
   public void setSlackCatchall(String slackCatchall) {
     this.slackCatchall = slackCatchall;
+  }
+
+  /**
+   * Set memcached host
+   *
+   * @param memcachedHost memcached host
+   */
+  public void setMemcachedHost(String memcachedHost) {
+    this.memcachedHost = memcachedHost;
+  }
+
+  /**
+   * Get memcached host
+   *
+   * @return memcached host
+   */
+  public String getMemcachedHost() {
+    return memcachedHost;
+  }
+
+  /**
+   * Set memcached port
+   *
+   * @param memcachedPort memcached port
+   */
+  public void setMemcachedPort(Integer memcachedPort) {
+    this.memcachedPort = memcachedPort;
+  }
+
+  /**
+   * Get memcached port
+   *
+   * @return memcached port
+   */
+  public Integer getMemcachedPort() {
+    return memcachedPort;
+  }
+
+  /**
+   * Set datastore namespace
+   *
+   * @param datastoreNamepsace datastore namespace
+   */
+  public void setDatastoreNamespace(String datastoreNamespace) {
+    this.datastoreNamespace = datastoreNamespace;
+  }
+
+  /**
+   * Get datastore namespace
+   *
+   * @return datastore namespace
+   */
+  public String getDatastoreNamespace() {
+    return datastoreNamespace;
+  }
+
+  /**
+   * Set datastore kind
+   *
+   * @param datastoreKind datastore kind
+   */
+  public void setDatastoreKind(String datastoreKind) {
+    this.datastoreKind = datastoreKind;
+  }
+
+  /**
+   * Get datastore kind
+   *
+   * @return datastore kind
+   */
+  public String getDatastoreKind() {
+    return datastoreKind;
   }
 
   /** Create new empty {@link AlertConfiguration} */

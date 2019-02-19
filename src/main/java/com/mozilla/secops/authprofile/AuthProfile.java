@@ -270,6 +270,10 @@ public class AuthProfile implements Serializable {
             dnote);
         a.addMetadata("notify_email_direct", dnote);
       }
+      if (identity.getSlackNotifyDirect(idmanager.getDefaultNotification())) {
+        log.info("{}: adding direct slack notification", a.getMetadataValue("identity_key"));
+        a.addMetadata("notify_slack_direct", a.getMetadataValue("identity_key"));
+      }
     }
 
     private void buildAlertSummary(Event e, Alert a) {
@@ -356,6 +360,7 @@ public class AuthProfile implements Serializable {
             if (ignoreDuplicateSourceAddress(e, seenKnownAddresses)) {
               continue;
             }
+
             // Address was known
             log.info(
                 "{}: access from known source: {} {}",

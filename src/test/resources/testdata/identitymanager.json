@@ -13,12 +13,14 @@
             "aliases": [ "numberone", "riker", "riker@mozilla.com" ],
             "fragment": "riker",
             "notify": {
-                "direct_email_notify_format": "holodeck-%s@mozilla.com"
+                "direct_email_notify_format": "holodeck-%s@mozilla.com",
+                "direct_slack_notify": true
             }
         }
     },
     "default_notify": {
         "direct_email_notify": true,
+        "direct_slack_notify": false,
         "direct_email_notify_format": "testing-%s@mozilla.com"
     },
     "aws_account_map": {
