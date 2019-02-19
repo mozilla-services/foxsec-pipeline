@@ -900,6 +900,8 @@ public class ParserTest {
     assertEquals("Mozilla/5.0", f.getAgent());
     assertEquals("/v1/account/login", f.getPath());
     assertEquals(400, (int) f.getStatus());
+    assertEquals(
+        com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.INCORRECT_PASSWORD, f.getErrno());
   }
 
   @Test
