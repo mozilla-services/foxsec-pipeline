@@ -66,6 +66,11 @@ public class FxaAuth extends PayloadBase implements Serializable {
           return null;
         }
         return fxaAuthData.getEmail();
+      case FXAAUTH_UID:
+        if (fxaAuthData == null) {
+          return null;
+        }
+        return fxaAuthData.getUid();
     }
     return null;
   }

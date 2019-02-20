@@ -235,7 +235,7 @@
                                     {
                                         "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_selectors": [
-                                            "FXAAUTH_ACCOUNTID",
+                                            "FXAAUTH_UID",
                                             "FXAAUTH_SOURCEADDRESS"
                                         ]
                                     }
@@ -245,8 +245,8 @@
                     }
                 }
             },
-            "summary_assembly_fmt": "email verify code rate violation, %s from %s",
-            "metadata_assembly": [ "accountid", "sourceaddress" ]
+            "summary_assembly_fmt": "email verify code rate violation, uid %s from %s",
+            "metadata_assembly": [ "uid", "sourceaddress" ]
         }
     }
 }

@@ -97,4 +97,23 @@ public class TestCustoms {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void rlMultiTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/customs_multi1.txt", p);
+
+    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
+    // Force use of event timestamp for testing purposes
+    cfg.setTimestampOverride(true);
+
+    PCollection<Alert> alerts =
+        input
+            .apply(
+                ParDo.of(
+                    new ParserDoFn()
+                        .withConfiguration(ParserCfg.fromInputOptions(getTestOptions()))))
+            .apply(new Customs.Detectors(cfg, getTestOptions()));
+
+    p.run().waitUntilFinish();
+  }
 }

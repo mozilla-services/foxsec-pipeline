@@ -46,7 +46,8 @@ public class EventFilterPayload implements Serializable {
     FXAAUTH_SOURCEADDRESS,
     FXAAUTH_ACCOUNTID,
     FXAAUTH_SMSRECIPIENT,
-    FXAAUTH_EMAILRECIPIENT
+    FXAAUTH_EMAILRECIPIENT,
+    FXAAUTH_UID
   }
 
   /** Properties match integers from various payload event types */
