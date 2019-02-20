@@ -9,11 +9,14 @@ import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.parser.PayloadBase;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-class FilterRulePayloadFilter {
+class FilterRulePayloadFilter implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private String wantClass;
   private ArrayList<ArrayList<String>> stringMatches;
   private ArrayList<String> stringSelectors;
@@ -42,7 +45,9 @@ class FilterRulePayloadFilter {
   }
 }
 
-class FilterRule {
+class FilterRule implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private String wantSubtype;
   private ArrayList<FilterRulePayloadFilter> payloadFilters;
 
@@ -68,7 +73,9 @@ class FilterRule {
   }
 }
 
-class FilterCfg {
+class FilterCfg implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private ArrayList<FilterRule> filterRules;
   private ArrayList<FilterRule> keyingRules;
   private Boolean outputWithTimestamp;
@@ -113,7 +120,9 @@ class FilterCfg {
  * filtering API directly. This is useful for supporting more dynamic filter configuration without
  * code changes.
  */
-public class EventFilterCfg {
+public class EventFilterCfg implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private Map<String, FilterCfg> filterCfgs;
   private Boolean timestampOverride;
 

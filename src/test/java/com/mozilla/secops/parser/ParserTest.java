@@ -902,6 +902,9 @@ public class ParserTest {
     assertEquals(400, (int) f.getStatus());
     assertEquals(
         com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.INCORRECT_PASSWORD, f.getErrno());
+    assertEquals(FxaAuth.EventSummary.LOGIN_FAILURE, d.getEventSummary());
+    assertEquals("127.0.0.1", d.getSourceAddress());
+    assertEquals("2019-02-15T16:56:33.121Z", e.getTimestamp().toString());
   }
 
   @Test

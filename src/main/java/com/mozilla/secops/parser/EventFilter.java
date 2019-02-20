@@ -19,7 +19,8 @@ public class EventFilter implements Serializable {
   private Boolean outputWithTimestamp;
   private Boolean matchAny; // If true, match on any input event
 
-  private String keyChar = "+";
+  private static final String keyChar = "+";
+  private static final String splitChar = "\\+";
 
   /**
    * Get composite transform to apply filter to event stream
@@ -130,6 +131,16 @@ public class EventFilter implements Serializable {
       keys.addAll(values);
     }
     return String.join(keyChar, keys);
+  }
+
+  /**
+   * Given a key constructed using a keying transform, split it into it's individual elements.
+   *
+   * @param input Input string
+   * @return Array of elements
+   */
+  public static String[] splitKey(String input) {
+    return input.split(splitChar);
   }
 
   /**

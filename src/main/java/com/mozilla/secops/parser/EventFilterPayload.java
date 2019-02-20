@@ -40,7 +40,13 @@ public class EventFilterPayload implements Serializable {
     GLB_URLREQUESTPATH,
 
     NGINX_REQUESTMETHOD,
-    NGINX_URLREQUESTPATH
+    NGINX_URLREQUESTPATH,
+
+    FXAAUTH_EVENTSUMMARY,
+    FXAAUTH_SOURCEADDRESS,
+    FXAAUTH_ACCOUNTID,
+    FXAAUTH_SMSRECIPIENT,
+    FXAAUTH_EMAILRECIPIENT
   }
 
   /** Properties match integers from various payload event types */

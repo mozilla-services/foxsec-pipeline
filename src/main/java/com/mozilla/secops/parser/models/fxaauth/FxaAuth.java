@@ -149,6 +149,10 @@ public class FxaAuth implements Serializable {
     return email;
   }
 
+  public String getSmsRecipient() {
+    return null;
+  }
+
   /**
    * Get errno
    *

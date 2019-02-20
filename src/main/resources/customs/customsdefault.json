@@ -11,12 +11,12 @@
                         "output_with_timestamp": false,
                         "rules": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_match": [
-                                            [ "SECEVENT_ACTION", "loginFailure" ]
+                                            [ "FXAAUTH_EVENTSUMMARY", "loginFailure" ]
                                         ]
                                     }
                                 ]
@@ -24,13 +24,13 @@
                         ],
                         "keying": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_selectors": [
-                                            "SECEVENT_SOURCEADDRESS",
-                                            "SECEVENT_ACCOUNTID"
+                                            "FXAAUTH_ACCOUNTID",
+                                            "FXAAUTH_SOURCEADDRESS"
                                         ]
                                     }
                                 ]
@@ -38,46 +38,9 @@
                         ]
                     }
                 }
-            }
-        },
-        "rl_sms_recipient": {
-            "sliding_window_length": 3600,
-            "sliding_window_slides": 60,
-            "threshold": 5,
-            "alert_suppression_length": 900,
-            "filter": {
-                "filters": {
-                    "default": {
-                        "output_with_timestamp": false,
-                        "rules": [
-                            {
-                                "subtype": "SECEVENT",
-                                "payload_filters": [
-                                    {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
-                                        "string_match": [
-                                            [ "SECEVENT_ACTION", "sendSms" ]
-                                        ]
-                                    }
-                                ]
-                            }
-                        ],
-                        "keying": [
-                            {
-                                "subtype": "SECEVENT",
-                                "payload_filters": [
-                                    {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
-                                        "string_selectors": [
-                                            "SECEVENT_SMSRECIPIENT"
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                }
-            }
+            },
+            "summary_assembly_fmt": "login failure rate violation, %s from %s",
+            "metadata_assembly": [ "accountid", "sourceaddress" ]
         },
         "rl_sms_sourceaddress": {
             "sliding_window_length": 3600,
@@ -90,12 +53,12 @@
                         "output_with_timestamp": false,
                         "rules": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_match": [
-                                            [ "SECEVENT_ACTION", "sendSms" ]
+                                            [ "FXAAUTH_EVENTSUMMARY", "sendSmsConnectDevice" ]
                                         ]
                                     }
                                 ]
@@ -103,12 +66,12 @@
                         ],
                         "keying": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_selectors": [
-                                            "SECEVENT_SOURCEADDRESS"
+                                            "FXAAUTH_SOURCEADDRESS"
                                         ]
                                     }
                                 ]
@@ -116,7 +79,9 @@
                         ]
                     }
                 }
-            }
+            },
+            "summary_assembly_fmt": "sms send source address rate violation, %s",
+            "metadata_assembly": [ "sourceaddress" ]
         },
         "rl_sms_accountid": {
             "sliding_window_length": 3600,
@@ -129,12 +94,12 @@
                         "output_with_timestamp": false,
                         "rules": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_match": [
-                                            [ "SECEVENT_ACTION", "sendSms" ]
+                                            [ "FXAAUTH_EVENTSUMMARY", "sendSmsConnectDevice" ]
                                         ]
                                     }
                                 ]
@@ -142,12 +107,12 @@
                         ],
                         "keying": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_selectors": [
-                                            "SECEVENT_ACCOUNTID"
+                                            "FXAAUTH_ACCOUNTID"
                                         ]
                                     }
                                 ]
@@ -155,7 +120,9 @@
                         ]
                     }
                 }
-            }
+            },
+            "summary_assembly_fmt": "sms send account id rate violation, %s",
+            "metadata_assembly": [ "accountid" ]
         },
         "rl_email_recipient": {
             "sliding_window_length": 900,
@@ -168,12 +135,12 @@
                         "output_with_timestamp": false,
                         "rules": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_match": [
-                                            [ "SECEVENT_ACTION", "sendEmail" ]
+                                            [ "FXAAUTH_EVENTSUMMARY", "sendRecoveryEmail" ]
                                         ]
                                     }
                                 ]
@@ -181,12 +148,12 @@
                         ],
                         "keying": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_selectors": [
-                                            "SECEVENT_EMAILRECIPIENT"
+                                            "FXAAUTH_ACCOUNTID"
                                         ]
                                     }
                                 ]
@@ -194,7 +161,9 @@
                         ]
                     }
                 }
-            }
+            },
+            "summary_assembly_fmt": "recovery email send rate violation, %s",
+            "metadata_assembly": [ "accountid" ]
         },
         "rl_statuscheck": {
             "sliding_window_length": 900,
@@ -207,12 +176,12 @@
                         "output_with_timestamp": false,
                         "rules": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_match": [
-                                            [ "SECEVENT_ACTION", "accountStatusCheck" ]
+                                            [ "FXAAUTH_EVENTSUMMARY", "accountStatusCheck" ]
                                         ]
                                     }
                                 ]
@@ -220,12 +189,12 @@
                         ],
                         "keying": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_selectors": [
-                                            "SECEVENT_SOURCEADDRESS"
+                                            "FXAAUTH_SOURCEADDRESS"
                                         ]
                                     }
                                 ]
@@ -233,7 +202,9 @@
                         ]
                     }
                 }
-            }
+            },
+            "summary_assembly_fmt": "account status check rate violation, %s",
+            "metadata_assembly": [ "sourceaddress" ]
         },
         "rl_verifycode_sourceaddress_accountid": {
             "sliding_window_length": 900,
@@ -246,12 +217,12 @@
                         "output_with_timestamp": false,
                         "rules": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_match": [
-                                            [ "SECEVENT_ACTION", "recoveryEmailVerifyCode" ]
+                                            [ "FXAAUTH_EVENTSUMMARY", "recoveryEmailVerifyCodeFailure" ]
                                         ]
                                     }
                                 ]
@@ -259,13 +230,13 @@
                         ],
                         "keying": [
                             {
-                                "subtype": "SECEVENT",
+                                "subtype": "FXAAUTH",
                                 "payload_filters": [
                                     {
-                                        "class": "com.mozilla.secops.parser.SecEvent",
+                                        "class": "com.mozilla.secops.parser.FxaAuth",
                                         "string_selectors": [
-                                            "SECEVENT_SOURCEADDRESS",
-                                            "SECEVENT_ACCOUNTID"
+                                            "FXAAUTH_ACCOUNTID",
+                                            "FXAAUTH_SOURCEADDRESS"
                                         ]
                                     }
                                 ]
@@ -273,7 +244,9 @@
                         ]
                     }
                 }
-            }
+            }.
+            "summary_assembly_fmt": "email verify code rate violation, %s from %s",
+            "metadata_assembly": [ "accountid", "sourceaddress" ]
         }
     }
 }

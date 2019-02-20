@@ -6,12 +6,69 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /** Payload parser for FxA authentication server log data */
 public class FxaAuth extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  /** Event summary is determined based on source event fields */
+  public enum EventSummary {
+    LOGIN_FAILURE {
+      @Override
+      public String toString() {
+        return "loginFailure";
+      }
+    },
+    ACCOUNT_STATUS_CHECK {
+      @Override
+      public String toString() {
+        return "accountStatusCheck";
+      }
+    },
+    RECOVERY_EMAIL_VERIFY_CODE_FAILURE {
+      @Override
+      public String toString() {
+        return "recoveryEmailVerifyCodeFailure";
+      }
+    },
+    SEND_RECOVERY_EMAIL {
+      @Override
+      public String toString() {
+        return "sendRecoveryEmail";
+      }
+    },
+    SEND_SMS_CONNECT_DEVICE {
+      @Override
+      public String toString() {
+        return "sendSmsConnectDevice";
+      }
+    }
+  }
+
   private com.mozilla.secops.parser.models.fxaauth.FxaAuth fxaAuthData;
+  private EventSummary eventSummary;
+  private String sourceAddress;
+
+  @Override
+  public String eventStringValue(EventFilterPayload.StringProperty property) {
+    switch (property) {
+      case FXAAUTH_EVENTSUMMARY:
+        if (eventSummary == null) {
+          return null;
+        } else {
+          return eventSummary.toString();
+        }
+      case FXAAUTH_SOURCEADDRESS:
+        return getSourceAddress();
+      case FXAAUTH_ACCOUNTID:
+        if (fxaAuthData == null) {
+          return null;
+        }
+        return fxaAuthData.getEmail();
+    }
+    return null;
+  }
 
   private ObjectMapper getObjectMapper() {
     ObjectMapper mapper = new ObjectMapper();
@@ -61,6 +118,124 @@ public class FxaAuth extends PayloadBase implements Serializable {
     return fxaAuthData;
   }
 
+  /**
+   * Get event summary
+   *
+   * @return Event summary
+   */
+  @JsonProperty("event_summary")
+  public EventSummary getEventSummary() {
+    return eventSummary;
+  }
+
+  /**
+   * Get client source address
+   *
+   * @return String
+   */
+  @JsonProperty("sourceaddress")
+  public String getSourceAddress() {
+    return sourceAddress;
+  }
+
+  public String getSourceAddressCity() {
+    return null;
+  }
+
+  public String getSourceAddressCountry() {
+    return null;
+  }
+
+  private Boolean discernLoginFailure() {
+    if (!fxaAuthData.getPath().equals("/v1/account/login")) {
+      return false;
+    }
+    if (!fxaAuthData.getStatus().equals(400)) {
+      return false;
+    }
+    eventSummary = EventSummary.LOGIN_FAILURE;
+    return true;
+  }
+
+  private Boolean discernStatusCheck() {
+    if (!fxaAuthData.getPath().equals("/v1/account/status")) {
+      return false;
+    }
+    if (!fxaAuthData.getStatus().equals(200)) {
+      return false;
+    }
+    if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
+      return false;
+    }
+    eventSummary = EventSummary.ACCOUNT_STATUS_CHECK;
+    return true;
+  }
+
+  private Boolean discernRecoveryEmailVerifyCodeFailure() {
+    if (!fxaAuthData.getPath().equals("/v1/recovery_email/verify_code")) {
+      return false;
+    }
+    if (!fxaAuthData.getStatus().equals(400)) {
+      return false;
+    }
+    if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
+      return false;
+    }
+    eventSummary = EventSummary.RECOVERY_EMAIL_VERIFY_CODE_FAILURE;
+    return true;
+  }
+
+  private Boolean discernSendRecoveryEmail() {
+    if (!fxaAuthData.getPath().equals("/v1/recovery_email")) {
+      return false;
+    }
+    if (!fxaAuthData.getStatus().equals(200)) {
+      return false;
+    }
+    if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
+      return false;
+    }
+    eventSummary = EventSummary.SEND_RECOVERY_EMAIL;
+    return true;
+  }
+
+  private Boolean discernSendSmsConnectDevice() {
+    if (!fxaAuthData.getPath().equals("/v1/sms")) {
+      return false;
+    }
+    if (!fxaAuthData.getStatus().equals(200)) {
+      return false;
+    }
+    if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
+      return false;
+    }
+    eventSummary = EventSummary.SEND_SMS_CONNECT_DEVICE;
+    return true;
+  }
+
+  private void discernEventSummary() {
+    if (fxaAuthData.getPath() == null) {
+      return;
+    }
+    if (fxaAuthData.getMethod() == null) {
+      return;
+    }
+    if (fxaAuthData.getStatus() == null) {
+      return;
+    }
+    if (discernLoginFailure()) {
+      return;
+    } else if (discernStatusCheck()) {
+      return;
+    } else if (discernRecoveryEmailVerifyCodeFailure()) {
+      return;
+    } else if (discernSendRecoveryEmail()) {
+      return;
+    } else if (discernSendSmsConnectDevice()) {
+      return;
+    }
+  }
+
   /** Construct matcher object. */
   public FxaAuth() {}
 
@@ -81,5 +256,25 @@ public class FxaAuth extends PayloadBase implements Serializable {
     } catch (IOException exc) {
       return;
     }
+
+    String rac = fxaAuthData.getRemoteAddressChain();
+    if (rac != null) {
+      // The auth server source address information is stored as a JSON encoded string that is an
+      // array of addresses, so convert that
+      ArrayList<String> raca = new ArrayList<>();
+      try {
+        raca =
+            mapper.readValue(
+                rac,
+                mapper.getTypeFactory().constructCollectionType(ArrayList.class, String.class));
+        if (raca != null) {
+          sourceAddress = state.getParser().applyXffAddressSelector(String.join(",", raca));
+        }
+      } catch (IOException exc) {
+        // pass
+      }
+    }
+
+    discernEventSummary();
   }
 }

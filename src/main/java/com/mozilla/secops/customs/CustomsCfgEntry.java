@@ -14,9 +14,31 @@ public class CustomsCfgEntry implements Serializable {
   private Long alertSuppressionLength;
   private Long threshold;
   private EventFilterCfg eventFilterCfg;
+  private String summaryAssemblyFmt;
+  private String[] metadataAssembly;
 
   /**
-   * Get alert threshold
+   * Get summary assembly format string
+   *
+   * @return String
+   */
+  @JsonProperty("summary_assembly_fmt")
+  public String getSummaryAssemblyFmt() {
+    return summaryAssemblyFmt;
+  }
+
+  /**
+   * Get metadata assembly values
+   *
+   * @return String[]
+   */
+  @JsonProperty("metadata_assembly")
+  public String[] getMetadataAssembly() {
+    return metadataAssembly;
+  }
+
+  /**
+   * /** Get alert threshold
    *
    * @return Alert threshold
    */

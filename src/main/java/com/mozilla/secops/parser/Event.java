@@ -114,10 +114,19 @@ public class Event implements Serializable {
   /**
    * Set mozlog value
    *
+   * <p>If the mozlog entry has a timestamp value, this timestamp will be used for the event
+   * timestamp.
+   *
    * @param mozlog Mozlog values for event
    */
   public void setMozlog(Mozlog mozlog) {
     this.mozlog = mozlog;
+
+    // If we have a mozlog timestamp entry, use that for our event timestamp
+    if (mozlog.getTimestamp() != null) {
+      // Convert to ms for joda time
+      setTimestamp(new DateTime(mozlog.getTimestamp() / 1000000));
+    }
   }
 
   /**
