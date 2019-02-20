@@ -244,7 +244,7 @@
                         ]
                     }
                 }
-            }.
+            },
             "summary_assembly_fmt": "email verify code rate violation, %s from %s",
             "metadata_assembly": [ "accountid", "sourceaddress" ]
         }
