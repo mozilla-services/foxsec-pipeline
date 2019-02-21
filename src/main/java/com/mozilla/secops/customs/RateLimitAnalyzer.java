@@ -6,13 +6,12 @@ import com.mozilla.secops.parser.EventFilter;
 import java.io.IOException;
 import java.util.Map;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
-import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.GlobalWindows;
 import org.apache.beam.sdk.transforms.windowing.Repeatedly;
 import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
@@ -65,18 +64,12 @@ public class RateLimitAnalyzer extends PTransform<PCollection<Event>, PCollectio
                 .withSideInputs(eventView))
         .apply(
             "suppression windows",
-            Window.<KV<String, Alert>>into(
-                    FixedWindows.of(Duration.standardSeconds(cfg.getAlertSuppressionLength())))
+            Window.<KV<String, Alert>>into(new GlobalWindows())
                 .triggering(
                     Repeatedly.forever(
-                        AfterWatermark.pastEndOfWindow()
-                            .withEarlyFirings(
-                                AfterProcessingTime.pastFirstElementInPane()
-                                    .plusDelayOf(Duration.standardSeconds(5L)))))
-                .withAllowedLateness(Duration.ZERO)
-                .discardingFiredPanes())
-        .apply("suppression gbk", GroupByKey.<String, Alert>create())
-        .apply(ParDo.of(new RateLimitSuppressor()));
+                        AfterProcessingTime.pastFirstElementInPane()
+                            .plusDelayOf(Duration.standardSeconds(5L)))))
+        .apply(ParDo.of(new RateLimitSuppressor(cfg)));
   }
 
   /**

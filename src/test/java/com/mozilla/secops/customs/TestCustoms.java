@@ -14,9 +14,7 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
-import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -71,12 +69,9 @@ public class TestCustoms {
 
     PCollection<Long> count =
         alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(900000L)))
-        .containsInAnyOrder(1L);
+    PAssert.that(count).containsInAnyOrder(1L);
 
     PAssert.that(alerts)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(900000L)))
         .satisfies(
             x -> {
               int cnt = 0;
@@ -113,6 +108,10 @@ public class TestCustoms {
                     new ParserDoFn()
                         .withConfiguration(ParserCfg.fromInputOptions(getTestOptions()))))
             .apply(new Customs.Detectors(cfg, getTestOptions()));
+
+    PCollection<Long> count =
+        alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+    PAssert.that(count).containsInAnyOrder(6L);
 
     p.run().waitUntilFinish();
   }
