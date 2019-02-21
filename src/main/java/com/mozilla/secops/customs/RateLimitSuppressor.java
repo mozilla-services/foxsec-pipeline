@@ -46,15 +46,15 @@ public class RateLimitSuppressor extends DoFn<KV<String, Alert>, Alert> {
 
     Instant l = last.read();
     if (l != null) {
-      Long delta = new Instant().getMillis() - l.getMillis();
+      Long delta = alertval.getTimestamp().getMillis() - l.getMillis();
       if (delta < suppressMillis) {
         log.info("suppressing additional alert for {}, {} < {}", key, delta, suppressMillis);
         return;
       }
     }
-    last.write(new Instant());
+    last.write(alertval.getTimestamp().toInstant());
 
-    log.info("emitting alert for {}", key);
+    log.info("emitting alert for {} [{}]", key, alertval.getTimestamp());
     log.info("emit: {}", alertval.toJSON());
     c.output(alertval);
   }
