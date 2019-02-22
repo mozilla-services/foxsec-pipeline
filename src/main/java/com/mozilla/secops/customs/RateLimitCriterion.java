@@ -95,7 +95,8 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     String[] kelements = EventFilter.splitKey(key);
     int kelementCount = kelements.length;
     if (kelementCount != cfg.getMetadataAssembly().length) {
-      throw new IllegalArgumentException("metadata assembly length did not match key count");
+      log.warn("dropping alert for {}, metadata assembly length did not match key count", key);
+      return;
     }
     for (int i = 0; i < kelementCount; i++) {
       alert.addMetadata(cfg.getMetadataAssembly()[i], kelements[i]);
