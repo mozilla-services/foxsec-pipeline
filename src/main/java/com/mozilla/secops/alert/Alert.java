@@ -101,6 +101,27 @@ public class Alert implements Serializable {
   }
 
   /**
+   * Set a masked summary in the alert
+   *
+   * <p>Some output transforms will utilize the prefer the masked summary to the primary summary
+   * field, assuming the masked summary has sensitive information removed.
+   *
+   * @param maskedSummary Masked summary string
+   */
+  public void setMaskedSummary(String maskedSummary) {
+    addMetadata("masked_summary", maskedSummary);
+  }
+
+  /**
+   * Get any masked summary value in the alert
+   *
+   * @return Masked summary or null if unset
+   */
+  public String getMaskedSummary() {
+    return getMetadataValue("masked_summary");
+  }
+
+  /**
    * Set alert merge key for notifications in metadata
    *
    * <p>If a merge key is set in metadata for an alert, some output transforms will utilize this key

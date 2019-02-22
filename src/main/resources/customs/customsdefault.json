@@ -40,7 +40,7 @@
                 }
             },
             "summary_assembly_fmt": "login failure rate violation, %s from %s",
-            "metadata_assembly": [ "accountid", "sourceaddress" ]
+            "metadata_assembly": [ "mask:accountid", "sourceaddress" ]
         },
         "rl_sms_sourceaddress": {
             "sliding_window_length": 3600,
@@ -122,7 +122,7 @@
                 }
             },
             "summary_assembly_fmt": "sms send account id rate violation, %s",
-            "metadata_assembly": [ "accountid" ]
+            "metadata_assembly": [ "mask:accountid" ]
         },
         "rl_email_recipient": {
             "sliding_window_length": 900,
@@ -163,7 +163,7 @@
                 }
             },
             "summary_assembly_fmt": "recovery email send rate violation, %s",
-            "metadata_assembly": [ "accountid" ]
+            "metadata_assembly": [ "mask:accountid" ]
         },
         "rl_statuscheck": {
             "sliding_window_length": 900,

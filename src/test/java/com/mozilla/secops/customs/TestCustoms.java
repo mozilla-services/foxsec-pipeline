@@ -90,6 +90,12 @@ public class TestCustoms {
                     "rl_login_failure_sourceaddress_accountid",
                     a.getMetadataValue("customs_category"));
                 assertEquals("1970-01-01T00:00:00.000Z", a.getTimestamp().toString());
+                assertEquals(
+                    "test login failure rate violation, spock@mozilla.com from 127.0.0.1",
+                    a.getSummary());
+                assertEquals(
+                    "test login failure rate violation, <<masked>> from 127.0.0.1",
+                    a.getMetadataValue("masked_summary"));
                 cnt++;
               }
               assertEquals(1, cnt);

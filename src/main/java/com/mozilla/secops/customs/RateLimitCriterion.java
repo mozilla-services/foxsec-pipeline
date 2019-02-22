@@ -99,10 +99,27 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
       return;
     }
     for (int i = 0; i < kelementCount; i++) {
-      alert.addMetadata(cfg.getMetadataAssembly()[i], kelements[i]);
+      alert.addMetadata(cfg.getMetadataAssembly()[i].replaceFirst("mask:", ""), kelements[i]);
     }
     alert.setSummary(
         monitoredResource + " " + String.format(cfg.getSummaryAssemblyFmt(), (Object[]) kelements));
+
+    String[] melements = new String[kelements.length];
+    Boolean mField = false;
+    for (int i = 0; i < kelements.length; i++) {
+      if (cfg.getMetadataAssembly()[i].startsWith("mask:")) {
+        melements[i] = "<<masked>>";
+        mField = true;
+      } else {
+        melements[i] = kelements[i];
+      }
+    }
+    if (mField) {
+      alert.setMaskedSummary(
+          monitoredResource
+              + " "
+              + String.format(cfg.getSummaryAssemblyFmt(), (Object[]) melements));
+    }
 
     if (!alert.hasCorrectFields()) {
       throw new IllegalArgumentException("alert has invalid field configuration");
