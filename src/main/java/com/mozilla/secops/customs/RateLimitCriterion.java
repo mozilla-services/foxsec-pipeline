@@ -67,6 +67,10 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     alert.setSeverity(severity);
 
     Iterable<Event> eventList = eventMap.get(key);
+    if (eventList == null) {
+      log.info("dropping alert for {}, event list was empty", key);
+      return;
+    }
 
     // Set the alert timestamp based on the latest event timestamp
     DateTime max = null;
@@ -86,6 +90,7 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     alert.addMetadata("customs_category", detectorName);
     alert.addMetadata("threshold", cfg.getThreshold().toString());
     alert.addMetadata("count", count.toString());
+    alert.setNotifyMergeKey(detectorName);
 
     String[] kelements = EventFilter.splitKey(key);
     int kelementCount = kelements.length;
@@ -95,7 +100,8 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     for (int i = 0; i < kelementCount; i++) {
       alert.addMetadata(cfg.getMetadataAssembly()[i], kelements[i]);
     }
-    alert.setSummary(String.format(cfg.getSummaryAssemblyFmt(), (Object[]) kelements));
+    alert.setSummary(
+        monitoredResource + " " + String.format(cfg.getSummaryAssemblyFmt(), (Object[]) kelements));
 
     if (!alert.hasCorrectFields()) {
       throw new IllegalArgumentException("alert has invalid field configuration");
