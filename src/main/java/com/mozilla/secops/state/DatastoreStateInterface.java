@@ -83,10 +83,7 @@ public class DatastoreStateInterface implements StateInterface {
     } else {
       datastore = DatastoreOptions.getDefaultInstance().getService();
     }
-    keyFactory = datastore.newKeyFactory().setKind(kind);
-    if (namespace != "") {
-      keyFactory = keyFactory.setNamespace(namespace);
-    }
+    keyFactory = datastore.newKeyFactory().setNamespace(namespace).setKind(kind);
   }
 
   /**

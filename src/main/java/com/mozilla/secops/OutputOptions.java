@@ -35,6 +35,12 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputIprepdApikey(String value);
 
+  @Description("Enable use of whitelisted ips saved in datastore; requires deployment in GCP")
+  @Default.Boolean(false)
+  Boolean getOutputIprepdEnableDatastoreWhitelist();
+
+  void setOutputIprepdEnableDatastoreWhitelist(Boolean value);
+
   @Description(
       "With alert email output; SMTP credentials format id:secret (supports RuntimeSecrets)")
   String getOutputAlertSmtpCredentials();
@@ -92,12 +98,6 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
   String getAlertStateDatastoreKind();
 
   void setAlertStateDatastoreKind(String value);
-
-  @Description("Enable use of whitelisted ips saved in datastore; requires deployment in GCP")
-  @Default.Boolean(false)
-  Boolean getEnableWhitelistedIps();
-
-  void setEnableWhitelistedIps(Boolean value);
 
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);
