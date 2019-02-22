@@ -130,6 +130,11 @@ public class IprepdIO {
         return;
       }
 
+      String iprepdExempt = a.getMetadataValue("iprepd_exempt");
+      if (iprepdExempt != null && iprepdExempt == "true") {
+        return;
+      }
+
       Violation v = Violation.fromAlert(a);
       if (v == null) {
         return;

@@ -14,6 +14,7 @@ import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
+import com.mozilla.secops.whitelistedips.WhitelistedIpsLabeler;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -755,15 +756,25 @@ public class HTTPRequest implements Serializable {
       }
 
       PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
+
+      if (options.getEnableWhitelistedIps()) {
+        results = results.apply("label whitelisted ips", ParDo.of(new WhitelistedIpsLabeler()));
+      }
+
       results.apply("output", OutputOptions.compositeOutput(options));
     }
 
     if (options.getEnableEndpointAbuseAnalysis()) {
-      events
-          .apply("window for fixed fire early", new WindowForFixedFireEarly())
-          .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
-          .apply("output format", ParDo.of(new AlertFormatter(options)))
-          .apply("output", OutputOptions.compositeOutput(options));
+      PCollection<String> results =
+          events
+              .apply("window for fixed fire early", new WindowForFixedFireEarly())
+              .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
+              .apply("output format", ParDo.of(new AlertFormatter(options)));
+
+      if (options.getEnableWhitelistedIps()) {
+        results = results.apply("label whitelisted ips", ParDo.of(new WhitelistedIpsLabeler()));
+      }
+      results.apply("output", OutputOptions.compositeOutput(options));
     }
 
     p.run();

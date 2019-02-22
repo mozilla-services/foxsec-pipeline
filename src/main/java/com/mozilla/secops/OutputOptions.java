@@ -93,6 +93,12 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setAlertStateDatastoreKind(String value);
 
+  @Description("Enable use of whitelisted ips saved in datastore; requires deployment in GCP")
+  @Default.Boolean(false)
+  Boolean getEnableWhitelistedIps();
+
+  void setEnableWhitelistedIps(Boolean value);
+
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);
   }
