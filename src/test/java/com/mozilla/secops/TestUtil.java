@@ -1,7 +1,9 @@
 package com.mozilla.secops;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
@@ -33,5 +35,23 @@ public class TestUtil {
     }
     scanner.close();
     return p.apply(Create.of(inputData));
+  }
+
+  /**
+   * Read test input as a resource, returning an array of strings, one for each line in the input
+   *
+   * @param resource Resource path to load test data from
+   * @return Array of strings
+   */
+  public static String[] getTestInputArray(String resource) throws IOException {
+    ArrayList<String> inputData = new ArrayList<String>();
+
+    BufferedReader in =
+        new BufferedReader(new InputStreamReader(TestUtil.class.getResourceAsStream(resource)));
+    String s;
+    while ((s = in.readLine()) != null) {
+      inputData.add(s);
+    }
+    return inputData.toArray(new String[0]);
   }
 }

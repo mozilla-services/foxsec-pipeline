@@ -8,13 +8,18 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.ParserTest;
+import java.util.Arrays;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
+import org.apache.beam.sdk.testing.TestStream;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -84,11 +89,46 @@ public class TestCustoms {
                 assertEquals(
                     "rl_login_failure_sourceaddress_accountid",
                     a.getMetadataValue("customs_category"));
+                assertEquals("1970-01-01T00:00:00.000Z", a.getTimestamp().toString());
                 cnt++;
               }
               assertEquals(1, cnt);
               return null;
             });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void rlLoginFailureSourceAddressTestStream() throws Exception {
+    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
+    // Force use of event timestamp for testing purposes
+    cfg.setTimestampOverride(true);
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
+    String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple2.txt");
+    String[] eb3 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple3.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkTo(new Instant(0L).plus(Duration.standardSeconds(1500)))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
+            .advanceWatermarkTo(new Instant(0L).plus(Duration.standardSeconds(2500)))
+            .addElements(eb3[0], Arrays.copyOfRange(eb3, 1, eb3.length))
+            .advanceWatermarkToInfinity();
+
+    PCollection<Alert> alerts =
+        p.apply(s)
+            .apply(
+                ParDo.of(
+                    new ParserDoFn()
+                        .withConfiguration(ParserCfg.fromInputOptions(getTestOptions()))))
+            .apply(new Customs.Detectors(cfg, getTestOptions()));
+
+    PCollection<Long> count =
+        alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+    PAssert.that(count).containsInAnyOrder(2L);
 
     p.run().waitUntilFinish();
   }
