@@ -117,6 +117,7 @@ public class Alert implements Serializable {
    *
    * @return Masked summary or null if unset
    */
+  @JsonIgnore
   public String getMaskedSummary() {
     return getMetadataValue("masked_summary");
   }
