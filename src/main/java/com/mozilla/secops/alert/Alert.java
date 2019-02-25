@@ -103,8 +103,8 @@ public class Alert implements Serializable {
   /**
    * Set a masked summary in the alert
    *
-   * <p>Some output transforms will utilize the prefer the masked summary to the primary summary
-   * field, assuming the masked summary has sensitive information removed.
+   * <p>Some output transforms will prefer the masked summary to the primary summary field, assuming
+   * the masked summary has sensitive information removed.
    *
    * @param maskedSummary Masked summary string
    */
