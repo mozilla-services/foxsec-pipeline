@@ -24,6 +24,8 @@ import org.slf4j.LoggerFactory;
 
 /** {@link IprepdIO} provides an IO transform for writing violation messages to iprepd */
 public class IprepdIO {
+  public static final String IPREPD_EXEMPT = "iprepd_exempt";
+
   /**
    * Return {@link PTransform} to emit violations to iprepd
    *
@@ -135,8 +137,8 @@ public class IprepdIO {
         return;
       }
 
-      String iprepdExempt = a.getMetadataValue("iprepd_exempt");
-      if (iprepdExempt != null && iprepdExempt == "true") {
+      String iprepdExempt = a.getMetadataValue(IPREPD_EXEMPT);
+      if (iprepdExempt != null && iprepdExempt.equals("true")) {
         return;
       }
 
@@ -227,8 +229,8 @@ public class IprepdIO {
     try {
       WhitelistedIp wip = state.get(ip, WhitelistedIp.class);
       if (wip != null) {
-        a.addMetadata("iprepd_exempt", "true");
-        a.addMetadata("whitelist_created_by", wip.getCreatedBy());
+        a.addMetadata(IPREPD_EXEMPT, "true");
+        a.addMetadata(IPREPD_EXEMPT + "_created_by", wip.getCreatedBy());
       }
     } catch (StateException exc) {
       log.error("error getting whitelisted ip: {}", exc.getMessage());
