@@ -38,7 +38,7 @@ public class CustomsCfgEntry implements Serializable {
   }
 
   /**
-   * /** Get alert threshold
+   * Get alert threshold
    *
    * @return Alert threshold
    */
