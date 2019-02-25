@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.maxmind.geoip2.model.CityResponse;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -49,6 +50,8 @@ public class FxaAuth extends PayloadBase implements Serializable {
   private com.mozilla.secops.parser.models.fxaauth.FxaAuth fxaAuthData;
   private EventSummary eventSummary;
   private String sourceAddress;
+  private String sourceAddressCity;
+  private String sourceAddressCountry;
 
   @Override
   public String eventStringValue(EventFilterPayload.StringProperty property) {
@@ -143,12 +146,24 @@ public class FxaAuth extends PayloadBase implements Serializable {
     return sourceAddress;
   }
 
+  /**
+   * Get source address city
+   *
+   * @return String
+   */
+  @JsonProperty("sourceaddress_city")
   public String getSourceAddressCity() {
-    return null;
+    return sourceAddressCity;
   }
 
+  /**
+   * Get source address country
+   *
+   * @return String
+   */
+  @JsonProperty("sourceaddress_country")
   public String getSourceAddressCountry() {
-    return null;
+    return sourceAddressCountry;
   }
 
   private Boolean discernLoginFailure() {
@@ -277,6 +292,14 @@ public class FxaAuth extends PayloadBase implements Serializable {
         }
       } catch (IOException exc) {
         // pass
+      }
+    }
+
+    if (sourceAddress != null) {
+      CityResponse cr = state.getParser().geoIp(sourceAddress);
+      if (cr != null) {
+        sourceAddressCity = cr.getCity().getName();
+        sourceAddressCountry = cr.getCountry().getIsoCode();
       }
     }
 
