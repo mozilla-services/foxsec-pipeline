@@ -123,9 +123,9 @@ public class EventFilterTransformTest {
     PAssert.thatMap(keyed)
         .satisfies(
             results -> {
-              Event ev = results.get("loginFailure");
+              Event ev = results.get("bG9naW5GYWlsdXJl");
               assertNotNull(ev);
-              ev = results.get("secevent.model.1");
+              ev = results.get("c2VjZXZlbnQubW9kZWwuMQ==");
               assertNull(ev);
               return null;
             });
@@ -133,9 +133,9 @@ public class EventFilterTransformTest {
     PAssert.thatMap(multiKeyed)
         .satisfies(
             results -> {
-              Event ev = results.get("loginFailure+q@the-q-continuum");
+              Event ev = results.get("bG9naW5GYWlsdXJl cUB0aGUtcS1jb250aW51dW0=");
               assertNotNull(ev);
-              ev = results.get("loginFailure");
+              ev = results.get("bG9naW5GYWlsdXJl");
               assertNull(ev);
               return null;
             });
@@ -173,7 +173,7 @@ public class EventFilterTransformTest {
     PAssert.thatMap(keyed)
         .satisfies(
             results -> {
-              Event ev = results.get("riker+publickey");
+              Event ev = results.get("cmlrZXI= cHVibGlja2V5");
               assertNotNull(ev);
               return null;
             });
