@@ -6,6 +6,7 @@ import com.mozilla.secops.alert.AlertConfiguration;
 import com.mozilla.secops.alert.AlertIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -31,6 +32,7 @@ public abstract class CompositeOutput {
   public static PTransform<PCollection<String>, PDone> withOptions(OutputOptions options) {
     final String outputFile = options.getOutputFile();
     final String outputBigQuery = options.getOutputBigQuery();
+    final String outputPubsub = options.getOutputPubsub();
     final String outputIprepd = options.getOutputIprepd();
     final String outputIprepdApikey = options.getOutputIprepdApikey();
     final String project = options.getProject();
@@ -89,6 +91,9 @@ public abstract class CompositeOutput {
                   .to(outputBigQuery)
                   .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER)
                   .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
+        }
+        if (outputPubsub != null) {
+          input.apply(PubsubIO.writeStrings().to(outputPubsub));
         }
         if (outputIprepd != null) {
           input.apply(IprepdIO.write(outputIprepd, outputIprepdApikey, project));
