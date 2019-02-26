@@ -192,7 +192,7 @@ public class AlertConfiguration implements Serializable {
   /**
    * Set datastore namespace
    *
-   * @param datastoreNamepsace datastore namespace
+   * @param datastoreNamespace datastore namespace
    */
   public void setDatastoreNamespace(String datastoreNamespace) {
     this.datastoreNamespace = datastoreNamespace;

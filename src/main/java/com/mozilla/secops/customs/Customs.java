@@ -23,7 +23,10 @@ import org.apache.beam.sdk.values.PCollectionList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Implements various rate limiting and analysis heuristics on {@link FxaAuth} streams */
+/**
+ * Implements various rate limiting and analysis heuristics on {@link
+ * com.mozilla.secops.parser.FxaAuth} streams
+ */
 public class Customs implements Serializable {
   private static final long serialVersionUID = 1L;
 
