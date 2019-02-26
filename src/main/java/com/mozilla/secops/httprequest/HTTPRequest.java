@@ -3,6 +3,7 @@ package com.mozilla.secops.httprequest;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.InputOptions;
+import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.Stats;
 import com.mozilla.secops.alert.Alert;
@@ -179,6 +180,7 @@ public class HTTPRequest implements Serializable {
 
     private final Long maxErrorRate;
     private final String monitoredResource;
+    private final Boolean enableIprepdDatastoreWhitelist;
 
     /**
      * Static initializer for {@link ErrorRateAnalysis}
@@ -188,6 +190,7 @@ public class HTTPRequest implements Serializable {
     public ErrorRateAnalysis(HTTPRequestOptions options) {
       maxErrorRate = options.getMaxClientErrorRate();
       monitoredResource = options.getMonitoredResourceIndicator();
+      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
     }
 
     @Override
@@ -234,6 +237,9 @@ public class HTTPRequest implements Serializable {
                       a.setCategory("httprequest");
                       a.addMetadata("category", "error_rate");
                       a.addMetadata("sourceaddress", c.element().getKey());
+                      if (enableIprepdDatastoreWhitelist) {
+                        IprepdIO.addMetadataIfWhitelisted(c.element().getKey(), a);
+                      }
                       a.addMetadata("error_count", c.element().getValue().toString());
                       a.addMetadata("error_threshold", maxErrorRate.toString());
                       a.setNotifyMergeKey(String.format("error_count", c.element().getKey()));
@@ -263,6 +269,7 @@ public class HTTPRequest implements Serializable {
 
     private final Map<String[], Integer> endpoints;
     private final String monitoredResource;
+    private final Boolean enableIprepdDatastoreWhitelist;
 
     /**
      * Static initializer for {@link EndpointAbuseAnalysis}
@@ -273,6 +280,7 @@ public class HTTPRequest implements Serializable {
       log = LoggerFactory.getLogger(EndpointAbuseAnalysis.class);
 
       monitoredResource = options.getMonitoredResourceIndicator();
+      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
 
       endpoints = new HashMap<String[], Integer>();
       for (String endpoint : options.getEndpointAbusePath()) {
@@ -411,6 +419,9 @@ public class HTTPRequest implements Serializable {
                         a.setCategory("httprequest");
                         a.addMetadata("category", "endpoint_abuse");
                         a.addMetadata("sourceaddress", remoteAddress);
+                        if (enableIprepdDatastoreWhitelist) {
+                          IprepdIO.addMetadataIfWhitelisted(remoteAddress, a);
+                        }
                         a.addMetadata("endpoint", comparePath);
                         a.addMetadata("method", compareMethod);
                         a.addMetadata("count", Integer.toString(count));
@@ -450,6 +461,7 @@ public class HTTPRequest implements Serializable {
     private final Long requiredMinimumClients;
     private final Double clampThresholdMaximum;
     private final String monitoredResource;
+    private final Boolean enableIprepdDatastoreWhitelist;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
     private Logger log;
@@ -465,6 +477,7 @@ public class HTTPRequest implements Serializable {
       this.requiredMinimumClients = options.getRequiredMinimumClients();
       this.clampThresholdMaximum = options.getClampThresholdMaximum();
       this.monitoredResource = options.getMonitoredResourceIndicator();
+      this.enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
@@ -613,6 +626,9 @@ public class HTTPRequest implements Serializable {
                         a.setCategory("httprequest");
                         a.addMetadata("category", "threshold_analysis");
                         a.addMetadata("sourceaddress", c.element().getKey());
+                        if (enableIprepdDatastoreWhitelist) {
+                          IprepdIO.addMetadataIfWhitelisted(c.element().getKey(), a);
+                        }
                         a.addMetadata("mean", sOutput.getMean().toString());
                         a.addMetadata("count", c.element().getValue().toString());
                         a.addMetadata("threshold_modifier", thresholdModifier.toString());

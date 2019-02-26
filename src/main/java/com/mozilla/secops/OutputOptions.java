@@ -40,6 +40,12 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputIprepdApikey(String value);
 
+  @Description("Enable use of whitelisted ips saved in datastore; requires deployment in GCP")
+  @Default.Boolean(false)
+  Boolean getOutputIprepdEnableDatastoreWhitelist();
+
+  void setOutputIprepdEnableDatastoreWhitelist(Boolean value);
+
   @Description(
       "With alert email output; SMTP credentials format id:secret (supports RuntimeSecrets)")
   String getOutputAlertSmtpCredentials();

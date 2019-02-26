@@ -1,7 +1,11 @@
 package com.mozilla.secops;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.crypto.RuntimeSecrets;
+import com.mozilla.secops.state.DatastoreStateInterface;
+import com.mozilla.secops.state.State;
+import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import java.util.StringJoiner;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -14,11 +18,14 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** {@link IprepdIO} provides an IO transform for writing violation messages to iprepd */
 public class IprepdIO {
+  public static final String IPREPD_EXEMPT = "iprepd_exempt";
+
   /**
    * Return {@link PTransform} to emit violations to iprepd
    *
@@ -130,6 +137,11 @@ public class IprepdIO {
         return;
       }
 
+      String iprepdExempt = a.getMetadataValue(IPREPD_EXEMPT);
+      if (iprepdExempt != null && iprepdExempt.equals("true")) {
+        return;
+      }
+
       Violation v = Violation.fromAlert(a);
       if (v == null) {
         return;
@@ -168,6 +180,60 @@ public class IprepdIO {
       } catch (IOException exc) {
         log.warn(exc.getMessage());
       }
+    }
+  }
+
+  /** WhitelistedIp contains the metadata associated with a whitelisted ip. */
+  public static class WhitelistedIp {
+    private String ip;
+    private DateTime expiresAt;
+    private String createdBy;
+
+    @JsonProperty("ip")
+    public String getIp() {
+      return ip;
+    }
+
+    @JsonProperty("expires_at")
+    public DateTime getExpiresAt() {
+      return expiresAt;
+    }
+
+    @JsonProperty("created_by")
+    public String getCreatedBy() {
+      return createdBy;
+    }
+  }
+
+  private static final String whitelistedIpKind = "whitelisted_ip";
+  private static final String whitelistedIpNamespace = "whitelisted_ip";
+
+  /**
+   * Add whitelisted IP metadata if the IP address is whitelisted.
+   *
+   * @param ip IP address to check
+   * @param a Alert to add metadata to
+   */
+  public static void addMetadataIfWhitelisted(String ip, Alert a) {
+    if (ip == null || a == null) {
+      return;
+    }
+
+    State state = new State(new DatastoreStateInterface(whitelistedIpKind, whitelistedIpNamespace));
+    Logger log = LoggerFactory.getLogger(IprepdIO.class);
+    try {
+      state.initialize();
+    } catch (StateException exc) {
+      log.error("error initializing state: {}", exc.getMessage());
+    }
+    try {
+      WhitelistedIp wip = state.get(ip, WhitelistedIp.class);
+      if (wip != null) {
+        a.addMetadata(IPREPD_EXEMPT, "true");
+        a.addMetadata(IPREPD_EXEMPT + "_created_by", wip.getCreatedBy());
+      }
+    } catch (StateException exc) {
+      log.error("error getting whitelisted ip: {}", exc.getMessage());
     }
   }
 }
