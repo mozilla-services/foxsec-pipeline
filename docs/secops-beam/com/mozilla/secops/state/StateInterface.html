@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -127,23 +127,29 @@ var activeTableTab = "activeTableTab";
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#deleteAll--">deleteAll</a></span>()</code>
+<div class="block">Delete all keys from state</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#done--">done</a></span>()</code>
 <div class="block">Notify state implementation no further processing will occur</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#getObject-java.lang.String-">getObject</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s)</code>
 <div class="block">Retrieve object from state</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#initialize--">initialize</a></span>()</code>
 <div class="block">Perform and setup required to read and write state</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#saveObject-java.lang.String-java.lang.String-">saveObject</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s,
           <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;v)</code>
@@ -179,6 +185,21 @@ var activeTableTab = "activeTableTab";
 <dd><code>s</code> - State key</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Stored state JSON</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="deleteAll--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>deleteAll</h4>
+<pre>void&nbsp;deleteAll()
+        throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
+<div class="block">Delete all keys from state</div>
+<dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
 </dl>

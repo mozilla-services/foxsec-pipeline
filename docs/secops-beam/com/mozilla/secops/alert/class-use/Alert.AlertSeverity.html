@@ -88,12 +88,6 @@
 <div class="block">Alert generation and output</div>
 </td>
 </tr>
-<tr class="rowColor">
-<td class="colFirst"><a href="#com.mozilla.secops.customs">com.mozilla.secops.customs</a></td>
-<td class="colLast">
-<div class="block">Customs server generic rate limiting heuristics pipeline</div>
-</td>
-</tr>
 </tbody>
 </table>
 </li>
@@ -142,59 +136,6 @@ the order they are declared.</div>
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><span class="typeNameLabel">Alert.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/alert/Alert.html#setSeverity-com.mozilla.secops.alert.Alert.AlertSeverity-">setSeverity</a></span>(<a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a>&nbsp;severity)</code>
 <div class="block">Set alert severity</div>
-</td>
-</tr>
-</tbody>
-</table>
-</li>
-<li class="blockList"><a name="com.mozilla.secops.customs">
-<!--   -->
-</a>
-<h3>Uses of <a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a> in <a href="../../../../../com/mozilla/secops/customs/package-summary.html">com.mozilla.secops.customs</a></h3>
-<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
-<caption><span>Methods in <a href="../../../../../com/mozilla/secops/customs/package-summary.html">com.mozilla.secops.customs</a> that return <a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a></span><span class="tabEnd">&nbsp;</span></caption>
-<tr>
-<th class="colFirst" scope="col">Modifier and Type</th>
-<th class="colLast" scope="col">Method and Description</th>
-</tr>
-<tbody>
-<tr class="altColor">
-<td class="colFirst"><code><a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a></code></td>
-<td class="colLast"><span class="typeNameLabel">RateLimitAnalyzer.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/customs/RateLimitAnalyzer.html#getAlertCriteriaSeverity--">getAlertCriteriaSeverity</a></span>()</code>
-<div class="block">Get alert severity</div>
-</td>
-</tr>
-</tbody>
-</table>
-<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
-<caption><span>Methods in <a href="../../../../../com/mozilla/secops/customs/package-summary.html">com.mozilla.secops.customs</a> with parameters of type <a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a></span><span class="tabEnd">&nbsp;</span></caption>
-<tr>
-<th class="colFirst" scope="col">Modifier and Type</th>
-<th class="colLast" scope="col">Method and Description</th>
-</tr>
-<tbody>
-<tr class="altColor">
-<td class="colFirst"><code><a href="../../../../../com/mozilla/secops/customs/RateLimitAnalyzer.html" title="class in com.mozilla.secops.customs">RateLimitAnalyzer</a></code></td>
-<td class="colLast"><span class="typeNameLabel">RateLimitAnalyzer.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/customs/RateLimitAnalyzer.html#setAlertCriteria-java.lang.Long-com.mozilla.secops.alert.Alert.AlertSeverity-">setAlertCriteria</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;count,
-                <a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a>&nbsp;severity)</code>
-<div class="block">Set alerting criteria</div>
-</td>
-</tr>
-</tbody>
-</table>
-<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing constructors, and an explanation">
-<caption><span>Constructors in <a href="../../../../../com/mozilla/secops/customs/package-summary.html">com.mozilla.secops.customs</a> with parameters of type <a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a></span><span class="tabEnd">&nbsp;</span></caption>
-<tr>
-<th class="colOne" scope="col">Constructor and Description</th>
-</tr>
-<tbody>
-<tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/customs/RateLimitCriterion.html#RateLimitCriterion-com.mozilla.secops.alert.Alert.AlertSeverity-java.lang.String-java.lang.Long-org.apache.beam.sdk.values.PCollectionView-java.lang.String-">RateLimitCriterion</a></span>(<a href="../../../../../com/mozilla/secops/alert/Alert.AlertSeverity.html" title="enum in com.mozilla.secops.alert">Alert.AlertSeverity</a>&nbsp;severity,
-                  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;customsMeta,
-                  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;limit,
-                  org.apache.beam.sdk.values.PCollectionView&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt;&gt;&nbsp;eventView,
-                  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;monitoredResource)</code>
-<div class="block"><a href="../../../../../com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs"><code>RateLimitCriterion</code></a> static initializer</div>
 </td>
 </tr>
 </tbody>

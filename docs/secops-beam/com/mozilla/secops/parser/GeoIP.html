@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10};
+var methods = {"i0":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -111,19 +111,7 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">GeoIP</span>
 extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></pre>
-<div class="block">GeoIP resolution
-
- <p>Upon initialization, a <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a> object will attempt to load database files from specific
- resource paths in the following order.
-
- <p>
-
- <ul>
-   <li>/GeoLite2-City.mmdb
-   <li>/testdata/GeoIP2-City-Test.mmdb
- </ul>
-
- <p>If the test database is used, the usingTest function will return true.</div>
+<div class="block">GeoIP resolution</div>
 </li>
 </ul>
 </div>
@@ -142,8 +130,8 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/GeoIP.html#GeoIP--">GeoIP</a></span>()</code>
-<div class="block">Initialize new <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a></div>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/GeoIP.html#GeoIP-java.lang.String-">GeoIP</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;path)</code>
+<div class="block">Initialize new <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a>, load database from specified path</div>
 </td>
 </tr>
 </table>
@@ -165,12 +153,6 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <td class="colFirst"><code>com.maxmind.geoip2.model.CityResponse</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/GeoIP.html#lookup-java.lang.String-">lookup</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ip)</code>
 <div class="block">Lookup city/country from IP address string</div>
-</td>
-</tr>
-<tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/GeoIP.html#usingTest--">usingTest</a></span>()</code>
-<div class="block">Indicate if <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a> initialized with testing database</div>
 </td>
 </tr>
 </table>
@@ -195,14 +177,18 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="GeoIP--">
+<a name="GeoIP-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>GeoIP</h4>
-<pre>public&nbsp;GeoIP()</pre>
-<div class="block">Initialize new <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a></div>
+<pre>public&nbsp;GeoIP(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;path)</pre>
+<div class="block">Initialize new <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a>, load database from specified path</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>path</code> - Resource or GCS path to load database from</dd>
+</dl>
 </li>
 </ul>
 </li>
@@ -216,7 +202,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <a name="lookup-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockList">
+<ul class="blockListLast">
 <li class="blockList">
 <h4>lookup</h4>
 <pre>public&nbsp;com.maxmind.geoip2.model.CityResponse&nbsp;lookup(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ip)</pre>
@@ -226,20 +212,6 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <dd><code>ip</code> - IP address string</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>MaxmindDB <code>CityResponse</code>, or null on failure</dd>
-</dl>
-</li>
-</ul>
-<a name="usingTest--">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>usingTest</h4>
-<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;usingTest()</pre>
-<div class="block">Indicate if <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a> initialized with testing database</div>
-<dl>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>True if testing database is configured</dd>
 </dl>
 </li>
 </ul>

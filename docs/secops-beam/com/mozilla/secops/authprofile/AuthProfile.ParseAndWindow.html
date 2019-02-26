@@ -128,7 +128,7 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
  <code>PCollection</code> of <code>KV</code> objects where the key is a particular username and the value
  is a list of authentication events seen for that user within the window.
 
- <p>The output is windowed in the global window with a trigger which fires every 30 seconds.</div>
+ <p>The output is windowed in the global window with a trigger which fires every 60 seconds.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../serialized-form.html#com.mozilla.secops.authprofile.AuthProfile.ParseAndWindow">Serialized Form</a></dd>
@@ -151,7 +151,9 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html#ParseAndWindow--">ParseAndWindow</a></span>()</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html#ParseAndWindow-com.mozilla.secops.authprofile.AuthProfile.AuthProfileOptions-">ParseAndWindow</a></span>(<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>&nbsp;options)</code>
+<div class="block">Static initializer for <a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html" title="class in com.mozilla.secops.authprofile"><code>AuthProfile.ParseAndWindow</code></a> using specified pipeline options</div>
+</td>
 </tr>
 </table>
 </li>
@@ -201,13 +203,18 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="ParseAndWindow--">
+<a name="ParseAndWindow-com.mozilla.secops.authprofile.AuthProfile.AuthProfileOptions-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>ParseAndWindow</h4>
-<pre>public&nbsp;ParseAndWindow()</pre>
+<pre>public&nbsp;ParseAndWindow(<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>&nbsp;options)</pre>
+<div class="block">Static initializer for <a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html" title="class in com.mozilla.secops.authprofile"><code>AuthProfile.ParseAndWindow</code></a> using specified pipeline options</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>options</code> - Pipeline options</dd>
+</dl>
 </li>
 </ul>
 </li>

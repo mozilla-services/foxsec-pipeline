@@ -100,7 +100,7 @@ var activeTableTab = "activeTableTab";
 <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</li>
+<li>org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</li>
 <li>
 <ul class="inheritance">
 <li>com.mozilla.secops.customs.RateLimitSuppressor</li>
@@ -119,16 +119,13 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">RateLimitSuppressor</span>
-extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</pre>
+extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</pre>
 <div class="block"><code>DoFn</code> to apply suppression of alerts.
 
  <p>The input is expected to be a <code>KV</code> where the key is a string identifier that suppression
- is desired for, and the value is any alerts associated with this identifier. State is used within
- the applicable window for the event.
-
- <p>If no alert has been seen for a given identifier, the earliest alert for the identifier is
- submitted based on the alert timestamp. If the identifier has already been seen in-window, a
- notice is output in the logs and the alerts are dropped.</div>
+ is desired for, and the value is an alert associated with this identifier. Global window state is
+ used to suppress additional alerts for the identifier until the suppression timeframe configured
+ for a particular detector has expired.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../serialized-form.html#com.mozilla.secops.customs.RateLimitSuppressor">Serialized Form</a></dd>
@@ -166,7 +163,7 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/RateLimitSuppressor.html#RateLimitSuppressor--">RateLimitSuppressor</a></span>()</code>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/RateLimitSuppressor.html#RateLimitSuppressor-com.mozilla.secops.customs.CustomsCfgEntry-">RateLimitSuppressor</a></span>(<a href="../../../../com/mozilla/secops/customs/CustomsCfgEntry.html" title="class in com.mozilla.secops.customs">CustomsCfgEntry</a>&nbsp;cfg)</code>
 <div class="block">Create new <a href="../../../../com/mozilla/secops/customs/RateLimitSuppressor.html" title="class in com.mozilla.secops.customs"><code>RateLimitSuppressor</code></a></div>
 </td>
 </tr>
@@ -187,9 +184,8 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/RateLimitSuppressor.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-org.apache.beam.sdk.transforms.windowing.BoundedWindow-org.apache.beam.sdk.state.ValueState-">processElement</a></span>(org.apache.beam.sdk.transforms.DoFn.ProcessContext&nbsp;c,
-              org.apache.beam.sdk.transforms.windowing.BoundedWindow&nbsp;w,
-              org.apache.beam.sdk.state.ValueState&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&gt;&nbsp;suppress)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/RateLimitSuppressor.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-org.apache.beam.sdk.state.ValueState-">processElement</a></span>(org.apache.beam.sdk.transforms.DoFn.ProcessContext&nbsp;c,
+              org.apache.beam.sdk.state.ValueState&lt;org.joda.time.Instant&gt;&nbsp;last)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -220,14 +216,18 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="RateLimitSuppressor--">
+<a name="RateLimitSuppressor-com.mozilla.secops.customs.CustomsCfgEntry-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>RateLimitSuppressor</h4>
-<pre>public&nbsp;RateLimitSuppressor()</pre>
+<pre>public&nbsp;RateLimitSuppressor(<a href="../../../../com/mozilla/secops/customs/CustomsCfgEntry.html" title="class in com.mozilla.secops.customs">CustomsCfgEntry</a>&nbsp;cfg)</pre>
 <div class="block">Create new <a href="../../../../com/mozilla/secops/customs/RateLimitSuppressor.html" title="class in com.mozilla.secops.customs"><code>RateLimitSuppressor</code></a></div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>cfg</code> - Customs configuration entry</dd>
+</dl>
 </li>
 </ul>
 </li>
@@ -238,7 +238,7 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-org.apache.beam.sdk.transforms.windowing.BoundedWindow-org.apache.beam.sdk.state.ValueState-">
+<a name="processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-org.apache.beam.sdk.state.ValueState-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -246,9 +246,8 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <h4>processElement</h4>
 <pre>@DoFn.ProcessElement
 public&nbsp;void&nbsp;processElement(org.apache.beam.sdk.transforms.DoFn.ProcessContext&nbsp;c,
-                                                org.apache.beam.sdk.transforms.windowing.BoundedWindow&nbsp;w,
-                                                @DoFn.StateId(value="suppression")
-                                                org.apache.beam.sdk.state.ValueState&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&gt;&nbsp;suppress)</pre>
+                                                @DoFn.StateId(value="id_last_alert")
+                                                org.apache.beam.sdk.state.ValueState&lt;org.joda.time.Instant&gt;&nbsp;last)</pre>
 </li>
 </ul>
 </li>

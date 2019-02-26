@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -161,6 +161,19 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/slack/SlackManager.html#handleSlackResponse-com.github.seratch.jslack.api.methods.SlackApiResponse-">handleSlackResponse</a></span>(com.github.seratch.jslack.api.methods.SlackApiResponse&nbsp;resp)</code>
+<div class="block">Checks if the response contains an error or warning message, and returns true if the request
+ was successful.</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/slack/SlackManager.html#lookupUserIdByEmail-java.lang.String-">lookupUserIdByEmail</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;email)</code>
+<div class="block">Get slack user id from their email.</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>com.github.seratch.jslack.api.methods.response.chat.ChatPostMessageResponse</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/slack/SlackManager.html#sendConfirmationRequestToUser-java.lang.String-java.lang.String-java.lang.String-">sendConfirmationRequestToUser</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;userId,
                              <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;alertId,
@@ -168,7 +181,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <div class="block">Send message with confirmation request to slack user.</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>com.github.seratch.jslack.api.methods.response.chat.ChatPostMessageResponse</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/slack/SlackManager.html#sendMessageToChannel-java.lang.String-java.lang.String-">sendMessageToChannel</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;channelId,
                     <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;message)</code>
@@ -244,6 +257,27 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </dl>
 </li>
 </ul>
+<a name="lookupUserIdByEmail-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>lookupUserIdByEmail</h4>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;lookupUserIdByEmail(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;email)
+                           throws <a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a>,
+                                  com.github.seratch.jslack.api.methods.SlackApiException</pre>
+<div class="block">Get slack user id from their email.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>email</code> - User's email</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>User's slack user id</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a></code></dd>
+<dd><code>com.github.seratch.jslack.api.methods.SlackApiException</code></dd>
+</dl>
+</li>
+</ul>
 <a name="getEmailToUserIdMapping--">
 <!--   -->
 </a>
@@ -285,7 +319,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <a name="sendConfirmationRequestToUser-java.lang.String-java.lang.String-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>sendConfirmationRequestToUser</h4>
 <pre>public&nbsp;com.github.seratch.jslack.api.methods.response.chat.ChatPostMessageResponse&nbsp;sendConfirmationRequestToUser(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;userId,
@@ -304,6 +338,23 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a></code></dd>
 <dd><code>com.github.seratch.jslack.api.methods.SlackApiException</code></dd>
+</dl>
+</li>
+</ul>
+<a name="handleSlackResponse-com.github.seratch.jslack.api.methods.SlackApiResponse-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>handleSlackResponse</h4>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;handleSlackResponse(com.github.seratch.jslack.api.methods.SlackApiResponse&nbsp;resp)</pre>
+<div class="block">Checks if the response contains an error or warning message, and returns true if the request
+ was successful.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>resp</code> - Slack api response</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Boolean, true if request was successful</dd>
 </dl>
 </li>
 </ul>

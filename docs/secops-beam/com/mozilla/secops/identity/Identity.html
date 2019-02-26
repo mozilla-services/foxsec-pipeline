@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -171,6 +171,12 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <div class="block">Get notification preferences for identity</div>
 </td>
 </tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/identity/Identity.html#getSlackNotifyDirect-com.mozilla.secops.identity.Notify-">getSlackNotifyDirect</a></span>(<a href="../../../../com/mozilla/secops/identity/Notify.html" title="class in com.mozilla.secops.identity">Notify</a>&nbsp;defaultNotification)</code>
+<div class="block">Returns boolean that is true if this identity should get a direct notification via Slack</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -255,11 +261,25 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <a name="getEmailNotifyDirect-com.mozilla.secops.identity.Notify-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getEmailNotifyDirect</h4>
 <pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getEmailNotifyDirect(<a href="../../../../com/mozilla/secops/identity/Notify.html" title="class in com.mozilla.secops.identity">Notify</a>&nbsp;defaultNotification)</pre>
 <div class="block">Resolve direct email notification target for identity</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>defaultNotification</code> - Default notification preferences if unset in identity</dd>
+</dl>
+</li>
+</ul>
+<a name="getSlackNotifyDirect-com.mozilla.secops.identity.Notify-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>getSlackNotifyDirect</h4>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;getSlackNotifyDirect(<a href="../../../../com/mozilla/secops/identity/Notify.html" title="class in com.mozilla.secops.identity">Notify</a>&nbsp;defaultNotification)</pre>
+<div class="block">Returns boolean that is true if this identity should get a direct notification via Slack</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>defaultNotification</code> - Default notification preferences if unset in identity</dd>

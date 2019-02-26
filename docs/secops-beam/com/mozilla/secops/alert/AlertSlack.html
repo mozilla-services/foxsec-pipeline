@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -133,6 +133,12 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <div class="block">Construct new alert slack object</div>
 </td>
 </tr>
+<tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/alert/AlertSlack.html#AlertSlack-com.mozilla.secops.alert.AlertConfiguration-com.mozilla.secops.slack.SlackManager-">AlertSlack</a></span>(<a href="../../../../com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert">AlertConfiguration</a>&nbsp;cfg,
+          <a href="../../../../com/mozilla/secops/slack/SlackManager.html" title="class in com.mozilla.secops.slack">SlackManager</a>&nbsp;slackManager)</code>
+<div class="block">Construct new alert slack object, providing an already instantiated <a href="../../../../com/mozilla/secops/slack/SlackManager.html" title="class in com.mozilla.secops.slack"><code>SlackManager</code></a></div>
+</td>
+</tr>
 </table>
 </li>
 </ul>
@@ -167,6 +173,13 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <div class="block">Send alert to slack catchall channel</div>
 </td>
 </tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/alert/AlertSlack.html#sendToUser-com.mozilla.secops.alert.Alert-java.lang.String-">sendToUser</a></span>(<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&nbsp;a,
+          <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;userId)</code>
+<div class="block">Send alert to a user.</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -192,11 +205,22 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <a name="AlertSlack-com.mozilla.secops.alert.AlertConfiguration-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>AlertSlack</h4>
 <pre>public&nbsp;AlertSlack(<a href="../../../../com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert">AlertConfiguration</a>&nbsp;cfg)</pre>
 <div class="block">Construct new alert slack object</div>
+</li>
+</ul>
+<a name="AlertSlack-com.mozilla.secops.alert.AlertConfiguration-com.mozilla.secops.slack.SlackManager-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>AlertSlack</h4>
+<pre>public&nbsp;AlertSlack(<a href="../../../../com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert">AlertConfiguration</a>&nbsp;cfg,
+                  <a href="../../../../com/mozilla/secops/slack/SlackManager.html" title="class in com.mozilla.secops.slack">SlackManager</a>&nbsp;slackManager)</pre>
+<div class="block">Construct new alert slack object, providing an already instantiated <a href="../../../../com/mozilla/secops/slack/SlackManager.html" title="class in com.mozilla.secops.slack"><code>SlackManager</code></a></div>
 </li>
 </ul>
 </li>
@@ -214,10 +238,31 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <li class="blockList">
 <h4>sendToCatchall</h4>
 <pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;sendToCatchall(<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&nbsp;a)</pre>
-<div class="block">Send alert to slack catchall channel</div>
+<div class="block">Send alert to slack catchall channel
+
+ <p>If a masked summary is present in the alert, this function will prefer that summary to the
+ primary summary field.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>a</code> - Alert</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Boolean on whether the alert was sent successfully</dd>
+</dl>
+</li>
+</ul>
+<a name="sendToUser-com.mozilla.secops.alert.Alert-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>sendToUser</h4>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;sendToUser(<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&nbsp;a,
+                          <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;userId)</pre>
+<div class="block">Send alert to a user.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>a</code> - Alert</dd>
+<dd><code>userId</code> - Slack user id</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Boolean on whether the alert was sent successfully</dd>
 </dl>

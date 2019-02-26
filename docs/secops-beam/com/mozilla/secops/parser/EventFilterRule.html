@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/parser/EventFilterPayload.StringProperty.html" title="enum in com.mozilla.secops.parser"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/parser/GcpAudit.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/parser/FxaAuth.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/parser/EventFilterRule.html" target="_top">Frames</a></li>
@@ -190,11 +190,18 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </tr>
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html#wantStackdriverLabel-java.lang.String-java.lang.String-">wantStackdriverLabel</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;key,
+                    <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>
+<div class="block">Add match criteria for a Stackdriver label</div>
+</td>
+</tr>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html#wantStackdriverProject-java.lang.String-">wantStackdriverProject</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;project)</code>
 <div class="block">Add match criteria for Stackdriver project</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/EventFilterRule.html#wantSubtype-com.mozilla.secops.parser.Payload.PayloadType-">wantSubtype</a></span>(<a href="../../../../com/mozilla/secops/parser/Payload.PayloadType.html" title="enum in com.mozilla.secops.parser">Payload.PayloadType</a>&nbsp;p)</code>
 <div class="block">Add match criteria for a payload subtype</div>
@@ -342,6 +349,27 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </dl>
 </li>
 </ul>
+<a name="wantStackdriverLabel-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>wantStackdriverLabel</h4>
+<pre>public&nbsp;<a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser">EventFilterRule</a>&nbsp;wantStackdriverLabel(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;key,
+                                            <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
+<div class="block">Add match criteria for a Stackdriver label
+
+ <p>If this rule is installed, an event will only match if it is an event from Stackdriver and
+ has a label with the specified key and value.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>key</code> - Label key</dd>
+<dd><code>value</code> - Label value</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>EventFilterRule for chaining</dd>
+</dl>
+</li>
+</ul>
 <a name="wantNormalizedType-com.mozilla.secops.parser.Normalized.Type-">
 <!--   -->
 </a>
@@ -387,7 +415,7 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/parser/EventFilterPayload.StringProperty.html" title="enum in com.mozilla.secops.parser"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/parser/GcpAudit.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/parser/FxaAuth.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/parser/EventFilterRule.html" target="_top">Frames</a></li>

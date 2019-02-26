@@ -127,7 +127,8 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <div class="block">Composite transform to parse a <code>PCollection</code> containing events as strings and emit a
  <code>PCollection</code> of <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser"><code>Event</code></a> objects.
 
- <p>This transform currently discards events that are not <a href="../../../../com/mozilla/secops/parser/GLB.html" title="class in com.mozilla.secops.parser"><code>GLB</code></a> events.</div>
+ <p>This transform currently discards events that do not contain the HTTP_REQUEST normalized
+ field.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../serialized-form.html#com.mozilla.secops.httprequest.HTTPRequest.Parse">Serialized Form</a></dd>
