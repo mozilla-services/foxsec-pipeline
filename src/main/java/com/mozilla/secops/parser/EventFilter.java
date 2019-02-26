@@ -2,6 +2,7 @@ package com.mozilla.secops.parser;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Base64;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -19,7 +20,8 @@ public class EventFilter implements Serializable {
   private Boolean outputWithTimestamp;
   private Boolean matchAny; // If true, match on any input event
 
-  private String keyChar = "+";
+  private static final String keyChar = " ";
+  private static final String splitChar = "\\ ";
 
   /**
    * Get composite transform to apply filter to event stream
@@ -117,6 +119,10 @@ public class EventFilter implements Serializable {
   /**
    * Given any keySelectors return the applicable key from the event
    *
+   * <p>Base64 encoding is applied to key sub elements that are used in the returned key.
+   *
+   * <p>Pipelines should use splitKey to convert the elements back to their original form.
+   *
    * @param e Input event
    * @return Key string
    */
@@ -130,6 +136,21 @@ public class EventFilter implements Serializable {
       keys.addAll(values);
     }
     return String.join(keyChar, keys);
+  }
+
+  /**
+   * Given a key constructed using a keying transform, split it into it's individual elements.
+   *
+   * @param input Input string
+   * @return Array of elements
+   */
+  public static String[] splitKey(String input) {
+    String[] oe = input.split(splitChar);
+    String[] ret = new String[oe.length];
+    for (int i = 0; i < oe.length; i++) {
+      ret[i] = new String(Base64.getDecoder().decode(oe[i].getBytes()));
+    }
+    return ret;
   }
 
   /**

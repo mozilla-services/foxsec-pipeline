@@ -2,14 +2,12 @@ package com.mozilla.secops.customs;
 
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
-import com.mozilla.secops.parser.SecEvent;
-import java.util.ArrayList;
-import java.util.Collection;
+import com.mozilla.secops.parser.EventFilter;
 import java.util.Map;
-import java.util.function.Function;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,182 +18,113 @@ import org.slf4j.LoggerFactory;
 public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>> {
   private static final long serialVersionUID = 1L;
 
-  private final int MAX_SAMPLE = 5;
-
-  private final Alert.AlertSeverity severity;
-  private final String customsMeta;
+  private final String detectorName;
   private final String monitoredResource;
-  private final Long limit;
+  private final CustomsCfgEntry cfg;
   private final PCollectionView<Map<String, Iterable<Event>>> eventView;
+  private final Alert.AlertSeverity severity;
 
   private Logger log;
 
   /**
-   * {@link RateLimitCriterion} static initializer
+   * Constructor for {@link RateLimitCriterion}
    *
-   * @param severity Severity to use for generated alerts
-   * @param customsMeta Customs metadata tag to place on alert
-   * @param limit Generate alert if count meets or exceeds limit value in window
+   * @param detectorName Detector name
+   * @param cfg Customs configuration entry
+   * @param eventView Event view to use for side input
+   * @param monitoredResource Monitored resource name
    */
   public RateLimitCriterion(
-      Alert.AlertSeverity severity,
-      String customsMeta,
-      Long limit,
+      String detectorName,
+      CustomsCfgEntry cfg,
       PCollectionView<Map<String, Iterable<Event>>> eventView,
       String monitoredResource) {
-    this.severity = severity;
-    this.customsMeta = customsMeta;
-    this.limit = limit;
+    this.detectorName = detectorName;
+    this.cfg = cfg;
     this.eventView = eventView;
     this.monitoredResource = monitoredResource;
+
+    severity = Alert.AlertSeverity.INFORMATIONAL;
   }
 
   @Setup
   public void setup() {
     log = LoggerFactory.getLogger(RateLimitCriterion.class);
-    log.info(
-        "initialized new rate limit criterion analyzer, {} {} {}", severity, customsMeta, limit);
-  }
-
-  private Boolean uniqueAttribute(Iterable<Event> eventList, Function<Event, String> fn) {
-    Event[] events = ((Collection<Event>) eventList).toArray(new Event[0]);
-    if (events.length == 0) {
-      return false;
-    }
-    if (events.length == 1) {
-      return true;
-    }
-    String comp = fn.apply(events[0]);
-    if (comp == null) {
-      return false;
-    }
-    for (Event e : events) {
-      if (!(fn.apply(e).equals(comp))) {
-        return false;
-      }
-    }
-    return true;
+    log.info("initialized new rate limit criterion analyzer, {} {}", severity, detectorName);
   }
 
   @ProcessElement
   public void processElement(ProcessContext c) {
-    KV<String, Long> e = c.element();
+    String key = c.element().getKey();
+    Long count = c.element().getValue();
     Map<String, Iterable<Event>> eventMap = c.sideInput(eventView);
 
-    String key = e.getKey();
-    Long valueCount = e.getValue();
-    if (valueCount < limit) {
+    if (count < cfg.getThreshold()) {
       return;
     }
 
-    // Take a arbitrary sample of any events that were included in the detection window to be added
-    // to the alert as metadata
-    ArrayList<Event> sample = new ArrayList<Event>();
-    Boolean sampleTruncated = false;
+    Alert alert = new Alert();
+    alert.setSeverity(severity);
+
     Iterable<Event> eventList = eventMap.get(key);
-    int i = 0;
-    if (eventList != null) {
-      for (Event ev : eventList) {
-        sample.add(ev);
-        if (++i >= MAX_SAMPLE) {
-          sampleTruncated = true;
-          break;
+    if (eventList == null) {
+      log.info("dropping alert for {}, event list was empty", key);
+      return;
+    }
+
+    // Set the alert timestamp based on the latest event timestamp
+    DateTime max = null;
+    for (Event e : eventList) {
+      if (max == null) {
+        max = e.getTimestamp();
+        alert.setTimestamp(max);
+      } else {
+        if (max.isBefore(e.getTimestamp())) {
+          max = e.getTimestamp();
+          alert.setTimestamp(max);
         }
       }
     }
 
-    Alert alert = new Alert();
-
-    // Set our category to customs to indicate this alert originated from the customs pipeline
     alert.setCategory("customs");
+    alert.addMetadata("customs_category", detectorName);
+    alert.addMetadata("threshold", cfg.getThreshold().toString());
+    alert.addMetadata("count", count.toString());
+    alert.setNotifyMergeKey(detectorName);
 
-    // Add the name of the detector to the metadata to indicate the detector rule that fired
-    alert.addMetadata("customs_category", customsMeta);
-
-    // customs_suspected is set to include the key on which the rate limiting logic operated, this
-    // could be a single value or multiple values joined with a + symbol depending on the
-    // detector configuration
-    alert.addMetadata("customs_suspected", key);
-
-    // The number of events seen for the key within the window, and the threshold setting in the
-    // detector configuration. Since an alert is being generated the count will always meet or
-    // exceed the threshold.
-    alert.addMetadata("customs_count", valueCount.toString());
-    alert.addMetadata("customs_threshold", limit.toString());
-
-    // Set an alert summary
+    String[] kelements = EventFilter.splitKey(key);
+    int kelementCount = kelements.length;
+    if (kelementCount != cfg.getMetadataAssembly().length) {
+      log.warn("dropping alert for {}, metadata assembly length did not match key count", key);
+      return;
+    }
+    for (int i = 0; i < kelementCount; i++) {
+      alert.addMetadata(cfg.getMetadataAssembly()[i].replaceFirst("mask:", ""), kelements[i]);
+    }
     alert.setSummary(
-        String.format(
-            "%s customs %s %s %d %d", monitoredResource, customsMeta, key, valueCount, limit));
+        monitoredResource + " " + String.format(cfg.getSummaryAssemblyFmt(), (Object[]) kelements));
 
-    // If all of the in-scope events in the alert pertain to the same account ID, include this
-    // unique account ID value as metadata.
-    if (uniqueAttribute(
-        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getActorAccountId())) {
-      alert.addMetadata(
-          "customs_unique_actor_accountid",
-          sample.get(0).<SecEvent>getPayload().getSecEventData().getActorAccountId());
-    }
-
-    // If SMS recipient was the same for all events, store that as metadata
-    if (uniqueAttribute(
-        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getSmsRecipient())) {
-      alert.addMetadata(
-          "customs_unique_sms_recipient",
-          sample.get(0).<SecEvent>getPayload().getSecEventData().getSmsRecipient());
-    }
-
-    // If email recipient was the same for all events, store that as metadata
-    if (uniqueAttribute(
-        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getEmailRecipient())) {
-      alert.addMetadata(
-          "customs_unique_email_recipient",
-          sample.get(0).<SecEvent>getPayload().getSecEventData().getEmailRecipient());
-    }
-
-    // If source address was unique for all events, store that as metadata
-    if (uniqueAttribute(
-        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getSourceAddress())) {
-      alert.addMetadata(
-          "customs_unique_source_address",
-          sample.get(0).<SecEvent>getPayload().getSecEventData().getSourceAddress());
-
-      // Since we had a unique source address, also see if we can pull in unique country and city
-      // values as well
-      if (uniqueAttribute(
-          eventList, le -> le.<SecEvent>getPayload().getSecEventData().getSourceAddressCity())) {
-        alert.addMetadata(
-            "customs_unique_source_address_city",
-            sample.get(0).<SecEvent>getPayload().getSecEventData().getSourceAddressCity());
-      }
-      if (uniqueAttribute(
-          eventList, le -> le.<SecEvent>getPayload().getSecEventData().getSourceAddressCountry())) {
-        alert.addMetadata(
-            "customs_unique_source_address_country",
-            sample.get(0).<SecEvent>getPayload().getSecEventData().getSourceAddressCountry());
+    String[] melements = new String[kelements.length];
+    Boolean mField = false;
+    for (int i = 0; i < kelements.length; i++) {
+      if (cfg.getMetadataAssembly()[i].startsWith("mask:")) {
+        melements[i] = "<<masked>>";
+        mField = true;
+      } else {
+        melements[i] = kelements[i];
       }
     }
-
-    // If object account ID was unique for all events, store that as metadata
-    if (uniqueAttribute(
-        eventList, le -> le.<SecEvent>getPayload().getSecEventData().getDestinationAccountId())) {
-      alert.addMetadata(
-          "customs_unique_object_accountid",
-          sample.get(0).<SecEvent>getPayload().getSecEventData().getDestinationAccountId());
-    }
-
-    // Finally, store a sample of events that were part of this detection as metadata in the
-    // alert.
-    if (sample.size() > 0) {
-      alert.addMetadata("customs_sample", Event.iterableToJson(sample));
-      alert.addMetadata("customs_sample_truncated", sampleTruncated.toString());
+    if (mField) {
+      alert.setMaskedSummary(
+          monitoredResource
+              + " "
+              + String.format(cfg.getSummaryAssemblyFmt(), (Object[]) melements));
     }
 
     if (!alert.hasCorrectFields()) {
       throw new IllegalArgumentException("alert has invalid field configuration");
     }
 
-    alert.setSeverity(severity);
     c.output(KV.of(key, alert));
   }
 }

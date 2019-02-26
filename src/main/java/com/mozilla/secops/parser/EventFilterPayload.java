@@ -2,6 +2,7 @@ package com.mozilla.secops.parser;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -40,7 +41,14 @@ public class EventFilterPayload implements Serializable {
     GLB_URLREQUESTPATH,
 
     NGINX_REQUESTMETHOD,
-    NGINX_URLREQUESTPATH
+    NGINX_URLREQUESTPATH,
+
+    FXAAUTH_EVENTSUMMARY,
+    FXAAUTH_SOURCEADDRESS,
+    FXAAUTH_ACCOUNTID,
+    FXAAUTH_SMSRECIPIENT,
+    FXAAUTH_EMAILRECIPIENT,
+    FXAAUTH_UID
   }
 
   /** Properties match integers from various payload event types */
@@ -146,6 +154,7 @@ public class EventFilterPayload implements Serializable {
       if (value == null) {
         return null;
       }
+      value = new String(Base64.getEncoder().encode(value.getBytes()));
       ret.add(value);
     }
     return ret;

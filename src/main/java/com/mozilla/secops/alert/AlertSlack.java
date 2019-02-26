@@ -55,13 +55,21 @@ public class AlertSlack {
   /**
    * Send alert to slack catchall channel
    *
+   * <p>If a masked summary is present in the alert, this function will prefer that summary to the
+   * primary summary field.
+   *
    * @param a Alert
    * @return Boolean on whether the alert was sent successfully
    */
   public Boolean sendToCatchall(Alert a) {
     log.info("generating catchall slack for {} (channel id)", cfg.getSlackCatchall());
 
-    String text = String.format("%s (%s)", a.getSummary(), a.getAlertId());
+    String summary = a.getSummary();
+    if (a.getMaskedSummary() != null) {
+      summary = a.getMaskedSummary();
+    }
+
+    String text = String.format("%s (%s)", summary, a.getAlertId());
     try {
       return slackManager.handleSlackResponse(
           slackManager.sendMessageToChannel(cfg.getSlackCatchall(), text));

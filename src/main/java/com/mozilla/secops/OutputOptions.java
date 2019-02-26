@@ -24,6 +24,11 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputBigQuery(String value);
 
+  @Description("Write output to Pubsub; Pubsub topic")
+  String getOutputPubsub();
+
+  void setOutputPubsub(String value);
+
   @Description(
       "Write violation notices to iprepd; specify URL, only applicable for HTTPRequest results")
   String getOutputIprepd();

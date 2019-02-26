@@ -302,6 +302,7 @@ public class Parser {
     payloads.add(new Cloudtrail());
     payloads.add(new GcpAudit());
     payloads.add(new BmoAudit());
+    payloads.add(new FxaAuth());
     payloads.add(new OpenSSH());
     payloads.add(new Duopull());
     payloads.add(new Raw());

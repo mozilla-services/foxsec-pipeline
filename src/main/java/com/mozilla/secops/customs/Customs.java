@@ -5,10 +5,8 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.parser.Event;
-import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
-import com.mozilla.secops.parser.SecEvent;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
@@ -25,7 +23,7 @@ import org.apache.beam.sdk.values.PCollectionList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Implements various rate limiting and analysis heuristics on {@link SecEvent} streams */
+/** Implements various rate limiting and analysis heuristics on {@link FxaAuth} streams */
 public class Customs implements Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -33,13 +31,9 @@ public class Customs implements Serializable {
   public static class Detector extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
-    private String detectorName;
+    private final String detectorName;
     private final String monitoredResource;
-    private final Long threshold;
-    private final Long windowLength;
-    private final Long windowSlides;
-    private final Long suppressLength;
-    private EventFilter filter;
+    private final CustomsCfgEntry cfg;
 
     private Logger log;
 
@@ -48,33 +42,19 @@ public class Customs implements Serializable {
      *
      * @param detectorName Descriptive name for detector instance
      * @param cfg Configuration for detector
+     * @param monitoredResource Monitored resource name
      */
     public Detector(String detectorName, CustomsCfgEntry cfg, String monitoredResource) {
       log = LoggerFactory.getLogger(Detector.class);
       log.info("initializing new detector, {}", detectorName);
-      this.filter = null;
+      this.cfg = cfg;
       this.detectorName = detectorName;
-      this.threshold = cfg.getThreshold();
-      this.windowLength = cfg.getSlidingWindowLength();
-      this.windowSlides = cfg.getSlidingWindowSlides();
-      this.suppressLength = cfg.getAlertSuppressionLength();
       this.monitoredResource = monitoredResource;
-      try {
-        this.filter = cfg.getEventFilterCfg().getEventFilter("default");
-      } catch (IOException exc) {
-        log.error("{} filter creation failed, {}", detectorName, exc.getMessage());
-      }
     }
 
     @Override
     public PCollection<Alert> expand(PCollection<Event> col) {
-      return col.apply(
-          RateLimitAnalyzer.getTransform(
-              new RateLimitAnalyzer(detectorName, monitoredResource)
-                  .setFilter(filter)
-                  .setAlertCriteria(threshold, Alert.AlertSeverity.INFORMATIONAL)
-                  .setAnalysisWindow(windowLength, windowSlides)
-                  .setAlertSuppression(suppressLength)));
+      return col.apply(new RateLimitAnalyzer(detectorName, cfg, monitoredResource));
     }
   }
 
@@ -89,6 +69,7 @@ public class Customs implements Serializable {
      * Initialize new flattening detectors instance
      *
      * @param cfg Customs configuration
+     * @param options Pipeline options
      */
     public Detectors(CustomsCfg cfg, CustomsOptions options) {
       this.cfg = cfg;
