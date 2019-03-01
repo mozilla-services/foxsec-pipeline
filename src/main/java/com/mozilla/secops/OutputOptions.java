@@ -46,6 +46,11 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputIprepdEnableDatastoreWhitelist(Boolean value);
 
+  @Description("Use whitelisting datastore in specified project; project ID")
+  String getOutputIprepdDatastoreWhitelistProject();
+
+  void setOutputIprepdDatastoreWhitelistProject(String value);
+
   @Description(
       "With alert email output; SMTP credentials format id:secret (supports RuntimeSecrets)")
   String getOutputAlertSmtpCredentials();

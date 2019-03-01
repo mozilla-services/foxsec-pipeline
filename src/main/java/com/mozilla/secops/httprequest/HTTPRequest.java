@@ -181,6 +181,7 @@ public class HTTPRequest implements Serializable {
     private final Long maxErrorRate;
     private final String monitoredResource;
     private final Boolean enableIprepdDatastoreWhitelist;
+    private final String iprepdDatastoreWhitelistProject;
 
     /**
      * Static initializer for {@link ErrorRateAnalysis}
@@ -191,6 +192,7 @@ public class HTTPRequest implements Serializable {
       maxErrorRate = options.getMaxClientErrorRate();
       monitoredResource = options.getMonitoredResourceIndicator();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
+      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
     }
 
     @Override
@@ -238,7 +240,8 @@ public class HTTPRequest implements Serializable {
                       a.addMetadata("category", "error_rate");
                       a.addMetadata("sourceaddress", c.element().getKey());
                       if (enableIprepdDatastoreWhitelist) {
-                        IprepdIO.addMetadataIfWhitelisted(c.element().getKey(), a);
+                        IprepdIO.addMetadataIfWhitelisted(
+                            c.element().getKey(), a, iprepdDatastoreWhitelistProject);
                       }
                       a.addMetadata("error_count", c.element().getValue().toString());
                       a.addMetadata("error_threshold", maxErrorRate.toString());
@@ -270,6 +273,7 @@ public class HTTPRequest implements Serializable {
     private final Map<String[], Integer> endpoints;
     private final String monitoredResource;
     private final Boolean enableIprepdDatastoreWhitelist;
+    private final String iprepdDatastoreWhitelistProject;
 
     /**
      * Static initializer for {@link EndpointAbuseAnalysis}
@@ -281,6 +285,7 @@ public class HTTPRequest implements Serializable {
 
       monitoredResource = options.getMonitoredResourceIndicator();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
+      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
 
       endpoints = new HashMap<String[], Integer>();
       for (String endpoint : options.getEndpointAbusePath()) {
@@ -420,7 +425,8 @@ public class HTTPRequest implements Serializable {
                         a.addMetadata("category", "endpoint_abuse");
                         a.addMetadata("sourceaddress", remoteAddress);
                         if (enableIprepdDatastoreWhitelist) {
-                          IprepdIO.addMetadataIfWhitelisted(remoteAddress, a);
+                          IprepdIO.addMetadataIfWhitelisted(
+                              remoteAddress, a, iprepdDatastoreWhitelistProject);
                         }
                         a.addMetadata("endpoint", comparePath);
                         a.addMetadata("method", compareMethod);
@@ -462,6 +468,7 @@ public class HTTPRequest implements Serializable {
     private final Double clampThresholdMaximum;
     private final String monitoredResource;
     private final Boolean enableIprepdDatastoreWhitelist;
+    private final String iprepdDatastoreWhitelistProject;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
     private Logger log;
@@ -478,6 +485,7 @@ public class HTTPRequest implements Serializable {
       this.clampThresholdMaximum = options.getClampThresholdMaximum();
       this.monitoredResource = options.getMonitoredResourceIndicator();
       this.enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
+      this.iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
@@ -627,7 +635,8 @@ public class HTTPRequest implements Serializable {
                         a.addMetadata("category", "threshold_analysis");
                         a.addMetadata("sourceaddress", c.element().getKey());
                         if (enableIprepdDatastoreWhitelist) {
-                          IprepdIO.addMetadataIfWhitelisted(c.element().getKey(), a);
+                          IprepdIO.addMetadataIfWhitelisted(
+                              c.element().getKey(), a, iprepdDatastoreWhitelistProject);
                         }
                         a.addMetadata("mean", sOutput.getMean().toString());
                         a.addMetadata("count", c.element().getValue().toString());
