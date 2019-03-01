@@ -17,6 +17,7 @@ public class DatastoreStateInterface implements StateInterface {
   private KeyFactory keyFactory;
   private final String kind;
   private final String namespace;
+  private String project;
 
   public void deleteAll() throws StateException {
     StructuredQuery<Entity> query =
@@ -81,7 +82,11 @@ public class DatastoreStateInterface implements StateInterface {
       b.setCredentials(NoCredentials.getInstance());
       datastore = b.build().getService();
     } else {
-      datastore = DatastoreOptions.getDefaultInstance().getService();
+      DatastoreOptions.Builder b = DatastoreOptions.getDefaultInstance().toBuilder();
+      if (project != null) {
+        b.setProjectId(project);
+      }
+      datastore = b.build().getService();
     }
     keyFactory = datastore.newKeyFactory().setNamespace(namespace).setKind(kind);
   }
@@ -95,5 +100,17 @@ public class DatastoreStateInterface implements StateInterface {
   public DatastoreStateInterface(String kind, String namespace) {
     this.kind = kind;
     this.namespace = namespace;
+  }
+
+  /**
+   * Initialize a Datastore state interface using datastore in another project
+   *
+   * @param kind kind value to use for stored objects
+   * @param namespace Datastore namespace
+   * @param project Project identifier
+   */
+  public DatastoreStateInterface(String kind, String namespace, String project) {
+    this(kind, namespace);
+    this.project = project;
   }
 }

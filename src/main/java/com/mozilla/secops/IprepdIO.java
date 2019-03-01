@@ -215,11 +215,33 @@ public class IprepdIO {
    * @param a Alert to add metadata to
    */
   public static void addMetadataIfWhitelisted(String ip, Alert a) {
+    addMetadataIfWhitelisted(ip, a, null);
+  }
+
+  /**
+   * Add whitelisted IP metadata if the IP address is whitelisted.
+   *
+   * <p>This variant allows specification of a project ID, for cases where the datastore instance
+   * lives in another GCP project.
+   *
+   * @param ip IP address to check
+   * @param a Alert to add metadata to
+   * @param datastoreProject If Datastore is in another project, non-null project ID
+   */
+  public static void addMetadataIfWhitelisted(String ip, Alert a, String datastoreProject) {
     if (ip == null || a == null) {
       return;
     }
 
-    State state = new State(new DatastoreStateInterface(whitelistedIpKind, whitelistedIpNamespace));
+    State state;
+    if (datastoreProject != null) {
+      state =
+          new State(
+              new DatastoreStateInterface(
+                  whitelistedIpKind, whitelistedIpNamespace, datastoreProject));
+    } else {
+      state = new State(new DatastoreStateInterface(whitelistedIpKind, whitelistedIpNamespace));
+    }
     Logger log = LoggerFactory.getLogger(IprepdIO.class);
     try {
       state.initialize();
