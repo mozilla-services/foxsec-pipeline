@@ -17,6 +17,12 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
 
   void setInputFile(String[] value);
 
+  @Description(
+      "Read from Kinesis (multiple allowed); stream:key:secret:region (supports RuntimeSecrets)")
+  String[] getInputKinesis();
+
+  void setInputKinesis(String[] value);
+
   @Description("Path to load Maxmind database; resource path, gcs path")
   String getMaxmindDbPath();
 
