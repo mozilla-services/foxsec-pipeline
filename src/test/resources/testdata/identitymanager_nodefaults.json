@@ -1,0 +1,24 @@
+{
+    "identities": {
+        "testuser@mozilla.com": {
+            "aliases": [ "testuser" ]
+        },
+
+        "wcrusher@mozilla.com": {
+            "aliases": [ "wesley" ],
+            "fragment": "wcrusher"
+        },
+
+        "wriker@mozilla.com": {
+            "aliases": [ "numberone", "riker", "riker@mozilla.com" ],
+            "fragment": "riker",
+            "notify": {
+                "direct_email_notify_format": "holodeck-%s@mozilla.com",
+                "direct_slack_notify": true
+            }
+        }
+    },
+    "aws_account_map": {
+        "123456789": "riker-vacationing-on-risa"
+    }
+}

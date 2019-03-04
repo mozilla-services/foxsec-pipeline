@@ -57,6 +57,24 @@ public class TestIdentityManager {
   }
 
   @Test
+  public void identityManagerNotifyNoDefaultsTest() throws Exception {
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager_nodefaults.json");
+    assertNotNull(mgr);
+
+    Identity id = mgr.getIdentity("wriker@mozilla.com");
+    assertNotNull(id);
+    assertEquals(
+        "holodeck-riker@mozilla.com", id.getEmailNotifyDirect(mgr.getDefaultNotification()));
+    assertEquals("riker", id.getFragment());
+    assertTrue(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
+
+    id = mgr.getIdentity("wcrusher@mozilla.com");
+    assertNotNull(id);
+    assertNull(id.getEmailNotifyDirect(mgr.getDefaultNotification()));
+    assertFalse(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
+  }
+
+  @Test
   public void identityManagerAwsAccountMapLookupTest() throws Exception {
     IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
     assertNotNull(mgr);

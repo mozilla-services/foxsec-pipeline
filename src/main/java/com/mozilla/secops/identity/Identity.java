@@ -57,8 +57,9 @@ public class Identity {
       }
     } else if (notify == null) {
       // Unset, consult global setting
-      if (defaultNotification.getDirectEmailNotify() != null
-          && defaultNotification.getDirectEmailNotify() == false) {
+      if ((defaultNotification == null)
+          || (defaultNotification.getDirectEmailNotify() != null
+              && defaultNotification.getDirectEmailNotify() == false)) {
         // Also disabled globally, no notification
         return null;
       }
@@ -89,8 +90,9 @@ public class Identity {
         return false;
       }
     } else if (notify == null) {
-      if (defaultNotification.getDirectSlackNotify() != null
-          && defaultNotification.getDirectSlackNotify() == false) {
+      if ((defaultNotification == null)
+          || (defaultNotification.getDirectSlackNotify() != null
+              && defaultNotification.getDirectSlackNotify() == false)) {
         return false;
       }
     }
