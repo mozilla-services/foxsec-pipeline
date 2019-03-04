@@ -1,5 +1,6 @@
 package com.mozilla.secops.customs;
 
+import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
@@ -110,7 +111,7 @@ public class Customs implements Serializable {
     CustomsCfg cfg = CustomsCfg.loadFromResource(options.getConfigurationResourcePath());
 
     PCollection<Event> input =
-        p.apply("input", options.getInputType().read(p, options))
+        p.apply("input", new CompositeInput(options))
             .apply(
                 "parse",
                 ParDo.of(new ParserDoFn().withConfiguration(ParserCfg.fromInputOptions(options))));

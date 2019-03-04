@@ -1,6 +1,7 @@
 package com.mozilla.secops.httprequest;
 
 import com.mozilla.secops.CidrUtil;
+import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.IprepdIO;
@@ -751,8 +752,7 @@ public class HTTPRequest implements Serializable {
     Pipeline p = Pipeline.create(options);
 
     PCollection<Event> events =
-        p.apply("input", options.getInputType().read(p, options))
-            .apply("parse", new Parse(options));
+        p.apply("input", new CompositeInput(options)).apply("parse", new Parse(options));
 
     if (options.getEnableThresholdAnalysis() || options.getEnableErrorRateAnalysis()) {
       PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
