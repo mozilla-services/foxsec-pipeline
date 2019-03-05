@@ -101,8 +101,7 @@ public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
                                     // elements. Split these up and send them individually.
                                     //
                                     // This may need to be configurable depending on the input
-                                    // stream
-                                    // at some point.
+                                    // stream at some point.
                                     String[] e =
                                         new String(c.element().getDataAsBytes()).split("\\r?\\n");
                                     for (String i : e) {
