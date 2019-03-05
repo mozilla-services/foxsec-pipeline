@@ -75,7 +75,7 @@ public abstract class CompositeOutput {
         if (outputFile != null) {
           input
               .apply(Window.<String>into(FixedWindows.of(Duration.standardMinutes(5L))))
-              .apply(TextIO.write().to(outputFile).withWindowedWrites());
+              .apply(TextIO.write().to(outputFile).withWindowedWrites().withNumShards(1));
         }
         if (outputBigQuery != null) {
           PCollection<TableRow> bqdata =
