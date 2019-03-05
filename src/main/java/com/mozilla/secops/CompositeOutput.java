@@ -10,8 +10,11 @@ import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +73,9 @@ public abstract class CompositeOutput {
       @Override
       public PDone expand(PCollection<String> input) {
         if (outputFile != null) {
-          input.apply(TextIO.write().to(outputFile));
+          input
+              .apply(Window.<String>into(FixedWindows.of(Duration.standardMinutes(5L))))
+              .apply(TextIO.write().to(outputFile).withWindowedWrites());
         }
         if (outputBigQuery != null) {
           PCollection<TableRow> bqdata =
