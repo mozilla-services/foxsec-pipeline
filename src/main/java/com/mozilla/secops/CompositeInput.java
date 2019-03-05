@@ -15,12 +15,16 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link CompositeInput} provides a standardized composite input transform for use in pipelines.
  */
 public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
   private static final long serialVersionUID = 1L;
+
+  private final int MAX_KINESIS_RETRIES = 5;
 
   private final String[] fileInputs;
   private final String[] pubsubInputs;
@@ -41,6 +45,8 @@ public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
 
   @Override
   public PCollection<String> expand(PBegin begin) {
+    Logger log = LoggerFactory.getLogger(CompositeInput.class);
+
     PCollectionList<String> inputList = PCollectionList.<String>empty(begin.getPipeline());
 
     if (fileInputs != null) {
@@ -69,24 +75,57 @@ public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
         if (parts.length != 4) {
           return null;
         }
-        inputList =
-            inputList.and(
-                begin
-                    .apply(
-                        KinesisIO.read()
-                            .withStreamName(parts[0])
-                            .withInitialPositionInStream(InitialPositionInStream.LATEST)
-                            .withAWSClientsProvider(parts[1], parts[2], Regions.fromName(parts[3])))
-                    .apply(
-                        ParDo.of(
-                            new DoFn<KinesisRecord, String>() {
-                              private static final long serialVersionUID = 1L;
+        int tries = 0;
+        while (tries < MAX_KINESIS_RETRIES) {
+          Boolean success = false;
+          log.info("attempting kinesis input setup for {} in {}", parts[0], parts[3]);
+          tries++;
+          try {
+            inputList =
+                inputList.and(
+                    begin
+                        .apply(
+                            KinesisIO.read()
+                                .withStreamName(parts[0])
+                                .withInitialPositionInStream(InitialPositionInStream.LATEST)
+                                .withAWSClientsProvider(
+                                    parts[1], parts[2], Regions.fromName(parts[3])))
+                        .apply(
+                            ParDo.of(
+                                new DoFn<KinesisRecord, String>() {
+                                  private static final long serialVersionUID = 1L;
 
-                              @ProcessElement
-                              public void processElement(ProcessContext c) {
-                                c.output(new String(c.element().getDataAsBytes()));
-                              }
-                            })));
+                                  @ProcessElement
+                                  public void processElement(ProcessContext c) {
+                                    // Assume for now our Kinesis record contains newline delimited
+                                    // elements. Split these up and send them individually.
+                                    //
+                                    // This may need to be configurable depending on the input
+                                    // stream
+                                    // at some point.
+                                    String[] e =
+                                        new String(c.element().getDataAsBytes()).split("\\r?\\n");
+                                    for (String i : e) {
+                                      c.output(i);
+                                    }
+                                  }
+                                })));
+            success = true;
+          } catch (Exception exc) {
+            if (tries == MAX_KINESIS_RETRIES) {
+              return null;
+            }
+            log.info("sleeping to retry kinesis input: {}", exc.getMessage());
+            try {
+              Thread.sleep(7500);
+            } catch (InterruptedException iexc) {
+              // pass
+            }
+          }
+          if (success) {
+            break;
+          }
+        }
       }
     }
 
