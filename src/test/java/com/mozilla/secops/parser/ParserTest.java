@@ -671,6 +671,88 @@ public class ParserTest {
   }
 
   @Test
+  public void testCloudtrailStackdriverAuthConsoleLogin() throws Exception {
+    String buf =
+        "{\"insertId\": \"x1958zfskvv0x\", \"jsonPayload\": "
+            + "{ \"eventID\": \"55555555-3998-4e79-abdc-4c67df8bd013\", "
+            + "\"userIdentity\": { \"principalId\": \"XXXXXXXXXXXXXXX\", "
+            + "\"accountId\": \"123456789\", \"userName\": \"uhura\", "
+            + "\"type\": \"IAMUser\", \"arn\": \"arn:aws:iam::123456789:user/uhura\" },"
+            + "\"eventTime\": \"2019-03-05T20:54:57Z\", \"responseElements\": {\"ConsoleLogin\": "
+            + "\"Success\"},\"additionalEventData\": {\"MobileVersion\": "
+            + "\"No\",\"MFAUsed\": \"Yes\",\"LoginTo\": \"XXXXXX\"},"
+            + "\"eventVersion\": \"1.05\",\"eventName\": \"ConsoleLogin\",\"userAgent\": "
+            + "\"Mozilla/XXX\",\"awsRegion\": \"us-east-1\", "
+            + "\"requestParameters\": null, \"eventType\": \"AwsConsoleSignIn\", "
+            + "\"eventSource\": \"signin.amazonaws.com\", \"recipientAccountId\": "
+            + "\"123456789\", \"sourceIPAddress\": \"127.0.0.1\"},\"resource\": "
+            + "{\"type\": \"project\",\"labels\": {\"project_id\": \"xxxx\"}}, "
+            + "\"timestamp\": \"2019-03-05T21:03:08.738216017Z\",\"logName\": "
+            + "\"cloudtrail\",\"receiveTimestamp\": \"2019-03-05T21:03:11.314310240Z\"}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    Cloudtrail ct = e.getPayload();
+    assertNotNull(ct);
+    assertEquals("uhura", ct.getUser());
+    assertEquals("127.0.0.1", ct.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("127.0.0.1", n.getSourceAddress());
+    assertEquals("123456789", n.getObject());
+  }
+
+  @Test
+  public void testCloudtrailStackdriverAuthAssumeRole() throws Exception {
+    String buf =
+        "{\"insertId\": \"ak64xfucxo62\",\"jsonPayload\": {\"responseElements\": "
+            + "{\"credentials\": {\"expiration\": \"Mar 15, 2015 1:38:03 PM\","
+            + "\"accessKeyId\": \"ACCESSKEY\",\"sessionToken\": \"XXXXXXX\"},"
+            + "\"assumedRoleUser\": {\"assumedRoleId\": \"ABCD:uhura\",\"arn\": "
+            + "\"arn:aws:sts::987654321:assumed-role/role/uhura\"}},\"eventVersion\": "
+            + "\"1.05\",\"eventName\": \"AssumeRole\",\"userAgent\": "
+            + "\"signin.amazonaws.com\",\"requestParameters\": {\"roleArn\": "
+            + "\"arn:aws:iam::987654321:role/role\",\"roleSessionName\": "
+            + "\"uhura\"},\"awsRegion\": \"us-east-1\",\"eventType\": \"AwsApiCall\","
+            + "\"sharedEventID\": \"555555-5727-4be3-b20c\",\"eventSource\": "
+            + "\"sts.amazonaws.com\",\"resources\": [{\"ARN\": "
+            + "\"arn:aws:iam::987654321:role/role\",\"accountId\": "
+            + "\"987654321\",\"type\": \"AWS::IAM::Role\"}],\"recipientAccountId\": "
+            + "\"1234567890\",\"sourceIPAddress\": \"10.0.0.1\",\"requestID\": "
+            + "\"555555-3f5e-11e9-a09a\",\"eventID\": "
+            + "\"5555555-3f0d-4cc3-b979\",\"userIdentity\": "
+            + "{\"sessionContext\": {\"attributes\": {\"creationDate\": "
+            + "\"2019-03-05T15:47:59Z\",\"mfaAuthenticated\": \"true\"}},"
+            + "\"principalId\": \"PRINCIPALID\",\"accessKeyId\": \"ACCESSKEY\","
+            + "\"userName\": \"uhura\",\"accountId\": \"1234567890\",\"type\": "
+            + "\"IAMUser\",\"invokedBy\": \"signin.amazonaws.com\",\"arn\": "
+            + "\"arn:aws:iam::1234567890:user/uhura\"},\"eventTime\": "
+            + "\"2011-12-04T15:48:13Z\"},\"resource\": {\"type\": \"project\","
+            + "\"labels\": {\"project_id\": \"foxsec-pipeline-ingestion\"}},"
+            + "\"timestamp\": \"2015-03-15T15:58:52.211925220Z\",\"logName\": "
+            + "\"cloudtrail\",\"receiveTimestamp\": \"2018-01-01T15:58:53.115974226Z\"}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    Cloudtrail ct = e.getPayload();
+    assertNotNull(ct);
+    assertEquals("uhura", ct.getUser());
+    assertEquals("10.0.0.1", ct.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("10.0.0.1", n.getSourceAddress());
+    assertEquals("1234567890", n.getObject());
+  }
+
+  @Test
   public void testCloudtrailStackdriverAction() throws Exception {
     String buf =
         "{\"insertId\": \"1culjbag27h3ns1\",\"jsonPayload\": {\"eventVersion\": "
