@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
   private static final long serialVersionUID = 1L;
 
-  private final int MAX_KINESIS_RETRIES = 5;
-
   private final String[] fileInputs;
   private final String[] pubsubInputs;
   private final String[] kinesisInputs;
@@ -75,55 +73,46 @@ public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
         if (parts.length != 4) {
           return null;
         }
-        int tries = 0;
-        while (tries < MAX_KINESIS_RETRIES) {
-          Boolean success = false;
-          log.info("attempting kinesis input setup for {} in {}", parts[0], parts[3]);
-          tries++;
-          try {
-            inputList =
-                inputList.and(
-                    begin
-                        .apply(
-                            KinesisIO.read()
-                                .withStreamName(parts[0])
-                                .withInitialPositionInStream(InitialPositionInStream.LATEST)
-                                .withAWSClientsProvider(
-                                    parts[1], parts[2], Regions.fromName(parts[3])))
-                        .apply(
-                            ParDo.of(
-                                new DoFn<KinesisRecord, String>() {
-                                  private static final long serialVersionUID = 1L;
+        log.info("attempting kinesis input setup for {} in {}", parts[0], parts[3]);
+        inputList =
+            inputList.and(
+                begin
+                    .apply(
+                        KinesisIO.read()
+                            .withStreamName(parts[0])
+                            .withInitialPositionInStream(InitialPositionInStream.LATEST)
+                            .withAWSClientsProvider(parts[1], parts[2], Regions.fromName(parts[3])))
+                    .apply(
+                        ParDo.of(
+                            new DoFn<KinesisRecord, String>() {
+                              private static final long serialVersionUID = 1L;
 
-                                  @ProcessElement
-                                  public void processElement(ProcessContext c) {
-                                    // Assume for now our Kinesis record contains newline delimited
-                                    // elements. Split these up and send them individually.
-                                    //
-                                    // This may need to be configurable depending on the input
-                                    // stream at some point.
-                                    String[] e =
-                                        new String(c.element().getDataAsBytes()).split("\\r?\\n");
-                                    for (String i : e) {
-                                      c.output(i);
-                                    }
-                                  }
-                                })));
-            success = true;
-          } catch (Exception exc) {
-            if (tries == MAX_KINESIS_RETRIES) {
-              return null;
-            }
-            log.info("sleeping to retry kinesis input: {}", exc.getMessage());
-            try {
-              Thread.sleep(7500);
-            } catch (InterruptedException iexc) {
-              // pass
-            }
-          }
-          if (success) {
-            break;
-          }
+                              @ProcessElement
+                              public void processElement(ProcessContext c) {
+                                // Assume for now our Kinesis record contains newline delimited
+                                // elements. Split these up and send them individually.
+                                //
+                                // This may need to be configurable depending on the input
+                                // stream at some point.
+                                String[] e =
+                                    new String(c.element().getDataAsBytes()).split("\\r?\\n");
+                                for (String i : e) {
+                                  c.output(i);
+                                }
+                              }
+                            })));
+        try {
+          // XXX Pause for a moment here for cases where we are configuring multiple Kinesis streams
+          // that might exist in the same account; since setup calls DescribeStream it is possible
+          // to end up hitting rate limits here.
+          //
+          // Note this seems like it can also happen after initial configuration once the stream
+          // starts being read, but KinesisIO does not handle the transient error.
+          //
+          // This needs more investigation.
+          Thread.sleep(1000);
+        } catch (InterruptedException exc) {
+          // pass
         }
       }
     }
