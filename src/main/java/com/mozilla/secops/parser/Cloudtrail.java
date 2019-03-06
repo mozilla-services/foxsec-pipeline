@@ -2,6 +2,7 @@ package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
@@ -134,6 +135,8 @@ public class Cloudtrail extends PayloadBase implements Serializable {
   private ObjectMapper getObjectMapper() {
     ObjectMapper _mapper = new ObjectMapper();
     _mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    // Allows for null values in the JsonPayload in a LogEntry when mapping to a Map<String, Object>
+    _mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     return _mapper;
   }
 
