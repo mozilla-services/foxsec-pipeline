@@ -13,8 +13,7 @@ public class TestInputTypeFile {
 
   private static InputOptions getInputOptions() {
     InputOptions o = PipelineOptionsFactory.as(InputOptions.class);
-    o.setInputType(InputType.file);
-    o.setInput(new String[] {"./target/test-classes/testdata/inputtype_buffer1.txt"});
+    o.setInputFile(new String[] {"./target/test-classes/testdata/inputtype_buffer1.txt"});
     return o;
   }
 
@@ -29,7 +28,7 @@ public class TestInputTypeFile {
   public void readTextTest() throws Exception {
     InputOptions o = (InputOptions) pipeline.getOptions();
 
-    PCollection<String> results = pipeline.apply(o.getInputType().read(pipeline, o));
+    PCollection<String> results = pipeline.apply(new CompositeInput(o));
     PCollection<Long> count = results.apply(Count.globally());
 
     PAssert.that(count).containsInAnyOrder(10L);

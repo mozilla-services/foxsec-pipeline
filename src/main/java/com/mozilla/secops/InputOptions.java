@@ -2,24 +2,26 @@ package com.mozilla.secops;
 
 import org.apache.beam.sdk.extensions.gcp.options.GcpOptions;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions;
-import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.options.Validation;
 
 /** Standard input options for pipelines. */
 public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions {
-  @Description("Type of --input; must be one of [pubsub, file]")
-  @Default.Enum("file")
-  InputType getInputType();
+  @Description("Read from Pubsub (multiple allowed); Pubsub topic")
+  String[] getInputPubsub();
 
-  void setInputType(InputType value);
+  void setInputPubsub(String[] value);
 
-  @Description("Input to read from (multiple allowed); file path, Pubsub topic")
-  @Validation.Required
-  String[] getInput();
+  @Description("Read from file (multiple allowed); File path")
+  String[] getInputFile();
 
-  void setInput(String[] value);
+  void setInputFile(String[] value);
+
+  @Description(
+      "Read from Kinesis (multiple allowed); stream:key:secret:region (supports RuntimeSecrets)")
+  String[] getInputKinesis();
+
+  void setInputKinesis(String[] value);
 
   @Description("Path to load Maxmind database; resource path, gcs path")
   String getMaxmindDbPath();

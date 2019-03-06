@@ -1,5 +1,6 @@
 package com.mozilla.secops.authprofile;
 
+import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
@@ -427,7 +428,7 @@ public class AuthProfile implements Serializable {
   private static void runAuthProfile(AuthProfileOptions options) throws IllegalArgumentException {
     Pipeline p = Pipeline.create(options);
 
-    p.apply("input", options.getInputType().read(p, options))
+    p.apply("input", new CompositeInput(options))
         .apply("parse and window", new ParseAndWindow(options))
         .apply(ParDo.of(new Analyze(options)))
         .apply("output format", ParDo.of(new AlertFormatter(options)))
