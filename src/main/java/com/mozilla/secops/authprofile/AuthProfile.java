@@ -277,43 +277,25 @@ public class AuthProfile implements Serializable {
       }
     }
 
-    private void buildAlertSummary(Event e, Alert a) {
+    private String buildAlertSummary(Event e, Alert a) {
       String summary =
           String.format(
-              "authentication event observed %s [%s] to %s, ",
-              e.getNormalized().getSubjectUser(),
-              a.getMetadataValue("identity_key") != null
-                  ? a.getMetadataValue("identity_key")
-                  : "untracked",
-              e.getNormalized().getObject());
-      if (a.getSeverity().equals(Alert.AlertSeverity.WARNING)) {
-        summary = summary + "new source ";
-      }
-      summary =
-          summary
-              + String.format(
-                  "%s [%s/%s]",
-                  a.getMetadataValue("sourceaddress"),
-                  a.getMetadataValue("sourceaddress_city"),
-                  a.getMetadataValue("sourceaddress_country"));
-      a.setSummary(summary);
-    }
-
-    private void buildAlertPayload(Alert a) {
-      String payload =
-          String.format(
-              "An authentication event for user %s was detected to access %s.",
-              a.getMetadataValue("username"), a.getMetadataValue("object"));
+              "An authentication event for user %s was detected to access %s from %s [%s/%s].",
+              a.getMetadataValue("username"),
+              a.getMetadataValue("object"),
+              a.getMetadataValue("sourceaddress"),
+              a.getMetadataValue("sourceaddress_city"),
+              a.getMetadataValue("sourceaddress_country"));
       if (a.getMetadataValue("identity_key") != null) {
         if (a.getSeverity().equals(Alert.AlertSeverity.WARNING)) {
-          payload = payload + " This occurred from a source address unknown to the system.";
+          summary = summary + " This occurred from a source address unknown to the system.";
         } else {
-          payload = payload + " This occurred from a known source address.";
+          summary = summary + " This occurred from a known source address.";
         }
       } else {
-        payload = payload = " This event occurred for an untracked identity.";
+        summary = summary = " This event occurred for an untracked identity.";
       }
-      a.addToPayload(payload);
+      return summary;
     }
 
     @ProcessElement
@@ -378,8 +360,9 @@ public class AuthProfile implements Serializable {
           }
         }
 
-        buildAlertSummary(e, a);
-        buildAlertPayload(a);
+        String summary = buildAlertSummary(e, a);
+        a.setSummary(summary);
+        a.addToPayload(summary);
         c.output(a);
       }
     }

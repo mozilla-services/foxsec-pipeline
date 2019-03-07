@@ -97,8 +97,8 @@ public class AlertSlack {
 
     String text =
         String.format(
-            "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
-            a.getSummary(), a.assemblePayload(), a.getAlertId());
+            "Foxsec Fraud Detection Alert\n\n%s\n\nIf this was not you, or you have any questions about this alert, email us at secops@mozilla.com with the alert id: %s\n",
+            a.getSummary(), a.getAlertId());
     try {
       return slackManager.handleSlackResponse(slackManager.sendMessageToChannel(userId, text));
     } catch (IOException exc) {
@@ -136,8 +136,7 @@ public class AlertSlack {
 
     String text =
         String.format(
-            "Foxsec Fraud Detection Alert\n\n%s\n%s\nAlert Id: %s",
-            a.getSummary(), a.assemblePayload(), a.getAlertId());
+            "Foxsec Fraud Detection Alert\n\n%s\n\nAlert Id: %s\n", a.getSummary(), a.getAlertId());
     try {
       return slackManager.handleSlackResponse(
           slackManager.sendConfirmationRequestToUser(userId, a.getAlertId().toString(), text));
