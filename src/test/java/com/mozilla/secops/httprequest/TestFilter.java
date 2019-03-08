@@ -112,4 +112,55 @@ public class TestFilter {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void hostNoFilterTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_urlhostfilter.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    PCollection<Event> events =
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+    PCollection<Long> count =
+        events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
+
+    PAssert.that(count)
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .containsInAnyOrder(4L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void hostFilterTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_urlhostfilter.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setIncludeUrlHostRegex(new String[] {"wontmatch", "^send\\..*"});
+    PCollection<Event> events =
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+    PCollection<Long> count =
+        events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
+
+    PAssert.that(count)
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .containsInAnyOrder(2L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void hostFilterNoMatchTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_urlhostfilter.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setIncludeUrlHostRegex(new String[] {"wontmatch", "wontmatch2"});
+    PCollection<Event> events =
+        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+    PCollection<Long> count =
+        events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
+
+    PAssert.that(count).inWindow(new IntervalWindow(new Instant(0L), new Instant(60000))).empty();
+
+    p.run().waitUntilFinish();
+  }
 }
