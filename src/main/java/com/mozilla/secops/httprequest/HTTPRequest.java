@@ -12,6 +12,7 @@ import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterPayload;
+import com.mozilla.secops.parser.EventFilterPayloadOr;
 import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserCfg;
@@ -73,6 +74,7 @@ public class HTTPRequest implements Serializable {
     private final String[] filterRequestPath;
     private final String[] stackdriverLabelFilters;
     private final String cidrExclusionList;
+    private final String[] includeUrlHostRegex;
     private ParserCfg cfg;
 
     /**
@@ -86,6 +88,7 @@ public class HTTPRequest implements Serializable {
       stackdriverLabelFilters = options.getStackdriverLabelFilters();
       filterRequestPath = options.getFilterRequestPath();
       cidrExclusionList = options.getCidrExclusionList();
+      includeUrlHostRegex = options.getIncludeUrlHostRegex();
       cfg = ParserCfg.fromInputOptions(options);
     }
 
@@ -127,6 +130,16 @@ public class HTTPRequest implements Serializable {
                           .withIntegerMatch(
                               EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS, 200)));
         }
+      }
+      if (includeUrlHostRegex != null) {
+        EventFilterPayloadOr orFilter = new EventFilterPayloadOr();
+        for (String s : includeUrlHostRegex) {
+          orFilter.addPayloadFilter(
+              new EventFilterPayload()
+                  .withStringRegexMatch(
+                      EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTHOST, s));
+        }
+        rule.addPayloadFilter(orFilter);
       }
       filter.addRule(rule);
       PCollection<Event> parsed =
@@ -735,6 +748,11 @@ public class HTTPRequest implements Serializable {
     String[] getFilterRequestPath();
 
     void setFilterRequestPath(String[] value);
+
+    @Description("Only include requests with URL host matching regex (multiple allowed); regex")
+    String[] getIncludeUrlHostRegex();
+
+    void setIncludeUrlHostRegex(String[] value);
 
     @Description("Use timestamp parsed from event instead of timestamp set in input transform")
     @Default.Boolean(false)

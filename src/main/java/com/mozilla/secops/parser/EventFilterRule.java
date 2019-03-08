@@ -13,7 +13,7 @@ public class EventFilterRule implements Serializable {
   private Normalized.Type wantNormalizedType;
   private String wantStackdriverProject;
   private Map<String, String> wantStackdriverLabel;
-  private ArrayList<EventFilterPayload> payloadFilters;
+  private ArrayList<EventFilterPayloadInterface> payloadFilters;
 
   private ArrayList<EventFilterRule> exceptRules;
 
@@ -55,7 +55,7 @@ public class EventFilterRule implements Serializable {
         return false;
       }
     }
-    for (EventFilterPayload p : payloadFilters) {
+    for (EventFilterPayloadInterface p : payloadFilters) {
       if (!p.matches(e)) {
         return false;
       }
@@ -99,7 +99,7 @@ public class EventFilterRule implements Serializable {
         return null;
       }
     }
-    for (EventFilterPayload p : payloadFilters) {
+    for (EventFilterPayloadInterface p : payloadFilters) {
       ArrayList<String> values = p.getKeys(e);
       if (values == null) {
         return null;
@@ -115,7 +115,7 @@ public class EventFilterRule implements Serializable {
    * @param p Payload filter criteria
    * @return EventFilterRule for chaining
    */
-  public EventFilterRule addPayloadFilter(EventFilterPayload p) {
+  public EventFilterRule addPayloadFilter(EventFilterPayloadInterface p) {
     payloadFilters.add(p);
     return this;
   }
@@ -173,7 +173,7 @@ public class EventFilterRule implements Serializable {
 
   /** Create new empty {@link EventFilterRule} */
   public EventFilterRule() {
-    payloadFilters = new ArrayList<EventFilterPayload>();
+    payloadFilters = new ArrayList<EventFilterPayloadInterface>();
     exceptRules = new ArrayList<EventFilterRule>();
     wantStackdriverLabel = new HashMap<String, String>();
   }

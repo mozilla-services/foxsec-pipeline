@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /** Can be associated with {@link EventFilterRule} for payload matching */
-public class EventFilterPayload implements Serializable {
+public class EventFilterPayload implements EventFilterPayloadInterface, Serializable {
   private static final long serialVersionUID = 1L;
 
   /** Properties match strings from various payload event types */
@@ -19,6 +19,7 @@ public class EventFilterPayload implements Serializable {
     NORMALIZED_REQUESTMETHOD,
     NORMALIZED_REQUESTURL,
     NORMALIZED_URLREQUESTPATH,
+    NORMALIZED_URLREQUESTHOST,
     NORMALIZED_SOURCEADDRESS,
 
     SECEVENT_ACTION,
