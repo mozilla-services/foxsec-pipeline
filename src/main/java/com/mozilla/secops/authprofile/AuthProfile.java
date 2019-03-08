@@ -302,8 +302,12 @@ public class AuthProfile implements Serializable {
     private void buildAlertPayload(Alert a) {
       String payload =
           String.format(
-              "An authentication event for user %s was detected to access %s.",
-              a.getMetadataValue("username"), a.getMetadataValue("object"));
+              "An authentication event for user %s was detected to access %s from %s [%s/%s].",
+              a.getMetadataValue("username"),
+              a.getMetadataValue("object"),
+              a.getMetadataValue("sourceaddress"),
+              a.getMetadataValue("sourceaddress_city"),
+              a.getMetadataValue("sourceaddress_country"));
       if (a.getMetadataValue("identity_key") != null) {
         if (a.getSeverity().equals(Alert.AlertSeverity.WARNING)) {
           payload = payload + " This occurred from a source address unknown to the system.";
@@ -311,8 +315,12 @@ public class AuthProfile implements Serializable {
           payload = payload + " This occurred from a known source address.";
         }
       } else {
-        payload = payload = " This event occurred for an untracked identity.";
+        payload = payload + " This event occurred for an untracked identity.";
       }
+      payload =
+          payload
+              + "\n\nIf this was not you, or you have any questions about "
+              + "this alert, email us at secops@mozilla.com with the alert id.";
       a.addToPayload(payload);
     }
 
