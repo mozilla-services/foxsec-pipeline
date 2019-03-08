@@ -27,6 +27,7 @@ public class Normalized implements Serializable {
   private String requestMethod;
   private String requestUrl;
   private String urlRequestPath; // Extracted request path component
+  private String urlRequestHost; // Extracted request host component
   private Integer requestStatus;
   private String userAgent;
 
@@ -54,6 +55,8 @@ public class Normalized implements Serializable {
         return getRequestUrl();
       case NORMALIZED_URLREQUESTPATH:
         return getUrlRequestPath();
+      case NORMALIZED_URLREQUESTHOST:
+        return getUrlRequestHost();
       case NORMALIZED_SOURCEADDRESS:
         return getSourceAddress();
     }
@@ -262,6 +265,24 @@ public class Normalized implements Serializable {
    */
   public void setUrlRequestPath(String urlRequestPath) {
     this.urlRequestPath = urlRequestPath;
+  }
+
+  /**
+   * Get extracted URL request host component
+   *
+   * @return Request host field
+   */
+  public String getUrlRequestHost() {
+    return urlRequestHost;
+  }
+
+  /**
+   * Set extracted URL request host field
+   *
+   * @param urlRequestHost Extracted request host
+   */
+  public void setUrlRequestHost(String urlRequestHost) {
+    this.urlRequestHost = urlRequestHost;
   }
 
   /**
