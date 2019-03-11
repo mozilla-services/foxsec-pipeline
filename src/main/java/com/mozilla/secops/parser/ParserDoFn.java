@@ -1,5 +1,7 @@
 package com.mozilla.secops.parser;
 
+import com.mozilla.secops.identity.IdentityManager;
+import java.io.IOException;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +16,7 @@ public class ParserDoFn extends DoFn<String, Event> {
 
   private EventFilter inlineFilter;
   private ParserCfg cfg;
+  private String idmanagerPath;
 
   /**
    * Install an inline {@link EventFilter} in this transform
@@ -40,6 +43,11 @@ public class ParserDoFn extends DoFn<String, Event> {
     return this;
   }
 
+  public ParserDoFn withIdentityManagerFromPath(String idmanagerPath) {
+    this.idmanagerPath = idmanagerPath;
+    return this;
+  }
+
   @Setup
   public void setup() {
     if (cfg == null) {
@@ -48,6 +56,18 @@ public class ParserDoFn extends DoFn<String, Event> {
       ep = new Parser(cfg);
     }
     log = LoggerFactory.getLogger(ParserDoFn.class);
+
+    IdentityManager mgr = null;
+    try {
+      if (idmanagerPath == null) {
+        mgr = IdentityManager.load();
+      } else {
+        mgr = IdentityManager.load(idmanagerPath);
+      }
+      ep.setIdentityManager(mgr);
+    } catch (IOException exc) {
+      log.warn("could not load identity manager within ParserDoFn: {}", exc.getMessage());
+    }
   }
 
   @StartBundle

@@ -89,7 +89,11 @@ public class AuthProfile implements Serializable {
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH_SESSION));
 
       return col.apply(
-              ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)))
+              ParDo.of(
+                  new ParserDoFn()
+                      .withConfiguration(cfg)
+                      .withInlineEventFilter(filter)
+                      .withIdentityManagerFromPath(idmanagerPath)))
           .apply(
               ParDo.of(
                   new DoFn<Event, KV<String, Event>>() {
