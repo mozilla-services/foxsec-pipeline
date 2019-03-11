@@ -57,8 +57,8 @@ public class ParserDoFn extends DoFn<String, Event> {
     }
     log = LoggerFactory.getLogger(ParserDoFn.class);
 
-    IdentityManager mgr = null;
     try {
+      IdentityManager mgr;
       if (idmanagerPath == null) {
         mgr = IdentityManager.load();
       } else {
