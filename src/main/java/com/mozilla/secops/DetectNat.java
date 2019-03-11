@@ -25,8 +25,9 @@ import org.apache.beam.sdk.values.TypeDescriptors;
  * address.
  *
  * <p>The output from the transform is a {@link PCollection} of KV pairs where the key is a source
- * IP address identified in the window and the value is a boolean indicating if there is a
- * possibility the source address is a NAT gateway.
+ * IP address identified in the window and the value is a boolean set to true if there is a
+ * possibility the source address is a NAT gateway. If it is not suspected the source address is a
+ * NAT gateway, it will not be included in the output set.
  */
 public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<String, Boolean>>> {
   private static final long serialVersionUID = 1L;
@@ -101,8 +102,6 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
                 KV<String, Long> input = c.element();
                 if (input.getValue() >= UAMARKPROBABLE) {
                   c.output(KV.of(input.getKey(), true));
-                } else {
-                  c.output(KV.of(input.getKey(), false));
                 }
               }
             }));

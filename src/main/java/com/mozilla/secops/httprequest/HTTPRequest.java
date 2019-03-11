@@ -37,6 +37,7 @@ import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
@@ -550,18 +551,8 @@ public class HTTPRequest implements Serializable {
                   Combine.globally(Count.<String>combineFn()).withoutDefaults().asSingletonView());
 
       // For each client, extract the request count
-      PCollection<Long> counts =
-          clientCounts.apply(
-              "extract counts",
-              ParDo.of(
-                  new DoFn<KV<String, Long>, Long>() {
-                    private static final long serialVersionUID = 1L;
+      PCollection<Long> counts = clientCounts.apply("extract counts", Values.<Long>create());
 
-                    @ProcessElement
-                    public void processElement(ProcessContext c) {
-                      c.output(c.element().getValue());
-                    }
-                  }));
       // Obtain statistics on the client count population for use as a side input
       final PCollectionView<Stats.StatsOutput> wStats = Stats.getView(counts);
 

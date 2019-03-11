@@ -30,7 +30,6 @@ public class TestDetectNat {
 
     ArrayList<KV<String, Boolean>> expected = new ArrayList<>();
     expected.add(KV.of("192.168.1.1", true));
-    expected.add(KV.of("192.168.1.2", false));
     PAssert.that(results).containsInAnyOrder(expected);
 
     pipeline.run().waitUntilFinish();
