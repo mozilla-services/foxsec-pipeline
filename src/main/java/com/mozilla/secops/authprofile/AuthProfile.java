@@ -89,11 +89,7 @@ public class AuthProfile implements Serializable {
       filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH_SESSION));
 
       return col.apply(
-              ParDo.of(
-                  new ParserDoFn()
-                      .withConfiguration(cfg)
-                      .withInlineEventFilter(filter)
-                      .withIdentityManagerFromPath(idmanagerPath)))
+              ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)))
           .apply(
               ParDo.of(
                   new DoFn<Event, KV<String, Event>>() {
@@ -419,11 +415,6 @@ public class AuthProfile implements Serializable {
     String getDatastoreKind();
 
     void setDatastoreKind(String value);
-
-    @Description("Override default identity manager configuration; resource path")
-    String getIdentityManagerPath();
-
-    void setIdentityManagerPath(String value);
 
     @Description("Ignore events for any usernames match regex (multiple allowed)")
     String[] getIgnoreUserRegex();

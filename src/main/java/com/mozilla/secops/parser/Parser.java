@@ -306,6 +306,15 @@ public class Parser {
     payloads.add(new OpenSSH());
     payloads.add(new Duopull());
     payloads.add(new Raw());
+
+    if (cfg.getIdentityManagerPath() != null) {
+      try {
+        IdentityManager mgr = IdentityManager.load(cfg.getIdentityManagerPath());
+        setIdentityManager(mgr);
+      } catch (IOException exc) {
+        log.warn("could not load identity manager within ParserDoFn: {}", exc.getMessage());
+      }
+    }
   }
 
   /** Create new parser instance with default configuration */
