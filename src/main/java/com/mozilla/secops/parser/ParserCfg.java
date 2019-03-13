@@ -12,6 +12,7 @@ public class ParserCfg implements Serializable {
 
   private String maxmindDbPath;
   private ArrayList<String> xffAddressSelectorSubnets;
+  private String idmanagerPath;
 
   /**
    * Create a parser configuration from pipeline {@link InputOptions}
@@ -22,6 +23,7 @@ public class ParserCfg implements Serializable {
   public static ParserCfg fromInputOptions(InputOptions options) {
     ParserCfg cfg = new ParserCfg();
     cfg.setMaxmindDbPath(options.getMaxmindDbPath());
+    cfg.setIdentityManagerPath(options.getIdentityManagerPath());
     if (options.getXffAddressSelector() != null) {
       String parts[] = options.getXffAddressSelector().split(",");
       if (parts.length > 0) {
@@ -92,6 +94,24 @@ public class ParserCfg implements Serializable {
    */
   public void setMaxmindDbPath(String path) {
     maxmindDbPath = path;
+  }
+
+  /**
+   * Get IdentityManager json file path
+   *
+   * @return String of null if not specified
+   */
+  public String getIdentityManagerPath() {
+    return idmanagerPath;
+  }
+
+  /**
+   * Set IdentityManager json file path
+   *
+   * @param path Path
+   */
+  public void setIdentityManagerPath(String path) {
+    idmanagerPath = path;
   }
 
   /** Construct default parser configuration */
