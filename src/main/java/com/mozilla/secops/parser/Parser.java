@@ -312,7 +312,7 @@ public class Parser {
         IdentityManager mgr = IdentityManager.load(cfg.getIdentityManagerPath());
         setIdentityManager(mgr);
       } catch (IOException exc) {
-        log.warn("could not load identity manager within ParserDoFn: {}", exc.getMessage());
+        log.error("could not load identity manager within Parser: {}", exc.getMessage());
       }
     }
   }
