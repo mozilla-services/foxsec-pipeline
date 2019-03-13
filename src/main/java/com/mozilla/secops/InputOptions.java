@@ -33,7 +33,7 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
 
   void setXffAddressSelector(String value);
 
-  @Description("Override default identity manager configuration; resource path")
+  @Description("Specify identity manager configuration location; resource path, gcs path")
   String getIdentityManagerPath();
 
   void setIdentityManagerPath(String value);

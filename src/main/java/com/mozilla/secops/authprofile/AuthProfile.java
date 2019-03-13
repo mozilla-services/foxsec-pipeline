@@ -100,11 +100,7 @@ public class AuthProfile implements Serializable {
 
                     @Setup
                     public void setup() throws IOException {
-                      if (idmanagerPath == null) {
-                        idmanager = IdentityManager.load();
-                      } else {
-                        idmanager = IdentityManager.load(idmanagerPath);
-                      }
+                      idmanager = IdentityManager.load(idmanagerPath);
 
                       if (ignoreUserRegex != null) {
                         ignoreUsers = new Pattern[ignoreUserRegex.length];
@@ -198,11 +194,7 @@ public class AuthProfile implements Serializable {
     public void setup() throws StateException, IOException {
       log = LoggerFactory.getLogger(Analyze.class);
 
-      if (idmanagerPath == null) {
-        idmanager = IdentityManager.load();
-      } else {
-        idmanager = IdentityManager.load(idmanagerPath);
-      }
+      idmanager = IdentityManager.load(idmanagerPath);
 
       if (memcachedHost != null && memcachedPort != null) {
         log.info("using memcached for state management");

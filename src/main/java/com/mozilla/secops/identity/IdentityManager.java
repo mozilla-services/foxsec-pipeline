@@ -20,9 +20,6 @@ public class IdentityManager {
   private Map<String, String> awsAccountMap;
   private Notify defaultNotification;
 
-  /** Default identity manager resource path */
-  public static final String DEFAULT_RESOURCE_PATH = "/identitymanager.json";
-
   /**
    * Load identity manager configuration from a resource file
    *
@@ -31,6 +28,9 @@ public class IdentityManager {
    */
   public static IdentityManager load(String path) throws IOException {
     InputStream in;
+    if (path == null) {
+      throw new IOException("attempt to load identity manager with null path");
+    }
     if (GcsUtil.isGcsUrl(path)) {
       in = GcsUtil.fetchInputStreamContent(path);
     } else {
@@ -41,15 +41,6 @@ public class IdentityManager {
     }
     ObjectMapper mapper = new ObjectMapper();
     return mapper.readValue(in, IdentityManager.class);
-  }
-
-  /**
-   * Load identity manager configuration from default resource location
-   *
-   * @return {@link IdentityManager}
-   */
-  public static IdentityManager load() throws IOException {
-    return load(DEFAULT_RESOURCE_PATH);
   }
 
   /**
