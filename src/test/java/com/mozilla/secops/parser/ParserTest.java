@@ -515,6 +515,17 @@ public class ParserTest {
   }
 
   @Test
+  public void testParserFastMatcher() throws Exception {
+    ParserCfg cfg = new ParserCfg();
+    cfg.setParserFastMatcher("picard");
+
+    Parser p = new Parser(cfg);
+
+    assertNull(p.parse("riker test"));
+    assertNotNull(p.parse("picard test"));
+  }
+
+  @Test
   public void testHTTPMultiAddressSelector() throws Exception {
     ParserCfg cfg = new ParserCfg();
 

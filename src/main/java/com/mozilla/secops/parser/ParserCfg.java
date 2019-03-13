@@ -11,6 +11,7 @@ public class ParserCfg implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String maxmindDbPath;
+  private String fastMatcher;
   private ArrayList<String> xffAddressSelectorSubnets;
   private String idmanagerPath;
 
@@ -24,6 +25,7 @@ public class ParserCfg implements Serializable {
     ParserCfg cfg = new ParserCfg();
     cfg.setMaxmindDbPath(options.getMaxmindDbPath());
     cfg.setIdentityManagerPath(options.getIdentityManagerPath());
+    cfg.setParserFastMatcher(options.getParserFastMatcher());
     if (options.getXffAddressSelector() != null) {
       String parts[] = options.getXffAddressSelector().split(",");
       if (parts.length > 0) {
@@ -112,6 +114,28 @@ public class ParserCfg implements Serializable {
    */
   public void setIdentityManagerPath(String path) {
     idmanagerPath = path;
+  }
+
+  /*
+   * Get parser fast matcher
+   *
+   * @return String or null if not specified
+   */
+  public String getParserFastMatcher() {
+    return fastMatcher;
+  }
+
+  /**
+   * Set parser fast matcher
+   *
+   * <p>If a fast matcher is set in the parser, an input string is immediately tested to see if it
+   * contains the supplied substring. If not, the event is dropped prior to performing the bulk of
+   * the parsing/filtering operations.
+   *
+   * @param fastMatcher Matcher substring
+   */
+  public void setParserFastMatcher(String fastMatcher) {
+    this.fastMatcher = fastMatcher;
   }
 
   /** Construct default parser configuration */
