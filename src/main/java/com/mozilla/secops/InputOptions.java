@@ -37,4 +37,9 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   String getIdentityManagerPath();
 
   void setIdentityManagerPath(String value);
+
+  @Description("Install parser fast matcher; substring")
+  String getParserFastMatcher();
+
+  void setParserFastMatcher(String value);
 }

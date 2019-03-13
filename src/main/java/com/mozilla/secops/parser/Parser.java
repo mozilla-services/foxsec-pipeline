@@ -251,6 +251,15 @@ public class Parser {
    * @return {@link Event} or null if the event should be ignored
    */
   public Event parse(String input) {
+    String fm = cfg.getParserFastMatcher();
+    // If a fast matcher is set, test the input immediately against it and discard the
+    // event if it does not match
+    if (fm != null && input != null) {
+      if (!input.contains(fm)) {
+        return null;
+      }
+    }
+
     ParserState state = new ParserState(this);
 
     if (input == null) {
