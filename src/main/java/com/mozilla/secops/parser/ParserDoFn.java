@@ -1,16 +1,12 @@
 package com.mozilla.secops.parser;
 
 import org.apache.beam.sdk.transforms.DoFn;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** {@link DoFn} applying simple event parsing operations */
 public class ParserDoFn extends DoFn<String, Event> {
   private static final long serialVersionUID = 1L;
 
-  private Logger log;
   private Parser ep;
-  private Long parseCount;
 
   private EventFilter inlineFilter;
   private ParserCfg cfg;
@@ -47,19 +43,6 @@ public class ParserDoFn extends DoFn<String, Event> {
     } else {
       ep = new Parser(cfg);
     }
-    log = LoggerFactory.getLogger(ParserDoFn.class);
-  }
-
-  @StartBundle
-  public void StartBundle() {
-    parseCount = 0L;
-  }
-
-  @FinishBundle
-  public void FinishBundle() {
-    if (parseCount > 0L) {
-      log.info("{} events processed in bundle", parseCount);
-    }
   }
 
   @ProcessElement
@@ -71,12 +54,10 @@ public class ParserDoFn extends DoFn<String, Event> {
           return;
         }
         if (inlineFilter.getOutputWithTimestamp()) {
-          parseCount++;
           c.outputWithTimestamp(e, e.getTimestamp().toInstant());
           return;
         }
       }
-      parseCount++;
       c.output(e);
     }
   }
