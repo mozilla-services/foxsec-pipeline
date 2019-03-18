@@ -1,5 +1,6 @@
 package com.mozilla.secops.authprofile;
 
+import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
@@ -115,7 +116,7 @@ public class AuthProfile implements Serializable {
                       Event e = c.element();
                       Normalized n = e.getNormalized();
 
-                      if (n.getSubjectUser() == null) {
+                      if (n.getSubjectUser() == null || n.getSourceAddress() == null) {
                         return;
                       }
 
@@ -126,6 +127,11 @@ public class AuthProfile implements Serializable {
                             return;
                           }
                         }
+                      }
+
+                      // Ignore ip6 loopback as is seen with some GCP audit calls
+                      if (n.getSourceAddress().equals("0:0:0:0:0:0:0:1")) {
+                        return;
                       }
 
                       String identityKey = idmanager.lookupAlias(n.getSubjectUser());
@@ -173,6 +179,7 @@ public class AuthProfile implements Serializable {
     private final String datastoreNamespace;
     private final String datastoreKind;
     private final String idmanagerPath;
+    private CidrUtil cidrGcp;
     private IdentityManager idmanager;
     private Logger log;
     private State state;
@@ -195,6 +202,9 @@ public class AuthProfile implements Serializable {
       log = LoggerFactory.getLogger(Analyze.class);
 
       idmanager = IdentityManager.load(idmanagerPath);
+
+      cidrGcp = new CidrUtil();
+      cidrGcp.loadGcpSubnets();
 
       if (memcachedHost != null && memcachedPort != null) {
         log.info("using memcached for state management");
@@ -327,6 +337,12 @@ public class AuthProfile implements Serializable {
 
       for (Event e : events) {
         Alert a = createBaseAlert(e);
+
+        if (cidrGcp.contains(e.getNormalized().getSourceAddress())) {
+          // At some point we may want some special handling here, but for now just add an
+          // additional metadata tag indicating the event had a GCP origin.
+          a.addMetadata("gcp_origin", "true");
+        }
 
         if (identity == null) {
           a.addMetadata("identity_untracked", "true");
