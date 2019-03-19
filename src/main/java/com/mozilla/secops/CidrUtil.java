@@ -5,7 +5,13 @@ import com.mozilla.secops.parser.Normalized;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Scanner;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.InitialDirContext;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
@@ -66,6 +72,57 @@ public class CidrUtil {
       }
     }
     return false;
+  }
+
+  private static ArrayList<String> spfResolver(String record, String prefix) {
+    ArrayList<String> ret = new ArrayList<>();
+    try {
+      Attributes attrs =
+          new InitialDirContext().getAttributes("dns:" + record, new String[] {"TXT"});
+      NamingEnumeration<? extends Attribute> spfdom = attrs.getAll();
+      while (spfdom.hasMore()) {
+        Attribute a = spfdom.next();
+        Enumeration<?> v = a.getAll();
+        while (v.hasMoreElements()) {
+          String x = v.nextElement().toString();
+          String[] parts = x.split(" ");
+          for (String p : parts) {
+            if (p.matches("^" + prefix + ".*")) {
+              ret.add(p.replaceFirst(prefix, ""));
+            }
+          }
+        }
+      }
+    } catch (NamingException exc) {
+      // pass
+    }
+    return ret;
+  }
+
+  /**
+   * Load known GCP subnets into instance of {@link CidrUtil}
+   *
+   * <p>This is done via SPF record queries.
+   */
+  public void loadGcpSubnets() throws IOException {
+    int pcnt = 0;
+    for (int i = 1; i <= 16; i++) {
+      String rdom = String.format("_cloud-netblocks%d.googleusercontent.com", i);
+      ArrayList<String> ipents = spfResolver(rdom, "ip4:");
+      for (String j : ipents) {
+        pcnt++;
+        add(j);
+      }
+      ipents = spfResolver(rdom, "ip6:");
+      for (String j : ipents) {
+        pcnt++;
+        add(j);
+      }
+    }
+    // If we were not able to successfully add any subnet, throw an exception.
+    if (pcnt == 0) {
+      throw new IOException("unable to process GCP subnet list from SPF records");
+    }
   }
 
   /**
