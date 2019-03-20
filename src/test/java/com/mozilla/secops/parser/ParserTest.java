@@ -989,6 +989,9 @@ public class ParserTest {
     assertEquals("GET /assets/scripts/main.js?t=t HTTP/1.1", d.getRequest());
     assertEquals("GET", d.getRequestMethod());
     assertEquals("/assets/scripts/main.js?t=t", d.getRequestUrl());
+    assertEquals(
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:65.0) Gecko/20100101 Firefox/65.0",
+        d.getUserAgent());
 
     Normalized n = e.getNormalized();
     assertNotNull(n);
@@ -1022,6 +1025,9 @@ public class ParserTest {
     assertEquals("GET /assets/scripts/main.js?t=t HTTP/1.1", d.getRequest());
     assertEquals("GET", d.getRequestMethod());
     assertEquals("/assets/scripts/main.js?t=t", d.getRequestUrl());
+    assertEquals(
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:65.0) Gecko/20100101 Firefox/65.0",
+        d.getUserAgent());
 
     Normalized n = e.getNormalized();
     assertNotNull(n);
