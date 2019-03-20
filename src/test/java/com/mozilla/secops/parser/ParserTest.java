@@ -968,6 +968,72 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseApacheCombined() {
+    String buf =
+        "\"216.160.83.56\" - - [19/Mar/2019:14:52:39 -0500] \"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"
+            + " 3697 \"https://mozilla.org/item/10\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:"
+            + "65.0) Gecko/20100101 Firefox/65.0\"";
+    ParserCfg cfg = new ParserCfg();
+    cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
+    Parser p = new Parser(cfg);
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.APACHE_COMBINED, e.getPayloadType());
+
+    ApacheCombined d = e.getPayload();
+    assertNotNull(d);
+    assertNull(d.getRemoteUser());
+    assertEquals(200, (int) d.getStatus());
+    assertEquals("https://mozilla.org/item/10", d.getReferrer());
+    assertEquals("GET /assets/scripts/main.js?t=t HTTP/1.1", d.getRequest());
+    assertEquals("GET", d.getRequestMethod());
+    assertEquals("/assets/scripts/main.js?t=t", d.getRequestUrl());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.HTTP_REQUEST));
+    assertEquals("GET", n.getRequestMethod());
+    assertEquals(200, (int) n.getRequestStatus());
+    assertEquals("/assets/scripts/main.js?t=t", n.getRequestUrl());
+    assertEquals("/assets/scripts/main.js", n.getUrlRequestPath());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+  }
+
+  @Test
+  public void testParseApacheCombinedUser() {
+    String buf =
+        "\"216.160.83.56\" - riker [19/Mar/2019:14:52:39 -0500] \"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"
+            + " 3697 \"https://mozilla.org/item/10\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:"
+            + "65.0) Gecko/20100101 Firefox/65.0\"";
+    ParserCfg cfg = new ParserCfg();
+    cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
+    Parser p = new Parser(cfg);
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.APACHE_COMBINED, e.getPayloadType());
+
+    ApacheCombined d = e.getPayload();
+    assertNotNull(d);
+    assertEquals("riker", d.getRemoteUser());
+    assertEquals(200, (int) d.getStatus());
+    assertEquals("https://mozilla.org/item/10", d.getReferrer());
+    assertEquals("GET /assets/scripts/main.js?t=t HTTP/1.1", d.getRequest());
+    assertEquals("GET", d.getRequestMethod());
+    assertEquals("/assets/scripts/main.js?t=t", d.getRequestUrl());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.HTTP_REQUEST));
+    assertEquals("GET", n.getRequestMethod());
+    assertEquals(200, (int) n.getRequestStatus());
+    assertEquals("/assets/scripts/main.js?t=t", n.getRequestUrl());
+    assertEquals("/assets/scripts/main.js", n.getUrlRequestPath());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+  }
+
+  @Test
   public void testParseFxaAuth() {
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
