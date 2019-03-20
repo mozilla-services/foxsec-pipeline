@@ -1004,9 +1004,10 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseApacheCombinedUser() {
+  public void testParseApacheCombinedXffUser() {
     String buf =
-        "\"216.160.83.56\" - riker [19/Mar/2019:14:52:39 -0500] \"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"
+        "\"127.0.0.1, 10.0.0.1, 216.160.83.56\" - riker [19/Mar/2019:14:52:39 -0500] "
+            + "\"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"
             + " 3697 \"https://mozilla.org/item/10\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:"
             + "65.0) Gecko/20100101 Firefox/65.0\"";
     ParserCfg cfg = new ParserCfg();
