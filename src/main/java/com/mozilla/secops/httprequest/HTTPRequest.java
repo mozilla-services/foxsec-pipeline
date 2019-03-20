@@ -891,11 +891,12 @@ public class HTTPRequest implements Serializable {
 
       PCollectionList<String> resultsList = PCollectionList.empty(p);
 
+      PCollectionView<Map<String, Boolean>> natView = null;
+      if (options.getNatDetection()) {
+        natView = DetectNat.getView(fwEvents);
+      }
+
       if (options.getEnableThresholdAnalysis()) {
-        PCollectionView<Map<String, Boolean>> natView = null;
-        if (options.getNatDetection()) {
-          natView = DetectNat.getView(fwEvents);
-        }
         resultsList =
             resultsList.and(
                 fwEvents
@@ -907,7 +908,7 @@ public class HTTPRequest implements Serializable {
         resultsList =
             resultsList.and(
                 fwEvents
-                    .apply("hard limit analysis", new HardLimitAnalysis(options))
+                    .apply("hard limit analysis", new HardLimitAnalysis(options, natView))
                     .apply("output format", ParDo.of(new AlertFormatter(options))));
       }
 
