@@ -272,6 +272,115 @@ public class HTTPRequest implements Serializable {
     }
   }
 
+  /** Transform for analysis of hard per-source request count limit within fixed window */
+  public static class HardLimitAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>> {
+    private static final long serialVersionUID = 1L;
+
+    private final Long maxCount;
+    private final String monitoredResource;
+    private final Boolean enableIprepdDatastoreWhitelist;
+    private final String iprepdDatastoreWhitelistProject;
+    private PCollectionView<Map<String, Boolean>> natView = null;
+
+    private Logger log;
+
+    /**
+     * Static initializer for {@link HardLimitAnalysis}
+     *
+     * @param options Pipeline options
+     */
+    public HardLimitAnalysis(HTTPRequestOptions options) {
+      maxCount = options.getHardLimitRequestCount();
+      monitoredResource = options.getMonitoredResourceIndicator();
+      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
+      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
+      log = LoggerFactory.getLogger(HardLimitAnalysis.class);
+    }
+
+    /**
+     * Static initializer for {@link HardLimitAnalysis}
+     *
+     * @param options Pipeline options
+     * @param natView Use {@link DetectNat} view during hard limit analysis
+     */
+    public HardLimitAnalysis(
+        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
+      this(options);
+      this.natView = natView;
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> input) {
+      if (natView == null) {
+        // If natView was not set then we just create an empty view for use as the side input
+        natView = DetectNat.getEmptyView(input.getPipeline());
+      }
+      return input
+          .apply(
+              "hard limit per client count",
+              ParDo.of(
+                  new DoFn<Event, String>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Normalized n = c.element().getNormalized();
+                      if (n.getSourceAddress() == null) {
+                        return;
+                      }
+                      c.output(n.getSourceAddress());
+                    }
+                  }))
+          .apply(Count.<String>perElement())
+          .apply(
+              "per-source hard limit analysis",
+              ParDo.of(
+                      new DoFn<KV<String, Long>, Alert>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @ProcessElement
+                        public void processElement(ProcessContext c, BoundedWindow w) {
+                          Map<String, Boolean> nv = c.sideInput(natView);
+                          if (c.element().getValue() <= maxCount) {
+                            return;
+                          }
+                          Boolean isNat = nv.get(c.element().getKey());
+                          if (isNat != null && isNat) {
+                            log.info(
+                                "{}: detectnat: skipping result emission for {}",
+                                w.toString(),
+                                c.element().getKey());
+                            return;
+                          }
+                          Alert a = new Alert();
+                          a.setSummary(
+                              String.format(
+                                  "%s httprequest hard_limit %s %d",
+                                  monitoredResource, c.element().getKey(), c.element().getValue()));
+                          a.setCategory("httprequest");
+                          a.addMetadata("category", "hard_limit");
+                          a.addMetadata("sourceaddress", c.element().getKey());
+                          if (enableIprepdDatastoreWhitelist) {
+                            IprepdIO.addMetadataIfWhitelisted(
+                                c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                          }
+                          a.addMetadata("count", c.element().getValue().toString());
+                          a.addMetadata("request_threshold", maxCount.toString());
+                          a.setNotifyMergeKey(
+                              String.format("hard_limit_count", c.element().getKey()));
+                          a.addMetadata(
+                              "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                          if (!a.hasCorrectFields()) {
+                            throw new IllegalArgumentException(
+                                "alert has invalid field configuration");
+                          }
+                          c.output(a);
+                        }
+                      })
+                  .withSideInputs(natView));
+    }
+  }
+
   /**
    * Transform for detection of a single source endpoint making excessive requests of a specific
    * endpoint path solely.
@@ -682,6 +791,18 @@ public class HTTPRequest implements Serializable {
 
     void setEnableEndpointAbuseAnalysis(Boolean value);
 
+    @Description("Enable hard limit analysis")
+    @Default.Boolean(false)
+    Boolean getEnableHardLimitAnalysis();
+
+    void setEnableHardLimitAnalysis(Boolean value);
+
+    @Description("Hard limit request count per window per client")
+    @Default.Long(100L)
+    Long getHardLimitRequestCount();
+
+    void setHardLimitRequestCount(Long value);
+
     @Description("Analysis threshold modifier")
     @Default.Double(75.0)
     Double getAnalysisThresholdModifier();
@@ -763,20 +884,31 @@ public class HTTPRequest implements Serializable {
     PCollection<Event> events =
         p.apply("input", new CompositeInput(options)).apply("parse", new Parse(options));
 
-    if (options.getEnableThresholdAnalysis() || options.getEnableErrorRateAnalysis()) {
+    if (options.getEnableThresholdAnalysis()
+        || options.getEnableErrorRateAnalysis()
+        || options.getEnableHardLimitAnalysis()) {
       PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
 
       PCollectionList<String> resultsList = PCollectionList.empty(p);
 
+      PCollectionView<Map<String, Boolean>> natView = null;
+      if (options.getNatDetection()) {
+        natView = DetectNat.getView(fwEvents);
+      }
+
       if (options.getEnableThresholdAnalysis()) {
-        PCollectionView<Map<String, Boolean>> natView = null;
-        if (options.getNatDetection()) {
-          natView = DetectNat.getView(fwEvents);
-        }
         resultsList =
             resultsList.and(
                 fwEvents
                     .apply("threshold analysis", new ThresholdAnalysis(options, natView))
+                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+      }
+
+      if (options.getEnableHardLimitAnalysis()) {
+        resultsList =
+            resultsList.and(
+                fwEvents
+                    .apply("hard limit analysis", new HardLimitAnalysis(options, natView))
                     .apply("output format", ParDo.of(new AlertFormatter(options))));
       }
 

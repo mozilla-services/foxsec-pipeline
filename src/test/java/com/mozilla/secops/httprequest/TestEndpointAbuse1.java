@@ -48,11 +48,11 @@ public class TestEndpointAbuse1 {
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
 
     PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(600000)))
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(600000L)))
         .containsInAnyOrder(1L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(600000)))
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(600000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
@@ -93,7 +93,7 @@ public class TestEndpointAbuse1 {
     PCollection<Long> count =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
 
-    PAssert.that(count).inWindow(new IntervalWindow(new Instant(0L), new Instant(600000))).empty();
+    PAssert.that(count).inWindow(new IntervalWindow(new Instant(0L), new Instant(600000L))).empty();
 
     p.run().waitUntilFinish();
   }

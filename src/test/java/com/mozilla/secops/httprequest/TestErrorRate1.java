@@ -50,10 +50,10 @@ public class TestErrorRate1 {
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
     PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .containsInAnyOrder(720L);
     PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000)))
+        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
         .containsInAnyOrder(720L);
 
     p.run().waitUntilFinish();
