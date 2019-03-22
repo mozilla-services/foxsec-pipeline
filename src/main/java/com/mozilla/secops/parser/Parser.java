@@ -310,6 +310,7 @@ public class Parser {
     payloads.add(new SecEvent());
     payloads.add(new Cloudtrail());
     payloads.add(new GcpAudit());
+    payloads.add(new ApacheCombined());
     payloads.add(new BmoAudit());
     payloads.add(new FxaAuth());
     payloads.add(new OpenSSH());

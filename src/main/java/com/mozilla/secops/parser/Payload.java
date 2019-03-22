@@ -26,6 +26,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     BMOAUDIT,
     /** FxA auth */
     FXAAUTH,
+    /** Apache Combined */
+    APACHE_COMBINED,
     /** Raw */
     RAW
   }
