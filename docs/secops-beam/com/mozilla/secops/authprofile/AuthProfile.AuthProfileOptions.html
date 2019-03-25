@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":6,"i13":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -129,7 +129,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <!--   -->
 </a>
 <h3>Nested classes/interfaces inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GcpOptions</h3>
-<code>org.apache.beam.sdk.extensions.gcp.options.GcpOptions.DefaultProjectFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpTempLocationFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpUserCredentialsFactory</code></li>
+<code>org.apache.beam.sdk.extensions.gcp.options.GcpOptions.DefaultProjectFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.EnableStreamingEngineFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpTempLocationFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpUserCredentialsFactory</code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="nested.classes.inherited.from.class.org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions">
@@ -137,6 +137,21 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 </a>
 <h3>Nested classes/interfaces inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions</h3>
 <code>org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions.GoogleApiTracer</code></li>
+</ul>
+</li>
+</ul>
+<!-- =========== FIELD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<ul class="blockList">
+<li class="blockList"><a name="fields.inherited.from.class.org.apache.beam.sdk.extensions.gcp.options.GcpOptions">
+<!--   -->
+</a>
+<h3>Fields inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GcpOptions</h3>
+<code>STREAMING_ENGINE_EXPERIMENT, WINDMILL_SERVICE_EXPERIMENT</code></li>
 </ul>
 </li>
 </ul>
@@ -161,50 +176,42 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#getDatastoreNamespace--">getDatastoreNamespace</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#getIdentityManagerPath--">getIdentityManagerPath</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#getIgnoreUnknownIdentities--">getIgnoreUnknownIdentities</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#getIgnoreUserRegex--">getIgnoreUserRegex</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#getMemcachedHost--">getMemcachedHost</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#getMemcachedPort--">getMemcachedPort</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#setDatastoreKind-java.lang.String-">setDatastoreKind</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#setDatastoreNamespace-java.lang.String-">setDatastoreNamespace</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#setIdentityManagerPath-java.lang.String-">setIdentityManagerPath</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
-</tr>
-<tr id="i10" class="altColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#setIgnoreUnknownIdentities-java.lang.Boolean-">setIgnoreUnknownIdentities</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#setIgnoreUserRegex-java.lang.String:A-">setIgnoreUserRegex</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#setMemcachedHost-java.lang.String-">setMemcachedHost</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html#setMemcachedPort-java.lang.Integer-">setMemcachedPort</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
@@ -214,7 +221,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a></h3>
-<code><a href="../../../../com/mozilla/secops/InputOptions.html#getInput--">getInput</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getInputType--">getInputType</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getMaxmindDbPath--">getMaxmindDbPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getXffAddressSelector--">getXffAddressSelector</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInput-java.lang.String:A-">setInput</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInputType-com.mozilla.secops.InputType-">setInputType</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setMaxmindDbPath-java.lang.String-">setMaxmindDbPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setXffAddressSelector-java.lang.String-">setXffAddressSelector</a></code></li>
+<code><a href="../../../../com/mozilla/secops/InputOptions.html#getIdentityManagerPath--">getIdentityManagerPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getInputFile--">getInputFile</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getInputKinesis--">getInputKinesis</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getInputPubsub--">getInputPubsub</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getMaxmindDbPath--">getMaxmindDbPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getParserFastMatcher--">getParserFastMatcher</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getXffAddressSelector--">getXffAddressSelector</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setIdentityManagerPath-java.lang.String-">setIdentityManagerPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInputFile-java.lang.String:A-">setInputFile</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInputKinesis-java.lang.String:A-">setInputKinesis</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInputPubsub-java.lang.String:A-">setInputPubsub</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setMaxmindDbPath-java.lang.String-">setMaxmindDbPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setParserFastMatcher-java.lang.String-">setParserFastMatcher</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setXffAddressSelector-java.lang.String-">setXffAddressSelector</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions">
@@ -228,7 +235,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GcpOptions</h3>
-<code>getCredentialFactoryClass, getGcpCredential, getGcpTempLocation, getProject, getZone, setCredentialFactoryClass, setGcpCredential, setGcpTempLocation, setProject, setZone</code></li>
+<code>getCredentialFactoryClass, getDataflowKmsKey, getGcpCredential, getGcpTempLocation, getProject, getZone, isEnableStreamingEngine, setCredentialFactoryClass, setDataflowKmsKey, setEnableStreamingEngine, setGcpCredential, setGcpTempLocation, setProject, setZone</code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions">
@@ -256,7 +263,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a></h3>
-<code><a href="../../../../com/mozilla/secops/OutputOptions.html#compositeOutput-com.mozilla.secops.OutputOptions-">compositeOutput</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getAlertStateDatastoreKind--">getAlertStateDatastoreKind</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getAlertStateDatastoreNamespace--">getAlertStateDatastoreNamespace</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getAlertStateMemcachedHost--">getAlertStateMemcachedHost</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getAlertStateMemcachedPort--">getAlertStateMemcachedPort</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getMonitoredResourceIndicator--">getMonitoredResourceIndicator</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailCatchall--">getOutputAlertEmailCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailFrom--">getOutputAlertEmailFrom</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackCatchall--">getOutputAlertSlackCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackToken--">getOutputAlertSlackToken</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpCredentials--">getOutputAlertSmtpCredentials</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpRelay--">getOutputAlertSmtpRelay</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputBigQuery--">getOutputBigQuery</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputFile--">getOutputFile</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepd--">getOutputIprepd</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdApikey--">getOutputIprepdApikey</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdEnableDatastoreWhitelist--">getOutputIprepdEnableDatastoreWhitelist</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputPubsub--">getOutputPubsub</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setAlertStateDatastoreKind-java.lang.String-">setAlertStateDatastoreKind</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setAlertStateDatastoreNamespace-java.lang.String-">setAlertStateDatastoreNamespace</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setAlertStateMemcachedHost-java.lang.String-">setAlertStateMemcachedHost</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setAlertStateMemcachedPort-java.lang.Integer-">setAlertStateMemcachedPort</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setMonitoredResourceIndicator-java.lang.String-">setMonitoredResourceIndicator</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailCatchall-java.lang.String-">setOutputAlertEmailCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailFrom-java.lang.String-">setOutputAlertEmailFrom</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackCatchall-java.lang.String-">setOutputAlertSlackCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackToken-java.lang.String-">setOutputAlertSlackToken</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpCredentials-java.lang.String-">setOutputAlertSmtpCredentials</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpRelay-java.lang.String-">setOutputAlertSmtpRelay</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputBigQuery-java.lang.String-">setOutputBigQuery</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputFile-java.lang.String-">setOutputFile</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepd-java.lang.String-">setOutputIprepd</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdApikey-java.lang.String-">setOutputIprepdApikey</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdEnableDatastoreWhitelist-java.lang.Boolean-">setOutputIprepdEnableDatastoreWhitelist</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputPubsub-java.lang.String-">setOutputPubsub</a></code></li>
+<code><a href="../../../../com/mozilla/secops/OutputOptions.html#compositeOutput-com.mozilla.secops.OutputOptions-">compositeOutput</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getAlertStateDatastoreKind--">getAlertStateDatastoreKind</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getAlertStateDatastoreNamespace--">getAlertStateDatastoreNamespace</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getAlertStateMemcachedHost--">getAlertStateMemcachedHost</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getAlertStateMemcachedPort--">getAlertStateMemcachedPort</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getMonitoredResourceIndicator--">getMonitoredResourceIndicator</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailCatchall--">getOutputAlertEmailCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailFrom--">getOutputAlertEmailFrom</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackCatchall--">getOutputAlertSlackCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackToken--">getOutputAlertSlackToken</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpCredentials--">getOutputAlertSmtpCredentials</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpRelay--">getOutputAlertSmtpRelay</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputBigQuery--">getOutputBigQuery</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputFile--">getOutputFile</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepd--">getOutputIprepd</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdApikey--">getOutputIprepdApikey</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdDatastoreWhitelistProject--">getOutputIprepdDatastoreWhitelistProject</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdEnableDatastoreWhitelist--">getOutputIprepdEnableDatastoreWhitelist</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#getOutputPubsub--">getOutputPubsub</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setAlertStateDatastoreKind-java.lang.String-">setAlertStateDatastoreKind</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setAlertStateDatastoreNamespace-java.lang.String-">setAlertStateDatastoreNamespace</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setAlertStateMemcachedHost-java.lang.String-">setAlertStateMemcachedHost</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setAlertStateMemcachedPort-java.lang.Integer-">setAlertStateMemcachedPort</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setMonitoredResourceIndicator-java.lang.String-">setMonitoredResourceIndicator</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailCatchall-java.lang.String-">setOutputAlertEmailCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailFrom-java.lang.String-">setOutputAlertEmailFrom</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackCatchall-java.lang.String-">setOutputAlertSlackCatchall</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackToken-java.lang.String-">setOutputAlertSlackToken</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpCredentials-java.lang.String-">setOutputAlertSmtpCredentials</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpRelay-java.lang.String-">setOutputAlertSmtpRelay</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputBigQuery-java.lang.String-">setOutputBigQuery</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputFile-java.lang.String-">setOutputFile</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepd-java.lang.String-">setOutputIprepd</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdApikey-java.lang.String-">setOutputIprepdApikey</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdDatastoreWhitelistProject-java.lang.String-">setOutputIprepdDatastoreWhitelistProject</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdEnableDatastoreWhitelist-java.lang.Boolean-">setOutputIprepdEnableDatastoreWhitelist</a>, <a href="../../../../com/mozilla/secops/OutputOptions.html#setOutputPubsub-java.lang.String-">setOutputPubsub</a></code></li>
 </ul>
 </li>
 </ul>
@@ -343,24 +350,6 @@ extends org.apache.beam.sdk.options.PipelineOptions, <a href="../../../../com/mo
 <li class="blockList">
 <h4>setDatastoreKind</h4>
 <pre>void&nbsp;setDatastoreKind(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
-</li>
-</ul>
-<a name="getIdentityManagerPath--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getIdentityManagerPath</h4>
-<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getIdentityManagerPath()</pre>
-</li>
-</ul>
-<a name="setIdentityManagerPath-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>setIdentityManagerPath</h4>
-<pre>void&nbsp;setIdentityManagerPath(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
 </li>
 </ul>
 <a name="getIgnoreUserRegex--">

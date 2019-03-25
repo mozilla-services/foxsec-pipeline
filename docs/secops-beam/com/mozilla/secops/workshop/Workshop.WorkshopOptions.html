@@ -123,7 +123,7 @@ extends <a href="../../../../com/mozilla/secops/InputOptions.html" title="interf
 <!--   -->
 </a>
 <h3>Nested classes/interfaces inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GcpOptions</h3>
-<code>org.apache.beam.sdk.extensions.gcp.options.GcpOptions.DefaultProjectFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpTempLocationFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpUserCredentialsFactory</code></li>
+<code>org.apache.beam.sdk.extensions.gcp.options.GcpOptions.DefaultProjectFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.EnableStreamingEngineFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpTempLocationFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpUserCredentialsFactory</code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="nested.classes.inherited.from.class.org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions">
@@ -131,6 +131,21 @@ extends <a href="../../../../com/mozilla/secops/InputOptions.html" title="interf
 </a>
 <h3>Nested classes/interfaces inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions</h3>
 <code>org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions.GoogleApiTracer</code></li>
+</ul>
+</li>
+</ul>
+<!-- =========== FIELD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<ul class="blockList">
+<li class="blockList"><a name="fields.inherited.from.class.org.apache.beam.sdk.extensions.gcp.options.GcpOptions">
+<!--   -->
+</a>
+<h3>Fields inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GcpOptions</h3>
+<code>STREAMING_ENGINE_EXPERIMENT, WINDMILL_SERVICE_EXPERIMENT</code></li>
 </ul>
 </li>
 </ul>
@@ -145,7 +160,7 @@ extends <a href="../../../../com/mozilla/secops/InputOptions.html" title="interf
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a></h3>
-<code><a href="../../../../com/mozilla/secops/InputOptions.html#getInput--">getInput</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getInputType--">getInputType</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getMaxmindDbPath--">getMaxmindDbPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getXffAddressSelector--">getXffAddressSelector</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInput-java.lang.String:A-">setInput</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInputType-com.mozilla.secops.InputType-">setInputType</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setMaxmindDbPath-java.lang.String-">setMaxmindDbPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setXffAddressSelector-java.lang.String-">setXffAddressSelector</a></code></li>
+<code><a href="../../../../com/mozilla/secops/InputOptions.html#getIdentityManagerPath--">getIdentityManagerPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getInputFile--">getInputFile</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getInputKinesis--">getInputKinesis</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getInputPubsub--">getInputPubsub</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getMaxmindDbPath--">getMaxmindDbPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getParserFastMatcher--">getParserFastMatcher</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#getXffAddressSelector--">getXffAddressSelector</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setIdentityManagerPath-java.lang.String-">setIdentityManagerPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInputFile-java.lang.String:A-">setInputFile</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInputKinesis-java.lang.String:A-">setInputKinesis</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setInputPubsub-java.lang.String:A-">setInputPubsub</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setMaxmindDbPath-java.lang.String-">setMaxmindDbPath</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setParserFastMatcher-java.lang.String-">setParserFastMatcher</a>, <a href="../../../../com/mozilla/secops/InputOptions.html#setXffAddressSelector-java.lang.String-">setXffAddressSelector</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions">
@@ -159,7 +174,7 @@ extends <a href="../../../../com/mozilla/secops/InputOptions.html" title="interf
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GcpOptions</h3>
-<code>getCredentialFactoryClass, getGcpCredential, getGcpTempLocation, getProject, getZone, setCredentialFactoryClass, setGcpCredential, setGcpTempLocation, setProject, setZone</code></li>
+<code>getCredentialFactoryClass, getDataflowKmsKey, getGcpCredential, getGcpTempLocation, getProject, getZone, isEnableStreamingEngine, setCredentialFactoryClass, setDataflowKmsKey, setEnableStreamingEngine, setGcpCredential, setGcpTempLocation, setProject, setZone</code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions">

@@ -311,9 +311,13 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">HTTPRequest.EndpointAbuseAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.HardLimitAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.HardLimitAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">HTTPRequest.EndpointAbuseAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">HTTPRequest.ThresholdAnalysis.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/httprequest/HTTPRequest.ThresholdAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;col)</code>&nbsp;</td>
 </tr>
@@ -401,31 +405,55 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">EventFilterRule.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilterRule.html#getKeys-com.mozilla.secops.parser.Event-">getKeys</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
+<td class="colLast"><span class="typeNameLabel">EventFilterPayloadInterface.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilterPayloadInterface.html#getKeys-com.mozilla.secops.parser.Event-">getKeys</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
 <div class="block">Return extracted keys from event based on string selectors</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">EventFilterRule.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilterRule.html#getKeys-com.mozilla.secops.parser.Event-">getKeys</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
+<div class="block">Return extracted keys from event based on string selectors</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">EventFilterPayload.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilterPayload.html#getKeys-com.mozilla.secops.parser.Event-">getKeys</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
+<div class="block">Return extracted keys from event based on string selectors</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">EventFilterPayloadOr.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilterPayloadOr.html#getKeys-com.mozilla.secops.parser.Event-">getKeys</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
 <div class="block">Return extracted keys from event based on string selectors</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><span class="typeNameLabel">EventFilterPayloadInterface.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilterPayloadInterface.html#matches-com.mozilla.secops.parser.Event-">matches</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
+<div class="block">Should return true if the filter matches the supplied event</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
 <td class="colLast"><span class="typeNameLabel">EventFilter.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilter.html#matches-com.mozilla.secops.parser.Event-">matches</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
 <div class="block">Test if event matches filter</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
 <td class="colLast"><span class="typeNameLabel">EventFilterRule.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilterRule.html#matches-com.mozilla.secops.parser.Event-">matches</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
 <div class="block">Test if event matches rule</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
 <td class="colLast"><span class="typeNameLabel">EventFilterPayload.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilterPayload.html#matches-com.mozilla.secops.parser.Event-">matches</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
+<div class="block">Return true if payload criteria matches</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><span class="typeNameLabel">EventFilterPayloadOr.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/EventFilterPayloadOr.html#matches-com.mozilla.secops.parser.Event-">matches</a></span>(<a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
 <div class="block">Return true if payload criteria matches</div>
 </td>
 </tr>
@@ -453,76 +481,83 @@
 </tr>
 <tbody>
 <tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/ApacheCombined.html#ApacheCombined-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">ApacheCombined</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
+              <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
+              com.mozilla.secops.parser.ParserState&nbsp;state)</code>
+<div class="block">Construct parser object.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/BmoAudit.html#BmoAudit-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">BmoAudit</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
         <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
         com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/Cloudtrail.html#Cloudtrail-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">Cloudtrail</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
           <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
           com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/Duopull.html#Duopull-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">Duopull</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
        <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
        com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/FxaAuth.html#FxaAuth-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">FxaAuth</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
        <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
        com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/GcpAudit.html#GcpAudit-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">GcpAudit</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
         <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
         com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/GLB.html#GLB-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">GLB</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
    <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
    com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/Nginx.html#Nginx-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">Nginx</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
      <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
      com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/OpenSSH.html#OpenSSH-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">OpenSSH</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
        <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
        com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/PayloadBase.html#PayloadBase-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">PayloadBase</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
            <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
            com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/Raw.html#Raw-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">Raw</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
    <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
    com.mozilla.secops.parser.ParserState&nbsp;state)</code>
 <div class="block">Construct parser object.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/parser/SecEvent.html#SecEvent-java.lang.String-com.mozilla.secops.parser.Event-com.mozilla.secops.parser.ParserState-">SecEvent</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
         <a href="../../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e,
         com.mozilla.secops.parser.ParserState&nbsp;state)</code>

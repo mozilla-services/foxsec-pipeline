@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":9};
+var methods = {"i0":10,"i1":10,"i2":9,"i3":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../com/mozilla/secops/CompositeOutput.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../com/mozilla/secops/CompositeInput.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?com/mozilla/secops/CidrUtil.html" target="_top">Frames</a></li>
@@ -173,6 +173,12 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
  within subnets loaded from path.</div>
 </td>
 </tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/CidrUtil.html#loadGcpSubnets--">loadGcpSubnets</a></span>()</code>
+<div class="block">Load known GCP subnets into instance of <a href="../../../com/mozilla/secops/CidrUtil.html" title="class in com.mozilla.secops"><code>CidrUtil</code></a></div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -263,6 +269,23 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </dl>
 </li>
 </ul>
+<a name="loadGcpSubnets--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>loadGcpSubnets</h4>
+<pre>public&nbsp;void&nbsp;loadGcpSubnets()
+                    throws <a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a></pre>
+<div class="block">Load known GCP subnets into instance of <a href="../../../com/mozilla/secops/CidrUtil.html" title="class in com.mozilla.secops"><code>CidrUtil</code></a>
+
+ <p>This is done via SPF record queries.</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a></code></dd>
+</dl>
+</li>
+</ul>
 <a name="add-java.lang.String-">
 <!--   -->
 </a>
@@ -306,7 +329,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../com/mozilla/secops/CompositeOutput.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../com/mozilla/secops/CompositeInput.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?com/mozilla/secops/CidrUtil.html" target="_top">Frames</a></li>

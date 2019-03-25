@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -142,7 +142,7 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;<a href="https://docs.oracle.com/
 <!--   -->
 </a>
 <h3>Nested classes/interfaces inherited from class&nbsp;org.apache.beam.sdk.transforms.DoFn</h3>
-<code>org.apache.beam.sdk.transforms.DoFn.BoundedPerElement, org.apache.beam.sdk.transforms.DoFn.Element, org.apache.beam.sdk.transforms.DoFn.FieldAccess, org.apache.beam.sdk.transforms.DoFn.FinishBundle, org.apache.beam.sdk.transforms.DoFn.FinishBundleContext, org.apache.beam.sdk.transforms.DoFn.GetInitialRestriction, org.apache.beam.sdk.transforms.DoFn.GetRestrictionCoder, org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver, org.apache.beam.sdk.transforms.DoFn.NewTracker, org.apache.beam.sdk.transforms.DoFn.OnTimer, org.apache.beam.sdk.transforms.DoFn.OnTimerContext, org.apache.beam.sdk.transforms.DoFn.OnWindowExpiration, org.apache.beam.sdk.transforms.DoFn.OutputReceiver&lt;T&gt;, org.apache.beam.sdk.transforms.DoFn.ProcessContext, org.apache.beam.sdk.transforms.DoFn.ProcessContinuation, org.apache.beam.sdk.transforms.DoFn.ProcessElement, org.apache.beam.sdk.transforms.DoFn.RequiresStableInput, org.apache.beam.sdk.transforms.DoFn.Setup, org.apache.beam.sdk.transforms.DoFn.SplitRestriction, org.apache.beam.sdk.transforms.DoFn.StartBundle, org.apache.beam.sdk.transforms.DoFn.StartBundleContext, org.apache.beam.sdk.transforms.DoFn.StateId, org.apache.beam.sdk.transforms.DoFn.Teardown, org.apache.beam.sdk.transforms.DoFn.TimerId, org.apache.beam.sdk.transforms.DoFn.Timestamp, org.apache.beam.sdk.transforms.DoFn.UnboundedPerElement, org.apache.beam.sdk.transforms.DoFn.WindowedContext</code></li>
+<code>org.apache.beam.sdk.transforms.DoFn.BoundedPerElement, org.apache.beam.sdk.transforms.DoFn.BundleFinalizer, org.apache.beam.sdk.transforms.DoFn.Element, org.apache.beam.sdk.transforms.DoFn.FieldAccess, org.apache.beam.sdk.transforms.DoFn.FinishBundle, org.apache.beam.sdk.transforms.DoFn.FinishBundleContext, org.apache.beam.sdk.transforms.DoFn.GetInitialRestriction, org.apache.beam.sdk.transforms.DoFn.GetRestrictionCoder, org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver, org.apache.beam.sdk.transforms.DoFn.NewTracker, org.apache.beam.sdk.transforms.DoFn.OnTimer, org.apache.beam.sdk.transforms.DoFn.OnTimerContext, org.apache.beam.sdk.transforms.DoFn.OnWindowExpiration, org.apache.beam.sdk.transforms.DoFn.OutputReceiver&lt;T&gt;, org.apache.beam.sdk.transforms.DoFn.ProcessContext, org.apache.beam.sdk.transforms.DoFn.ProcessContinuation, org.apache.beam.sdk.transforms.DoFn.ProcessElement, org.apache.beam.sdk.transforms.DoFn.RequiresStableInput, org.apache.beam.sdk.transforms.DoFn.Setup, org.apache.beam.sdk.transforms.DoFn.SplitRestriction, org.apache.beam.sdk.transforms.DoFn.StartBundle, org.apache.beam.sdk.transforms.DoFn.StartBundleContext, org.apache.beam.sdk.transforms.DoFn.StateId, org.apache.beam.sdk.transforms.DoFn.Teardown, org.apache.beam.sdk.transforms.DoFn.TimerId, org.apache.beam.sdk.transforms.DoFn.Timestamp, org.apache.beam.sdk.transforms.DoFn.UnboundedPerElement, org.apache.beam.sdk.transforms.DoFn.WindowedContext</code></li>
 </ul>
 </li>
 </ul>
@@ -177,27 +177,19 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;<a href="https://docs.oracle.com/
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/ParserDoFn.html#FinishBundle--">FinishBundle</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/ParserDoFn.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-">processElement</a></span>(org.apache.beam.sdk.transforms.DoFn.ProcessContext&nbsp;c)</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/ParserDoFn.html#processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-">processElement</a></span>(org.apache.beam.sdk.transforms.DoFn.ProcessContext&nbsp;c)</code>&nbsp;</td>
-</tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/ParserDoFn.html#setup--">setup</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/ParserDoFn.html#StartBundle--">StartBundle</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i4" class="altColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/ParserDoFn.html" title="class in com.mozilla.secops.parser">ParserDoFn</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/ParserDoFn.html#withConfiguration-com.mozilla.secops.parser.ParserCfg-">withConfiguration</a></span>(<a href="../../../../com/mozilla/secops/parser/ParserCfg.html" title="class in com.mozilla.secops.parser">ParserCfg</a>&nbsp;cfg)</code>
 <div class="block">Configure this function to use the specified configuration in the parser</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/ParserDoFn.html" title="class in com.mozilla.secops.parser">ParserDoFn</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/ParserDoFn.html#withInlineEventFilter-com.mozilla.secops.parser.EventFilter-">withInlineEventFilter</a></span>(<a href="../../../../com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser">EventFilter</a>&nbsp;inlineFilter)</code>
 <div class="block">Install an inline <a href="../../../../com/mozilla/secops/parser/EventFilter.html" title="class in com.mozilla.secops.parser"><code>EventFilter</code></a> in this transform</div>
@@ -292,26 +284,6 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;<a href="https://docs.oracle.com/
 <h4>setup</h4>
 <pre>@DoFn.Setup
 public&nbsp;void&nbsp;setup()</pre>
-</li>
-</ul>
-<a name="StartBundle--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>StartBundle</h4>
-<pre>@DoFn.StartBundle
-public&nbsp;void&nbsp;StartBundle()</pre>
-</li>
-</ul>
-<a name="FinishBundle--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>FinishBundle</h4>
-<pre>@DoFn.FinishBundle
-public&nbsp;void&nbsp;FinishBundle()</pre>
 </li>
 </ul>
 <a name="processElement-org.apache.beam.sdk.transforms.DoFn.ProcessContext-">

@@ -127,8 +127,9 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
  address.
 
  <p>The output from the transform is a <code>PCollection</code> of KV pairs where the key is a source
- IP address identified in the window and the value is a boolean indicating if there is a
- possibility the source address is a NAT gateway.</div>
+ IP address identified in the window and the value is a boolean set to true if there is a
+ possibility the source address is a NAT gateway. If it is not suspected the source address is a
+ NAT gateway, it will not be included in the output set.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../serialized-form.html#com.mozilla.secops.DetectNat">Serialized Form</a></dd>
@@ -190,7 +191,7 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;org.apache.beam.sdk.transforms.PTransform</h3>
-<code>compose, getAdditionalInputs, getDefaultOutputCoder, getName, populateDisplayData, toString, validate</code></li>
+<code>compose, compose, getAdditionalInputs, getDefaultOutputCoder, getName, populateDisplayData, toString, validate</code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">

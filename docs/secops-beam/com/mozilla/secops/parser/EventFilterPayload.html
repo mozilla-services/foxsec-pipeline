@@ -109,13 +109,13 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</a></dd>
+<dd><a href="../../../../com/mozilla/secops/parser/EventFilterPayloadInterface.html" title="interface in com.mozilla.secops.parser">EventFilterPayloadInterface</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</a></dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">EventFilterPayload</span>
 extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>
-implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</a></pre>
+implements <a href="../../../../com/mozilla/secops/parser/EventFilterPayloadInterface.html" title="interface in com.mozilla.secops.parser">EventFilterPayloadInterface</a>, <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</a></pre>
 <div class="block">Can be associated with <a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser"><code>EventFilterRule</code></a> for payload matching</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
@@ -292,6 +292,8 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;matches(<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</pre>
 <div class="block">Return true if payload criteria matches</div>
 <dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../com/mozilla/secops/parser/EventFilterPayloadInterface.html#matches-com.mozilla.secops.parser.Event-">matches</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../com/mozilla/secops/parser/EventFilterPayloadInterface.html" title="interface in com.mozilla.secops.parser">EventFilterPayloadInterface</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>e</code> - Input event</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -308,6 +310,8 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 <pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;getKeys(<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</pre>
 <div class="block">Return extracted keys from event based on string selectors</div>
 <dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../com/mozilla/secops/parser/EventFilterPayloadInterface.html#getKeys-com.mozilla.secops.parser.Event-">getKeys</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../com/mozilla/secops/parser/EventFilterPayloadInterface.html" title="interface in com.mozilla.secops.parser">EventFilterPayloadInterface</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>e</code> - Input event</dd>
 <dt><span class="returnLabel">Returns:</span></dt>

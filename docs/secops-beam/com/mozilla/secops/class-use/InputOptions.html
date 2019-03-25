@@ -119,6 +119,12 @@
 </td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><a href="#com.mozilla.secops.streamwriter">com.mozilla.secops.streamwriter</a></td>
+<td class="colLast">
+<div class="block">Simple stream writer</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="#com.mozilla.secops.workshop">com.mozilla.secops.workshop</a></td>
 <td class="colLast">
 <div class="block">Getting started with Beam introduction pipeline</div>
@@ -133,19 +139,15 @@
 <!--   -->
 </a>
 <h3>Uses of <a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a> in <a href="../../../../com/mozilla/secops/package-summary.html">com.mozilla.secops</a></h3>
-<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
-<caption><span>Methods in <a href="../../../../com/mozilla/secops/package-summary.html">com.mozilla.secops</a> with parameters of type <a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a></span><span class="tabEnd">&nbsp;</span></caption>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing constructors, and an explanation">
+<caption><span>Constructors in <a href="../../../../com/mozilla/secops/package-summary.html">com.mozilla.secops</a> with parameters of type <a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a></span><span class="tabEnd">&nbsp;</span></caption>
 <tr>
-<th class="colFirst" scope="col">Modifier and Type</th>
-<th class="colLast" scope="col">Method and Description</th>
+<th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><code>abstract org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PBegin,org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">InputType.</span><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/InputType.html#read-org.apache.beam.sdk.Pipeline-com.mozilla.secops.InputOptions-">read</a></span>(org.apache.beam.sdk.Pipeline&nbsp;p,
-    <a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>&nbsp;options)</code>
-<div class="block">The read method can be called on the returned value to obtain a respective <code>PTransform</code>
- based on the supplied <a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><code>InputOptions</code></a>.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/CompositeInput.html#CompositeInput-com.mozilla.secops.InputOptions-">CompositeInput</a></span>(<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>&nbsp;options)</code>
+<div class="block">Initialize new <a href="../../../../com/mozilla/secops/CompositeInput.html" title="class in com.mozilla.secops"><code>CompositeInput</code></a> transform</div>
 </td>
 </tr>
 </tbody>
@@ -246,6 +248,26 @@
 <td class="colFirst"><code>static <a href="../../../../com/mozilla/secops/parser/ParserCfg.html" title="class in com.mozilla.secops.parser">ParserCfg</a></code></td>
 <td class="colLast"><span class="typeNameLabel">ParserCfg.</span><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/ParserCfg.html#fromInputOptions-com.mozilla.secops.InputOptions-">fromInputOptions</a></span>(<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>&nbsp;options)</code>
 <div class="block">Create a parser configuration from pipeline <a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><code>InputOptions</code></a></div>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.streamwriter">
+<!--   -->
+</a>
+<h3>Uses of <a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a> in <a href="../../../../com/mozilla/secops/streamwriter/package-summary.html">com.mozilla.secops.streamwriter</a></h3>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing subinterfaces, and an explanation">
+<caption><span>Subinterfaces of <a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a> in <a href="../../../../com/mozilla/secops/streamwriter/package-summary.html">com.mozilla.secops.streamwriter</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Interface and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>static interface&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/streamwriter/StreamWriter.StreamWriterOptions.html" title="interface in com.mozilla.secops.streamwriter">StreamWriter.StreamWriterOptions</a></span></code>
+<div class="block">Runtime options for <a href="../../../../com/mozilla/secops/streamwriter/StreamWriter.html" title="class in com.mozilla.secops.streamwriter"><code>StreamWriter</code></a> pipeline.</div>
 </td>
 </tr>
 </tbody>

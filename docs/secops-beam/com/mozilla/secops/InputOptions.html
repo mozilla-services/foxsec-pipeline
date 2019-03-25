@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":6,"i13":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../com/mozilla/secops/GcsUtil.html" title="class in com.mozilla.secops"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../com/mozilla/secops/InputType.html" title="enum in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../com/mozilla/secops/IprepdIO.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?com/mozilla/secops/InputOptions.html" target="_top">Frames</a></li>
@@ -105,7 +105,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>All Known Subinterfaces:</dt>
-<dd><a href="../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>, <a href="../../../com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html" title="interface in com.mozilla.secops.awsbehavior">AwsBehavior.AwsBehaviorOptions</a>, <a href="../../../com/mozilla/secops/customs/Customs.CustomsOptions.html" title="interface in com.mozilla.secops.customs">Customs.CustomsOptions</a>, <a href="../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>, <a href="../../../com/mozilla/secops/workshop/Workshop.WorkshopOptions.html" title="interface in com.mozilla.secops.workshop">Workshop.WorkshopOptions</a></dd>
+<dd><a href="../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>, <a href="../../../com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html" title="interface in com.mozilla.secops.awsbehavior">AwsBehavior.AwsBehaviorOptions</a>, <a href="../../../com/mozilla/secops/customs/Customs.CustomsOptions.html" title="interface in com.mozilla.secops.customs">Customs.CustomsOptions</a>, <a href="../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>, <a href="../../../com/mozilla/secops/streamwriter/StreamWriter.StreamWriterOptions.html" title="interface in com.mozilla.secops.streamwriter">StreamWriter.StreamWriterOptions</a>, <a href="../../../com/mozilla/secops/workshop/Workshop.WorkshopOptions.html" title="interface in com.mozilla.secops.workshop">Workshop.WorkshopOptions</a></dd>
 </dl>
 <hr>
 <br>
@@ -129,7 +129,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.io.gcp.
 <!--   -->
 </a>
 <h3>Nested classes/interfaces inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GcpOptions</h3>
-<code>org.apache.beam.sdk.extensions.gcp.options.GcpOptions.DefaultProjectFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpTempLocationFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpUserCredentialsFactory</code></li>
+<code>org.apache.beam.sdk.extensions.gcp.options.GcpOptions.DefaultProjectFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.EnableStreamingEngineFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpTempLocationFactory, org.apache.beam.sdk.extensions.gcp.options.GcpOptions.GcpUserCredentialsFactory</code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="nested.classes.inherited.from.class.org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions">
@@ -137,6 +137,21 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.io.gcp.
 </a>
 <h3>Nested classes/interfaces inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions</h3>
 <code>org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions.GoogleApiTracer</code></li>
+</ul>
+</li>
+</ul>
+<!-- =========== FIELD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<ul class="blockList">
+<li class="blockList"><a name="fields.inherited.from.class.org.apache.beam.sdk.extensions.gcp.options.GcpOptions">
+<!--   -->
+</a>
+<h3>Fields inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GcpOptions</h3>
+<code>STREAMING_ENGINE_EXPERIMENT, WINDMILL_SERVICE_EXPERIMENT</code></li>
 </ul>
 </li>
 </ul>
@@ -153,34 +168,58 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.io.gcp.
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#getInput--">getInput</a></span>()</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#getIdentityManagerPath--">getIdentityManagerPath</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="../../../com/mozilla/secops/InputType.html" title="enum in com.mozilla.secops">InputType</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#getInputType--">getInputType</a></span>()</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#getInputFile--">getInputFile</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#getInputKinesis--">getInputKinesis</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#getInputPubsub--">getInputPubsub</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#getMaxmindDbPath--">getMaxmindDbPath</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#getParserFastMatcher--">getParserFastMatcher</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#getXffAddressSelector--">getXffAddressSelector</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#setInput-java.lang.String:A-">setInput</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#setIdentityManagerPath-java.lang.String-">setIdentityManagerPath</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#setInputType-com.mozilla.secops.InputType-">setInputType</a></span>(<a href="../../../com/mozilla/secops/InputType.html" title="enum in com.mozilla.secops">InputType</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#setInputFile-java.lang.String:A-">setInputFile</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#setInputKinesis-java.lang.String:A-">setInputKinesis</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i10" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#setInputPubsub-java.lang.String:A-">setInputPubsub</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#setMaxmindDbPath-java.lang.String-">setMaxmindDbPath</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i12" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#setParserFastMatcher-java.lang.String-">setParserFastMatcher</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/InputOptions.html#setXffAddressSelector-java.lang.String-">setXffAddressSelector</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
@@ -197,7 +236,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.io.gcp.
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;org.apache.beam.sdk.extensions.gcp.options.GcpOptions</h3>
-<code>getCredentialFactoryClass, getGcpCredential, getGcpTempLocation, getProject, getZone, setCredentialFactoryClass, setGcpCredential, setGcpTempLocation, setProject, setZone</code></li>
+<code>getCredentialFactoryClass, getDataflowKmsKey, getGcpCredential, getGcpTempLocation, getProject, getZone, isEnableStreamingEngine, setCredentialFactoryClass, setDataflowKmsKey, setEnableStreamingEngine, setGcpCredential, setGcpTempLocation, setProject, setZone</code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions">
@@ -234,42 +273,58 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.io.gcp.
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="getInputType--">
+<a name="getInputPubsub--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getInputType</h4>
-<pre>@Default.Enum(value="file")
-<a href="../../../com/mozilla/secops/InputType.html" title="enum in com.mozilla.secops">InputType</a>&nbsp;getInputType()</pre>
+<h4>getInputPubsub</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;getInputPubsub()</pre>
 </li>
 </ul>
-<a name="setInputType-com.mozilla.secops.InputType-">
+<a name="setInputPubsub-java.lang.String:A-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>setInputType</h4>
-<pre>void&nbsp;setInputType(<a href="../../../com/mozilla/secops/InputType.html" title="enum in com.mozilla.secops">InputType</a>&nbsp;value)</pre>
+<h4>setInputPubsub</h4>
+<pre>void&nbsp;setInputPubsub(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</pre>
 </li>
 </ul>
-<a name="getInput--">
+<a name="getInputFile--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getInput</h4>
-<pre>@Validation.Required
-<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;getInput()</pre>
+<h4>getInputFile</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;getInputFile()</pre>
 </li>
 </ul>
-<a name="setInput-java.lang.String:A-">
+<a name="setInputFile-java.lang.String:A-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>setInput</h4>
-<pre>void&nbsp;setInput(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</pre>
+<h4>setInputFile</h4>
+<pre>void&nbsp;setInputFile(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getInputKinesis--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getInputKinesis</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;getInputKinesis()</pre>
+</li>
+</ul>
+<a name="setInputKinesis-java.lang.String:A-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setInputKinesis</h4>
+<pre>void&nbsp;setInputKinesis(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</pre>
 </li>
 </ul>
 <a name="getMaxmindDbPath--">
@@ -302,10 +357,46 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.io.gcp.
 <a name="setXffAddressSelector-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>setXffAddressSelector</h4>
 <pre>void&nbsp;setXffAddressSelector(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getIdentityManagerPath--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getIdentityManagerPath</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getIdentityManagerPath()</pre>
+</li>
+</ul>
+<a name="setIdentityManagerPath-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setIdentityManagerPath</h4>
+<pre>void&nbsp;setIdentityManagerPath(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getParserFastMatcher--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getParserFastMatcher</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getParserFastMatcher()</pre>
+</li>
+</ul>
+<a name="setParserFastMatcher-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>setParserFastMatcher</h4>
+<pre>void&nbsp;setParserFastMatcher(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
 </li>
 </ul>
 </li>
@@ -337,7 +428,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.io.gcp.
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../com/mozilla/secops/GcsUtil.html" title="class in com.mozilla.secops"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../com/mozilla/secops/InputType.html" title="enum in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../com/mozilla/secops/IprepdIO.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?com/mozilla/secops/InputOptions.html" target="_top">Frames</a></li>

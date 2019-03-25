@@ -77,6 +77,38 @@
 <li class="blockList">
 <h2 title="Package">Package&nbsp;com.mozilla.secops</h2>
 <ul class="blockList">
+<li class="blockList"><a name="com.mozilla.secops.CompositeInput">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/CompositeInput.html" title="class in com.mozilla.secops">com.mozilla.secops.CompositeInput</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PBegin,org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&gt; implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>fileInputs</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[] fileInputs</pre>
+</li>
+<li class="blockList">
+<h4>pubsubInputs</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[] pubsubInputs</pre>
+</li>
+<li class="blockList">
+<h4>kinesisInputs</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[] kinesisInputs</pre>
+</li>
+<li class="blockListLast">
+<h4>project</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> project</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="blockList"><a name="com.mozilla.secops.DetectNat">
 <!--   -->
 </a>
@@ -402,6 +434,10 @@
 <li class="blockList">
 <h4>idmanagerPath</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> idmanagerPath</pre>
+</li>
+<li class="blockList">
+<h4>cidrGcp</h4>
+<pre><a href="com/mozilla/secops/CidrUtil.html" title="class in com.mozilla.secops">CidrUtil</a> cidrGcp</pre>
 </li>
 <li class="blockList">
 <h4>idmanager</h4>
@@ -861,9 +897,13 @@
 <h4>monitoredResource</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
 <h4>enableIprepdDatastoreWhitelist</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a> enableIprepdDatastoreWhitelist</pre>
+</li>
+<li class="blockListLast">
+<h4>iprepdDatastoreWhitelistProject</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> iprepdDatastoreWhitelistProject</pre>
 </li>
 </ul>
 </li>
@@ -889,9 +929,53 @@
 <h4>monitoredResource</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
 <h4>enableIprepdDatastoreWhitelist</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a> enableIprepdDatastoreWhitelist</pre>
+</li>
+<li class="blockListLast">
+<h4>iprepdDatastoreWhitelistProject</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> iprepdDatastoreWhitelistProject</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.httprequest.HTTPRequest.HardLimitAnalysis">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/httprequest/HTTPRequest.HardLimitAnalysis.html" title="class in com.mozilla.secops.httprequest">com.mozilla.secops.httprequest.HTTPRequest.HardLimitAnalysis</a> extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt; implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>maxCount</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> maxCount</pre>
+</li>
+<li class="blockList">
+<h4>monitoredResource</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> monitoredResource</pre>
+</li>
+<li class="blockList">
+<h4>enableIprepdDatastoreWhitelist</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a> enableIprepdDatastoreWhitelist</pre>
+</li>
+<li class="blockList">
+<h4>iprepdDatastoreWhitelistProject</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> iprepdDatastoreWhitelistProject</pre>
+</li>
+<li class="blockList">
+<h4>natView</h4>
+<pre>org.apache.beam.sdk.values.PCollectionView&lt;T&gt; natView</pre>
+</li>
+<li class="blockListLast">
+<h4>log</h4>
+<pre>org.slf4j.Logger log</pre>
 </li>
 </ul>
 </li>
@@ -928,6 +1012,10 @@
 <li class="blockList">
 <h4>cidrExclusionList</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> cidrExclusionList</pre>
+</li>
+<li class="blockList">
+<h4>includeUrlHostRegex</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[] includeUrlHostRegex</pre>
 </li>
 <li class="blockListLast">
 <h4>cfg</h4>
@@ -974,6 +1062,10 @@
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a> enableIprepdDatastoreWhitelist</pre>
 </li>
 <li class="blockList">
+<h4>iprepdDatastoreWhitelistProject</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> iprepdDatastoreWhitelistProject</pre>
+</li>
+<li class="blockList">
 <h4>natView</h4>
 <pre>org.apache.beam.sdk.values.PCollectionView&lt;T&gt; natView</pre>
 </li>
@@ -1008,6 +1100,70 @@
 <li class="blockList">
 <h2 title="Package">Package&nbsp;com.mozilla.secops.parser</h2>
 <ul class="blockList">
+<li class="blockList"><a name="com.mozilla.secops.parser.ApacheCombined">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/parser/ApacheCombined.html" title="class in com.mozilla.secops.parser">com.mozilla.secops.parser.ApacheCombined</a> extends <a href="com/mozilla/secops/parser/PayloadBase.html" title="class in com.mozilla.secops.parser">PayloadBase</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>matchRe</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> matchRe</pre>
+</li>
+<li class="blockList">
+<h4>pattRe</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html?is-external=true" title="class or interface in java.util.regex">Pattern</a> pattRe</pre>
+</li>
+<li class="blockList">
+<h4>remoteAddr</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> remoteAddr</pre>
+</li>
+<li class="blockList">
+<h4>userAgent</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> userAgent</pre>
+</li>
+<li class="blockList">
+<h4>referrer</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> referrer</pre>
+</li>
+<li class="blockList">
+<h4>request</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> request</pre>
+</li>
+<li class="blockList">
+<h4>remoteUser</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> remoteUser</pre>
+</li>
+<li class="blockList">
+<h4>bytesSent</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a> bytesSent</pre>
+</li>
+<li class="blockList">
+<h4>status</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a> status</pre>
+</li>
+<li class="blockList">
+<h4>requestMethod</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> requestMethod</pre>
+</li>
+<li class="blockList">
+<h4>requestUrl</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> requestUrl</pre>
+</li>
+<li class="blockListLast">
+<h4>requestPath</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> requestPath</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="blockList"><a name="com.mozilla.secops.parser.BmoAudit">
 <!--   -->
 </a>
@@ -1227,6 +1383,26 @@
 <li class="blockListLast">
 <h4>stringSelectors</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">E</a>&gt; stringSelectors</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.parser.EventFilterPayloadOr">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/parser/EventFilterPayloadOr.html" title="class in com.mozilla.secops.parser">com.mozilla.secops.parser.EventFilterPayloadOr</a> extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>payloadFilters</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">E</a>&gt; payloadFilters</pre>
 </li>
 </ul>
 </li>
@@ -1565,6 +1741,10 @@
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> urlRequestPath</pre>
 </li>
 <li class="blockList">
+<h4>urlRequestHost</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> urlRequestHost</pre>
+</li>
+<li class="blockList">
 <h4>requestStatus</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a> requestStatus</pre>
 </li>
@@ -1652,9 +1832,17 @@
 <h4>maxmindDbPath</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> maxmindDbPath</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
+<h4>fastMatcher</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> fastMatcher</pre>
+</li>
+<li class="blockList">
 <h4>xffAddressSelectorSubnets</h4>
 <pre><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">E</a>&gt; xffAddressSelectorSubnets</pre>
+</li>
+<li class="blockListLast">
+<h4>idmanagerPath</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> idmanagerPath</pre>
 </li>
 </ul>
 </li>
@@ -1673,16 +1861,8 @@
 <h3>Serialized Fields</h3>
 <ul class="blockList">
 <li class="blockList">
-<h4>log</h4>
-<pre>org.slf4j.Logger log</pre>
-</li>
-<li class="blockList">
 <h4>ep</h4>
 <pre><a href="com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser">Parser</a> ep</pre>
-</li>
-<li class="blockList">
-<h4>parseCount</h4>
-<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a> parseCount</pre>
 </li>
 <li class="blockList">
 <h4>inlineFilter</h4>
@@ -2263,6 +2443,20 @@
 <!--   -->
 </a>
 <h3>Class <a href="com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">com.mozilla.secops.state.StateException</a> extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+</li>
+</ul>
+</li>
+<li class="blockList">
+<h2 title="Package">Package&nbsp;com.mozilla.secops.streamwriter</h2>
+<ul class="blockList">
+<li class="blockList"><a name="com.mozilla.secops.streamwriter.StreamWriter">
+<!--   -->
+</a>
+<h3>Class <a href="com/mozilla/secops/streamwriter/StreamWriter.html" title="class in com.mozilla.secops.streamwriter">com.mozilla.secops.streamwriter.StreamWriter</a> extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a> implements Serializable</h3>
 <dl class="nameValue">
 <dt>serialVersionUID:</dt>
 <dd>1L</dd>
