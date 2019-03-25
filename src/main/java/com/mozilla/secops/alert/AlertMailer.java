@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 public class AlertMailer {
   private final AlertConfiguration cfg;
   private final Logger log;
+  private final String smtpCreds;
   private TemplateManager templateManager;
 
   /**
@@ -55,13 +56,6 @@ public class AlertMailer {
 
   private void sendMail(
       ArrayList<String> recipients, String subject, String textBody, String htmlBody) {
-    String smtpCreds;
-    try {
-      smtpCreds = RuntimeSecrets.interpretSecret(cfg.getSmtpCredentials(), cfg.getGcpProject());
-    } catch (IOException exc) {
-      log.error("mail submission failed: {}", exc.getMessage());
-      return;
-    }
     String[] akeys = smtpCreds.split(":");
     if (akeys.length != 2) {
       log.error("mail submission failed: invalid SMTP credentials specified");
@@ -111,6 +105,13 @@ public class AlertMailer {
   public AlertMailer(AlertConfiguration cfg) {
     log = LoggerFactory.getLogger(AlertMailer.class);
     this.cfg = cfg;
+
+    try {
+      smtpCreds = RuntimeSecrets.interpretSecret(cfg.getSmtpCredentials(), cfg.getGcpProject());
+    } catch (IOException exc) {
+      throw new RuntimeException(exc.getMessage());
+    }
+
     templateManager = new TemplateManager();
   }
 

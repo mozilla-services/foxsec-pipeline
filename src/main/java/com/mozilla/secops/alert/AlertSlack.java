@@ -27,7 +27,7 @@ public class AlertSlack {
       String slackToken = RuntimeSecrets.interpretSecret(cfg.getSlackToken(), cfg.getGcpProject());
       slackManager = new SlackManager(slackToken);
     } catch (IOException exc) {
-      log.error("failed to get slack token: {}", exc.getMessage());
+      throw new RuntimeException(exc.getMessage());
     }
   }
 

@@ -35,7 +35,13 @@ public class IprepdIO {
    * @return IO transform
    */
   public static Write write(String url, String apiKey, String project) {
-    return new Write(url, apiKey, project);
+    String key;
+    try {
+      key = RuntimeSecrets.interpretSecret(apiKey, project);
+    } catch (IOException exc) {
+      throw new RuntimeException(exc.getMessage());
+    }
+    return new Write(url, key, project);
   }
 
   /**
@@ -122,7 +128,6 @@ public class IprepdIO {
       apiKey = wTransform.getApiKey();
       if (apiKey != null) {
         log.info("using iprepd apikey authentication");
-        apiKey = RuntimeSecrets.interpretSecret(apiKey, project);
       }
     }
 
