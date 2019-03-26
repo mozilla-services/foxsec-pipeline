@@ -37,6 +37,12 @@ public class Violation {
       public String toString() {
         return "endpoint_abuse_violation";
       }
+    },
+    HARD_LIMIT_VIOLATION {
+      @Override
+      public String toString() {
+        return "hard_limit_violation";
+      }
     }
   }
 
@@ -51,6 +57,7 @@ public class Violation {
     tMap.put("error_rate", ViolationType.CLIENT_ERROR_RATE_VIOLATION);
     tMap.put("threshold_analysis", ViolationType.REQUEST_THRESHOLD_VIOLATION);
     tMap.put("endpoint_abuse", ViolationType.ENDPOINT_ABUSE_VIOLATION);
+    tMap.put("hard_limit", ViolationType.HARD_LIMIT_VIOLATION);
     violationMap = Collections.unmodifiableMap(tMap);
   }
 
