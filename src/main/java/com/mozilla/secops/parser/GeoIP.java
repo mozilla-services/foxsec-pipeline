@@ -7,11 +7,12 @@ import com.mozilla.secops.GcsUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** GeoIP resolution */
 public class GeoIP {
-  private DatabaseReader geoipDb;
-  private Boolean initialized = false;
+  private static DatabaseReader geoipDb = null;
+  private static AtomicBoolean initialized = new AtomicBoolean(false);
 
   /**
    * Lookup city/country from IP address string
@@ -20,7 +21,7 @@ public class GeoIP {
    * @return MaxmindDB {@link CityResponse}, or null on failure
    */
   public CityResponse lookup(String ip) {
-    if (!initialized) {
+    if (!initialized.get()) {
       return null;
     }
 
@@ -34,13 +35,12 @@ public class GeoIP {
     }
   }
 
-  /**
-   * Initialize new {@link GeoIP}, load database from specified path
-   *
-   * @param path Resource or GCS path to load database from
-   */
-  public GeoIP(String path) {
+  private static synchronized void initialize(String path) throws IOException {
     InputStream in;
+
+    if (initialized.get()) {
+      return;
+    }
 
     if (GcsUtil.isGcsUrl(path)) {
       in = GcsUtil.fetchInputStreamContent(path);
@@ -51,11 +51,20 @@ public class GeoIP {
       return;
     }
 
+    geoipDb = new DatabaseReader.Builder(in).build();
+    initialized.set(true);
+  }
+
+  /**
+   * Initialize new {@link GeoIP}, load database from specified path
+   *
+   * @param path Resource or GCS path to load database from
+   */
+  public GeoIP(String path) {
     try {
-      geoipDb = new DatabaseReader.Builder(in).build();
-      initialized = true;
+      initialize(path);
     } catch (IOException exc) {
-      // pass
+      throw new RuntimeException(exc.getMessage());
     }
   }
 }
