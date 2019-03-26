@@ -869,7 +869,7 @@ public class HTTPRequest implements Serializable {
 
     void setUseEventTimestamp(Boolean value);
 
-    @Description("Load CIDR exclusion list; resource path")
+    @Description("Load CIDR exclusion list; resource path, gcs path")
     String getCidrExclusionList();
 
     void setCidrExclusionList(String value);
