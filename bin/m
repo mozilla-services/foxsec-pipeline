@@ -13,7 +13,7 @@ if [[ `uname` == 'Darwin' ]]; then
 	CACHEFLAGS=':cached'
 fi
 
-# If using WSL, the devevloper is likely using a symlink to a directory
+# If using WSL, the developer is likely using a symlink to a directory
 # on the Windows fs.
 if [[ `uname -a` == *"Microsoft"* ]]; then
 	PWD=`pwd -P`
