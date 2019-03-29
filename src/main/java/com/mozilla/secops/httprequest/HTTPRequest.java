@@ -3,6 +3,7 @@ package com.mozilla.secops.httprequest;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.DetectNat;
+import com.mozilla.secops.FileUtil;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.OutputOptions;
@@ -17,10 +18,12 @@ import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -369,6 +372,136 @@ public class HTTPRequest implements Serializable {
                           a.setNotifyMergeKey("hard_limit_count");
                           a.addMetadata(
                               "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                          if (!a.hasCorrectFields()) {
+                            throw new IllegalArgumentException(
+                                "alert has invalid field configuration");
+                          }
+                          c.output(a);
+                        }
+                      })
+                  .withSideInputs(natView));
+    }
+  }
+
+  /** Analysis to identify known bad user agents */
+  public static class UserAgentBlacklistAnalysis
+      extends PTransform<PCollection<Event>, PCollection<Alert>> {
+    private static final long serialVersionUID = 1L;
+
+    private final String monitoredResource;
+    private final Boolean enableIprepdDatastoreWhitelist;
+    private final String iprepdDatastoreWhitelistProject;
+    private final String uaBlacklistPath;
+
+    private PCollectionView<Map<String, Boolean>> natView = null;
+
+    private Logger log;
+
+    /**
+     * Initialize new {@link UserAgentBlacklistAnalysis}
+     *
+     * @param options Pipeline options
+     */
+    public UserAgentBlacklistAnalysis(HTTPRequestOptions options) {
+      monitoredResource = options.getMonitoredResourceIndicator();
+      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
+      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
+      uaBlacklistPath = options.getUserAgentBlacklistPath();
+      log = LoggerFactory.getLogger(UserAgentBlacklistAnalysis.class);
+    }
+
+    /**
+     * Initialize new {@link UserAgentBlacklistAnalysis}
+     *
+     * @param options Pipeline options
+     * @param natView Use {@link DetectNat} view during analysis
+     */
+    public UserAgentBlacklistAnalysis(
+        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
+      this(options);
+      this.natView = natView;
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> input) {
+      if (natView == null) {
+        // If natView was not set then we just create an empty view for use as the side input
+        natView = DetectNat.getEmptyView(input.getPipeline());
+      }
+      return input
+          .apply(
+              "extract agent and source",
+              ParDo.of(
+                  new DoFn<Event, KV<String, String>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    private ArrayList<Pattern> uaRegex;
+
+                    @Setup
+                    public void setup() throws IOException {
+                      ArrayList<String> in = FileUtil.fileReadLines(uaBlacklistPath);
+                      uaRegex = new ArrayList<Pattern>();
+                      for (String i : in) {
+                        uaRegex.add(Pattern.compile(i));
+                      }
+                    }
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Normalized n = c.element().getNormalized();
+
+                      String ua = n.getUserAgent();
+                      if (ua == null) {
+                        return;
+                      }
+                      for (Pattern p : uaRegex) {
+                        if (p.matcher(ua).matches()) {
+                          c.output(KV.of(n.getSourceAddress(), ua));
+                          return;
+                        }
+                      }
+                    }
+                  }))
+          .apply(GroupByKey.<String, String>create())
+          .apply(
+              "user agent blacklist analysis",
+              ParDo.of(
+                      new DoFn<KV<String, Iterable<String>>, Alert>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @ProcessElement
+                        public void processElement(ProcessContext c, BoundedWindow w) {
+                          Map<String, Boolean> nv = c.sideInput(natView);
+
+                          String saddr = c.element().getKey();
+                          // Iterable user agent list not currently used here, could probably be
+                          // included in the alert metadata though.
+
+                          Boolean isNat = nv.get(saddr);
+                          if (isNat != null && isNat) {
+                            log.info(
+                                "{}: detectnat: skipping result emission for {}",
+                                w.toString(),
+                                saddr);
+                            return;
+                          }
+
+                          Alert a = new Alert();
+                          a.setSummary(
+                              String.format(
+                                  "%s httprequest useragent_blacklist %s",
+                                  monitoredResource, saddr));
+                          a.setCategory("httprequest");
+                          a.addMetadata("category", "useragent_blacklist");
+                          a.addMetadata("sourceaddress", saddr);
+                          if (enableIprepdDatastoreWhitelist) {
+                            IprepdIO.addMetadataIfWhitelisted(
+                                saddr, a, iprepdDatastoreWhitelistProject);
+                          }
+                          a.setNotifyMergeKey("useragent_blacklist");
+                          a.addMetadata(
+                              "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+
                           if (!a.hasCorrectFields()) {
                             throw new IllegalArgumentException(
                                 "alert has invalid field configuration");
@@ -794,6 +927,12 @@ public class HTTPRequest implements Serializable {
 
     void setEnableHardLimitAnalysis(Boolean value);
 
+    @Description("Enable user agent blacklist analysis")
+    @Default.Boolean(false)
+    Boolean getEnableUserAgentBlacklistAnalysis();
+
+    void setEnableUserAgentBlacklistAnalysis(Boolean value);
+
     @Description("Hard limit request count per window per client")
     @Default.Long(100L)
     Long getHardLimitRequestCount();
@@ -837,6 +976,12 @@ public class HTTPRequest implements Serializable {
 
     void setNatDetection(Boolean value);
 
+    @Description(
+        "Path to load user agent blacklist from for UA blacklist analysis; resource path, gcs path")
+    String getUserAgentBlacklistPath();
+
+    void setUserAgentBlacklistPath(String value);
+
     @Description("Only inspect Stackdriver events generated for specified project identifier")
     String getStackdriverProjectFilter();
 
@@ -869,7 +1014,7 @@ public class HTTPRequest implements Serializable {
 
     void setUseEventTimestamp(Boolean value);
 
-    @Description("Load CIDR exclusion list; resource path")
+    @Description("Load CIDR exclusion list; resource path, gcs path")
     String getCidrExclusionList();
 
     void setCidrExclusionList(String value);
@@ -886,7 +1031,7 @@ public class HTTPRequest implements Serializable {
         || options.getEnableHardLimitAnalysis()) {
       PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
 
-      PCollectionList<String> resultsList = PCollectionList.empty(p);
+      PCollectionList<Alert> resultsList = PCollectionList.empty(p);
 
       PCollectionView<Map<String, Boolean>> natView = null;
       if (options.getNatDetection()) {
@@ -896,29 +1041,31 @@ public class HTTPRequest implements Serializable {
       if (options.getEnableThresholdAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents
-                    .apply("threshold analysis", new ThresholdAnalysis(options, natView))
-                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+                fwEvents.apply("threshold analysis", new ThresholdAnalysis(options, natView)));
       }
 
       if (options.getEnableHardLimitAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents
-                    .apply("hard limit analysis", new HardLimitAnalysis(options, natView))
-                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+                fwEvents.apply("hard limit analysis", new HardLimitAnalysis(options, natView)));
       }
 
       if (options.getEnableErrorRateAnalysis()) {
         resultsList =
-            resultsList.and(
-                fwEvents
-                    .apply("error rate analysis", new ErrorRateAnalysis(options))
-                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+            resultsList.and(fwEvents.apply("error rate analysis", new ErrorRateAnalysis(options)));
       }
 
-      PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
-      results.apply("output", OutputOptions.compositeOutput(options));
+      if (options.getEnableUserAgentBlacklistAnalysis()) {
+        resultsList =
+            resultsList.and(
+                fwEvents.apply(
+                    "ua blacklist analysis", new UserAgentBlacklistAnalysis(options, natView)));
+      }
+
+      resultsList
+          .apply(Flatten.<Alert>pCollections())
+          .apply("output format", ParDo.of(new AlertFormatter(options)))
+          .apply("output", OutputOptions.compositeOutput(options));
     }
 
     if (options.getEnableEndpointAbuseAnalysis()) {

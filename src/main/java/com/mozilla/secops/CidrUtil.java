@@ -3,10 +3,8 @@ package com.mozilla.secops;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Scanner;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -146,18 +144,9 @@ public class CidrUtil {
    */
   public CidrUtil(String path) throws IOException {
     this();
-    InputStream in;
-    if (GcsUtil.isGcsUrl(path)) {
-      in = GcsUtil.fetchInputStreamContent(path);
-    } else {
-      in = CidrUtil.class.getResourceAsStream(path);
-    }
-    if (in == null) {
-      throw new IOException("failed to load cidr list from specified path");
-    }
-    Scanner s = new Scanner(in);
-    while (s.hasNext()) {
-      add(s.next());
+    ArrayList<String> flist = FileUtil.fileReadLines(path);
+    for (String i : flist) {
+      add(i);
     }
   }
 }

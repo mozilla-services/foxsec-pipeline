@@ -43,7 +43,13 @@ public class Violation {
       public String toString() {
         return "hard_limit_violation";
       }
-    }
+    },
+    USERAGENT_BLACKLIST_VIOLATION {
+      @Override
+      public String toString() {
+        return "useragent_blacklist_violation";
+      }
+    },
   }
 
   private static final Map<String, ViolationType> violationMap;
@@ -58,6 +64,7 @@ public class Violation {
     tMap.put("threshold_analysis", ViolationType.REQUEST_THRESHOLD_VIOLATION);
     tMap.put("endpoint_abuse", ViolationType.ENDPOINT_ABUSE_VIOLATION);
     tMap.put("hard_limit", ViolationType.HARD_LIMIT_VIOLATION);
+    tMap.put("useragent_blacklist", ViolationType.USERAGENT_BLACKLIST_VIOLATION);
     violationMap = Collections.unmodifiableMap(tMap);
   }
 
