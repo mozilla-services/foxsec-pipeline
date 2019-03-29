@@ -13,6 +13,12 @@ if [[ `uname` == 'Darwin' ]]; then
 	CACHEFLAGS=':cached'
 fi
 
+# If using WSL, the developer is likely using a symlink to a directory
+# on the Windows fs.
+if [[ `uname -a` == *"Microsoft"* ]]; then
+	PWD=`pwd -P`
+fi
+
 # Create dir to cache maven dependencies if it doesn't already exist.
 mkdir -p .m2
 
