@@ -262,7 +262,7 @@ public class AuthProfile implements Serializable {
         return ipAddr;
       }
       for (Map.Entry<String, String> namedSubnet : namedSubnets.entrySet()) {
-        if (CidrUtil.AddressInCidr(ipAddr, namedSubnet.getValue())) {
+        if (CidrUtil.addressInCidr(ipAddr, namedSubnet.getValue())) {
           return namedSubnet.getKey();
         }
       }
@@ -374,6 +374,10 @@ public class AuthProfile implements Serializable {
           }
 
           String entryKey = getEntryKey(e.getNormalized().getSourceAddress());
+          if (!entryKey.equals(e.getNormalized().getSourceAddress())) {
+            a.addMetadata("entry_key", entryKey);
+          }
+
           if (sm.updateEntry(entryKey)) {
             // Check new address ignore list
             if (ignoreDuplicateSourceAddress(e, seenNewAddresses)) {

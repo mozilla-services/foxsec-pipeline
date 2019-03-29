@@ -293,12 +293,14 @@ public class TestAuthProfile {
                   assertEquals("authprofile.ftlh", a.getTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  assertEquals("office", a.getMetadataValue("entry_key"));
                 } else if (actualSummary.matches("(.*)new source aaaa(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                   assertEquals("authprofile.ftlh", a.getTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  assertNull(a.getMetadataValue("entry_key"));
                 }
                 assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                 assertEquals("riker", a.getMetadataValue("username"));

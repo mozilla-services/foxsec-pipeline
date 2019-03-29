@@ -57,9 +57,16 @@ public class CidrUtil {
     };
   }
 
-  public static boolean AddressInCidr(String ipAddr, String cidr) {
+  /**
+   * Return true if address is within the cidr
+   *
+   * @param addr IP address to check against cidr
+   * @param cidr cidr to check if it contains the IP address
+   * @return True if addr is within the cidr.
+   */
+  public static boolean addressInCidr(String addr, String cidr) {
     IpAddressMatcher c = new IpAddressMatcher(cidr);
-    return c.matches(ipAddr);
+    return c.matches(addr);
   }
 
   /**
