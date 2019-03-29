@@ -27,7 +27,7 @@ public class FileUtil {
       throw new IOException("failed to read file from specified path");
     }
     ArrayList<String> ret = new ArrayList<>();
-    Scanner s = new Scanner(in);
+    Scanner s = new Scanner(in).useDelimiter("\\n");
     while (s.hasNext()) {
       String n = s.next();
       if (n.startsWith("#")) {
