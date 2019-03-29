@@ -57,6 +57,11 @@ public class CidrUtil {
     };
   }
 
+  public static boolean AddressInCidr(String ipAddr, String cidr) {
+    IpAddressMatcher c = new IpAddressMatcher(cidr);
+    return c.matches(ipAddr);
+  }
+
   /**
    * Return true if any loaded subnet contains the specified address
    *

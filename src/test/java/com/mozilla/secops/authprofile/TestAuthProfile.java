@@ -268,4 +268,61 @@ public class TestAuthProfile {
             });
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void analyzeNamedSubnetsTest() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer3.txt", p);
+
+    PCollection<Alert> res =
+        input
+            .apply(new AuthProfile.ParseAndWindow(options))
+            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long newCnt = 0;
+              long infoCnt = 0;
+              for (Alert a : results) {
+                assertEquals("authprofile", a.getCategory());
+                String actualSummary = a.getSummary();
+                if (actualSummary.equals(
+                    "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                        + "new source fd00:0:0:0:0:0:0:1 [unknown/unknown]")) {
+                  newCnt++;
+                  assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  assertEquals("authprofile.ftlh", a.getTemplateName());
+                  assertEquals(
+                      "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                } else if (actualSummary.equals(
+                    "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                        + "new source aaaa:0:0:0:0:0:0:1 [unknown/unknown]")) {
+                  newCnt++;
+                  assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  assertEquals("authprofile.ftlh", a.getTemplateName());
+                  assertEquals(
+                      "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                } else if (actualSummary.equals(
+                    "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                        + "fd00:0:0:0:0:0:0:2 [unknown/unknown]")) {
+                  infoCnt++;
+                  assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                  assertNull(a.getTemplateName());
+                  assertNull(a.getMetadataValue("notify_email_direct"));
+                }
+                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                assertEquals("riker", a.getMetadataValue("username"));
+                assertEquals("emit-bastion", a.getMetadataValue("object"));
+                assertEquals("unknown", a.getMetadataValue("sourceaddress_city"));
+                assertEquals("unknown", a.getMetadataValue("sourceaddress_country"));
+              }
+              assertEquals(2L, newCnt);
+              assertEquals(1L, infoCnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }
