@@ -1062,6 +1062,15 @@ public class HTTPRequest implements Serializable {
                     .apply("output format", ParDo.of(new AlertFormatter(options))));
       }
 
+      if (options.getEnableUserAgentBlacklistAnalysis()) {
+        resultsList =
+            resultsList.and(
+                fwEvents
+                    .apply(
+                        "ua blacklist analysis", new UserAgentBlacklistAnalysis(options, natView))
+                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+      }
+
       PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
       results.apply("output", OutputOptions.compositeOutput(options));
     }
