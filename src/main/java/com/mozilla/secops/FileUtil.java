@@ -10,6 +10,9 @@ public class FileUtil {
   /**
    * Read file from specified path, returning an {@link ArrayList} containing an item for each line
    *
+   * <p>Lines beginning with a # character are treated as comments and not returned in the result
+   * set.
+   *
    * @param path Resource path or GCS URL to read file from
    * @return {@link ArrayList} containing line items
    */
@@ -24,9 +27,13 @@ public class FileUtil {
       throw new IOException("failed to read file from specified path");
     }
     ArrayList<String> ret = new ArrayList<>();
-    Scanner s = new Scanner(in);
+    Scanner s = new Scanner(in).useDelimiter("\\n");
     while (s.hasNext()) {
-      ret.add(s.next());
+      String n = s.next();
+      if (n.startsWith("#")) {
+        continue;
+      }
+      ret.add(n);
     }
     return ret;
   }
