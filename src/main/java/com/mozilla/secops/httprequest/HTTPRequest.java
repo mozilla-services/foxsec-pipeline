@@ -1031,7 +1031,7 @@ public class HTTPRequest implements Serializable {
         || options.getEnableHardLimitAnalysis()) {
       PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
 
-      PCollectionList<String> resultsList = PCollectionList.empty(p);
+      PCollectionList<Alert> resultsList = PCollectionList.empty(p);
 
       PCollectionView<Map<String, Boolean>> natView = null;
       if (options.getNatDetection()) {
@@ -1041,38 +1041,31 @@ public class HTTPRequest implements Serializable {
       if (options.getEnableThresholdAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents
-                    .apply("threshold analysis", new ThresholdAnalysis(options, natView))
-                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+                fwEvents.apply("threshold analysis", new ThresholdAnalysis(options, natView)));
       }
 
       if (options.getEnableHardLimitAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents
-                    .apply("hard limit analysis", new HardLimitAnalysis(options, natView))
-                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+                fwEvents.apply("hard limit analysis", new HardLimitAnalysis(options, natView)));
       }
 
       if (options.getEnableErrorRateAnalysis()) {
         resultsList =
-            resultsList.and(
-                fwEvents
-                    .apply("error rate analysis", new ErrorRateAnalysis(options))
-                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+            resultsList.and(fwEvents.apply("error rate analysis", new ErrorRateAnalysis(options)));
       }
 
       if (options.getEnableUserAgentBlacklistAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents
-                    .apply(
-                        "ua blacklist analysis", new UserAgentBlacklistAnalysis(options, natView))
-                    .apply("output format", ParDo.of(new AlertFormatter(options))));
+                fwEvents.apply(
+                    "ua blacklist analysis", new UserAgentBlacklistAnalysis(options, natView)));
       }
 
-      PCollection<String> results = resultsList.apply(Flatten.<String>pCollections());
-      results.apply("output", OutputOptions.compositeOutput(options));
+      resultsList
+          .apply(Flatten.<Alert>pCollections())
+          .apply("output format", ParDo.of(new AlertFormatter(options)))
+          .apply("output", OutputOptions.compositeOutput(options));
     }
 
     if (options.getEnableEndpointAbuseAnalysis()) {
