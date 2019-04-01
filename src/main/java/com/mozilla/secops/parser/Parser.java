@@ -1,7 +1,9 @@
 package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
@@ -30,6 +32,7 @@ public class Parser {
 
   private final List<PayloadBase> payloads;
   private final JacksonFactory jf;
+  private final ObjectMapper mapper;
   private final Logger log;
   private final ParserCfg cfg;
   private GeoIP geoip;
@@ -172,9 +175,6 @@ public class Parser {
       Map<String, Object> jsonPayload = entry.getJsonPayload();
       String jbuf = null;
       if (jsonPayload != null) {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(
-            com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         try {
           jbuf = mapper.writeValueAsString(jsonPayload);
         } catch (JsonProcessingException exc) {
@@ -182,7 +182,7 @@ public class Parser {
         }
       }
       if (jbuf != null) {
-        Mozlog m = Mozlog.fromJSON(jbuf);
+        Mozlog m = Mozlog.fromJSON(jbuf, mapper);
         if (m != null) {
           e.setMozlog(m);
           state.setMozlogHint(m);
@@ -191,7 +191,7 @@ public class Parser {
       }
     }
 
-    Mozlog m = Mozlog.fromJSON(input);
+    Mozlog m = Mozlog.fromJSON(input, mapper);
     if (m != null) {
       e.setMozlog(m);
       state.setMozlogHint(m);
@@ -300,6 +300,15 @@ public class Parser {
   public Parser(ParserCfg cfg) {
     log = LoggerFactory.getLogger(Parser.class);
     jf = new JacksonFactory();
+
+    mapper = new ObjectMapper();
+    mapper.registerModule(new JodaModule());
+    mapper.configure(
+        com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    // Not all Mozlog implementations use lower case field names, and we will reuse this mapper
+    // for Mozlog conversion
+    mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+
     this.cfg = cfg;
     if (cfg.getMaxmindDbPath() != null) {
       geoip = new GeoIP(cfg.getMaxmindDbPath());
