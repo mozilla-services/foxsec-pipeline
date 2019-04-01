@@ -187,7 +187,9 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
    * @return {@link PCollectionView} representing results of analysis
    */
   public static PCollectionView<StatsOutput> getView(PCollection<Long> input) {
-    return input.apply(new Stats()).apply(View.<StatsOutput>asSingleton());
+    return input
+        .apply(new Stats())
+        .apply(View.<StatsOutput>asSingleton().withDefaultValue(new StatsOutput()));
   }
 
   @Override
