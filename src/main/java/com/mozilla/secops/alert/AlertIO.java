@@ -1,5 +1,6 @@
 package com.mozilla.secops.alert;
 
+import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -7,14 +8,9 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
-import org.apache.beam.sdk.transforms.windowing.GlobalWindows;
-import org.apache.beam.sdk.transforms.windowing.Repeatedly;
-import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
-import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,13 +34,7 @@ public class AlertIO {
 
     @Override
     public PCollection<Alert> expand(PCollection<String> col) {
-      return col.apply(
-              Window.<String>into(new GlobalWindows())
-                  .triggering(
-                      Repeatedly.forever(
-                          AfterProcessingTime.pastFirstElementInPane()
-                              .plusDelayOf(Duration.standardMinutes(1))))
-                  .discardingFiredPanes())
+      return col.apply("window for alert merge", new GlobalTriggers<String>(60))
           .apply(
               "extract merge keys",
               ParDo.of(

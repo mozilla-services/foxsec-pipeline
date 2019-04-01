@@ -12,6 +12,7 @@ import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
+import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.regex.PatternSyntaxException;
@@ -24,13 +25,8 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
-import org.apache.beam.sdk.transforms.windowing.GlobalWindows;
-import org.apache.beam.sdk.transforms.windowing.Repeatedly;
-import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
-import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,14 +61,7 @@ public class AwsBehavior implements Serializable {
 
       return col.apply(ParDo.of(new ParserDoFn().withConfiguration(cfg)))
           .apply(EventFilter.getTransform(filter))
-          .apply(
-              Window.<Event>into(new GlobalWindows())
-                  .triggering(
-                      Repeatedly.forever(
-                          AfterProcessingTime.pastFirstElementInPane()
-                              .plusDelayOf(Duration.standardSeconds(10))))
-                  .withAllowedLateness(Duration.standardSeconds(10))
-                  .discardingFiredPanes());
+          .apply(new GlobalTriggers<Event>(10));
     }
   }
 

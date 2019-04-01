@@ -18,6 +18,7 @@ import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.MemcachedStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateException;
+import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,13 +32,8 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
-import org.apache.beam.sdk.transforms.windowing.GlobalWindows;
-import org.apache.beam.sdk.transforms.windowing.Repeatedly;
-import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,13 +152,7 @@ public class AuthProfile implements Serializable {
                       }
                     }
                   }))
-          .apply(
-              Window.<KV<String, Event>>into(new GlobalWindows())
-                  .triggering(
-                      Repeatedly.forever(
-                          AfterProcessingTime.pastFirstElementInPane()
-                              .plusDelayOf(Duration.standardSeconds(60))))
-                  .discardingFiredPanes())
+          .apply(new GlobalTriggers<KV<String, Event>>(60))
           .apply(GroupByKey.<String, Event>create());
     }
   }

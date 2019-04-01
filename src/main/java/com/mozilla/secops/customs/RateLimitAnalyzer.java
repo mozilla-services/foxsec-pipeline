@@ -3,6 +3,7 @@ package com.mozilla.secops.customs;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.util.Map;
 import org.apache.beam.sdk.transforms.Count;
@@ -11,7 +12,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
-import org.apache.beam.sdk.transforms.windowing.GlobalWindows;
 import org.apache.beam.sdk.transforms.windowing.Repeatedly;
 import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
@@ -62,13 +62,7 @@ public class RateLimitAnalyzer extends PTransform<PCollection<Event>, PCollectio
         .apply(
             ParDo.of(new RateLimitCriterion(detectorName, cfg, eventView, monitoredResource))
                 .withSideInputs(eventView))
-        .apply(
-            "suppression windows",
-            Window.<KV<String, Alert>>into(new GlobalWindows())
-                .triggering(
-                    Repeatedly.forever(
-                        AfterProcessingTime.pastFirstElementInPane()
-                            .plusDelayOf(Duration.standardSeconds(5L)))))
+        .apply("suppression windows", new GlobalTriggers<KV<String, Alert>>(5))
         .apply(ParDo.of(new RateLimitSuppressor(cfg)));
   }
 
