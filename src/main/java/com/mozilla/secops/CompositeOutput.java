@@ -49,6 +49,7 @@ public abstract class CompositeOutput {
     alertcfg.setGcpProject(project);
     alertcfg.setSlackToken(options.getOutputAlertSlackToken());
     alertcfg.setSlackCatchall(options.getOutputAlertSlackCatchall());
+    alertcfg.setGcsTemplateBasePath(options.getOutputAlertGcsTemplateBasePath());
 
     String memcachedHost = options.getAlertStateMemcachedHost();
     Integer memcachedPort = options.getAlertStateMemcachedPort();

@@ -16,11 +16,13 @@ public class AlertSlack {
   private SlackManager slackManager;
   private final Logger log;
   private State state;
+  private TemplateManager templateManager;
 
   /** Construct new alert slack object */
   public AlertSlack(AlertConfiguration cfg) {
     log = LoggerFactory.getLogger(AlertSlack.class);
     this.cfg = cfg;
+    templateManager = new TemplateManager(cfg);
     configureState();
 
     try {
@@ -35,6 +37,7 @@ public class AlertSlack {
   public AlertSlack(AlertConfiguration cfg, SlackManager slackManager) {
     log = LoggerFactory.getLogger(AlertSlack.class);
     this.cfg = cfg;
+    templateManager = new TemplateManager(cfg);
     configureState();
     this.slackManager = slackManager;
   }
@@ -95,9 +98,7 @@ public class AlertSlack {
 
     log.info("generating slack message for {}", userId);
 
-    String text =
-        String.format(
-            "Foxsec Fraud Detection Alert\n\n%s\n\nalert id: %s", a.getPayload(), a.getAlertId());
+    String text = createAlertBody(a);
     try {
       return slackManager.handleSlackResponse(slackManager.sendMessageToChannel(userId, text));
     } catch (IOException exc) {
@@ -165,4 +166,17 @@ public class AlertSlack {
 
     return null;
   }
+
+  private String createAlertBody(Alert a) {
+    if (a.getSlackTemplateName() != null) {
+      try {
+        return templateManager.processTemplate(
+            a.getSlackTemplateName(), a.generateTemplateVariables());
+      } catch (Exception exc) {
+        log.error("slack template processing failed: {}", exc.getMessage());
+      }
+    }
+    return String.format(
+        "Foxsec Fraud Detection Alert\n\n%s\n\nalert id: %s", a.getPayload(), a.getAlertId());
+  };
 }
