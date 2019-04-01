@@ -33,6 +33,7 @@ public class Parser {
   private final List<PayloadBase> payloads;
   private final JacksonFactory jf;
   private final ObjectMapper mapper;
+  private final JacksonFactory googleJacksonFactory;
   private final Logger log;
   private final ParserCfg cfg;
   private GeoIP geoip;
@@ -261,6 +262,7 @@ public class Parser {
     }
 
     ParserState state = new ParserState(this);
+    state.setGoogleJacksonFactory(googleJacksonFactory);
 
     if (input == null) {
       input = "";
@@ -308,6 +310,8 @@ public class Parser {
     // Not all Mozlog implementations use lower case field names, and we will reuse this mapper
     // for Mozlog conversion
     mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+
+    googleJacksonFactory = new JacksonFactory();
 
     this.cfg = cfg;
     if (cfg.getMaxmindDbPath() != null) {

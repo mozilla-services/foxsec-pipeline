@@ -73,9 +73,8 @@ public class GLB extends PayloadBase implements Serializable {
     jfmatcher = null;
     LogEntry entry = state.getLogEntryHint();
     if (entry == null) {
-      // Use method local JacksonFactory as the object is not serializable, and this event
-      // may be passed around
-      JacksonFactory jf = new JacksonFactory();
+      // Reuse JacksonFactory from parser state
+      JacksonFactory jf = state.getGoogleJacksonFactory();
       try {
         JsonParser jp = jf.createJsonParser(input);
         entry = jp.parse(LogEntry.class);
