@@ -18,6 +18,7 @@ import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
+import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -1026,12 +1027,12 @@ public class HTTPRequest implements Serializable {
     PCollection<Event> events =
         p.apply("input", new CompositeInput(options)).apply("parse", new Parse(options));
 
+    PCollectionList<Alert> resultsList = PCollectionList.empty(p);
+
     if (options.getEnableThresholdAnalysis()
         || options.getEnableErrorRateAnalysis()
         || options.getEnableHardLimitAnalysis()) {
       PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
-
-      PCollectionList<Alert> resultsList = PCollectionList.empty(p);
 
       PCollectionView<Map<String, Boolean>> natView = null;
       if (options.getNatDetection()) {
@@ -1041,40 +1042,50 @@ public class HTTPRequest implements Serializable {
       if (options.getEnableThresholdAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents.apply("threshold analysis", new ThresholdAnalysis(options, natView)));
+                fwEvents
+                    .apply("threshold analysis", new ThresholdAnalysis(options, natView))
+                    .apply("threshold analysis global", new GlobalTriggers<Alert>(5)));
       }
 
       if (options.getEnableHardLimitAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents.apply("hard limit analysis", new HardLimitAnalysis(options, natView)));
+                fwEvents
+                    .apply("hard limit analysis", new HardLimitAnalysis(options, natView))
+                    .apply("hard limit analysis global", new GlobalTriggers<Alert>(5)));
       }
 
       if (options.getEnableErrorRateAnalysis()) {
         resultsList =
-            resultsList.and(fwEvents.apply("error rate analysis", new ErrorRateAnalysis(options)));
+            resultsList.and(
+                fwEvents
+                    .apply("error rate analysis", new ErrorRateAnalysis(options))
+                    .apply("error rate analysis global", new GlobalTriggers<Alert>(5)));
       }
 
       if (options.getEnableUserAgentBlacklistAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents.apply(
-                    "ua blacklist analysis", new UserAgentBlacklistAnalysis(options, natView)));
+                fwEvents
+                    .apply(
+                        "ua blacklist analysis", new UserAgentBlacklistAnalysis(options, natView))
+                    .apply("ua blacklist analysis global", new GlobalTriggers<Alert>(5)));
       }
-
-      resultsList
-          .apply("flatten window for fixed output", Flatten.<Alert>pCollections())
-          .apply("output format", ParDo.of(new AlertFormatter(options)))
-          .apply("output", OutputOptions.compositeOutput(options));
     }
 
     if (options.getEnableEndpointAbuseAnalysis()) {
-      events
-          .apply("window for fixed fire early", new WindowForFixedFireEarly())
-          .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
-          .apply("output format", ParDo.of(new AlertFormatter(options)))
-          .apply("output", OutputOptions.compositeOutput(options));
+      resultsList =
+          resultsList.and(
+              events
+                  .apply("window for fixed fire early", new WindowForFixedFireEarly())
+                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
+                  .apply("endpoint abuse analysis global", new GlobalTriggers<Alert>(5)));
     }
+
+    resultsList
+        .apply("flatten output", Flatten.<Alert>pCollections())
+        .apply("output format", ParDo.of(new AlertFormatter(options)))
+        .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();
   }
