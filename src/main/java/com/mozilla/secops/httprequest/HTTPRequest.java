@@ -788,7 +788,7 @@ public class HTTPRequest implements Serializable {
               .apply(Keys.<String>create())
               .apply(
                   "unique client count",
-                  Combine.globally(Count.<String>combineFn()).withoutDefaults().asSingletonView());
+                  Combine.globally(Count.<String>combineFn()).asSingletonView());
 
       // For each client, extract the request count
       PCollection<Long> counts = clientCounts.apply("extract counts", Values.<Long>create());
