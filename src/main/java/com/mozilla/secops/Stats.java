@@ -188,14 +188,16 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
    */
   public static PCollectionView<StatsOutput> getView(PCollection<Long> input) {
     return input
-        .apply(new Stats())
-        .apply(View.<StatsOutput>asSingleton().withDefaultValue(new StatsOutput()));
+        .apply("stats transform", new Stats())
+        .apply("stats view", View.<StatsOutput>asSingleton().withDefaultValue(new StatsOutput()));
   }
 
   @Override
   public PCollection<StatsOutput> expand(PCollection<Long> input) {
-    PCollectionView<Double> meanValue = input.apply(Mean.<Long>globally().asSingletonView());
+    PCollectionView<Double> meanValue =
+        input.apply("stats mean calculation", Mean.<Long>globally().asSingletonView());
     return input.apply(
+        "stats",
         Combine.globally(new StatsCombiner(meanValue)).withoutDefaults().withSideInputs(meanValue));
   }
 }
