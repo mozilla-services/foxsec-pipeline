@@ -20,7 +20,7 @@ public final class GcsUtil {
    * Get signed url from GCS Url (gs://...)
    *
    * @param input Input string
-   * @return URL signed url
+   * @return java.net.URL signed url
    */
   public static java.net.URL signedUrlFromGcsUrl(String input) {
     BlobId bid = blobIdFromUrl(input);
