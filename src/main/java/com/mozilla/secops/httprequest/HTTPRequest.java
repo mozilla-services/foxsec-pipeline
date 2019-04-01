@@ -1063,7 +1063,7 @@ public class HTTPRequest implements Serializable {
       }
 
       resultsList
-          .apply(Flatten.<Alert>pCollections())
+          .apply("flatten window for fixed output", Flatten.<Alert>pCollections())
           .apply("output format", ParDo.of(new AlertFormatter(options)))
           .apply("output", OutputOptions.compositeOutput(options));
     }
