@@ -263,41 +263,22 @@ public class Alert implements Serializable {
   }
 
   /**
-   * Set email template name
+   * Set template name
    *
    * @param templateName Freemarker template name with file extension
    */
-  public void setEmailTemplateName(String templateName) {
-    addMetadata("template_name_email", templateName);
+  public void setTemplateName(String templateName) {
+    addMetadata("template_name", templateName);
   }
 
   /**
-   * Get email template name
+   * Get template name
    *
    * @return Freemarker template name with file extension or null if not set.
    */
   @JsonIgnore
-  public String getEmailTemplateName() {
-    return getMetadataValue("template_name_email");
-  }
-
-  /**
-   * Set slack template name
-   *
-   * @param templateName Freemarker template name with file extension
-   */
-  public void setSlackTemplateName(String templateName) {
-    addMetadata("template_name_slack", templateName);
-  }
-
-  /**
-   * Get slack template name
-   *
-   * @return Freemarker template name with file extension or null if not set.
-   */
-  @JsonIgnore
-  public String getSlackTemplateName() {
-    return getMetadataValue("template_name_slack");
+  public String getTemplateName() {
+    return getMetadataValue("template_name");
   }
 
   /**
