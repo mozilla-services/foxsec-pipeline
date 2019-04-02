@@ -26,6 +26,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
 
     private final UUID sid;
 
+    private Long totalElements;
     private Long totalSum;
     private Double popVar;
     private Double mean;
@@ -104,10 +105,29 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       return totalSum;
     }
 
+    /**
+     * Set total elements that made up result
+     *
+     * @param totalElements Total element cound
+     */
+    public void setTotalElements(Long totalElements) {
+      this.totalElements = totalElements;
+    }
+
+    /**
+     * Get total elements
+     *
+     * @return Total element count
+     */
+    public Long getTotalElements() {
+      return totalElements;
+    }
+
     /** Initialize new statistics output class */
     StatsOutput() {
       sid = UUID.randomUUID();
       totalSum = 0L;
+      totalElements = 0L;
       popVar = 0.0;
       mean = 0.0;
     }
@@ -124,10 +144,12 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       private static final long serialVersionUID = 1L;
 
       Long sum;
+      Long total;
       ArrayList<Double> varianceSq;
 
       State() {
         sum = 0L;
+        total = 0L;
         varianceSq = new ArrayList<Double>();
       }
     }
@@ -139,6 +161,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
 
     @Override
     public State addInput(State state, Long input, Context c) {
+      state.total++;
       state.sum += input;
       state.varianceSq.add(Math.pow(input - c.sideInput(meanValue), 2));
       return state;
@@ -149,6 +172,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       State merged = new State();
       for (State s : states) {
         merged.sum += s.sum;
+        merged.total += s.total;
         merged.varianceSq.addAll(s.varianceSq);
       }
       return merged;
@@ -159,6 +183,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       Double mean = c.sideInput(meanValue);
       StatsOutput ret = new StatsOutput();
       ret.setTotalSum(state.sum);
+      ret.setTotalElements(state.total);
       Double x = 0.0;
       for (Double y : state.varianceSq) {
         x += y;

@@ -28,6 +28,7 @@ public class TestStats {
               assertEquals(5.5, (double) s.getMean(), 0.1);
               assertEquals(2.25, (double) s.getPopulationVariance(), 0.1);
               assertEquals(55L, (long) s.getTotalSum());
+              assertEquals(10L, (long) s.getTotalElements());
               return null;
             });
 
