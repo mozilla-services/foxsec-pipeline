@@ -33,12 +33,10 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.state.StateSpec;
 import org.apache.beam.sdk.state.StateSpecs;
 import org.apache.beam.sdk.state.ValueState;
-import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
-import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Values;
@@ -783,14 +781,6 @@ public class HTTPRequest implements Serializable {
                       }))
               .apply(Count.<String>perElement());
 
-      // Calculate the number of unique clients in the collection
-      PCollectionView<Long> uniqueClients =
-          clientCounts
-              .apply(Keys.<String>create())
-              .apply(
-                  "unique client count",
-                  Combine.globally(Count.<String>combineFn()).asSingletonView());
-
       // For each client, extract the request count
       PCollection<Long> counts = clientCounts.apply("extract counts", Values.<Long>create());
 
@@ -816,7 +806,7 @@ public class HTTPRequest implements Serializable {
                     @ProcessElement
                     public void processElement(ProcessContext c, BoundedWindow w) {
                       Stats.StatsOutput sOutput = c.sideInput(wStats);
-                      Long uc = c.sideInput(uniqueClients);
+                      Long uc = sOutput.getTotalElements();
                       Map<String, Boolean> nv = c.sideInput(natView);
 
                       Double cMean = sOutput.getMean();
@@ -898,7 +888,7 @@ public class HTTPRequest implements Serializable {
                       }
                     }
                   })
-              .withSideInputs(wStats, natView, uniqueClients));
+              .withSideInputs(wStats, natView));
     }
   }
 
