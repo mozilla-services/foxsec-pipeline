@@ -3,8 +3,7 @@ package com.mozilla.secops;
 import java.io.Serializable;
 import java.util.UUID;
 import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext;
-import org.apache.beam.sdk.transforms.CombineWithContext.Context;
+import org.apache.beam.sdk.transforms.Combine.CombineFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
@@ -111,37 +110,59 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
     }
   }
 
-  /** {@link CombineFnWithContext} for performing statistics operations on a collection of values */
-  public static class StatsCombiner
-      extends CombineFnWithContext<Long, StatsCombiner.State, StatsOutput> {
+  /** {@link CombineFn} for performing statistics operations on a collection of values */
+  public static class StatsCombiner extends CombineFn<Long, StatsCombiner.State, StatsOutput> {
     private static final long serialVersionUID = 1L;
 
     private static class State implements Serializable {
       private static final long serialVersionUID = 1L;
 
+      private final UUID sid;
+
       Long sum;
       Long total;
 
+      /**
+       * Return unique state ID
+       *
+       * @return Unique state ID
+       */
+      public UUID getId() {
+        return sid;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        State s = (State) o;
+        return getId().equals(s.getId());
+      }
+
+      @Override
+      public int hashCode() {
+        return sid.hashCode();
+      }
+
       State() {
+        sid = UUID.randomUUID();
         sum = 0L;
         total = 0L;
       }
     }
 
     @Override
-    public State createAccumulator(Context c) {
+    public State createAccumulator() {
       return new State();
     }
 
     @Override
-    public State addInput(State state, Long input, Context c) {
+    public State addInput(State state, Long input) {
       state.total++;
       state.sum += input;
       return state;
     }
 
     @Override
-    public State mergeAccumulators(Iterable<State> states, Context c) {
+    public State mergeAccumulators(Iterable<State> states) {
       State merged = new State();
       for (State s : states) {
         merged.sum += s.sum;
@@ -151,7 +172,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
     }
 
     @Override
-    public StatsOutput extractOutput(State state, Context c) {
+    public StatsOutput extractOutput(State state) {
       StatsOutput ret = new StatsOutput();
       ret.setTotalSum(state.sum);
       ret.setTotalElements(state.total);
