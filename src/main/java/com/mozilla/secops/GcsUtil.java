@@ -22,7 +22,9 @@ public final class GcsUtil {
    * @param input Input string
    * @return java.net.URL signed url
    */
-  public static java.net.URL signedUrlFromGcsUrl(String input) {
+  public static java.net.URL signedUrlFromGcsUrl(String input)
+      throws IllegalStateException, IllegalArgumentException,
+          com.google.auth.ServiceAccountSigner.SigningException {
     BlobId bid = blobIdFromUrl(input);
     if (bid == null) {
       return null;
@@ -33,13 +35,7 @@ public final class GcsUtil {
     if (blob == null || !blob.exists()) {
       return null;
     }
-    try {
-      return storage.signUrl(BlobInfo.newBuilder(bid).build(), 10, TimeUnit.MINUTES);
-    } catch (IllegalStateException exc) {
-      return null;
-    } catch (com.google.auth.ServiceAccountSigner.SigningException exc) {
-      return null;
-    }
+    return storage.signUrl(BlobInfo.newBuilder(bid).build(), 10, TimeUnit.MINUTES);
   }
 
   /**

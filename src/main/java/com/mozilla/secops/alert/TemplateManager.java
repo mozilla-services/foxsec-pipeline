@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Manager class for processing templates using Freemarker */
 public class TemplateManager {
@@ -40,8 +42,10 @@ public class TemplateManager {
   /* Extends URLTemplateLoader to support Google Cloud Storage URLs */
   private class GcsTemplateLoader extends URLTemplateLoader {
     private String basePath;
+    private final Logger log;
 
     public GcsTemplateLoader(String basePath) {
+      log = LoggerFactory.getLogger(GcsTemplateLoader.class);
       if (!basePath.endsWith("/")) {
         basePath = basePath + "/";
       }
@@ -49,7 +53,18 @@ public class TemplateManager {
     }
 
     protected java.net.URL getURL(String name) {
-      return GcsUtil.signedUrlFromGcsUrl(String.format("%s%s", basePath, name));
+      try {
+        return GcsUtil.signedUrlFromGcsUrl(String.format("%s%s", basePath, name));
+      } catch (IllegalStateException exc) {
+        log.error(
+            "no implementation of ServiceAccountSigner was provided to StorageOptions: {}",
+            exc.getMessage());
+      } catch (IllegalArgumentException exc) {
+        log.error("there was an error with the SignUrlOptions: {}", exc.getMessage());
+      } catch (com.google.auth.ServiceAccountSigner.SigningException exc) {
+        log.error("the attempt to sign the URL failed: {}", exc.getMessage());
+      }
+      return null;
     }
   }
 

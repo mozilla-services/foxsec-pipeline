@@ -254,7 +254,7 @@ public class AuthProfile implements Serializable {
       if (e.getNormalized().isOfType(Normalized.Type.AUTH)) {
         a.addMetadata("auth_alert_type", "auth");
       } else if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
-        a.addMetadata("auth_alert_type", "auth");
+        a.addMetadata("auth_alert_type", "auth_session");
       }
 
       return a;
