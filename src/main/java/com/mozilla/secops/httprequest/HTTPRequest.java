@@ -792,17 +792,6 @@ public class HTTPRequest implements Serializable {
                   new DoFn<KV<String, Long>, Alert>() {
                     private static final long serialVersionUID = 1L;
 
-                    private Boolean warningLogged;
-                    private Boolean clampMaximumLogged;
-                    private Boolean statsLogged;
-
-                    @StartBundle
-                    public void startBundle() {
-                      warningLogged = false;
-                      clampMaximumLogged = false;
-                      statsLogged = false;
-                    }
-
                     @ProcessElement
                     public void processElement(ProcessContext c, BoundedWindow w) {
                       Stats.StatsOutput sOutput = c.sideInput(wStats);
@@ -810,45 +799,16 @@ public class HTTPRequest implements Serializable {
                       Map<String, Boolean> nv = c.sideInput(natView);
 
                       Double cMean = sOutput.getMean();
-                      if (!statsLogged) {
-                        log.info(
-                            "{}: statistics: mean/{} unique_clients/{} threshold/{}",
-                            w.toString(),
-                            cMean,
-                            uc,
-                            cMean * thresholdModifier);
-                        statsLogged = true;
-                      }
 
                       if (uc < requiredMinimumClients) {
-                        if (!warningLogged) {
-                          log.warn(
-                              "{}: ignoring events as window does not meet minimum clients",
-                              w.toString());
-                          warningLogged = true;
-                        }
                         return;
                       }
 
                       if (cMean < requiredMinimumAverage) {
-                        if (!warningLogged) {
-                          log.warn(
-                              "{}: ignoring events as window does not meet minimum average",
-                              w.toString());
-                          warningLogged = true;
-                        }
                         return;
                       }
 
                       if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
-                        if (!clampMaximumLogged) {
-                          log.info(
-                              "{}: clamping calculated mean {} to maximum {}",
-                              w.toString(),
-                              cMean,
-                              clampThresholdMaximum);
-                          clampMaximumLogged = true;
-                        }
                         cMean = clampThresholdMaximum;
                       }
 
