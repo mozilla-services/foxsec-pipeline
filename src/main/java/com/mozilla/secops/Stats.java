@@ -1,12 +1,10 @@
 package com.mozilla.secops;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.UUID;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext;
 import org.apache.beam.sdk.transforms.CombineWithContext.Context;
-import org.apache.beam.sdk.transforms.Mean;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
@@ -28,7 +26,6 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
 
     private Long totalElements;
     private Long totalSum;
-    private Double popVar;
     private Double mean;
 
     @Override
@@ -67,24 +64,6 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
      */
     public void setMean(Double mean) {
       this.mean = mean;
-    }
-
-    /**
-     * Get set population variance
-     *
-     * @return Population variance
-     */
-    public Double getPopulationVariance() {
-      return popVar;
-    }
-
-    /**
-     * Set population variance in result
-     *
-     * @param popVar Population variance
-     */
-    public void setPopulationVariance(Double popVar) {
-      this.popVar = popVar;
     }
 
     /**
@@ -128,7 +107,6 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       sid = UUID.randomUUID();
       totalSum = 0L;
       totalElements = 0L;
-      popVar = 0.0;
       mean = 0.0;
     }
   }
@@ -138,19 +116,15 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       extends CombineFnWithContext<Long, StatsCombiner.State, StatsOutput> {
     private static final long serialVersionUID = 1L;
 
-    private PCollectionView<Double> meanValue;
-
     private static class State implements Serializable {
       private static final long serialVersionUID = 1L;
 
       Long sum;
       Long total;
-      ArrayList<Double> varianceSq;
 
       State() {
         sum = 0L;
         total = 0L;
-        varianceSq = new ArrayList<Double>();
       }
     }
 
@@ -163,7 +137,6 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
     public State addInput(State state, Long input, Context c) {
       state.total++;
       state.sum += input;
-      state.varianceSq.add(Math.pow(input - c.sideInput(meanValue), 2));
       return state;
     }
 
@@ -173,23 +146,18 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       for (State s : states) {
         merged.sum += s.sum;
         merged.total += s.total;
-        merged.varianceSq.addAll(s.varianceSq);
       }
       return merged;
     }
 
     @Override
     public StatsOutput extractOutput(State state, Context c) {
-      Double mean = c.sideInput(meanValue);
       StatsOutput ret = new StatsOutput();
       ret.setTotalSum(state.sum);
       ret.setTotalElements(state.total);
-      Double x = 0.0;
-      for (Double y : state.varianceSq) {
-        x += y;
+      if (state.total > 0L) {
+        ret.setMean((double) state.sum / state.total);
       }
-      ret.setPopulationVariance(x / state.varianceSq.size());
-      ret.setMean(mean);
       return ret;
     }
 
@@ -198,9 +166,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       return new StatsOutput();
     }
 
-    StatsCombiner(PCollectionView<Double> meanValue) {
-      this.meanValue = meanValue;
-    }
+    StatsCombiner() {}
   }
 
   Stats() {}
@@ -219,10 +185,6 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
 
   @Override
   public PCollection<StatsOutput> expand(PCollection<Long> input) {
-    PCollectionView<Double> meanValue =
-        input.apply("stats mean calculation", Mean.<Long>globally().asSingletonView());
-    return input.apply(
-        "stats",
-        Combine.globally(new StatsCombiner(meanValue)).withoutDefaults().withSideInputs(meanValue));
+    return input.apply("stats", Combine.globally(new StatsCombiner()).withoutDefaults());
   }
 }

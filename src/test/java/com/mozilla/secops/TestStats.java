@@ -26,7 +26,6 @@ public class TestStats {
               Stats.StatsOutput s =
                   ((Collection<Stats.StatsOutput>) x).toArray(new Stats.StatsOutput[0])[0];
               assertEquals(5.5, (double) s.getMean(), 0.1);
-              assertEquals(2.25, (double) s.getPopulationVariance(), 0.1);
               assertEquals(55L, (long) s.getTotalSum());
               assertEquals(10L, (long) s.getTotalElements());
               return null;
