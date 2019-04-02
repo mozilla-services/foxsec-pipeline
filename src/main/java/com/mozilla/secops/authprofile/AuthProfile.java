@@ -21,6 +21,7 @@ import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
@@ -180,6 +181,7 @@ public class AuthProfile implements Serializable {
     private final String datastoreKind;
     private final String idmanagerPath;
     private CidrUtil cidrGcp;
+    private Map<String, String> namedSubnets;
     private IdentityManager idmanager;
     private Logger log;
     private State state;
@@ -202,6 +204,7 @@ public class AuthProfile implements Serializable {
       log = LoggerFactory.getLogger(Analyze.class);
 
       idmanager = IdentityManager.load(idmanagerPath);
+      namedSubnets = idmanager.getNamedSubnets();
 
       cidrGcp = new CidrUtil();
       cidrGcp.loadGcpSubnets();
@@ -252,6 +255,18 @@ public class AuthProfile implements Serializable {
       }
 
       return a;
+    }
+
+    private String getEntryKey(String ipAddr) {
+      if (namedSubnets == null) {
+        return ipAddr;
+      }
+      for (Map.Entry<String, String> namedSubnet : namedSubnets.entrySet()) {
+        if (CidrUtil.addressInCidr(ipAddr, namedSubnet.getValue())) {
+          return namedSubnet.getKey();
+        }
+      }
+      return ipAddr;
     }
 
     private Boolean ignoreDuplicateSourceAddress(Event e, ArrayList<String> list) {
@@ -358,7 +373,12 @@ public class AuthProfile implements Serializable {
             sm = new StateModel(userIdentity);
           }
 
-          if (sm.updateEntry(e.getNormalized().getSourceAddress())) {
+          String entryKey = getEntryKey(e.getNormalized().getSourceAddress());
+          if (!entryKey.equals(e.getNormalized().getSourceAddress())) {
+            a.addMetadata("entry_key", entryKey);
+          }
+
+          if (sm.updateEntry(entryKey)) {
             // Check new address ignore list
             if (ignoreDuplicateSourceAddress(e, seenNewAddresses)) {
               continue;

@@ -268,4 +268,50 @@ public class TestAuthProfile {
             });
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void analyzeNamedSubnetsTest() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer3.txt", p);
+
+    PCollection<Alert> res =
+        input
+            .apply(new AuthProfile.ParseAndWindow(options))
+            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long newCnt = 0;
+              for (Alert a : results) {
+                assertEquals("authprofile", a.getCategory());
+                String actualSummary = a.getSummary();
+                if (actualSummary.matches("(.*)new source fd00(.*)")) {
+                  newCnt++;
+                  assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  assertEquals("authprofile.ftlh", a.getTemplateName());
+                  assertEquals(
+                      "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  assertEquals("office", a.getMetadataValue("entry_key"));
+                } else if (actualSummary.matches("(.*)new source aaaa(.*)")) {
+                  newCnt++;
+                  assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  assertEquals("authprofile.ftlh", a.getTemplateName());
+                  assertEquals(
+                      "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  assertNull(a.getMetadataValue("entry_key"));
+                }
+                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                assertEquals("riker", a.getMetadataValue("username"));
+                assertEquals("emit-bastion", a.getMetadataValue("object"));
+                assertEquals("unknown", a.getMetadataValue("sourceaddress_city"));
+                assertEquals("unknown", a.getMetadataValue("sourceaddress_country"));
+              }
+              assertEquals(2L, newCnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }

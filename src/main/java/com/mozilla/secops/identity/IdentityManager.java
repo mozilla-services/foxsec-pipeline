@@ -19,6 +19,7 @@ public class IdentityManager {
   private Map<String, Identity> identities;
   private Map<String, String> awsAccountMap;
   private Notify defaultNotification;
+  private Map<String, String> namedSubnets;
 
   /**
    * Load identity manager configuration from a resource file
@@ -71,6 +72,16 @@ public class IdentityManager {
   @JsonProperty("default_notify")
   public Notify getDefaultNotification() {
     return defaultNotification;
+  }
+
+  /**
+   * Get named subnets
+   *
+   * @return Map of names to subnets
+   */
+  @JsonProperty("named_subnets")
+  public Map<String, String> getNamedSubnets() {
+    return namedSubnets;
   }
 
   /**

@@ -25,5 +25,8 @@
     },
     "aws_account_map": {
         "123456789": "riker-vacationing-on-risa"
+    },
+    "named_subnets": {
+      "office": "fd00:0:0:0:0:0:0:0/48"
     }
 }

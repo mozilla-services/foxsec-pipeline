@@ -58,6 +58,18 @@ public class CidrUtil {
   }
 
   /**
+   * Return true if address is within the cidr
+   *
+   * @param addr IP address to check against cidr
+   * @param cidr cidr to check if it contains the IP address
+   * @return True if addr is within the cidr.
+   */
+  public static boolean addressInCidr(String addr, String cidr) {
+    IpAddressMatcher c = new IpAddressMatcher(cidr);
+    return c.matches(addr);
+  }
+
+  /**
    * Return true if any loaded subnet contains the specified address
    *
    * @param addr IP address to check against subnets
