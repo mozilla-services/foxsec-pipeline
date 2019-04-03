@@ -112,14 +112,13 @@ public class AlertMailer {
       throw new RuntimeException(exc.getMessage());
     }
 
-    templateManager = new TemplateManager(cfg);
+    templateManager = new TemplateManager();
   }
 
   private String createAlertMailBody(Alert a) {
-    if (a.getEmailTemplateName() != null) {
+    if (a.getTemplateName() != null) {
       try {
-        return templateManager.processTemplate(
-            a.getEmailTemplateName(), a.generateTemplateVariables());
+        return templateManager.createEmailBody(a.getTemplateName(), a.generateTemplateVariables());
       } catch (Exception exc) {
         log.error("email body creation failed: {}", exc.getMessage());
       }

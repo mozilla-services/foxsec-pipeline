@@ -109,11 +109,6 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setAlertStateDatastoreKind(String value);
 
-  @Description("GCS path to alert templates; for example: gs://prod-alerts/templates")
-  String getOutputAlertGcsTemplateBasePath();
-
-  void setOutputAlertGcsTemplateBasePath(String value);
-
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);
   }

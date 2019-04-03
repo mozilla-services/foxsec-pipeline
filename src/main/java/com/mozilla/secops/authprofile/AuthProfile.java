@@ -254,12 +254,6 @@ public class AuthProfile implements Serializable {
         a.addMetadata("sourceaddress_country", "unknown");
       }
 
-      if (e.getNormalized().isOfType(Normalized.Type.AUTH)) {
-        a.addMetadata("auth_alert_type", "auth");
-      } else if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
-        a.addMetadata("auth_alert_type", "auth_session");
-      }
-
       return a;
     }
 
@@ -322,14 +316,10 @@ public class AuthProfile implements Serializable {
       a.setSummary(summary);
     }
 
-    private void buildAlertPayload(Event e, Alert a) {
-      String msg = "An authentication event for user %s was detected to access %s from %s [%s/%s].";
-      if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
-        msg = "A sensitive event from user %s was detected in association with %s from %s [%s/%s].";
-      }
+    private void buildAlertPayload(Alert a) {
       String payload =
           String.format(
-              msg,
+              "An authentication event for user %s was detected to access %s from %s [%s/%s].",
               a.getMetadataValue("username"),
               a.getMetadataValue("object"),
               a.getMetadataValue("sourceaddress"),
@@ -400,8 +390,7 @@ public class AuthProfile implements Serializable {
                 e.getNormalized().getSubjectUser(),
                 e.getNormalized().getSourceAddress());
             a.setSeverity(Alert.AlertSeverity.WARNING);
-            a.setEmailTemplateName("email/authprofile.ftlh");
-            a.setSlackTemplateName("slack/authprofile.ftlh");
+            a.setTemplateName("authprofile.ftlh");
             addEscalationMetadata(a, identity);
           } else {
             // Check known address ignore list
@@ -426,7 +415,7 @@ public class AuthProfile implements Serializable {
         }
 
         buildAlertSummary(e, a);
-        buildAlertPayload(e, a);
+        buildAlertPayload(a);
         c.output(a);
       }
     }

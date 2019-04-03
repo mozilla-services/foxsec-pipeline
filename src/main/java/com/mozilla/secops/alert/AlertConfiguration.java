@@ -17,7 +17,6 @@ public class AlertConfiguration implements Serializable {
   private Integer memcachedPort;
   private String datastoreNamespace;
   private String datastoreKind;
-  private String gcsTemplateBasePath;
 
   /**
    * Determine if {@link AlertIO} should be established in composite transform
@@ -224,24 +223,6 @@ public class AlertConfiguration implements Serializable {
    */
   public String getDatastoreKind() {
     return datastoreKind;
-  }
-
-  /**
-   * Set gcs template base path
-   *
-   * @param basePath gcs template base path
-   */
-  public void setGcsTemplateBasePath(String basePath) {
-    this.gcsTemplateBasePath = basePath;
-  }
-
-  /**
-   * Get gcs template base path
-   *
-   * @return gcs template base path
-   */
-  public String getGcsTemplateBasePath() {
-    return this.gcsTemplateBasePath;
   }
 
   /** Create new empty {@link AlertConfiguration} */
