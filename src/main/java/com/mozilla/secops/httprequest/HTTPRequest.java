@@ -787,68 +787,86 @@ public class HTTPRequest implements Serializable {
       // Obtain statistics on the client count population for use as a side input
       final PCollectionView<Stats.StatsOutput> wStats = Stats.getView(counts);
 
-      return clientCounts.apply(
-          ParDo.of(
-                  new DoFn<KV<String, Long>, Alert>() {
+      return clientCounts
+          .apply(
+              "filter insignificant",
+              ParDo.of(
+                  new DoFn<KV<String, Long>, KV<String, Long>>() {
                     private static final long serialVersionUID = 1L;
 
                     @ProcessElement
-                    public void processElement(ProcessContext c, BoundedWindow w) {
-                      Stats.StatsOutput sOutput = c.sideInput(wStats);
-                      Long uc = sOutput.getTotalElements();
-                      Map<String, Boolean> nv = c.sideInput(natView);
-
-                      Double cMean = sOutput.getMean();
-
-                      if (uc < requiredMinimumClients) {
-                        return;
-                      }
-
-                      if (cMean < requiredMinimumAverage) {
-                        return;
-                      }
-
-                      if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
-                        cMean = clampThresholdMaximum;
-                      }
-
-                      if (c.element().getValue() >= (cMean * thresholdModifier)) {
-                        Boolean isNat = nv.get(c.element().getKey());
-                        if (isNat != null && isNat) {
-                          log.info(
-                              "{}: detectnat: skipping result emission for {}",
-                              w.toString(),
-                              c.element().getKey());
-                          return;
-                        }
-                        log.info("{}: emitting alert for {}", w.toString(), c.element().getKey());
-                        Alert a = new Alert();
-                        a.setSummary(
-                            String.format(
-                                "%s httprequest threshold_analysis %s %d",
-                                monitoredResource, c.element().getKey(), c.element().getValue()));
-                        a.setCategory("httprequest");
-                        a.addMetadata("category", "threshold_analysis");
-                        a.addMetadata("sourceaddress", c.element().getKey());
-                        if (enableIprepdDatastoreWhitelist) {
-                          IprepdIO.addMetadataIfWhitelisted(
-                              c.element().getKey(), a, iprepdDatastoreWhitelistProject);
-                        }
-                        a.addMetadata("mean", sOutput.getMean().toString());
-                        a.addMetadata("count", c.element().getValue().toString());
-                        a.addMetadata("threshold_modifier", thresholdModifier.toString());
-                        a.setNotifyMergeKey("threshold_analysis");
-                        a.addMetadata(
-                            "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-                        if (!a.hasCorrectFields()) {
-                          throw new IllegalArgumentException(
-                              "alert has invalid field configuration");
-                        }
-                        c.output(a);
+                    public void processElement(ProcessContext c) {
+                      if (c.element().getValue() > 1) {
+                        c.output(c.element());
                       }
                     }
-                  })
-              .withSideInputs(wStats, natView));
+                  }))
+          .apply(
+              "apply thresholds",
+              ParDo.of(
+                      new DoFn<KV<String, Long>, Alert>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @ProcessElement
+                        public void processElement(ProcessContext c, BoundedWindow w) {
+                          Stats.StatsOutput sOutput = c.sideInput(wStats);
+                          Long uc = sOutput.getTotalElements();
+                          Map<String, Boolean> nv = c.sideInput(natView);
+
+                          Double cMean = sOutput.getMean();
+
+                          if (uc < requiredMinimumClients) {
+                            return;
+                          }
+
+                          if (cMean < requiredMinimumAverage) {
+                            return;
+                          }
+
+                          if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
+                            cMean = clampThresholdMaximum;
+                          }
+
+                          if (c.element().getValue() >= (cMean * thresholdModifier)) {
+                            Boolean isNat = nv.get(c.element().getKey());
+                            if (isNat != null && isNat) {
+                              log.info(
+                                  "{}: detectnat: skipping result emission for {}",
+                                  w.toString(),
+                                  c.element().getKey());
+                              return;
+                            }
+                            log.info(
+                                "{}: emitting alert for {}", w.toString(), c.element().getKey());
+                            Alert a = new Alert();
+                            a.setSummary(
+                                String.format(
+                                    "%s httprequest threshold_analysis %s %d",
+                                    monitoredResource,
+                                    c.element().getKey(),
+                                    c.element().getValue()));
+                            a.setCategory("httprequest");
+                            a.addMetadata("category", "threshold_analysis");
+                            a.addMetadata("sourceaddress", c.element().getKey());
+                            if (enableIprepdDatastoreWhitelist) {
+                              IprepdIO.addMetadataIfWhitelisted(
+                                  c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                            }
+                            a.addMetadata("mean", sOutput.getMean().toString());
+                            a.addMetadata("count", c.element().getValue().toString());
+                            a.addMetadata("threshold_modifier", thresholdModifier.toString());
+                            a.setNotifyMergeKey("threshold_analysis");
+                            a.addMetadata(
+                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                            if (!a.hasCorrectFields()) {
+                              throw new IllegalArgumentException(
+                                  "alert has invalid field configuration");
+                            }
+                            c.output(a);
+                          }
+                        }
+                      })
+                  .withSideInputs(wStats, natView));
     }
   }
 
