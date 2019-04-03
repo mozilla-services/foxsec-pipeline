@@ -31,6 +31,7 @@ public class GLB extends PayloadBase implements Serializable {
       if (entry == null) {
         JsonParser jp = jfmatcher.createJsonParser(input);
         entry = jp.parse(LogEntry.class);
+        jp.close();
       }
 
       Map<String, Object> m = entry.getJsonPayload();
@@ -73,14 +74,24 @@ public class GLB extends PayloadBase implements Serializable {
     jfmatcher = null;
     LogEntry entry = state.getLogEntryHint();
     if (entry == null) {
-      // Use method local JacksonFactory as the object is not serializable, and this event
-      // may be passed around
-      JacksonFactory jf = new JacksonFactory();
+      // Reuse JacksonFactory from parser state
+      JacksonFactory jf = state.getGoogleJacksonFactory();
+      JsonParser jp;
       try {
-        JsonParser jp = jf.createJsonParser(input);
+        jp = jf.createJsonParser(input);
+      } catch (IOException exc) {
+        return;
+      }
+      try {
         entry = jp.parse(LogEntry.class);
       } catch (IOException exc) {
         return;
+      } finally {
+        try {
+          jp.close();
+        } catch (IOException jexc) {
+          throw new RuntimeException(jexc.getMessage());
+        }
       }
     }
     HttpRequest h = entry.getHttpRequest();

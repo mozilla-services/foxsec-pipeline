@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
@@ -133,17 +131,11 @@ public class Mozlog implements Serializable {
    * Create a new {@link Mozlog} object using a JSON string as input
    *
    * @param input Mozlog JSON event
+   * @param mapper ObjectMapper to use
    * @return Mozlog event or null if deserialization failed
    */
-  public static Mozlog fromJSON(String input) {
+  public static Mozlog fromJSON(String input, ObjectMapper mapper) {
     Mozlog ret;
-
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new JodaModule());
-    mapper.configure(
-        com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    // Not all Mozlog implementations use lower case field names
-    mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
 
     try {
       ret = mapper.readValue(input, Mozlog.class);

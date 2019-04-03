@@ -1,12 +1,9 @@
 package com.mozilla.secops;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.UUID;
 import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext;
-import org.apache.beam.sdk.transforms.CombineWithContext.Context;
-import org.apache.beam.sdk.transforms.Mean;
+import org.apache.beam.sdk.transforms.Combine.CombineFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
@@ -26,8 +23,8 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
 
     private final UUID sid;
 
+    private Long totalElements;
     private Long totalSum;
-    private Double popVar;
     private Double mean;
 
     @Override
@@ -69,24 +66,6 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
     }
 
     /**
-     * Get set population variance
-     *
-     * @return Population variance
-     */
-    public Double getPopulationVariance() {
-      return popVar;
-    }
-
-    /**
-     * Set population variance in result
-     *
-     * @param popVar Population variance
-     */
-    public void setPopulationVariance(Double popVar) {
-      this.popVar = popVar;
-    }
-
-    /**
      * Set total sum in result
      *
      * @param totalSum Total sum
@@ -104,67 +83,102 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       return totalSum;
     }
 
+    /**
+     * Set total elements that made up result
+     *
+     * @param totalElements Total element cound
+     */
+    public void setTotalElements(Long totalElements) {
+      this.totalElements = totalElements;
+    }
+
+    /**
+     * Get total elements
+     *
+     * @return Total element count
+     */
+    public Long getTotalElements() {
+      return totalElements;
+    }
+
     /** Initialize new statistics output class */
     StatsOutput() {
       sid = UUID.randomUUID();
       totalSum = 0L;
-      popVar = 0.0;
+      totalElements = 0L;
       mean = 0.0;
     }
   }
 
-  /** {@link CombineFnWithContext} for performing statistics operations on a collection of values */
-  public static class StatsCombiner
-      extends CombineFnWithContext<Long, StatsCombiner.State, StatsOutput> {
+  /** {@link CombineFn} for performing statistics operations on a collection of values */
+  public static class StatsCombiner extends CombineFn<Long, StatsCombiner.State, StatsOutput> {
     private static final long serialVersionUID = 1L;
-
-    private PCollectionView<Double> meanValue;
 
     private static class State implements Serializable {
       private static final long serialVersionUID = 1L;
 
+      private final UUID sid;
+
       Long sum;
-      ArrayList<Double> varianceSq;
+      Long total;
+
+      /**
+       * Return unique state ID
+       *
+       * @return Unique state ID
+       */
+      public UUID getId() {
+        return sid;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        State s = (State) o;
+        return getId().equals(s.getId());
+      }
+
+      @Override
+      public int hashCode() {
+        return sid.hashCode();
+      }
 
       State() {
+        sid = UUID.randomUUID();
         sum = 0L;
-        varianceSq = new ArrayList<Double>();
+        total = 0L;
       }
     }
 
     @Override
-    public State createAccumulator(Context c) {
+    public State createAccumulator() {
       return new State();
     }
 
     @Override
-    public State addInput(State state, Long input, Context c) {
+    public State addInput(State state, Long input) {
+      state.total++;
       state.sum += input;
-      state.varianceSq.add(Math.pow(input - c.sideInput(meanValue), 2));
       return state;
     }
 
     @Override
-    public State mergeAccumulators(Iterable<State> states, Context c) {
+    public State mergeAccumulators(Iterable<State> states) {
       State merged = new State();
       for (State s : states) {
         merged.sum += s.sum;
-        merged.varianceSq.addAll(s.varianceSq);
+        merged.total += s.total;
       }
       return merged;
     }
 
     @Override
-    public StatsOutput extractOutput(State state, Context c) {
-      Double mean = c.sideInput(meanValue);
+    public StatsOutput extractOutput(State state) {
       StatsOutput ret = new StatsOutput();
       ret.setTotalSum(state.sum);
-      Double x = 0.0;
-      for (Double y : state.varianceSq) {
-        x += y;
+      ret.setTotalElements(state.total);
+      if (state.total > 0L) {
+        ret.setMean((double) state.sum / state.total);
       }
-      ret.setPopulationVariance(x / state.varianceSq.size());
-      ret.setMean(mean);
       return ret;
     }
 
@@ -173,9 +187,7 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       return new StatsOutput();
     }
 
-    StatsCombiner(PCollectionView<Double> meanValue) {
-      this.meanValue = meanValue;
-    }
+    StatsCombiner() {}
   }
 
   Stats() {}
@@ -187,13 +199,13 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
    * @return {@link PCollectionView} representing results of analysis
    */
   public static PCollectionView<StatsOutput> getView(PCollection<Long> input) {
-    return input.apply(new Stats()).apply(View.<StatsOutput>asSingleton());
+    return input
+        .apply("stats transform", new Stats())
+        .apply("stats view", View.<StatsOutput>asSingleton().withDefaultValue(new StatsOutput()));
   }
 
   @Override
   public PCollection<StatsOutput> expand(PCollection<Long> input) {
-    PCollectionView<Double> meanValue = input.apply(Mean.<Long>globally().asSingletonView());
-    return input.apply(
-        Combine.globally(new StatsCombiner(meanValue)).withoutDefaults().withSideInputs(meanValue));
+    return input.apply("stats", Combine.globally(new StatsCombiner()).withoutDefaults());
   }
 }

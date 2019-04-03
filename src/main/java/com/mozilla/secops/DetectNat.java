@@ -42,6 +42,7 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
    */
   public static PCollectionView<Map<String, Boolean>> getEmptyView(Pipeline p) {
     return p.apply(
+            "empty nat view",
             Create.empty(
                 TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans())))
         .apply(View.<String, Boolean>asMap());
@@ -54,7 +55,7 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
    * @return {@link PCollectionView} representing output of analysis
    */
   public static PCollectionView<Map<String, Boolean>> getView(PCollection<Event> events) {
-    return events.apply(new DetectNat()).apply(View.<String, Boolean>asMap());
+    return events.apply("nat view", new DetectNat()).apply(View.<String, Boolean>asMap());
   }
 
   @Override
@@ -62,7 +63,7 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
     PCollection<KV<String, Long>> perSourceUACounts =
         events
             .apply(
-                "extract user agents",
+                "detectnat extract user agents",
                 ParDo.of(
                     new DoFn<Event, KV<String, String>>() {
                       private static final long serialVersionUID = 1L;
@@ -86,8 +87,8 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
                         }
                       }
                     }))
-            .apply(Distinct.<KV<String, String>>create())
-            .apply(Count.<String, String>perKey());
+            .apply("detectnat distinct ua map", Distinct.<KV<String, String>>create())
+            .apply("detectnat ua count per key", Count.<String, String>perKey());
 
     // Operate solely on the UA output right now here, but this should be expanded with more
     // detailed analysis

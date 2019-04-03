@@ -18,6 +18,7 @@ import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
+import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -32,12 +33,10 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.state.StateSpec;
 import org.apache.beam.sdk.state.StateSpecs;
 import org.apache.beam.sdk.state.ValueState;
-import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
-import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Values;
@@ -782,122 +781,92 @@ public class HTTPRequest implements Serializable {
                       }))
               .apply(Count.<String>perElement());
 
-      // Calculate the number of unique clients in the collection
-      PCollectionView<Long> uniqueClients =
-          clientCounts
-              .apply(Keys.<String>create())
-              .apply(
-                  "unique client count",
-                  Combine.globally(Count.<String>combineFn()).withoutDefaults().asSingletonView());
-
       // For each client, extract the request count
       PCollection<Long> counts = clientCounts.apply("extract counts", Values.<Long>create());
 
       // Obtain statistics on the client count population for use as a side input
       final PCollectionView<Stats.StatsOutput> wStats = Stats.getView(counts);
 
-      return clientCounts.apply(
-          ParDo.of(
-                  new DoFn<KV<String, Long>, Alert>() {
+      return clientCounts
+          .apply(
+              "filter insignificant",
+              ParDo.of(
+                  new DoFn<KV<String, Long>, KV<String, Long>>() {
                     private static final long serialVersionUID = 1L;
 
-                    private Boolean warningLogged;
-                    private Boolean clampMaximumLogged;
-                    private Boolean statsLogged;
-
-                    @StartBundle
-                    public void startBundle() {
-                      warningLogged = false;
-                      clampMaximumLogged = false;
-                      statsLogged = false;
-                    }
-
                     @ProcessElement
-                    public void processElement(ProcessContext c, BoundedWindow w) {
-                      Stats.StatsOutput sOutput = c.sideInput(wStats);
-                      Long uc = c.sideInput(uniqueClients);
-                      Map<String, Boolean> nv = c.sideInput(natView);
-
-                      Double cMean = sOutput.getMean();
-                      if (!statsLogged) {
-                        log.info(
-                            "{}: statistics: mean/{} unique_clients/{} threshold/{}",
-                            w.toString(),
-                            cMean,
-                            uc,
-                            cMean * thresholdModifier);
-                        statsLogged = true;
-                      }
-
-                      if (uc < requiredMinimumClients) {
-                        if (!warningLogged) {
-                          log.warn(
-                              "{}: ignoring events as window does not meet minimum clients",
-                              w.toString());
-                          warningLogged = true;
-                        }
-                        return;
-                      }
-
-                      if (cMean < requiredMinimumAverage) {
-                        if (!warningLogged) {
-                          log.warn(
-                              "{}: ignoring events as window does not meet minimum average",
-                              w.toString());
-                          warningLogged = true;
-                        }
-                        return;
-                      }
-
-                      if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
-                        if (!clampMaximumLogged) {
-                          log.info(
-                              "{}: clamping calculated mean {} to maximum {}",
-                              w.toString(),
-                              cMean,
-                              clampThresholdMaximum);
-                          clampMaximumLogged = true;
-                        }
-                        cMean = clampThresholdMaximum;
-                      }
-
-                      if (c.element().getValue() >= (cMean * thresholdModifier)) {
-                        Boolean isNat = nv.get(c.element().getKey());
-                        if (isNat != null && isNat) {
-                          log.info(
-                              "{}: detectnat: skipping result emission for {}",
-                              w.toString(),
-                              c.element().getKey());
-                          return;
-                        }
-                        log.info("{}: emitting alert for {}", w.toString(), c.element().getKey());
-                        Alert a = new Alert();
-                        a.setSummary(
-                            String.format(
-                                "%s httprequest threshold_analysis %s %d",
-                                monitoredResource, c.element().getKey(), c.element().getValue()));
-                        a.setCategory("httprequest");
-                        a.addMetadata("category", "threshold_analysis");
-                        a.addMetadata("sourceaddress", c.element().getKey());
-                        if (enableIprepdDatastoreWhitelist) {
-                          IprepdIO.addMetadataIfWhitelisted(
-                              c.element().getKey(), a, iprepdDatastoreWhitelistProject);
-                        }
-                        a.addMetadata("mean", sOutput.getMean().toString());
-                        a.addMetadata("count", c.element().getValue().toString());
-                        a.addMetadata("threshold_modifier", thresholdModifier.toString());
-                        a.setNotifyMergeKey("threshold_analysis");
-                        a.addMetadata(
-                            "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-                        if (!a.hasCorrectFields()) {
-                          throw new IllegalArgumentException(
-                              "alert has invalid field configuration");
-                        }
-                        c.output(a);
+                    public void processElement(ProcessContext c) {
+                      if (c.element().getValue() > 1) {
+                        c.output(c.element());
                       }
                     }
-                  })
-              .withSideInputs(wStats, natView, uniqueClients));
+                  }))
+          .apply(
+              "apply thresholds",
+              ParDo.of(
+                      new DoFn<KV<String, Long>, Alert>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @ProcessElement
+                        public void processElement(ProcessContext c, BoundedWindow w) {
+                          Stats.StatsOutput sOutput = c.sideInput(wStats);
+                          Long uc = sOutput.getTotalElements();
+                          Map<String, Boolean> nv = c.sideInput(natView);
+
+                          Double cMean = sOutput.getMean();
+
+                          if (uc < requiredMinimumClients) {
+                            return;
+                          }
+
+                          if (cMean < requiredMinimumAverage) {
+                            return;
+                          }
+
+                          if ((clampThresholdMaximum != null) && (cMean > clampThresholdMaximum)) {
+                            cMean = clampThresholdMaximum;
+                          }
+
+                          if (c.element().getValue() >= (cMean * thresholdModifier)) {
+                            Boolean isNat = nv.get(c.element().getKey());
+                            if (isNat != null && isNat) {
+                              log.info(
+                                  "{}: detectnat: skipping result emission for {}",
+                                  w.toString(),
+                                  c.element().getKey());
+                              return;
+                            }
+                            log.info(
+                                "{}: emitting alert for {}", w.toString(), c.element().getKey());
+                            Alert a = new Alert();
+                            a.setSummary(
+                                String.format(
+                                    "%s httprequest threshold_analysis %s %d",
+                                    monitoredResource,
+                                    c.element().getKey(),
+                                    c.element().getValue()));
+                            a.setCategory("httprequest");
+                            a.addMetadata("category", "threshold_analysis");
+                            a.addMetadata("sourceaddress", c.element().getKey());
+                            if (enableIprepdDatastoreWhitelist) {
+                              IprepdIO.addMetadataIfWhitelisted(
+                                  c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                            }
+                            a.addMetadata("mean", sOutput.getMean().toString());
+                            a.addMetadata("count", c.element().getValue().toString());
+                            a.addMetadata("threshold_modifier", thresholdModifier.toString());
+                            a.setNotifyMergeKey("threshold_analysis");
+                            a.addMetadata(
+                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                            if (!a.hasCorrectFields()) {
+                              throw new IllegalArgumentException(
+                                  "alert has invalid field configuration");
+                            }
+                            c.output(a);
+                          }
+                        }
+                      })
+                  .withSideInputs(wStats, natView));
     }
   }
 
@@ -1026,12 +995,12 @@ public class HTTPRequest implements Serializable {
     PCollection<Event> events =
         p.apply("input", new CompositeInput(options)).apply("parse", new Parse(options));
 
+    PCollectionList<Alert> resultsList = PCollectionList.empty(p);
+
     if (options.getEnableThresholdAnalysis()
         || options.getEnableErrorRateAnalysis()
         || options.getEnableHardLimitAnalysis()) {
       PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
-
-      PCollectionList<Alert> resultsList = PCollectionList.empty(p);
 
       PCollectionView<Map<String, Boolean>> natView = null;
       if (options.getNatDetection()) {
@@ -1041,40 +1010,50 @@ public class HTTPRequest implements Serializable {
       if (options.getEnableThresholdAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents.apply("threshold analysis", new ThresholdAnalysis(options, natView)));
+                fwEvents
+                    .apply("threshold analysis", new ThresholdAnalysis(options, natView))
+                    .apply("threshold analysis global", new GlobalTriggers<Alert>(5)));
       }
 
       if (options.getEnableHardLimitAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents.apply("hard limit analysis", new HardLimitAnalysis(options, natView)));
+                fwEvents
+                    .apply("hard limit analysis", new HardLimitAnalysis(options, natView))
+                    .apply("hard limit analysis global", new GlobalTriggers<Alert>(5)));
       }
 
       if (options.getEnableErrorRateAnalysis()) {
         resultsList =
-            resultsList.and(fwEvents.apply("error rate analysis", new ErrorRateAnalysis(options)));
+            resultsList.and(
+                fwEvents
+                    .apply("error rate analysis", new ErrorRateAnalysis(options))
+                    .apply("error rate analysis global", new GlobalTriggers<Alert>(5)));
       }
 
       if (options.getEnableUserAgentBlacklistAnalysis()) {
         resultsList =
             resultsList.and(
-                fwEvents.apply(
-                    "ua blacklist analysis", new UserAgentBlacklistAnalysis(options, natView)));
+                fwEvents
+                    .apply(
+                        "ua blacklist analysis", new UserAgentBlacklistAnalysis(options, natView))
+                    .apply("ua blacklist analysis global", new GlobalTriggers<Alert>(5)));
       }
-
-      resultsList
-          .apply(Flatten.<Alert>pCollections())
-          .apply("output format", ParDo.of(new AlertFormatter(options)))
-          .apply("output", OutputOptions.compositeOutput(options));
     }
 
     if (options.getEnableEndpointAbuseAnalysis()) {
-      events
-          .apply("window for fixed fire early", new WindowForFixedFireEarly())
-          .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
-          .apply("output format", ParDo.of(new AlertFormatter(options)))
-          .apply("output", OutputOptions.compositeOutput(options));
+      resultsList =
+          resultsList.and(
+              events
+                  .apply("window for fixed fire early", new WindowForFixedFireEarly())
+                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
+                  .apply("endpoint abuse analysis global", new GlobalTriggers<Alert>(5)));
     }
+
+    resultsList
+        .apply("flatten output", Flatten.<Alert>pCollections())
+        .apply("output format", ParDo.of(new AlertFormatter(options)))
+        .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();
   }

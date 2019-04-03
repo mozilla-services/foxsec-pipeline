@@ -7,6 +7,7 @@ class ParserState {
   private final Parser parser;
   private LogEntry logEntryHint;
   private Mozlog mozLogHint;
+  private com.google.api.client.json.jackson2.JacksonFactory googleJacksonFactory;
 
   /**
    * Get LogEntry hint
@@ -42,6 +43,25 @@ class ParserState {
    */
   public void setMozlogHint(Mozlog entry) {
     mozLogHint = entry;
+  }
+
+  /**
+   * Set Google JacksonFactory
+   *
+   * @param googleJacksonFactory JacksonFactory
+   */
+  public void setGoogleJacksonFactory(
+      com.google.api.client.json.jackson2.JacksonFactory googleJacksonFactory) {
+    this.googleJacksonFactory = googleJacksonFactory;
+  }
+
+  /**
+   * Get Google JacksonFactory
+   *
+   * @return JacksonFactory, or null if unset
+   */
+  public com.google.api.client.json.jackson2.JacksonFactory getGoogleJacksonFactory() {
+    return googleJacksonFactory;
   }
 
   /**
