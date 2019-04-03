@@ -115,14 +115,16 @@ public class TestAuthProfile {
                         + "216.160.83.56 [Milton/US]")) {
                   infoCnt++;
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                  assertNull(a.getTemplateName());
+                  assertNull(a.getSlackTemplateName());
+                  assertNull(a.getEmailTemplateName());
                   assertNull(a.getMetadataValue("notify_email_direct"));
                 } else if (actualSummary.equals(
                     "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                         + "new source 216.160.83.56 [Milton/US]")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertEquals("authprofile.ftlh", a.getTemplateName());
+                  assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
+                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                 }
@@ -185,7 +187,8 @@ public class TestAuthProfile {
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     assertEquals(
                         "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
-                    assertEquals("authprofile.ftlh", a.getTemplateName());
+                    assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
+                    assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   }
                 }
               }
@@ -290,14 +293,16 @@ public class TestAuthProfile {
                 if (actualSummary.matches("(.*)new source fd00(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertEquals("authprofile.ftlh", a.getTemplateName());
+                  assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
+                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                   assertEquals("office", a.getMetadataValue("entry_key"));
                 } else if (actualSummary.matches("(.*)new source aaaa(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertEquals("authprofile.ftlh", a.getTemplateName());
+                  assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
+                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                   assertNull(a.getMetadataValue("entry_key"));
