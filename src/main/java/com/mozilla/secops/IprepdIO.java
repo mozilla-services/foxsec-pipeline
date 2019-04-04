@@ -139,6 +139,7 @@ public class IprepdIO {
       // violation, if this is successful we can escalate it to iprepd
       Alert a = Alert.fromJSON(el);
       if (a == null) {
+        log.error("alert deserialization failed for {}", el);
         return;
       }
 
@@ -149,12 +150,14 @@ public class IprepdIO {
 
       Violation v = Violation.fromAlert(a);
       if (v == null) {
+        // No need to log here, it's possible this is not an alert relavent for iprepd escalation
         return;
       }
       String sourceAddress = v.getSourceAddress();
 
       String violationJSON = v.toJSON();
       if (violationJSON == null) {
+        log.error("violation serialization failed");
         return;
       }
 
@@ -183,7 +186,7 @@ public class IprepdIO {
             resp.getStatusLine().getStatusCode());
         put.reset();
       } catch (IOException exc) {
-        log.warn(exc.getMessage());
+        log.error(exc.getMessage());
       }
     }
   }
