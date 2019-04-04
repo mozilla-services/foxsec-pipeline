@@ -1,8 +1,7 @@
 package com.mozilla.secops;
 
 import com.mozilla.secops.parser.Event;
-import com.mozilla.secops.parser.GLB;
-import com.mozilla.secops.parser.Payload;
+import com.mozilla.secops.parser.Normalized;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Count;
@@ -20,7 +19,8 @@ import org.apache.beam.sdk.values.TypeDescriptors;
 /**
  * Provides a basic NAT detection transform
  *
- * <p>Currently this transform only operates on GLB log data, and is based on the detection of
+ * <p>Currently this transform only operates on normalized {@link
+ * com.mozilla.secops.parser.Normalized.Type#HTTP_REQUEST} events and is based on the detection of
  * multiple user agents being identified for requests within the window for the same source IP
  * address.
  *
@@ -72,18 +72,13 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
                       public void processElement(ProcessContext c) {
                         Event e = c.element();
 
-                        KV<String, String> output = null;
-                        // Just support GLB events for now here
-                        if (e.getPayloadType() == Payload.PayloadType.GLB) {
-                          GLB g = e.getPayload();
-                          if (g.getSourceAddress() != null && g.getUserAgent() != null) {
-                            output = KV.of(g.getSourceAddress(), g.getUserAgent());
+                        Normalized n = e.getNormalized();
+                        if (n.isOfType(Normalized.Type.HTTP_REQUEST)) {
+                          if (n.getSourceAddress() != null && n.getUserAgent() != null) {
+                            c.output(KV.of(n.getSourceAddress(), n.getUserAgent()));
                           }
                         } else {
                           return;
-                        }
-                        if (output != null) {
-                          c.output(output);
                         }
                       }
                     }))
