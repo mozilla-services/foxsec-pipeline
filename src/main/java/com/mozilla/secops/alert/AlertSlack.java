@@ -19,18 +19,14 @@ public class AlertSlack {
   private TemplateManager templateManager;
 
   /** Construct new alert slack object */
-  public AlertSlack(AlertConfiguration cfg) {
+  public AlertSlack(AlertConfiguration cfg) throws IOException {
     log = LoggerFactory.getLogger(AlertSlack.class);
     this.cfg = cfg;
     templateManager = new TemplateManager(cfg);
     configureState();
 
-    try {
-      String slackToken = RuntimeSecrets.interpretSecret(cfg.getSlackToken(), cfg.getGcpProject());
-      slackManager = new SlackManager(slackToken);
-    } catch (IOException exc) {
-      throw new RuntimeException(exc.getMessage());
-    }
+    String slackToken = RuntimeSecrets.interpretSecret(cfg.getSlackToken(), cfg.getGcpProject());
+    slackManager = new SlackManager(slackToken);
   }
 
   /** Construct new alert slack object, providing an already instantiated {@link SlackManager} */
