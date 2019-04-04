@@ -256,10 +256,16 @@ public class HTTPRequest implements Serializable {
                       a.setCategory("httprequest");
                       a.addMetadata("category", "error_rate");
                       a.addMetadata("sourceaddress", c.element().getKey());
+
                       if (enableIprepdDatastoreWhitelist) {
-                        IprepdIO.addMetadataIfWhitelisted(
-                            c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                        try {
+                          IprepdIO.addMetadataIfWhitelisted(
+                              c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                        } catch (IOException exc) {
+                          return;
+                        }
                       }
+
                       a.addMetadata("error_count", c.element().getValue().toString());
                       a.addMetadata("error_threshold", maxErrorRate.toString());
                       a.setNotifyMergeKey("error_count");
@@ -362,10 +368,16 @@ public class HTTPRequest implements Serializable {
                           a.setCategory("httprequest");
                           a.addMetadata("category", "hard_limit");
                           a.addMetadata("sourceaddress", c.element().getKey());
-                          if (enableIprepdDatastoreWhitelist) {
-                            IprepdIO.addMetadataIfWhitelisted(
-                                c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+
+                          try {
+                            if (enableIprepdDatastoreWhitelist) {
+                              IprepdIO.addMetadataIfWhitelisted(
+                                  c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                            }
+                          } catch (IOException exc) {
+                            return;
                           }
+
                           a.addMetadata("count", c.element().getValue().toString());
                           a.addMetadata("request_threshold", maxCount.toString());
                           a.setNotifyMergeKey("hard_limit_count");
@@ -493,10 +505,16 @@ public class HTTPRequest implements Serializable {
                           a.setCategory("httprequest");
                           a.addMetadata("category", "useragent_blacklist");
                           a.addMetadata("sourceaddress", saddr);
-                          if (enableIprepdDatastoreWhitelist) {
-                            IprepdIO.addMetadataIfWhitelisted(
-                                saddr, a, iprepdDatastoreWhitelistProject);
+
+                          try {
+                            if (enableIprepdDatastoreWhitelist) {
+                              IprepdIO.addMetadataIfWhitelisted(
+                                  saddr, a, iprepdDatastoreWhitelistProject);
+                            }
+                          } catch (IOException exc) {
+                            return;
                           }
+
                           a.setNotifyMergeKey("useragent_blacklist");
                           a.addMetadata(
                               "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
@@ -678,10 +696,16 @@ public class HTTPRequest implements Serializable {
                         a.setCategory("httprequest");
                         a.addMetadata("category", "endpoint_abuse");
                         a.addMetadata("sourceaddress", remoteAddress);
-                        if (enableIprepdDatastoreWhitelist) {
-                          IprepdIO.addMetadataIfWhitelisted(
-                              remoteAddress, a, iprepdDatastoreWhitelistProject);
+
+                        try {
+                          if (enableIprepdDatastoreWhitelist) {
+                            IprepdIO.addMetadataIfWhitelisted(
+                                remoteAddress, a, iprepdDatastoreWhitelistProject);
+                          }
+                        } catch (IOException exc) {
+                          return;
                         }
+
                         a.addMetadata("endpoint", comparePath);
                         a.addMetadata("method", compareMethod);
                         a.addMetadata("count", Integer.toString(count));
@@ -848,10 +872,16 @@ public class HTTPRequest implements Serializable {
                             a.setCategory("httprequest");
                             a.addMetadata("category", "threshold_analysis");
                             a.addMetadata("sourceaddress", c.element().getKey());
-                            if (enableIprepdDatastoreWhitelist) {
-                              IprepdIO.addMetadataIfWhitelisted(
-                                  c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+
+                            try {
+                              if (enableIprepdDatastoreWhitelist) {
+                                IprepdIO.addMetadataIfWhitelisted(
+                                    c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                              }
+                            } catch (IOException exc) {
+                              return;
                             }
+
                             a.addMetadata("mean", sOutput.getMean().toString());
                             a.addMetadata("count", c.element().getValue().toString());
                             a.addMetadata("threshold_modifier", thresholdModifier.toString());

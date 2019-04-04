@@ -219,7 +219,7 @@ public class IprepdIO {
    * @param ip IP address to check
    * @param a Alert to add metadata to
    */
-  public static void addMetadataIfWhitelisted(String ip, Alert a) {
+  public static void addMetadataIfWhitelisted(String ip, Alert a) throws IOException {
     addMetadataIfWhitelisted(ip, a, null);
   }
 
@@ -233,7 +233,8 @@ public class IprepdIO {
    * @param a Alert to add metadata to
    * @param datastoreProject If Datastore is in another project, non-null project ID
    */
-  public static void addMetadataIfWhitelisted(String ip, Alert a, String datastoreProject) {
+  public static void addMetadataIfWhitelisted(String ip, Alert a, String datastoreProject)
+      throws IOException {
     if (ip == null || a == null) {
       return;
     }
@@ -247,12 +248,16 @@ public class IprepdIO {
     } else {
       state = new State(new DatastoreStateInterface(whitelistedIpKind, whitelistedIpNamespace));
     }
+
     Logger log = LoggerFactory.getLogger(IprepdIO.class);
+
     try {
       state.initialize();
     } catch (StateException exc) {
       log.error("error initializing state: {}", exc.getMessage());
+      throw new IOException(exc.getMessage());
     }
+
     try {
       WhitelistedIp wip = state.get(ip, WhitelistedIp.class);
       if (wip != null) {
@@ -261,6 +266,9 @@ public class IprepdIO {
       }
     } catch (StateException exc) {
       log.error("error getting whitelisted ip: {}", exc.getMessage());
+      throw new IOException(exc.getMessage());
+    } finally {
+      state.done();
     }
   }
 }
