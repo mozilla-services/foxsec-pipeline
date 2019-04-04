@@ -16,7 +16,7 @@ import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** {@link AlertMailer} handles SES based alerting output */
+/** {@link AlertMailer} handles email based alerting output */
 public class AlertMailer {
   private final AlertConfiguration cfg;
   private final Logger log;
