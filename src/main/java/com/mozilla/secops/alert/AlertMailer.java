@@ -16,7 +16,7 @@ import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** {@link AlertMailer} handles SES based alerting output */
+/** {@link AlertMailer} handles email based alerting output */
 public class AlertMailer {
   private final AlertConfiguration cfg;
   private final Logger log;
@@ -102,16 +102,11 @@ public class AlertMailer {
    *
    * @param cfg {@link AlertConfiguration}
    */
-  public AlertMailer(AlertConfiguration cfg) {
+  public AlertMailer(AlertConfiguration cfg) throws IOException {
     log = LoggerFactory.getLogger(AlertMailer.class);
     this.cfg = cfg;
 
-    try {
-      smtpCreds = RuntimeSecrets.interpretSecret(cfg.getSmtpCredentials(), cfg.getGcpProject());
-    } catch (IOException exc) {
-      throw new RuntimeException(exc.getMessage());
-    }
-
+    smtpCreds = RuntimeSecrets.interpretSecret(cfg.getSmtpCredentials(), cfg.getGcpProject());
     templateManager = new TemplateManager(cfg);
   }
 

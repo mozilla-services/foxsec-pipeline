@@ -11,6 +11,7 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** {@link AlertSlack} handles slack based alerting output */
 public class AlertSlack {
   private final AlertConfiguration cfg;
   private SlackManager slackManager;
@@ -18,22 +19,27 @@ public class AlertSlack {
   private State state;
   private TemplateManager templateManager;
 
-  /** Construct new alert slack object */
-  public AlertSlack(AlertConfiguration cfg) {
+  /**
+   * Construct new alert slack object
+   *
+   * @param cfg {@link AlertConfiguration}
+   */
+  public AlertSlack(AlertConfiguration cfg) throws IOException {
     log = LoggerFactory.getLogger(AlertSlack.class);
     this.cfg = cfg;
     templateManager = new TemplateManager(cfg);
     configureState();
 
-    try {
-      String slackToken = RuntimeSecrets.interpretSecret(cfg.getSlackToken(), cfg.getGcpProject());
-      slackManager = new SlackManager(slackToken);
-    } catch (IOException exc) {
-      throw new RuntimeException(exc.getMessage());
-    }
+    String slackToken = RuntimeSecrets.interpretSecret(cfg.getSlackToken(), cfg.getGcpProject());
+    slackManager = new SlackManager(slackToken);
   }
 
-  /** Construct new alert slack object, providing an already instantiated {@link SlackManager} */
+  /**
+   * Construct new alert slack object, providing an already instantiated {@link SlackManager}
+   *
+   * @param cfg {@link AlertConfiguration}
+   * @param slackManager {@link SlackManager} instance
+   */
   public AlertSlack(AlertConfiguration cfg, SlackManager slackManager) {
     log = LoggerFactory.getLogger(AlertSlack.class);
     this.cfg = cfg;

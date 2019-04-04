@@ -43,13 +43,13 @@ public class TestAlertSlack {
   }
 
   @Test
-  public void basicTest() {
+  public void basicTest() throws Exception {
     AlertSlack s = new AlertSlack(getTestAlertCfg());
     assertNotNull(s);
   }
 
   @Test
-  public void confirmationAlertBasicTest() {
+  public void confirmationAlertBasicTest() throws Exception {
     AlertSlack s = new AlertSlack(getTestAlertCfg());
 
     Boolean resultOne = s.confirmationAlert(null, "test");
