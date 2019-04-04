@@ -167,6 +167,10 @@ public class AlertIO {
     public void processElement(ProcessContext c) {
       Alert a = c.element();
       String raw = a.toJSON();
+      if (raw == null) {
+        log.error("alert serialization failed");
+        return;
+      }
 
       log.info("processing alert: {}", raw);
 
