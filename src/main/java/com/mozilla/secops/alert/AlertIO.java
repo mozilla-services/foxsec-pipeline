@@ -32,6 +32,13 @@ public class AlertIO {
   public static class AlertNotifyMerge extends PTransform<PCollection<String>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
+    private Logger log;
+
+    /** Static initializer for {@link AlertNotifyMerge} */
+    public AlertNotifyMerge() {
+      log = LoggerFactory.getLogger(AlertNotifyMerge.class);
+    }
+
     @Override
     public PCollection<Alert> expand(PCollection<String> col) {
       return col.apply("window for alert merge", new GlobalTriggers<String>(60))
@@ -45,6 +52,7 @@ public class AlertIO {
                     public void processElement(ProcessContext c) {
                       Alert a = Alert.fromJSON(c.element());
                       if (a == null) {
+                        log.error("alert deserialization failed for {}", c.element());
                         return;
                       }
                       String key = a.getNotifyMergeKey();
