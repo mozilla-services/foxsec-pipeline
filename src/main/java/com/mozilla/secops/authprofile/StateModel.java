@@ -16,7 +16,7 @@ import org.joda.time.DateTimeUtils;
  * <p>Used by {@link AuthProfile}.
  */
 public class StateModel {
-  private final Long DEFAULTPRUNEAGE = 604800L; // 7 days
+  private final Long DEFAULTPRUNEAGE = 864000L; // 10 days
 
   private String subject;
   private Map<String, ModelEntry> entries;
