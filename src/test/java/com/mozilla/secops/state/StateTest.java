@@ -53,13 +53,21 @@ public class StateTest {
     State s = new State(si);
     assertNotNull(s);
     s.initialize();
+    StateCursor c = s.newCursor();
+    assertNotNull(c);
+
     StateTestClass t = new StateTestClass();
     assertNotNull(t);
+
     t.str = "test";
-    s.set("testing", t);
-    t = s.get("testing", StateTestClass.class);
+    c.set("testing", t);
+    c.commit();
+
+    c = s.newCursor();
+    t = c.get("testing", StateTestClass.class);
     assertNotNull(t);
     assertEquals("test", t.str);
+    c.commit();
   }
 
   @Test
@@ -71,12 +79,19 @@ public class StateTest {
     StateTestClass t = new StateTestClass();
     assertNotNull(t);
     t.str = "test";
-    s.set("testing", t);
-    t = s.get("testing", StateTestClass.class);
+
+    StateCursor c = s.newCursor();
+    c.set("testing", t);
+    c.commit();
+    c = s.newCursor();
+    t = c.get("testing", StateTestClass.class);
     assertNotNull(t);
     assertEquals("test", t.str);
+    c.commit();
 
-    assertNull(s.get("nonexist", StateTestClass.class));
+    c = s.newCursor();
+    assertNull(c.get("nonexist", StateTestClass.class));
+    c.commit();
   }
 
   @Test(expected = StateException.class)
@@ -88,7 +103,14 @@ public class StateTest {
     StateTestClass t = new StateTestClass();
     assertNotNull(t);
     t.str = "test";
-    s.set("", t);
+    StateCursor c = s.newCursor();
+    try {
+      c.set("", t);
+    } catch (StateException exc) {
+      throw exc;
+    } finally {
+      c.commit();
+    }
   }
 
   @Test(expected = StateException.class)
@@ -97,6 +119,13 @@ public class StateTest {
     State s = new State(si);
     assertNotNull(s);
     s.initialize();
-    s.get("", StateTestClass.class);
+    StateCursor c = s.newCursor();
+    try {
+      c.get("", StateTestClass.class);
+    } catch (StateException exc) {
+      throw exc;
+    } finally {
+      c.commit();
+    }
   }
 }
