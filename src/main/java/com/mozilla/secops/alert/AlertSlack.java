@@ -104,6 +104,7 @@ public class AlertSlack {
 
     log.info("generating slack message for {}", userId);
 
+    a.addMetadata("slack_type", "notification");
     String text = createAlertBody(a);
     try {
       return slackManager.handleSlackResponse(slackManager.sendMessageToChannel(userId, text));
@@ -122,15 +123,21 @@ public class AlertSlack {
    * @param userId Slack user id
    * @return Boolean on whether the alert was sent successfully
    */
-  public Boolean confirmationAlert(Alert a, String userId) {
+  public Boolean sendConfirmationAlertToUser(Alert a, String userId) {
     if (a == null || userId == null) {
       return false;
     }
 
     log.info("storing state of alert for {}", userId);
 
+    if (state == null) {
+      log.error("alert state has not been configured");
+      return false;
+    }
+
+    a.addMetadata("slack_type", "confirmation");
+    a.addMetadata("status", "NEW");
     try {
-      a.addMetadata("status", "NEW");
       state.initialize();
       state.set(a.getAlertId().toString(), a);
     } catch (StateException exc) {
@@ -140,9 +147,7 @@ public class AlertSlack {
 
     log.info("generating slack message for {}", userId);
 
-    String text =
-        String.format(
-            "Foxsec Fraud Detection Alert\n\n%s\n\nalert id: %s", a.getPayload(), a.getAlertId());
+    String text = createAlertBody(a);
     try {
       return slackManager.handleSlackResponse(
           slackManager.sendConfirmationRequestToUser(userId, a.getAlertId().toString(), text));

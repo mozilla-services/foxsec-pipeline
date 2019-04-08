@@ -35,6 +35,7 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,6 +249,11 @@ public class AuthProfile implements Serializable {
         a.addMetadata("auth_alert_type", "auth");
       } else if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
         a.addMetadata("auth_alert_type", "auth_session");
+      }
+
+      DateTime eventTimestamp = e.getNormalized().getEventTimestamp();
+      if (eventTimestamp != null) {
+        a.addMetadata("event_timestamp", eventTimestamp.toString());
       }
 
       return a;

@@ -49,22 +49,22 @@ public class TestAlertSlack {
   }
 
   @Test
-  public void confirmationAlertBasicTest() throws Exception {
+  public void sendConfirmationAlertToUserBasicTest() throws Exception {
     AlertSlack s = new AlertSlack(getTestAlertCfg());
 
-    Boolean resultOne = s.confirmationAlert(null, "test");
+    Boolean resultOne = s.sendConfirmationAlertToUser(null, "test");
     assertFalse(resultOne);
-    Boolean resultTwo = s.confirmationAlert(getTestAlert(), null);
+    Boolean resultTwo = s.sendConfirmationAlertToUser(getTestAlert(), null);
     assertFalse(resultTwo);
   }
 
   @Test
-  public void confirmationAlertStateTest() throws Exception {
+  public void sendConfirmationAlertToUserStateTest() throws Exception {
     AlertConfiguration cfg = getTestAlertCfg();
     AlertSlack s = new AlertSlack(cfg, getMockSlackManager());
 
     Alert ta = getTestAlert();
-    Boolean result = s.confirmationAlert(ta, "test");
+    Boolean result = s.sendConfirmationAlertToUser(ta, "test");
     assertTrue(result);
 
     State state =

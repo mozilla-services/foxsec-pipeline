@@ -143,7 +143,7 @@ public class SlackManager {
     ArrayList<Action> actions = new ArrayList<Action>();
     actions.add(
         Action.builder()
-            .name("auth_yes")
+            .name("alert_yes")
             .text("Yes, this was me.")
             .style("primary")
             .value("yes")
@@ -151,7 +151,7 @@ public class SlackManager {
 
     actions.add(
         Action.builder()
-            .name("auth_no")
+            .name("alert_no")
             .text("No, this was not me.")
             .style("danger")
             .value("no")
@@ -170,7 +170,7 @@ public class SlackManager {
         Attachment.builder()
             .text("Was this you?")
             .fallback("Unable to create slack buttons; please contact secops@mozilla.com")
-            .callbackId(String.format("auth_confirmation_%s", alertId))
+            .callbackId(String.format("alert_confirmation_%s", alertId))
             .color("#3AA3E3")
             .actions(actions)
             .build());

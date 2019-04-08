@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 
 /** Payload parser for Cloudtrail events */
 public class Cloudtrail extends PayloadBase implements Serializable {
@@ -66,6 +68,8 @@ public class Cloudtrail extends PayloadBase implements Serializable {
         n.setSubjectUser(getUser());
         n.setSourceAddress(getSourceAddress());
         n.setObject(event.getRecipientAccountId());
+        n.setEventTimestamp(
+            DateTime.parse(event.getEventTime(), ISODateTimeFormat.dateTimeNoMillis()));
 
         // TODO: Consider moving identity management into Normalized
 
