@@ -36,6 +36,7 @@ public abstract class CompositeOutput {
     final String outputFile = options.getOutputFile();
     final String outputBigQuery = options.getOutputBigQuery();
     final String outputPubsub = options.getOutputPubsub();
+    final String outputSqs = options.getOutputSqs();
     final String outputIprepd = options.getOutputIprepd();
     final String outputIprepdApikey = options.getOutputIprepdApikey();
     final String project = options.getProject();
@@ -103,6 +104,9 @@ public abstract class CompositeOutput {
         }
         if (outputIprepd != null) {
           input.apply(IprepdIO.write(outputIprepd, outputIprepdApikey, project));
+        }
+        if (outputSqs != null) {
+          input.apply(SqsIO.write(outputSqs, project));
         }
         if (alertcfg.isConfigured()) {
           input.apply(AlertIO.write(alertcfg));
