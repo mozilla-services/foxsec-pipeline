@@ -7,6 +7,7 @@ public class Notify {
   private Boolean directEmailNotify;
   private String directEmailNotifyFormat;
   private Boolean directSlackNotify;
+  private Boolean directSlackConfirmationNotify;
 
   /**
    * Return if identity should be directly notified via email
@@ -26,6 +27,16 @@ public class Notify {
   @JsonProperty("direct_slack_notify")
   public Boolean getDirectSlackNotify() {
     return directSlackNotify;
+  }
+
+  /**
+   * Return if identity should be directly notified via Slack using confirmation alert
+   *
+   * @return Boolean to indicate direct notification via Slack using confirmation alert
+   */
+  @JsonProperty("direct_slack_confirmation_notify")
+  public Boolean getDirectSlackConfirmationNotify() {
+    return directSlackConfirmationNotify;
   }
 
   /**

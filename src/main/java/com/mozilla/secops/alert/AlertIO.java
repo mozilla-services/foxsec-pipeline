@@ -201,9 +201,14 @@ public class AlertIO {
           }
         }
 
+        String slackEmailConfirmation = a.getMetadataValue("notify_slack_confirmation_direct");
         String slackEmail = a.getMetadataValue("notify_slack_direct");
-        if (slackEmail != null) {
+        if (slackEmailConfirmation != null) {
           if (!slack.sendConfirmationAlertToUser(a, slack.getUserId(slackEmail))) {
+            log.error("failed to send notification via slack to user {}", slackEmail);
+          }
+        } else if (slackEmail != null) {
+          if (!slack.sendToUser(a, slack.getUserId(slackEmail))) {
             log.error("failed to send notification via slack to user {}", slackEmail);
           }
         }

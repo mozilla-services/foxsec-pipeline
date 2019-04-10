@@ -98,4 +98,26 @@ public class Identity {
     }
     return true;
   }
+
+  /**
+   * Returns boolean that is true if this identity should get a direct notification via Slack using
+   * confirmation alert
+   *
+   * @param defaultNotification Default notification preferences if unset in identity
+   */
+  public Boolean getSlackNotifyConfirmationDirect(Notify defaultNotification) {
+    if (notify != null) {
+      if (notify.getDirectSlackConfirmationNotify() != null
+          && notify.getDirectSlackConfirmationNotify() == false) {
+        return false;
+      }
+    } else if (notify == null) {
+      if ((defaultNotification == null)
+          || (defaultNotification.getDirectSlackConfirmationNotify() != null
+              && defaultNotification.getDirectSlackConfirmationNotify() == false)) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
