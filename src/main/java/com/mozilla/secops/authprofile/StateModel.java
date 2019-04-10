@@ -2,7 +2,7 @@ package com.mozilla.secops.authprofile;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mozilla.secops.state.State;
+import com.mozilla.secops.state.StateCursor;
 import com.mozilla.secops.state.StateException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -140,10 +140,10 @@ public class StateModel {
    * Retrieve state object for user
    *
    * @param user Subject name to retrieve state for
-   * @param s Initialized state interface for request
+   * @param s Initialized state cursor for request
    * @return User {@link StateModel} or null if it does not exist
    */
-  public static StateModel get(String user, State s) throws StateException {
+  public static StateModel get(String user, StateCursor s) throws StateException {
     StateModel ret = s.get(user, StateModel.class);
     if (ret == null) {
       return null;
@@ -155,10 +155,13 @@ public class StateModel {
   /**
    * Persist state using state interface
    *
-   * @param s Initialized state interface for request
+   * <p>Calling set will also commit and close the cursor.
+   *
+   * @param s Initialized state cursor for request
    */
-  public void set(State s) throws StateException {
+  public void set(StateCursor s) throws StateException {
     s.set(subject, this);
+    s.commit();
   }
 
   /**

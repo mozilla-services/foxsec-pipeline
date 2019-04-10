@@ -17,6 +17,7 @@ import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.MemcachedStateInterface;
 import com.mozilla.secops.state.State;
+import com.mozilla.secops.state.StateCursor;
 import com.mozilla.secops.state.StateException;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
@@ -366,9 +367,11 @@ public class AuthProfile implements Serializable {
             continue;
           }
         } else {
+          StateCursor cur = state.newCursor();
+
           a.addMetadata("identity_key", userIdentity);
           // The event was for a tracked identity, initialize the state model
-          StateModel sm = StateModel.get(userIdentity, state);
+          StateModel sm = StateModel.get(userIdentity, cur);
           if (sm == null) {
             sm = new StateModel(userIdentity);
           }
@@ -381,6 +384,7 @@ public class AuthProfile implements Serializable {
           if (sm.updateEntry(entryKey)) {
             // Check new address ignore list
             if (ignoreDuplicateSourceAddress(e, seenNewAddresses)) {
+              cur.commit();
               continue;
             }
             // Address was new
@@ -396,6 +400,7 @@ public class AuthProfile implements Serializable {
           } else {
             // Check known address ignore list
             if (ignoreDuplicateSourceAddress(e, seenKnownAddresses)) {
+              cur.commit();
               continue;
             }
 
@@ -409,7 +414,7 @@ public class AuthProfile implements Serializable {
 
           // Update persistent state with new information
           try {
-            sm.set(state);
+            sm.set(cur);
           } catch (StateException exc) {
             log.error("{}: error updating state: {}", userIdentity, exc.getMessage());
           }
