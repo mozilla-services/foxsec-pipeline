@@ -140,6 +140,7 @@ public class Parser {
 
       e.setStackdriverProject(getStackdriverProject(entry));
       e.setStackdriverLabels(entry.getLabels());
+      e.setTimestamp(parseISO8601(entry.getTimestamp()));
 
       // We were able to deserialize the LogEntry so store it as a hint in the state
       state.setLogEntryHint(entry);

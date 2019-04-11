@@ -84,6 +84,7 @@ public class TestAuthProfile {
               assertTrue(n.isOfType(Normalized.Type.AUTH));
               assertEquals("216.160.83.56", n.getSourceAddress());
               assertEquals("riker", n.getSubjectUser());
+              assertEquals("2018-09-18T22:15:38.000Z", n.getEventTimestamp().toString());
 
               return null;
             });
@@ -134,6 +135,7 @@ public class TestAuthProfile {
                 assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
                 assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
                 assertEquals("US", a.getMetadataValue("sourceaddress_country"));
+                assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
               }
               assertEquals(1L, newCnt);
               // Should have one informational since the rest of the duplicates will be
@@ -312,6 +314,7 @@ public class TestAuthProfile {
                 assertEquals("emit-bastion", a.getMetadataValue("object"));
                 assertEquals("unknown", a.getMetadataValue("sourceaddress_city"));
                 assertEquals("unknown", a.getMetadataValue("sourceaddress_country"));
+                assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
               }
               assertEquals(2L, newCnt);
               return null;
