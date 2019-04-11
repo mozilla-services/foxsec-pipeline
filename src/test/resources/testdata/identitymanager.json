@@ -21,6 +21,7 @@
     "default_notify": {
         "direct_email_notify": true,
         "direct_slack_notify": false,
+        "direct_slack_notify_confirmation": false,
         "direct_email_notify_format": "testing-%s@mozilla.com"
     },
     "aws_account_map": {
