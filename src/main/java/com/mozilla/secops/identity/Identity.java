@@ -86,16 +86,17 @@ public class Identity {
    */
   public Boolean getSlackNotifyDirect(Notify defaultNotification) {
     if (notify != null) {
-      if (notify.getDirectSlackNotify() != null && notify.getDirectSlackNotify() == false) {
-        return false;
-      }
-    } else if (notify == null) {
-      if ((defaultNotification == null)
-          || (defaultNotification.getDirectSlackNotify() != null
-              && defaultNotification.getDirectSlackNotify() == false)) {
-        return false;
+      if (notify.getDirectSlackNotify() != null) {
+        return notify.getDirectSlackNotify();
       }
     }
+
+    if ((defaultNotification == null)
+        || (defaultNotification.getDirectSlackNotify() != null
+            && defaultNotification.getDirectSlackNotify() == false)) {
+      return false;
+    }
+
     return true;
   }
 
@@ -107,17 +108,17 @@ public class Identity {
    */
   public Boolean getSlackNotifyConfirmationDirect(Notify defaultNotification) {
     if (notify != null) {
-      if (notify.getDirectSlackConfirmationNotify() != null
-          && notify.getDirectSlackConfirmationNotify() == false) {
-        return false;
-      }
-    } else if (notify == null) {
-      if ((defaultNotification == null)
-          || (defaultNotification.getDirectSlackConfirmationNotify() != null
-              && defaultNotification.getDirectSlackConfirmationNotify() == false)) {
-        return false;
+      if (notify.getDirectSlackConfirmationNotify() != null) {
+        return notify.getDirectSlackConfirmationNotify();
       }
     }
+
+    if ((defaultNotification == null)
+        || (defaultNotification.getDirectSlackConfirmationNotify() != null
+            && defaultNotification.getDirectSlackConfirmationNotify() == false)) {
+      return false;
+    }
+
     return true;
   }
 }

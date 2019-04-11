@@ -6,7 +6,10 @@
 
         "wcrusher@mozilla.com": {
             "aliases": [ "wesley" ],
-            "fragment": "wcrusher"
+            "fragment": "wcrusher",
+            "notify": {
+              "direct_slack_notify": false
+            }
         },
 
         "wriker@mozilla.com": {
