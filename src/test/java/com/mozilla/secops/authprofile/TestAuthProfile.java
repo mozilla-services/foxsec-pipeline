@@ -14,10 +14,12 @@ import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserTest;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
+import com.mozilla.secops.window.GlobalTriggers;
 import java.util.Collection;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
+import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -63,12 +65,16 @@ public class TestAuthProfile {
   }
 
   @Test
-  public void parseAndWindowTest() throws Exception {
+  public void parseExtractGBKTest() throws Exception {
     testEnv();
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer1.txt", p);
 
     PCollection<KV<String, Iterable<Event>>> res =
-        input.apply(new AuthProfile.ParseAndWindow(getTestOptions()));
+        input
+            .apply(new AuthProfile.Parse(getTestOptions()))
+            .apply(ParDo.of(new AuthProfile.ExtractIdentity(getTestOptions())))
+            .apply(new GlobalTriggers<KV<String, Event>>(60))
+            .apply(GroupByKey.<String, Event>create());
     PAssert.thatMap(res)
         .satisfies(
             results -> {
@@ -97,10 +103,7 @@ public class TestAuthProfile {
     AuthProfile.AuthProfileOptions options = getTestOptions();
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer1.txt", p);
 
-    PCollection<Alert> res =
-        input
-            .apply(new AuthProfile.ParseAndWindow(options))
-            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
 
     PAssert.that(res)
         .satisfies(
@@ -151,10 +154,7 @@ public class TestAuthProfile {
     AuthProfile.AuthProfileOptions options = getTestOptions();
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
 
-    PCollection<Alert> res =
-        input
-            .apply(new AuthProfile.ParseAndWindow(options))
-            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
 
     PAssert.that(res)
         .satisfies(
@@ -209,10 +209,7 @@ public class TestAuthProfile {
     options.setIgnoreUserRegex(new String[] {"^laforge@.*"});
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
 
-    PCollection<Alert> res =
-        input
-            .apply(new AuthProfile.ParseAndWindow(options))
-            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
 
     PAssert.that(res)
         .satisfies(
@@ -244,10 +241,7 @@ public class TestAuthProfile {
     options.setIgnoreUnknownIdentities(true);
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
 
-    PCollection<Alert> res =
-        input
-            .apply(new AuthProfile.ParseAndWindow(options))
-            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
 
     PAssert.that(res)
         .satisfies(
@@ -278,10 +272,7 @@ public class TestAuthProfile {
     AuthProfile.AuthProfileOptions options = getTestOptions();
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer3.txt", p);
 
-    PCollection<Alert> res =
-        input
-            .apply(new AuthProfile.ParseAndWindow(options))
-            .apply(ParDo.of(new AuthProfile.Analyze(options)));
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
 
     PAssert.that(res)
         .satisfies(

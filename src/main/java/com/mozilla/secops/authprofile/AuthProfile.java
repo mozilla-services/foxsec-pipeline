@@ -31,17 +31,18 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link AuthProfile} implements analysis of normalized authentication events to detect
- * authentication for a given user from an unknown source IP address.
+ * {@link AuthProfile} implements analysis of normalized authentication events
  *
  * <p>This pipeline can make use of various methods for persistent state storage.
  */
@@ -49,37 +50,43 @@ public class AuthProfile implements Serializable {
   private static final long serialVersionUID = 1L;
 
   /**
-   * Composite transform to parse a {@link PCollection} containing events as strings and emit a
-   * {@link PCollection} of {@link KV} objects where the key is a particular username and the value
-   * is a list of authentication events seen for that user within the window.
+   * Parse input strings returning applicable authentication events.
    *
-   * <p>The output is windowed in the global window with a trigger which fires every 60 seconds.
+   * <p>Events which are not of type {@link com.mozilla.secops.parser.Normalized.Type#AUTH} or
+   * {@link com.mozilla.secops.parser.Normalized.Type#AUTH_SESSION} are not returned in the
+   * resulting {@link PCollection}.
+   *
+   * <p>This transform also filters events associated with ignored or inapplicable users from the
+   * result set.
    */
-  public static class ParseAndWindow
-      extends PTransform<PCollection<String>, PCollection<KV<String, Iterable<Event>>>> {
+  public static class Parse extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
     private Logger log;
-    private final String idmanagerPath;
     private final String[] ignoreUserRegex;
-    private final Boolean ignoreUnknownIdentities;
+    private final String[] autoignoreUsers;
     private final ParserCfg cfg;
 
     /**
-     * Static initializer for {@link ParseAndWindow} using specified pipeline options
+     * Static initializer for {@link Parse} using specified pipeline options
      *
      * @param options Pipeline options
      */
-    public ParseAndWindow(AuthProfileOptions options) {
-      idmanagerPath = options.getIdentityManagerPath();
-      log = LoggerFactory.getLogger(ParseAndWindow.class);
+    public Parse(AuthProfileOptions options) {
+      log = LoggerFactory.getLogger(Parse.class);
       ignoreUserRegex = options.getIgnoreUserRegex();
-      ignoreUnknownIdentities = options.getIgnoreUnknownIdentities();
+      autoignoreUsers =
+          new String[] {
+            "cluster-autoscaler",
+            "system:unsecured",
+            "system:serviceaccount:kube-system:endpoint-controller",
+            "system:kube-proxy"
+          };
       cfg = ParserCfg.fromInputOptions(options);
     }
 
     @Override
-    public PCollection<KV<String, Iterable<Event>>> expand(PCollection<String> col) {
+    public PCollection<Event> expand(PCollection<String> col) {
       EventFilter filter = new EventFilter();
 
       // We are interested in both AUTH here (which indicates an authentication activity) and
@@ -91,16 +98,13 @@ public class AuthProfile implements Serializable {
               ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)))
           .apply(
               ParDo.of(
-                  new DoFn<Event, KV<String, Event>>() {
+                  new DoFn<Event, Event>() {
                     private static final long serialVersionUID = 1L;
 
-                    private IdentityManager idmanager;
                     private Pattern[] ignoreUsers;
 
                     @Setup
                     public void setup() throws IOException {
-                      idmanager = IdentityManager.load(idmanagerPath);
-
                       if (ignoreUserRegex != null) {
                         ignoreUsers = new Pattern[ignoreUserRegex.length];
                         for (int i = 0; i < ignoreUserRegex.length; i++) {
@@ -115,7 +119,15 @@ public class AuthProfile implements Serializable {
                       Normalized n = e.getNormalized();
 
                       if (n.getSubjectUser() == null || n.getSourceAddress() == null) {
+                        // At a minimum we want a subject user and a source address here
                         return;
+                      }
+
+                      // Filter any auto-ignored users
+                      for (String i : autoignoreUsers) {
+                        if (i.equals(n.getSubjectUser())) {
+                          return;
+                        }
                       }
 
                       if (ignoreUsers != null) {
@@ -127,43 +139,79 @@ public class AuthProfile implements Serializable {
                         }
                       }
 
-                      // Ignore ip6 loopback as is seen with some GCP audit calls
+                      // Ignore events with an ip6 loopback as is seen with some GCP audit calls
                       if (n.getSourceAddress().equals("0:0:0:0:0:0:0:1")) {
                         return;
                       }
 
-                      String identityKey = idmanager.lookupAlias(n.getSubjectUser());
-                      if (identityKey != null) {
-                        log.info("{}: resolved identity to {}", n.getSubjectUser(), identityKey);
-                        c.output(KV.of(identityKey, e));
-                      } else {
-                        // Don't bother logging for known Kubernetes system users
-                        if (!(n.getSubjectUser().equals("system:unsecured")
-                            || n.getSubjectUser().equals("cluster-autoscaler")
-                            || n.getSubjectUser()
-                                .equals("system:serviceaccount:kube-system:endpoint-controller")
-                            || n.getSubjectUser().equals("system:kube-proxy"))) {
-                          log.info(
-                              "{}: username does not map to any known identity or alias",
-                              n.getSubjectUser());
-                        }
-                        if (ignoreUnknownIdentities) {
-                          return;
-                        }
-                        c.output(KV.of(n.getSubjectUser(), e));
-                      }
+                      c.output(e);
                     }
-                  }))
-          .apply(new GlobalTriggers<KV<String, Event>>(60))
-          .apply(GroupByKey.<String, Event>create());
+                  }));
     }
   }
 
   /**
-   * Analyze grouped events for a given user, generating alert messages based on the contents of the
-   * authentication event.
+   * Extract subject user for each event in input {@link PCollection}
+   *
+   * <p>For each event in the input collection, extract the subject user and attempt to map the
+   * username to a known identity. If found, a {@link KV} is emitted with the key being the identity
+   * and the value being the original event.
+   *
+   * <p>If an identity is not found for the subject user, the key will simply be the subject user.
+   * However if pipeline options have been configured to ignore unknown identities, these elements
+   * will be dropped.
    */
-  public static class Analyze extends DoFn<KV<String, Iterable<Event>>, Alert> {
+  public static class ExtractIdentity extends DoFn<Event, KV<String, Event>> {
+    private static final long serialVersionUID = 1L;
+
+    private final String idmanagerPath;
+    private final Boolean ignoreUnknownIdentities;
+    private IdentityManager idmanager;
+    private Logger log;
+
+    /**
+     * Static initializer for {@link ExtractIdentity}
+     *
+     * @param options Pipeline options
+     */
+    public ExtractIdentity(AuthProfileOptions options) {
+      idmanagerPath = options.getIdentityManagerPath();
+      ignoreUnknownIdentities = options.getIgnoreUnknownIdentities();
+    }
+
+    @Setup
+    public void setup() throws IOException {
+      log = LoggerFactory.getLogger(ExtractIdentity.class);
+      idmanager = IdentityManager.load(idmanagerPath);
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext c) {
+      Event e = c.element();
+      Normalized n = e.getNormalized();
+
+      String identityKey = idmanager.lookupAlias(n.getSubjectUser());
+      if (identityKey != null) {
+        log.info("{}: resolved identity to {}", n.getSubjectUser(), identityKey);
+        c.output(KV.of(identityKey, e));
+      } else {
+        if (ignoreUnknownIdentities) {
+          log.info("{}: ignoring event as identity is unknown", n.getSubjectUser());
+        } else {
+          log.info(
+              "{}: identity is unknown, publishing event keyed with subject user",
+              n.getSubjectUser());
+          c.output(KV.of(n.getSubjectUser(), e));
+        }
+      }
+    }
+  }
+
+  /**
+   * Analyze grouped events associated with a particular user or identity against persistent user
+   * state
+   */
+  public static class StateAnalyze extends DoFn<KV<String, Iterable<Event>>, Alert> {
     private static final long serialVersionUID = 1L;
 
     private final String memcachedHost;
@@ -178,11 +226,11 @@ public class AuthProfile implements Serializable {
     private State state;
 
     /**
-     * Static initializer for {@link Analyze} using specified pipeline options
+     * Static initializer for {@link StateAnalyze} using specified pipeline options
      *
      * @param options Pipeline options for {@link AuthProfile}
      */
-    public Analyze(AuthProfileOptions options) {
+    public StateAnalyze(AuthProfileOptions options) {
       memcachedHost = options.getMemcachedHost();
       memcachedPort = options.getMemcachedPort();
       datastoreNamespace = options.getDatastoreNamespace();
@@ -192,7 +240,7 @@ public class AuthProfile implements Serializable {
 
     @Setup
     public void setup() throws StateException, IOException {
-      log = LoggerFactory.getLogger(Analyze.class);
+      log = LoggerFactory.getLogger(StateAnalyze.class);
 
       idmanager = IdentityManager.load(idmanagerPath);
       namedSubnets = idmanager.getNamedSubnets();
@@ -436,6 +484,12 @@ public class AuthProfile implements Serializable {
 
   /** Runtime options for {@link AuthProfile} pipeline. */
   public interface AuthProfileOptions extends PipelineOptions, InputOptions, OutputOptions {
+    @Description("Enable state analysis")
+    @Default.Boolean(true)
+    Boolean getEnableStateAnalysis();
+
+    void setEnableStateAnalysis(Boolean value);
+
     @Description("Use memcached state; hostname of memcached server")
     String getMemcachedHost();
 
@@ -469,12 +523,31 @@ public class AuthProfile implements Serializable {
     void setIgnoreUnknownIdentities(Boolean value);
   }
 
+  public static PCollection<Alert> processInput(
+      PCollection<String> input, AuthProfileOptions options) {
+    PCollectionList<Alert> alertList = PCollectionList.empty(input.getPipeline());
+
+    PCollection<Event> events = input.apply("parse", new Parse(options));
+
+    if (options.getEnableStateAnalysis()) {
+      alertList =
+          alertList.and(
+              events
+                  .apply("extract identity", ParDo.of(new ExtractIdentity(options)))
+                  .apply("window for state analyze", new GlobalTriggers<KV<String, Event>>(60))
+                  .apply("state analyze gbk", GroupByKey.<String, Event>create())
+                  .apply("state analyze", ParDo.of(new StateAnalyze(options)))
+                  .apply("state analyze rewindow for output", new GlobalTriggers<Alert>(5)));
+    }
+
+    return alertList.apply("flatten output", Flatten.<Alert>pCollections());
+  }
+
   private static void runAuthProfile(AuthProfileOptions options) throws IllegalArgumentException {
     Pipeline p = Pipeline.create(options);
 
-    p.apply("input", new CompositeInput(options))
-        .apply("parse and window", new ParseAndWindow(options))
-        .apply(ParDo.of(new Analyze(options)))
+    PCollection<String> input = p.apply("input", new CompositeInput(options));
+    processInput(input, options)
         .apply("output format", ParDo.of(new AlertFormatter(options)))
         .apply("output", OutputOptions.compositeOutput(options));
 
