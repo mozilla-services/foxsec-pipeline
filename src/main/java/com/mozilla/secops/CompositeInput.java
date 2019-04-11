@@ -65,13 +65,11 @@ public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
         try {
           k = RuntimeSecrets.interpretSecret(i, project);
         } catch (IOException exc) {
-          // XXX Just return null here for now which will result in a null pointer exception in the
-          // pipeline, but this should also log the error.
-          return null;
+          throw new RuntimeException(exc.getMessage());
         }
         String[] parts = k.split(":");
         if (parts.length != 4) {
-          return null;
+          throw new RuntimeException("format of kinesis input specification was invalid");
         }
         log.info("attempting kinesis input setup for {} in {}", parts[0], parts[3]);
         inputList =
