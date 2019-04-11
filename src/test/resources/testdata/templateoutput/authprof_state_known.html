@@ -109,24 +109,15 @@
                       <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;">
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        We noticed a login for ${username} to ${object} at ${alert.timestamp?datetime.iso_m_nz}.
+                        We noticed a login for riker to emit-bastion at DATESTAMP.
                         </p>
 
-                        <#if category == "state_analyze">
-                        <#if alert.severity == "INFORMATIONAL">
 			<p>This occurred from a known source address.</p>
-                        <#else>
-			<p>This occurred from a source address that was unknown to the system.</p>
-                        </#if>
-                        <#elseif category == "critical_object_analyze">
-                        <p>This destination object is configured as a critical resource for which alerts are always generated.</p>
-                        </#if>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        ${alert.timestamp?datetime.iso_m_nz} - ${sourceaddress} - ${sourceaddress_city}, ${sourceaddress_country}
+                        DATESTAMP - 216.160.83.56 - Milton, US
                         </p>
 
-                        <#if category == "state_analyze">
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
                         <strong>If this was not you</strong>, please respond to this email and let the Firefox Operations Security team know this access should be investigated.
                         </p>
@@ -134,11 +125,6 @@
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
                         These alerts are sent when a user logs into a monitored service from an “unknown IP”. The inactivity expiry for IPs is 10 days.
                         </p>
-                        <#elseif category == "critical_object_analyze">
-                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        These alerts are always generated when authentication activity is seen for objects configured as critical.
-                        </p>
-                        </#if>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
                         If you have any questions about this notification, email us at secops@mozilla.com.
@@ -157,7 +143,7 @@
               <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;">
                 <tr>
                   <td class="content-block" style="font-family: sans-serif; vertical-align: top; padding-bottom: 10px; padding-top: 10px; font-size: 12px; color: #999999; text-align: center;">
-                        alert id: ${alert.alertId}
+                        alert id: ALERTID
                   </td>
                 </tr>
               </table>

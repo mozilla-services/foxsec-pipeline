@@ -6,15 +6,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertConfiguration;
+import com.mozilla.secops.alert.TemplateManager;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserTest;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.window.GlobalTriggers;
+import java.io.IOException;
 import java.util.Collection;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
@@ -23,12 +27,30 @@ import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 public class TestAuthProfile {
   @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+
+  public static String renderTestTemplate(String path, Alert a) {
+    String in;
+    try {
+      in = TestUtil.getTestResource(path);
+    } catch (IOException exc) {
+      return null;
+    }
+    if (in == null) {
+      return null;
+    }
+
+    DateTimeFormatter fmt = DateTimeFormat.forPattern("MMM d, yyyy h:mm:ss aa");
+    in = in.replaceAll("DATESTAMP", fmt.print(a.getTimestamp()));
+    return in.replaceAll("ALERTID", a.getAlertId().toString());
+  }
 
   private void testEnv() throws Exception {
     environmentVariables.set("DATASTORE_EMULATOR_HOST", "localhost:8081");
@@ -112,27 +134,52 @@ public class TestAuthProfile {
               long infoCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
+                assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
+                assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                 String actualSummary = a.getSummary();
                 if (actualSummary.equals(
                     "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                         + "216.160.83.56 [Milton/US]")) {
                   infoCnt++;
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                  assertNull(a.getSlackTemplateName());
-                  assertNull(a.getEmailTemplateName());
                   assertNull(a.getMetadataValue("notify_email_direct"));
                   assertNull(a.getMetadataValue("escalate_to"));
+
+                  // Verify sample rendered email template for known source
+                  try {
+                    TemplateManager tmgr = new TemplateManager(new AlertConfiguration());
+                    String templateOutput =
+                        tmgr.processTemplate(
+                            a.getEmailTemplateName(), a.generateTemplateVariables());
+                    assertEquals(
+                        renderTestTemplate("/testdata/templateoutput/authprof_state_known.html", a),
+                        templateOutput);
+                  } catch (Exception exc) {
+                    fail(exc.getMessage());
+                  }
                 } else if (actualSummary.equals(
                     "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                         + "new source 216.160.83.56 [Milton/US]")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
-                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                   assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
+
+                  // Verify sample rendered email template for new source
+                  try {
+                    TemplateManager tmgr = new TemplateManager(new AlertConfiguration());
+                    String templateOutput =
+                        tmgr.processTemplate(
+                            a.getEmailTemplateName(), a.generateTemplateVariables());
+                    assertEquals(
+                        renderTestTemplate("/testdata/templateoutput/authprof_state_new.html", a),
+                        templateOutput);
+                  } catch (Exception exc) {
+                    fail(exc.getMessage());
+                  }
                 }
+                assertEquals("state_analyze", a.getMetadataValue("category"));
                 assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                 assertEquals("riker", a.getMetadataValue("username"));
                 assertEquals("emit-bastion", a.getMetadataValue("object"));
@@ -165,6 +212,9 @@ public class TestAuthProfile {
               long infoCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
+                assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
+                assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
+                assertEquals("state_analyze", a.getMetadataValue("category"));
                 String actualSummary = a.getSummary();
                 if (actualSummary.contains("new source")) {
                   newCnt++;
@@ -190,8 +240,6 @@ public class TestAuthProfile {
                     assertEquals(
                         "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                     assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
-                    assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
-                    assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   }
                 }
               }
@@ -283,12 +331,13 @@ public class TestAuthProfile {
               long newCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
+                assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
+                assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
+                assertEquals("state_analyze", a.getMetadataValue("category"));
                 String actualSummary = a.getSummary();
                 if (actualSummary.matches("(.*)new source fd00(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
-                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                   assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
@@ -296,8 +345,6 @@ public class TestAuthProfile {
                 } else if (actualSummary.matches("(.*)new source aaaa(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
-                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                   assertNull(a.getMetadataValue("entry_key"));
