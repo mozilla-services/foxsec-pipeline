@@ -11,34 +11,30 @@ public class MemcachedStateInterface implements StateInterface {
   private final int memcachedPort;
   private MemcachedClient memclient;
 
-  public void deleteAll() throws StateException {
-    memclient.flush();
-  }
-
-  public String getObject(String s) throws StateException {
-    try {
-      return (String) memclient.get(s);
-    } catch (OperationTimeoutException exc) {
-      throw new StateException(exc.getMessage());
-    }
-  }
-
-  public void saveObject(String s, String v) throws StateException {
-    try {
-      memclient.set(s, 0, v);
-    } catch (IllegalArgumentException exc) {
-      throw new StateException(exc.getMessage());
-    }
+  public StateCursor newCursor() {
+    return new MemcachedStateCursor(memclient);
   }
 
   public void done() {
     memclient.shutdown();
   }
 
+  public void deleteAll() throws StateException {
+    memclient.flush();
+  }
+
   public void initialize() throws StateException {
     try {
       memclient = new MemcachedClient(new InetSocketAddress(memcachedHost, memcachedPort));
     } catch (IOException exc) {
+      throw new StateException(exc.getMessage());
+    }
+  }
+
+  public String getObject(String s) throws StateException {
+    try {
+      return (String) memclient.get(s);
+    } catch (OperationTimeoutException exc) {
       throw new StateException(exc.getMessage());
     }
   }

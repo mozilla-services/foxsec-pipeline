@@ -6,6 +6,7 @@ import com.mozilla.secops.slack.SlackManager;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.MemcachedStateInterface;
 import com.mozilla.secops.state.State;
+import com.mozilla.secops.state.StateCursor;
 import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import org.slf4j.Logger;
@@ -137,12 +138,23 @@ public class AlertSlack {
 
     a.addMetadata("slack_type", "confirmation");
     a.addMetadata("status", "NEW");
+    StateCursor c = null;
     try {
       state.initialize();
-      state.set(a.getAlertId().toString(), a);
+      c = state.newCursor();
+      a.addMetadata("status", "NEW");
+      c.set(a.getAlertId().toString(), a);
     } catch (StateException exc) {
       log.error("error saving alert state (StateException): {}", exc.getMessage());
       return false;
+    } finally {
+      if (c != null) {
+        try {
+          c.commit();
+        } catch (StateException exc) {
+          log.error("error during alert state commit (StateException): {}", exc.getMessage());
+        }
+      }
     }
 
     log.info("generating slack message for {}", userId);
