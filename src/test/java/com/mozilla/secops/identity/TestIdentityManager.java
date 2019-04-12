@@ -44,7 +44,7 @@ public class TestIdentityManager {
     assertNotNull(id);
     assertNull(id.getEmailNotifyDirect(mgr.getDefaultNotification()));
     assertFalse(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
-    assertFalse(id.getSlackNotifyConfirmationDirect(mgr.getDefaultNotification()));
+    assertFalse(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
     assertNull(id.getFragment());
 
     // Identity with direct email format override
@@ -55,7 +55,7 @@ public class TestIdentityManager {
         "holodeck-riker@mozilla.com", id.getEmailNotifyDirect(mgr.getDefaultNotification()));
     assertEquals("riker", id.getFragment());
     assertTrue(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
-    assertTrue(id.getSlackNotifyConfirmationDirect(mgr.getDefaultNotification()));
+    assertTrue(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
   }
 
   @Test
@@ -69,13 +69,13 @@ public class TestIdentityManager {
         "holodeck-riker@mozilla.com", id.getEmailNotifyDirect(mgr.getDefaultNotification()));
     assertEquals("riker", id.getFragment());
     assertTrue(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
-    assertTrue(id.getSlackNotifyConfirmationDirect(mgr.getDefaultNotification()));
+    assertTrue(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
 
     id = mgr.getIdentity("wcrusher@mozilla.com");
     assertNotNull(id);
     assertNull(id.getEmailNotifyDirect(mgr.getDefaultNotification()));
     assertFalse(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
-    assertFalse(id.getSlackNotifyConfirmationDirect(mgr.getDefaultNotification()));
+    assertFalse(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
   }
 
   @Test

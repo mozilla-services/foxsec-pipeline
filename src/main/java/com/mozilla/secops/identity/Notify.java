@@ -30,16 +30,6 @@ public class Notify {
   }
 
   /**
-   * Return if identity should be directly notified via Slack using confirmation alert
-   *
-   * @return Boolean to indicate direct notification via Slack using confirmation alert
-   */
-  @JsonProperty("direct_slack_confirmation_notify")
-  public Boolean getDirectSlackConfirmationNotify() {
-    return directSlackConfirmationNotify;
-  }
-
-  /**
    * Format string to use for construction of direct email notification
    *
    * @return Format string to use for email notification address

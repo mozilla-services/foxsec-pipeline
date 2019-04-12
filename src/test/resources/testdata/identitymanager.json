@@ -17,16 +17,20 @@
             "fragment": "riker",
             "notify": {
                 "direct_email_notify_format": "holodeck-%s@mozilla.com",
-                "direct_slack_notify": true,
-                "direct_slack_confirmation_notify": true
+                "direct_slack_notify": true
+            },
+            "feature_flags": {
+                "slack_confirmation_alert": true
             }
         }
     },
     "default_notify": {
         "direct_email_notify": true,
         "direct_slack_notify": false,
-        "direct_slack_confirmation_notify": false,
         "direct_email_notify_format": "testing-%s@mozilla.com"
+    },
+    "default_feature_flags": {
+        "slack_confirmation_alert": false
     },
     "aws_account_map": {
         "123456789": "riker-vacationing-on-risa"

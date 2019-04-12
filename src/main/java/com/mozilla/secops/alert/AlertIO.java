@@ -179,6 +179,8 @@ public class AlertIO {
         return;
       }
 
+      String alertType = a.getMetadataValue("alert_notification_type");
+
       if (mailer != null) {
         if (cfg.getEmailCatchall() != null) {
           // Configured catchall address always recieves a copy of the alert
@@ -201,15 +203,16 @@ public class AlertIO {
           }
         }
 
-        String slackEmailConfirmation = a.getMetadataValue("notify_slack_confirmation_direct");
         String slackEmail = a.getMetadataValue("notify_slack_direct");
-        if (slackEmailConfirmation != null) {
-          if (!slack.sendConfirmationAlertToUser(a, slack.getUserId(slackEmail))) {
-            log.error("failed to send notification via slack to user {}", slackEmail);
-          }
-        } else if (slackEmail != null) {
-          if (!slack.sendToUser(a, slack.getUserId(slackEmail))) {
-            log.error("failed to send notification via slack to user {}", slackEmail);
+        if (slackEmail != null) {
+          if (alertType.equals("slack_notification")) {
+            if (!slack.sendToUser(a, slack.getUserId(slackEmail))) {
+              log.error("failed to send notification via slack to user {}", slackEmail);
+            }
+          } else if (alertType.equals("slack_confirmation")) {
+            if (!slack.sendConfirmationAlertToUser(a, slack.getUserId(slackEmail))) {
+              log.error("failed to send notification via slack to user {}", slackEmail);
+            }
           }
         }
       }

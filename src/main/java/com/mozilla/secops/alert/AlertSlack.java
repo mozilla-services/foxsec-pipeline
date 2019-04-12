@@ -105,7 +105,6 @@ public class AlertSlack {
 
     log.info("generating slack message for {}", userId);
 
-    a.addMetadata("slack_type", "notification");
     String text = createAlertBody(a);
     try {
       return slackManager.handleSlackResponse(slackManager.sendMessageToChannel(userId, text));
@@ -136,8 +135,6 @@ public class AlertSlack {
       return false;
     }
 
-    a.addMetadata("slack_type", "confirmation");
-    a.addMetadata("status", "NEW");
     StateCursor c = null;
     try {
       state.initialize();
