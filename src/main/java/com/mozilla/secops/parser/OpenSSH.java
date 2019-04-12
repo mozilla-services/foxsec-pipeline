@@ -5,8 +5,6 @@ import com.mozilla.secops.identity.IdentityManager;
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
 
 /** Payload parser for OpenSSH log data */
 public class OpenSSH extends PayloadBase implements Serializable {
@@ -16,10 +14,7 @@ public class OpenSSH extends PayloadBase implements Serializable {
   private Pattern pattRe;
 
   private final String authAcceptedRe =
-      "("
-          + Parser.SYSLOG_TS_RE
-          + ") (\\S+) sshd\\[\\d+\\]: Accepted (\\S+) for (\\S+) from (\\S+) "
-          + "port (\\d+).*";
+      "^.* (\\S+) sshd\\[\\d+\\]: Accepted (\\S+) for (\\S+) from (\\S+) " + "port (\\d+).*";
   private Pattern pattAuthAcceptedRe;
 
   private String user;
@@ -28,7 +23,6 @@ public class OpenSSH extends PayloadBase implements Serializable {
   private String sourceAddressCity;
   private String sourceAddressCountry;
   private String hostname;
-  private String authTimestamp;
 
   @Override
   public Boolean matcher(String input, ParserState state) {
@@ -60,19 +54,15 @@ public class OpenSSH extends PayloadBase implements Serializable {
     pattAuthAcceptedRe = Pattern.compile(authAcceptedRe);
     Matcher mat = pattAuthAcceptedRe.matcher(input);
     if (mat.matches()) {
-      authTimestamp = mat.group(1);
-      hostname = mat.group(2);
-      authMethod = mat.group(3);
-      user = mat.group(4);
-      sourceAddress = mat.group(5);
+      hostname = mat.group(1);
+      authMethod = mat.group(2);
+      user = mat.group(3);
+      sourceAddress = mat.group(4);
       Normalized n = e.getNormalized();
       n.addType(Normalized.Type.AUTH);
       n.setSubjectUser(user);
       n.setSourceAddress(sourceAddress);
       n.setObject(hostname);
-
-      DateTime et = DateTime.parse(authTimestamp, DateTimeFormat.forPattern("MMM dd HH:mm:ss"));
-      n.setEventTimestamp(et.withYear(e.getTimestamp().year().get()));
 
       // If we have an instance of IdentityManager in the parser, see if we can
       // also set the resolved subject identity

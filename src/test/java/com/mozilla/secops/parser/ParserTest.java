@@ -651,7 +651,6 @@ public class ParserTest {
     assertEquals("riker", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("999999999999", n.getObject());
-    assertEquals("2018-06-26T06:00:13.000Z", n.getEventTimestamp().toString());
   }
 
   @Test
@@ -682,7 +681,6 @@ public class ParserTest {
     assertEquals("riker", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("XXXXXXXX", n.getObject());
-    assertEquals("2018-10-25T01:23:46.000Z", n.getEventTimestamp().toString());
   }
 
   @Test
@@ -719,7 +717,6 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH));
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("123456789", n.getObject());
-    assertEquals("2019-03-05T20:54:57.000Z", n.getEventTimestamp().toString());
   }
 
   @Test
@@ -766,7 +763,6 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH));
     assertEquals("10.0.0.1", n.getSourceAddress());
     assertEquals("1234567890", n.getObject());
-    assertEquals("2011-12-04T15:48:13.000Z", n.getEventTimestamp().toString());
   }
 
   @Test

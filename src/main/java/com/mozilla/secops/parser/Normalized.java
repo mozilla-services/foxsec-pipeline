@@ -2,7 +2,6 @@ package com.mozilla.secops.parser;
 
 import java.io.Serializable;
 import java.util.EnumSet;
-import org.joda.time.DateTime;
 
 /** Normalized event data */
 public class Normalized implements Serializable {
@@ -20,7 +19,6 @@ public class Normalized implements Serializable {
 
   private EnumSet<Type> types;
 
-  private DateTime eventTimestamp;
   private String subjectUser;
   private String sourceAddress;
   private String sourceAddressCity;
@@ -321,23 +319,5 @@ public class Normalized implements Serializable {
    */
   public void setUserAgent(String userAgent) {
     this.userAgent = userAgent;
-  }
-
-  /**
-   * Set event timestamp
-   *
-   * @param timestamp event timestamp
-   */
-  public void setEventTimestamp(DateTime timestamp) {
-    eventTimestamp = timestamp;
-  }
-
-  /**
-   * Get event timestamp
-   *
-   * @return Event timestamp
-   */
-  public DateTime getEventTimestamp() {
-    return eventTimestamp;
   }
 }
