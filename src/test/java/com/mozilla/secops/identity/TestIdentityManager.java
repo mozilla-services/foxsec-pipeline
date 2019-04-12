@@ -43,6 +43,7 @@ public class TestIdentityManager {
     id = mgr.getIdentity(testId);
     assertNotNull(id);
     assertNull(id.getEmailNotifyDirect(mgr.getDefaultNotification()));
+    assertNull(id.getEscalateTo());
     assertFalse(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
     assertFalse(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
     assertNull(id.getFragment());
@@ -54,6 +55,7 @@ public class TestIdentityManager {
     assertEquals(
         "holodeck-riker@mozilla.com", id.getEmailNotifyDirect(mgr.getDefaultNotification()));
     assertEquals("riker", id.getFragment());
+    assertEquals("picard@mozilla.com", id.getEscalateTo());
     assertTrue(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
     assertTrue(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
   }
@@ -68,12 +70,14 @@ public class TestIdentityManager {
     assertEquals(
         "holodeck-riker@mozilla.com", id.getEmailNotifyDirect(mgr.getDefaultNotification()));
     assertEquals("riker", id.getFragment());
+    assertEquals("picard@mozilla.com", id.getEscalateTo());
     assertTrue(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
     assertTrue(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
 
     id = mgr.getIdentity("wcrusher@mozilla.com");
     assertNotNull(id);
     assertNull(id.getEmailNotifyDirect(mgr.getDefaultNotification()));
+    assertNull(id.getEscalateTo());
     assertFalse(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
     assertFalse(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
   }

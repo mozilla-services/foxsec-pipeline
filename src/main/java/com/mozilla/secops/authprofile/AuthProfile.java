@@ -325,6 +325,10 @@ public class AuthProfile implements Serializable {
     }
 
     private void addEscalationMetadata(Alert a, Identity identity) {
+      if (identity.getEscalateTo() != null) {
+        a.addMetadata("escalate_to", identity.getEscalateTo());
+      }
+
       String dnote = identity.getEmailNotifyDirect(idmanager.getDefaultNotification());
       if (dnote != null) {
         log.info(

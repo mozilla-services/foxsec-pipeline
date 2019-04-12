@@ -9,6 +9,7 @@ public class Identity {
   private String fragment;
   private Notify notify;
   private FeatureFlags featureFlags;
+  private String escalateTo;
 
   /**
    * Get identity fragment
@@ -18,6 +19,16 @@ public class Identity {
   @JsonProperty("fragment")
   public String getFragment() {
     return fragment;
+  }
+
+  /**
+   * Get escalate to email address
+   *
+   * @return Escalation email
+   */
+  @JsonProperty("escalate_to")
+  public String getEscalateTo() {
+    return escalateTo;
   }
 
   /**
