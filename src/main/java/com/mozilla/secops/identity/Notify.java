@@ -7,6 +7,7 @@ public class Notify {
   private Boolean directEmailNotify;
   private String directEmailNotifyFormat;
   private Boolean directSlackNotify;
+  private Boolean directSlackConfirmationNotify;
 
   /**
    * Return if identity should be directly notified via email

@@ -8,6 +8,7 @@ public class Identity {
   private ArrayList<String> aliases;
   private String fragment;
   private Notify notify;
+  private FeatureFlags featureFlags;
 
   /**
    * Get identity fragment
@@ -37,6 +38,16 @@ public class Identity {
   @JsonProperty("notify")
   public Notify getNotify() {
     return notify;
+  }
+
+  /**
+   * Get feature flags for identity
+   *
+   * @return {@link FeatureFlags}
+   */
+  @JsonProperty("feature_flags")
+  public FeatureFlags getFeatureFlags() {
+    return featureFlags;
   }
 
   /**
@@ -86,16 +97,39 @@ public class Identity {
    */
   public Boolean getSlackNotifyDirect(Notify defaultNotification) {
     if (notify != null) {
-      if (notify.getDirectSlackNotify() != null && notify.getDirectSlackNotify() == false) {
-        return false;
-      }
-    } else if (notify == null) {
-      if ((defaultNotification == null)
-          || (defaultNotification.getDirectSlackNotify() != null
-              && defaultNotification.getDirectSlackNotify() == false)) {
-        return false;
+      if (notify.getDirectSlackNotify() != null) {
+        return notify.getDirectSlackNotify();
       }
     }
+
+    if ((defaultNotification == null)
+        || (defaultNotification.getDirectSlackNotify() != null
+            && defaultNotification.getDirectSlackNotify() == false)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Returns boolean that is true if this identity shoud get a slack confirmation alert.
+   * getSlackNotifyDirect() must also return true for this feature flag to be used.
+   *
+   * @param defaultFeatureFlags Default feature flags if unset in identity
+   */
+  public Boolean getSlackConfirmationAlertFeatureFlag(FeatureFlags defaultFeatureFlags) {
+    if (featureFlags != null) {
+      if (featureFlags.getSlackConfirmationAlert() != null) {
+        return featureFlags.getSlackConfirmationAlert();
+      }
+    }
+
+    if ((defaultFeatureFlags == null)
+        || (defaultFeatureFlags.getSlackConfirmationAlert() != null
+            && defaultFeatureFlags.getSlackConfirmationAlert() == false)) {
+      return false;
+    }
+
     return true;
   }
 }

@@ -20,6 +20,7 @@ public class IdentityManager {
   private Map<String, String> awsAccountMap;
   private Notify defaultNotification;
   private Map<String, String> namedSubnets;
+  private FeatureFlags defaultFeatureFlags;
 
   /**
    * Load identity manager configuration from a resource file
@@ -72,6 +73,16 @@ public class IdentityManager {
   @JsonProperty("default_notify")
   public Notify getDefaultNotification() {
     return defaultNotification;
+  }
+
+  /**
+   * Get default feature flags
+   *
+   * @return Default feature flags configuration as {@link FeatureFlags}
+   */
+  @JsonProperty("default_feature_flags")
+  public FeatureFlags getDefaultFeatureFlags() {
+    return defaultFeatureFlags;
   }
 
   /**

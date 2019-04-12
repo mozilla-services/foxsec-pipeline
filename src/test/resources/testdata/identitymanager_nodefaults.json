@@ -15,6 +15,9 @@
             "notify": {
                 "direct_email_notify_format": "holodeck-%s@mozilla.com",
                 "direct_slack_notify": true
+            },
+            "feature_flags": {
+                "slack_confirmation_alert": true
             }
         }
     },

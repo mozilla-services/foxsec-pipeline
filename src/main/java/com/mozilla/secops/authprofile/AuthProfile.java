@@ -288,6 +288,13 @@ public class AuthProfile implements Serializable {
       if (identity.getSlackNotifyDirect(idmanager.getDefaultNotification())) {
         log.info("{}: adding direct slack notification", a.getMetadataValue("identity_key"));
         a.addMetadata("notify_slack_direct", a.getMetadataValue("identity_key"));
+        if (identity.getSlackConfirmationAlertFeatureFlag(idmanager.getDefaultFeatureFlags())) {
+          a.addMetadata("alert_notification_type", "slack_confirmation");
+          // This is used outside of dataflow to keep track of the users response.
+          a.addMetadata("status", "NEW");
+        } else {
+          a.addMetadata("alert_notification_type", "slack_notification");
+        }
       }
     }
 
