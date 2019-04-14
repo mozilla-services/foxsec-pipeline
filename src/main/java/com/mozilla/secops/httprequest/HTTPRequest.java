@@ -22,7 +22,6 @@ import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
@@ -531,8 +530,8 @@ public class HTTPRequest implements Serializable {
   }
 
   /**
-   * Transform for detection of a single source endpoint making excessive requests of a specific
-   * endpoint path solely.
+   * Transform for detection of a single source making excessive requests of a specific endpoint
+   * path solely.
    *
    * <p>Generates alerts where the request profile violates path thresholds specified in the
    * endpointAbusePath pipeline option configuration.
@@ -543,10 +542,24 @@ public class HTTPRequest implements Serializable {
 
     private Logger log;
 
-    private final Map<String[], Integer> endpoints;
+    private final EndpointAbuseEndpointInfo[] endpoints;
     private final String monitoredResource;
     private final Boolean enableIprepdDatastoreWhitelist;
+    private final Boolean varianceSupportingOnly;
     private final String iprepdDatastoreWhitelistProject;
+
+    /** Internal class for configured endpoints in EPA */
+    public static class EndpointAbuseEndpointInfo implements Serializable {
+      private static final long serialVersionUID = 1L;
+
+      /** Request method */
+      public String method;
+      /** Request path */
+      public String path;
+      /** Threshold */
+      public Integer threshold;
+    }
+
     /**
      * Static initializer for {@link EndpointAbuseAnalysis}
      *
@@ -558,18 +571,21 @@ public class HTTPRequest implements Serializable {
       monitoredResource = options.getMonitoredResourceIndicator();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
+      varianceSupportingOnly = options.getEndpointAbuseExtendedVariance();
 
-      endpoints = new HashMap<String[], Integer>();
-      for (String endpoint : options.getEndpointAbusePath()) {
-        String[] parts = endpoint.split(":");
+      String[] cfgEndpoints = options.getEndpointAbusePath();
+      endpoints = new EndpointAbuseEndpointInfo[cfgEndpoints.length];
+      for (int i = 0; i < cfgEndpoints.length; i++) {
+        String[] parts = cfgEndpoints[i].split(":");
         if (parts.length != 3) {
           throw new IllegalArgumentException(
               "invalid format for abuse endpoint path, must be <int>:<method>:<path>");
         }
-        String k[] = new String[2];
-        k[0] = parts[1];
-        k[1] = parts[2];
-        endpoints.put(k, new Integer(parts[0]));
+        EndpointAbuseEndpointInfo ninfo = new EndpointAbuseEndpointInfo();
+        ninfo.threshold = new Integer(parts[0]);
+        ninfo.method = parts[1];
+        ninfo.path = parts[2];
+        endpoints[i] = ninfo;
       }
     }
 
@@ -620,114 +636,148 @@ public class HTTPRequest implements Serializable {
                         @StateId("counter") ValueState<Integer> counter) {
                       String remoteAddress = c.element().getKey();
                       Iterable<ArrayList<String>> paths = c.element().getValue();
-
-                      // Take a look at the first entry in the data set and see if it
-                      // corresponds to anything we have in the endpoints map. If so, look at
-                      // the rest of the requests in the window to determine variance and
-                      // if the noted threshold has been exceeded.
-                      Integer foundThreshold = null;
-                      String compareMethod = null;
-                      String comparePath = null;
+                      int[] endCounter = new int[endpoints.length];
                       String userAgent = null;
-                      int count = 0;
+                      Boolean basicVariance = false;
+                      Boolean extendedVariance = false;
+
+                      // Count the number of requests in-window for this source that map to
+                      // monitored endpoints. Set a basic variance flag if we see a request
+                      // that was made to something that is not monitored.
                       for (ArrayList<String> i : paths) {
-                        if (foundThreshold == null) {
-                          foundThreshold = getEndpointThreshold(i.get(1), i.get(0));
-                          compareMethod = i.get(0);
-                          comparePath = i.get(1);
-                          userAgent = i.get(2);
-                        } else {
-                          if (!(compareMethod.equals(i.get(0)))
-                              || !(comparePath.equals(i.get(1)))) {
-                            // Variance in requests in-window
-                            return;
+                        Integer abIdx = indexEndpoint(i.get(1), i.get(0));
+                        if (abIdx == null) {
+                          basicVariance = true;
+                          if (considerSupporting(i.get(1))) {
+                            extendedVariance = true;
+                          }
+                          continue;
+                        }
+                        // XXX Just pick up the user agent here; with agent variance this could
+                        // result in a different agent being included in the alert than the one
+                        // that was actually associated with the threshold violation, and should
+                        // be fixed.
+                        userAgent = i.get(2);
+                        endCounter[abIdx]++;
+                      }
+
+                      // If extended object variance is enabled, only consider variance if this
+                      // flag has been set. Otherwise we by default consider basic variance to be
+                      // enough.
+                      if (varianceSupportingOnly) {
+                        if (extendedVariance) {
+                          return;
+                        }
+                      } else {
+                        if (basicVariance) {
+                          return;
+                        }
+                      }
+
+                      // If we get here, there was not enough variance present, identify if any
+                      // monitored endpoints have exceeded the threshold and use the one with
+                      // the highest request count
+                      Integer abmaxIndex = null;
+                      int count = -1;
+                      for (int i = 0; i < endpoints.length; i++) {
+                        if (endpoints[i].threshold <= endCounter[i]) {
+                          if (abmaxIndex == null) {
+                            abmaxIndex = i;
+                            count = endCounter[i];
+                          } else {
+                            if (count < endCounter[i]) {
+                              abmaxIndex = i;
+                              count = endCounter[i];
+                            }
                           }
                         }
-                        if (foundThreshold == null) {
-                          // Entry wasn't in monitor map, so just ignore this client
-                          //
-                          // XXX This should be improved to determine when to ignore based on
-                          // perhaps a weighting heuristic if most of the requests are
-                          // applicable.
-                          return;
-                        }
-                        count++;
                       }
-                      if (count >= foundThreshold) {
-                        // If we already have counter state for this key, compare it against what
-                        // the path count was. If they are the same, this is likely a
-                        // duplicate associated with the window closing so we just
-                        // ignore it.
-                        Integer rCount = counter.read();
-                        if (rCount != null && rCount.equals(count)) {
-                          log.info("suppressing additional in-window alert for {}", remoteAddress);
-                          return;
-                        }
-                        counter.write(count);
 
-                        if (rCount != null && rCount < count) {
-                          // If we had counter state for this key and it is less than the
-                          // path component count, this is a supplemental pane with more
-                          // requests in it.
-                          //
-                          // Generate another alert, but decrement the count value in the
-                          // alert to reflect the delta between what we have already alerted
-                          // on and this new alert.
-                          count = count - rCount;
-                          log.info(
-                              "{}: supplemental alert for {} {}",
-                              w.toString(),
-                              remoteAddress,
-                              count);
-                        } else {
-                          log.info(
-                              "{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
-                        }
-
-                        Alert a = new Alert();
-                        a.setSummary(
-                            String.format(
-                                "%s httprequest endpoint_abuse %s %s %s %d",
-                                monitoredResource,
-                                remoteAddress,
-                                compareMethod,
-                                comparePath,
-                                count));
-                        a.setCategory("httprequest");
-                        a.addMetadata("category", "endpoint_abuse");
-                        a.addMetadata("sourceaddress", remoteAddress);
-
-                        try {
-                          if (enableIprepdDatastoreWhitelist) {
-                            IprepdIO.addMetadataIfWhitelisted(
-                                remoteAddress, a, iprepdDatastoreWhitelistProject);
-                          }
-                        } catch (IOException exc) {
-                          return;
-                        }
-
-                        a.addMetadata("endpoint", comparePath);
-                        a.addMetadata("method", compareMethod);
-                        a.addMetadata("count", Integer.toString(count));
-                        a.addMetadata("useragent", userAgent);
-                        a.setNotifyMergeKey("endpoint_abuse");
-                        a.addMetadata(
-                            "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-                        if (!a.hasCorrectFields()) {
-                          throw new IllegalArgumentException(
-                              "alert has invalid field configuration");
-                        }
-                        c.output(a);
+                      if (abmaxIndex == null) {
+                        // No requests exceeded threshold
+                        return;
                       }
+
+                      // If we already have counter state for this key, compare it against what
+                      // the path count was. If they are the same, this is likely a
+                      // duplicate associated with the window closing so we just
+                      // ignore it.
+                      Integer rCount = counter.read();
+                      if (rCount != null && rCount.equals(count)) {
+                        log.info("suppressing additional in-window alert for {}", remoteAddress);
+                        return;
+                      }
+                      counter.write(count);
+
+                      if (rCount != null && rCount < count) {
+                        // If we had counter state for this key and it is less than the
+                        // path component count, this is a supplemental pane with more
+                        // requests in it.
+                        //
+                        // Generate another alert, but decrement the count value in the
+                        // alert to reflect the delta between what we have already alerted
+                        // on and this new alert.
+                        count = count - rCount;
+                        log.info(
+                            "{}: supplemental alert for {} {}", w.toString(), remoteAddress, count);
+                      } else {
+                        log.info(
+                            "{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
+                      }
+
+                      String compareMethod = endpoints[abmaxIndex].method;
+                      String comparePath = endpoints[abmaxIndex].path;
+
+                      Alert a = new Alert();
+                      a.setSummary(
+                          String.format(
+                              "%s httprequest endpoint_abuse %s %s %s %d",
+                              monitoredResource, remoteAddress, compareMethod, comparePath, count));
+                      a.setCategory("httprequest");
+                      a.addMetadata("category", "endpoint_abuse");
+                      a.addMetadata("sourceaddress", remoteAddress);
+
+                      try {
+                        if (enableIprepdDatastoreWhitelist) {
+                          IprepdIO.addMetadataIfWhitelisted(
+                              remoteAddress, a, iprepdDatastoreWhitelistProject);
+                        }
+                      } catch (IOException exc) {
+                        return;
+                      }
+
+                      a.addMetadata("endpoint", comparePath);
+                      a.addMetadata("method", compareMethod);
+                      a.addMetadata("count", Integer.toString(count));
+                      a.addMetadata("useragent", userAgent);
+                      a.setNotifyMergeKey("endpoint_abuse");
+                      a.addMetadata(
+                          "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                      if (!a.hasCorrectFields()) {
+                        throw new IllegalArgumentException("alert has invalid field configuration");
+                      }
+                      c.output(a);
                     }
                   }));
     }
 
-    private Integer getEndpointThreshold(String path, String method) {
-      for (Map.Entry<String[], Integer> entry : endpoints.entrySet()) {
-        String k[] = entry.getKey();
-        if (method.equals(k[0]) && path.equals(k[1])) {
-          return entry.getValue();
+    private Boolean considerSupporting(String path) {
+      if ((path.endsWith(".css"))
+          || (path.endsWith(".js"))
+          || (path.endsWith(".gif"))
+          || (path.endsWith(".jpg"))
+          || (path.endsWith(".ico"))
+          || (path.endsWith(".svg"))
+          || (path.endsWith(".png"))) {
+        return true;
+      }
+      return false;
+    }
+
+    private Integer indexEndpoint(String path, String method) {
+      for (int i = 0; i < endpoints.length; i++) {
+        if ((endpoints[i].method.equals(method)) && (endpoints[i].path.equals(path))) {
+          return i;
         }
       }
       return null;
@@ -996,6 +1046,12 @@ public class HTTPRequest implements Serializable {
     String[] getEndpointAbusePath();
 
     void setEndpointAbusePath(String[] value);
+
+    @Description("In endpoint abuse analysis, only consider variance with supporting object types")
+    @Default.Boolean(false)
+    Boolean getEndpointAbuseExtendedVariance();
+
+    void setEndpointAbuseExtendedVariance(Boolean value);
 
     @Description("Filter successful requests for path before analysis; e.g., method:/path")
     String[] getFilterRequestPath();
