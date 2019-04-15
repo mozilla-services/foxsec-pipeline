@@ -121,6 +121,7 @@ public class TestAuthProfile {
                   assertNull(a.getSlackTemplateName());
                   assertNull(a.getEmailTemplateName());
                   assertNull(a.getMetadataValue("notify_email_direct"));
+                  assertNull(a.getMetadataValue("escalate_to"));
                 } else if (actualSummary.equals(
                     "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                         + "new source 216.160.83.56 [Milton/US]")) {
@@ -130,6 +131,7 @@ public class TestAuthProfile {
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                 }
                 assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                 assertEquals("riker", a.getMetadataValue("username"));
@@ -187,6 +189,7 @@ public class TestAuthProfile {
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     assertEquals(
                         "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                    assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                     assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
                     assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   }
@@ -288,6 +291,7 @@ public class TestAuthProfile {
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                   assertEquals("office", a.getMetadataValue("entry_key"));
                 } else if (actualSummary.matches("(.*)new source aaaa(.*)")) {
                   newCnt++;
@@ -297,6 +301,7 @@ public class TestAuthProfile {
                   assertEquals(
                       "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                   assertNull(a.getMetadataValue("entry_key"));
+                  assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                 }
                 assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                 assertEquals("riker", a.getMetadataValue("username"));
