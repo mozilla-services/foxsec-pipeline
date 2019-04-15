@@ -49,12 +49,12 @@ public class TestErrorRate1 {
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .containsInAnyOrder(720L);
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .containsInAnyOrder(720L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
+        .isEqualTo(720L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .isEqualTo(720L);
 
     p.run().waitUntilFinish();
   }
@@ -72,9 +72,9 @@ public class TestErrorRate1 {
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.that(resultCount)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .containsInAnyOrder(2L);
+    PAssert.thatSingleton(resultCount)
+        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .isEqualTo(2L);
 
     PAssert.that(results)
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))

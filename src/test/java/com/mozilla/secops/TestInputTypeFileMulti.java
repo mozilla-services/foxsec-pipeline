@@ -35,7 +35,7 @@ public class TestInputTypeFileMulti {
     PCollection<String> results = pipeline.apply(new CompositeInput(o));
     PCollection<Long> count = results.apply(Count.globally());
 
-    PAssert.that(count).containsInAnyOrder(30L);
+    PAssert.thatSingleton(count).isEqualTo(30L);
 
     pipeline.run().waitUntilFinish();
   }

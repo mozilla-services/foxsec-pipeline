@@ -47,9 +47,9 @@ public class TestEndpointAbuse1 {
     PCollection<Long> count =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
 
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(600000L)))
-        .containsInAnyOrder(1L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(600000L)))
+        .isEqualTo(1L);
 
     PAssert.that(results)
         .inWindow(new IntervalWindow(new Instant(0L), new Instant(600000L)))

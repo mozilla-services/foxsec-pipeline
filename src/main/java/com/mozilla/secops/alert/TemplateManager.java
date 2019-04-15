@@ -77,7 +77,7 @@ public class TemplateManager {
     cfg.setWrapUncheckedExceptions(true);
     cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
 
-    ClassTemplateLoader ctl = new ClassTemplateLoader(TemplateManager.class, "/alerts/templates");
+    ClassTemplateLoader ctl = new ClassTemplateLoader(TemplateManager.class, "/alert/templates");
     if (alertCfg.getGcsTemplateBasePath() != null) {
       GcsTemplateLoader gtl = new GcsTemplateLoader(alertCfg.getGcsTemplateBasePath());
       MultiTemplateLoader mtl = new MultiTemplateLoader(new TemplateLoader[] {gtl, ctl});

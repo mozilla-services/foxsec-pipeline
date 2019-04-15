@@ -36,9 +36,9 @@ public class TestFilter {
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(3L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .isEqualTo(3L);
 
     p.run().waitUntilFinish();
   }
@@ -54,9 +54,9 @@ public class TestFilter {
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(1L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .isEqualTo(1L);
 
     p.run().waitUntilFinish();
   }
@@ -72,9 +72,9 @@ public class TestFilter {
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(2L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .isEqualTo(2L);
 
     p.run().waitUntilFinish();
   }
@@ -90,9 +90,9 @@ public class TestFilter {
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(2L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .isEqualTo(2L);
 
     p.run().waitUntilFinish();
   }
@@ -123,9 +123,9 @@ public class TestFilter {
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(4L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .isEqualTo(4L);
 
     p.run().waitUntilFinish();
   }
@@ -141,9 +141,9 @@ public class TestFilter {
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(2L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .isEqualTo(2L);
 
     p.run().waitUntilFinish();
   }

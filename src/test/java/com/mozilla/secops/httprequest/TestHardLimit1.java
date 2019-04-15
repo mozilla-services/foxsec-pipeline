@@ -49,9 +49,9 @@ public class TestHardLimit1 {
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.that(resultCount)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .containsInAnyOrder(2L);
+    PAssert.thatSingleton(resultCount)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
+        .isEqualTo(2L);
 
     PAssert.that(results)
         .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
@@ -90,9 +90,9 @@ public class TestHardLimit1 {
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.that(resultCount)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .containsInAnyOrder(1L);
+    PAssert.thatSingleton(resultCount)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
+        .isEqualTo(1L);
 
     PAssert.that(results)
         .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))

@@ -38,6 +38,22 @@ public class TestUtil {
   }
 
   /**
+   * Read a resource file returning a string
+   *
+   * @param resource Resource path to load data from
+   * @return String
+   */
+  public static String getTestResource(String resource) throws IOException {
+    InputStream in = TestUtil.class.getResourceAsStream(resource);
+    if (in == null) {
+      return null;
+    }
+    try (Scanner scanner = new Scanner(in)) {
+      return scanner.useDelimiter("\\A").next();
+    }
+  }
+
+  /**
    * Read test input as a resource, returning an array of strings, one for each line in the input
    *
    * @param resource Resource path to load test data from

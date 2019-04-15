@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import org.joda.time.DateTime;
 
 /** Payload parser for Cloudtrail events */
 public class Cloudtrail extends PayloadBase implements Serializable {
@@ -60,6 +61,12 @@ public class Cloudtrail extends PayloadBase implements Serializable {
     mapper = getObjectMapper();
     try {
       event = parseInput(input);
+      if (event.getEventTime() != null) {
+        DateTime t = Parser.parseISO8601(event.getEventTime());
+        if (t != null) {
+          e.setTimestamp(t);
+        }
+      }
       if (isAuthEvent()) {
         Normalized n = e.getNormalized();
         n.setType(Normalized.Type.AUTH);

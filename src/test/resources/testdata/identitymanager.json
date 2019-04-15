@@ -15,6 +15,7 @@
         "wriker@mozilla.com": {
             "aliases": [ "numberone", "riker", "riker@mozilla.com" ],
             "fragment": "riker",
+            "escalate_to": "picard@mozilla.com",
             "notify": {
                 "direct_email_notify_format": "holodeck-%s@mozilla.com",
                 "direct_slack_notify": true
