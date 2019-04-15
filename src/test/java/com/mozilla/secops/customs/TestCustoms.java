@@ -50,7 +50,7 @@ public class TestCustoms {
             .apply(ParDo.of(new ParserDoFn()))
             .apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.that(count).containsInAnyOrder(5L);
+    PAssert.thatSingleton(count).isEqualTo(5L);
 
     p.run().waitUntilFinish();
   }
@@ -74,7 +74,7 @@ public class TestCustoms {
 
     PCollection<Long> count =
         alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.that(count).containsInAnyOrder(1L);
+    PAssert.thatSingleton(count).isEqualTo(1L);
 
     PAssert.that(alerts)
         .satisfies(
@@ -134,7 +134,7 @@ public class TestCustoms {
 
     PCollection<Long> count =
         alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.that(count).containsInAnyOrder(2L);
+    PAssert.thatSingleton(count).isEqualTo(2L);
 
     p.run().waitUntilFinish();
   }
@@ -157,7 +157,7 @@ public class TestCustoms {
 
     PCollection<Long> count =
         alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.that(count).containsInAnyOrder(6L);
+    PAssert.thatSingleton(count).isEqualTo(6L);
 
     p.run().waitUntilFinish();
   }
