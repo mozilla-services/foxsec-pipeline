@@ -208,6 +208,117 @@ public class AuthProfile implements Serializable {
   }
 
   /**
+   * Analysis for authentication involving critical objects
+   *
+   * <p>Analyze events to determine if they are related to any objects configured as being critical
+   * objects. Where identified, generate critical level alerts.
+   */
+  public static class CritObjectAnalyze extends DoFn<Event, Alert> {
+    private static final long serialVersionUID = 1L;
+
+    private final String[] critObjects;
+    private final String critNotifyEmail;
+
+    private Logger log;
+    private Pattern[] critObjectPat;
+
+    /**
+     * Initialize new critical object analysis
+     *
+     * @param options Pipeline options
+     */
+    public CritObjectAnalyze(AuthProfileOptions options) {
+      critObjects = options.getCritObjects();
+      critNotifyEmail = options.getCriticalNotificationEmail();
+    }
+
+    @Setup
+    public void setup() {
+      log = LoggerFactory.getLogger(StateAnalyze.class);
+      if (critObjects != null) {
+        critObjectPat = new Pattern[critObjects.length];
+        for (int i = 0; i < critObjects.length; i++) {
+          critObjectPat[i] = Pattern.compile(critObjects[i]);
+        }
+      }
+    }
+
+    private void addEscalationMetadata(Alert a) {
+      if (critNotifyEmail != null) {
+        log.info(
+            "{}: adding direct email notification metadata route for critical object alert to {}",
+            a.getAlertId().toString(),
+            critNotifyEmail);
+        a.addMetadata("notify_email_direct", critNotifyEmail);
+      }
+    }
+
+    private void buildAlertSummary(Event e, Alert a) {
+      String summary =
+          String.format(
+              "critical authentication event observed %s to %s, ",
+              e.getNormalized().getSubjectUser(), e.getNormalized().getObject());
+      summary =
+          summary
+              + String.format(
+                  "%s [%s/%s]",
+                  a.getMetadataValue("sourceaddress"),
+                  a.getMetadataValue("sourceaddress_city"),
+                  a.getMetadataValue("sourceaddress_country"));
+      a.setSummary(summary);
+    }
+
+    private void buildAlertPayload(Event e, Alert a) {
+      String msg =
+          "An authentication event for user %s was detected to access %s from %s [%s/%s]. "
+              + "This destination object is configured as a critical resource for which alerts are always"
+              + " generated.";
+      String payload =
+          String.format(
+              msg,
+              a.getMetadataValue("username"),
+              a.getMetadataValue("object"),
+              a.getMetadataValue("sourceaddress"),
+              a.getMetadataValue("sourceaddress_city"),
+              a.getMetadataValue("sourceaddress_country"));
+      a.addToPayload(payload);
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext c) {
+      if (critObjectPat == null) {
+        return;
+      }
+
+      Event e = c.element();
+      Normalized n = e.getNormalized();
+      String o = n.getObject();
+
+      String matchobj = null;
+      for (Pattern p : critObjectPat) {
+        if (p.matcher(o).matches()) {
+          matchobj = o;
+        }
+      }
+      if (matchobj == null) {
+        return;
+      }
+
+      log.info(
+          "escalating critical object alert for {} {}",
+          e.getNormalized().getSubjectUser(),
+          e.getNormalized().getObject());
+      Alert a = AuthProfile.createBaseAlert(e);
+      a.addMetadata("category", "critical_object_analyze");
+      a.setSeverity(Alert.AlertSeverity.CRITICAL);
+      buildAlertSummary(e, a);
+      buildAlertPayload(e, a);
+      addEscalationMetadata(a);
+      c.output(a);
+    }
+  }
+
+  /**
    * Analyze grouped events associated with a particular user or identity against persistent user
    * state
    */
@@ -263,43 +374,6 @@ public class AuthProfile implements Serializable {
     @Teardown
     public void teardown() {
       state.done();
-    }
-
-    /**
-     * Create a base {@link Alert} using information from the event
-     *
-     * @param e Event
-     * @return Base alert object
-     */
-    private Alert createBaseAlert(Event e) {
-      Alert a = new Alert();
-
-      Normalized n = e.getNormalized();
-      a.addMetadata("object", n.getObject());
-      a.addMetadata("username", n.getSubjectUser());
-      a.addMetadata("sourceaddress", n.getSourceAddress());
-      a.setCategory("authprofile");
-
-      String city = n.getSourceAddressCity();
-      if (city != null) {
-        a.addMetadata("sourceaddress_city", city);
-      } else {
-        a.addMetadata("sourceaddress_city", "unknown");
-      }
-      String country = n.getSourceAddressCountry();
-      if (city != null) {
-        a.addMetadata("sourceaddress_country", country);
-      } else {
-        a.addMetadata("sourceaddress_country", "unknown");
-      }
-
-      if (e.getNormalized().isOfType(Normalized.Type.AUTH)) {
-        a.addMetadata("auth_alert_type", "auth");
-      } else if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
-        a.addMetadata("auth_alert_type", "auth_session");
-      }
-
-      return a;
     }
 
     private String getEntryKey(String ipAddr) {
@@ -411,7 +485,8 @@ public class AuthProfile implements Serializable {
       ArrayList<String> seenKnownAddresses = new ArrayList<>();
 
       for (Event e : events) {
-        Alert a = createBaseAlert(e);
+        Alert a = AuthProfile.createBaseAlert(e);
+        a.addMetadata("category", "state_analyze");
 
         if (cidrGcp.contains(e.getNormalized().getSourceAddress())) {
           // At some point we may want some special handling here, but for now just add an
@@ -453,8 +528,6 @@ public class AuthProfile implements Serializable {
                 e.getNormalized().getSubjectUser(),
                 e.getNormalized().getSourceAddress());
             a.setSeverity(Alert.AlertSeverity.WARNING);
-            a.setEmailTemplateName("email/authprofile.ftlh");
-            a.setSlackTemplateName("slack/authprofile.ftlh");
             addEscalationMetadata(a, identity);
           } else {
             // Check known address ignore list
@@ -494,6 +567,12 @@ public class AuthProfile implements Serializable {
 
     void setEnableStateAnalysis(Boolean value);
 
+    @Description("Enable critical object analysis")
+    @Default.Boolean(true)
+    Boolean getEnableCritObjectAnalysis();
+
+    void setEnableCritObjectAnalysis(Boolean value);
+
     @Description("Use memcached state; hostname of memcached server")
     String getMemcachedHost();
 
@@ -525,6 +604,56 @@ public class AuthProfile implements Serializable {
     Boolean getIgnoreUnknownIdentities();
 
     void setIgnoreUnknownIdentities(Boolean value);
+
+    @Description("Objects to consider for critical object analysis; regex (multiple allowed)")
+    String[] getCritObjects();
+
+    void setCritObjects(String[] value);
+
+    @Description("Email address to receive critical alert notifications")
+    String getCriticalNotificationEmail();
+
+    void setCriticalNotificationEmail(String value);
+  }
+
+  /**
+   * Create a base authprofile {@link Alert} using information from the event
+   *
+   * @param e Event
+   * @return Base alert object
+   */
+  public static Alert createBaseAlert(Event e) {
+    Alert a = new Alert();
+
+    Normalized n = e.getNormalized();
+    a.addMetadata("object", n.getObject());
+    a.addMetadata("username", n.getSubjectUser());
+    a.addMetadata("sourceaddress", n.getSourceAddress());
+    a.setCategory("authprofile");
+
+    a.setEmailTemplateName("email/authprofile.ftlh");
+    a.setSlackTemplateName("slack/authprofile.ftlh");
+
+    String city = n.getSourceAddressCity();
+    if (city != null) {
+      a.addMetadata("sourceaddress_city", city);
+    } else {
+      a.addMetadata("sourceaddress_city", "unknown");
+    }
+    String country = n.getSourceAddressCountry();
+    if (city != null) {
+      a.addMetadata("sourceaddress_country", country);
+    } else {
+      a.addMetadata("sourceaddress_country", "unknown");
+    }
+
+    if (e.getNormalized().isOfType(Normalized.Type.AUTH)) {
+      a.addMetadata("auth_alert_type", "auth");
+    } else if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
+      a.addMetadata("auth_alert_type", "auth_session");
+    }
+
+    return a;
   }
 
   public static PCollection<Alert> processInput(
@@ -542,6 +671,15 @@ public class AuthProfile implements Serializable {
                   .apply("state analyze gbk", GroupByKey.<String, Event>create())
                   .apply("state analyze", ParDo.of(new StateAnalyze(options)))
                   .apply("state analyze rewindow for output", new GlobalTriggers<Alert>(5)));
+    }
+
+    if (options.getEnableCritObjectAnalysis()) {
+      alertList =
+          alertList.and(
+              events
+                  .apply("critical object analyze", ParDo.of(new CritObjectAnalyze(options)))
+                  .apply(
+                      "critical object analyze rewindow for output", new GlobalTriggers<Alert>(5)));
     }
 
     return alertList.apply("flatten output", Flatten.<Alert>pCollections());
