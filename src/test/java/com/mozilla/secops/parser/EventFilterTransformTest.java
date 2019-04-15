@@ -40,10 +40,10 @@ public class EventFilterTransformTest {
     PCollection<Event> nfiltered = input.apply("negative", EventFilter.getTransform(nFilter));
 
     PCollection<Long> pcount = pfiltered.apply("pcount", Count.globally());
-    PAssert.that(pcount).containsInAnyOrder(1L);
+    PAssert.thatSingleton(pcount).isEqualTo(1L);
 
     PCollection<Long> ncount = nfiltered.apply("ncount", Count.globally());
-    PAssert.that(ncount).containsInAnyOrder(0L);
+    PAssert.thatSingleton(ncount).isEqualTo(0L);
 
     pipeline.run().waitUntilFinish();
   }
@@ -77,10 +77,10 @@ public class EventFilterTransformTest {
     PCollection<Event> nfiltered = input.apply("negative", EventFilter.getTransform(nFilter));
 
     PCollection<Long> pcount = pfiltered.apply("pcount", Count.globally());
-    PAssert.that(pcount).containsInAnyOrder(1L);
+    PAssert.thatSingleton(pcount).isEqualTo(1L);
 
     PCollection<Long> ncount = nfiltered.apply("ncount", Count.globally());
-    PAssert.that(ncount).containsInAnyOrder(0L);
+    PAssert.thatSingleton(ncount).isEqualTo(0L);
 
     pipeline.run().waitUntilFinish();
   }
@@ -226,7 +226,7 @@ public class EventFilterTransformTest {
     filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.GLB));
     PCollection<Event> filtered = input.apply("match all", EventFilter.getTransform(filter));
     PCollection<Long> count = filtered.apply("count all", Count.globally());
-    PAssert.that(count).containsInAnyOrder(2L);
+    PAssert.thatSingleton(count).isEqualTo(2L);
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -234,7 +234,7 @@ public class EventFilterTransformTest {
         new EventFilterRule().wantSubtype(Payload.PayloadType.GLB).wantStackdriverProject("moz"));
     filtered = input.apply("match one", EventFilter.getTransform(filter));
     count = filtered.apply("count one", Count.globally());
-    PAssert.that(count).containsInAnyOrder(1L);
+    PAssert.thatSingleton(count).isEqualTo(1L);
     PAssert.that(filtered)
         .satisfies(
             x -> {

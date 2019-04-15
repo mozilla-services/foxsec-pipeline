@@ -53,12 +53,12 @@ public class TestThresholdAnalysis1 {
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .containsInAnyOrder(2400L);
-    PAssert.that(count)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000)))
-        .containsInAnyOrder(2520L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000)))
+        .isEqualTo(2400L);
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000)))
+        .isEqualTo(2520L);
 
     p.run().waitUntilFinish();
   }
@@ -77,9 +77,9 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.that(resultCount)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .containsInAnyOrder(2L);
+    PAssert.thatSingleton(resultCount)
+        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .isEqualTo(2L);
 
     PAssert.that(results)
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
@@ -124,9 +124,9 @@ public class TestThresholdAnalysis1 {
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     // 10.0.0.2 would normally trigger a result being emitted, but with NAT detection enabled
     // we should only see a single result for 10.0.0.1 in the selected interval window
-    PAssert.that(resultCount)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .containsInAnyOrder(1L);
+    PAssert.thatSingleton(resultCount)
+        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .isEqualTo(1L);
 
     PAssert.that(results)
         .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
@@ -211,9 +211,9 @@ public class TestThresholdAnalysis1 {
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.that(resultCount)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .containsInAnyOrder(14L);
+    PAssert.thatSingleton(resultCount)
+        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .isEqualTo(14L);
 
     p.run().waitUntilFinish();
   }
