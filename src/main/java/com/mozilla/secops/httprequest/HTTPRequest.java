@@ -51,6 +51,7 @@ import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -548,6 +549,7 @@ public class HTTPRequest implements Serializable {
     private final Boolean varianceSupportingOnly;
     private final String iprepdDatastoreWhitelistProject;
     private final Integer suppressRecovery;
+    private final Long earlyWindowIgnore;
 
     /** Internal class for configured endpoints in EPA */
     public static class EndpointAbuseEndpointInfo implements Serializable {
@@ -574,6 +576,7 @@ public class HTTPRequest implements Serializable {
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       varianceSupportingOnly = options.getEndpointAbuseExtendedVariance();
       suppressRecovery = options.getEndpointAbuseSuppressRecovery();
+      earlyWindowIgnore = options.getEndpointAbuseEarlyWindowIgnore();
 
       String[] cfgEndpoints = options.getEndpointAbusePath();
       endpoints = new EndpointAbuseEndpointInfo[cfgEndpoints.length];
@@ -614,10 +617,12 @@ public class HTTPRequest implements Serializable {
                       if (userAgent == null) {
                         userAgent = "unknown";
                       }
+                      String eTime = c.element().getTimestamp().toString();
                       ArrayList<String> v = new ArrayList<>();
                       v.add(requestMethod);
                       v.add(rpath);
                       v.add(userAgent);
+                      v.add(eTime);
                       c.output(KV.of(sourceAddress, v));
                     }
                   }))
@@ -643,10 +648,26 @@ public class HTTPRequest implements Serializable {
                       Boolean basicVariance = false;
                       Boolean extendedVariance = false;
 
+                      // Calculate the start of the window so we can use it for early window results
+                      // ignore if required; assumes fixed window length of 10 minutes
+                      Instant cutoff = null;
+                      Boolean allEarlyWindow = true;
+                      Instant windowStart = new Instant(w.maxTimestamp().getMillis() - 599999L);
+                      if (earlyWindowIgnore != null) {
+                        cutoff = new Instant(windowStart.getMillis() + earlyWindowIgnore);
+                      }
+
                       // Count the number of requests in-window for this source that map to
                       // monitored endpoints. Set a basic variance flag if we see a request
                       // that was made to something that is not monitored.
                       for (ArrayList<String> i : paths) {
+
+                        if (earlyWindowIgnore != null) {
+                          if (Instant.parse(i.get(3)).getMillis() > cutoff.getMillis()) {
+                            allEarlyWindow = false;
+                          }
+                        }
+
                         Integer abIdx = indexEndpoint(i.get(1), i.get(0));
                         if (abIdx == null) {
                           basicVariance = true;
@@ -674,6 +695,12 @@ public class HTTPRequest implements Serializable {
                         if (basicVariance) {
                           return;
                         }
+                      }
+
+                      // If we have an early window ignore interval configured and the requests fell
+                      // within it, just return here.
+                      if ((earlyWindowIgnore != null) && (allEarlyWindow)) {
+                        return;
                       }
 
                       // If we get here, there was not enough variance present, identify if any
@@ -1064,6 +1091,12 @@ public class HTTPRequest implements Serializable {
     Integer getEndpointAbuseSuppressRecovery();
 
     void setEndpointAbuseSuppressRecovery(Integer value);
+
+    @Description(
+        "In endpoint abuse analysis, suppress results for requests within ms of window start; ms")
+    Long getEndpointAbuseEarlyWindowIgnore();
+
+    void setEndpointAbuseEarlyWindowIgnore(Long value);
 
     @Description("Filter successful requests for path before analysis; e.g., method:/path")
     String[] getFilterRequestPath();

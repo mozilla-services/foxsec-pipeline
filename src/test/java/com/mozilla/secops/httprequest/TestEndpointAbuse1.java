@@ -74,6 +74,36 @@ public class TestEndpointAbuse1 {
   }
 
   @Test
+  public void endpointAbuseTestIgnoreWindowPrelude() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_endpointabuse3.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    String v[] = new String[1];
+    v[0] = "3:GET:/test";
+    options.setEndpointAbusePath(v);
+    options.setEndpointAbuseEarlyWindowIgnore(60000L);
+
+    PCollection<Alert> results =
+        input
+            .apply(new HTTPRequest.Parse(options))
+            .apply(new HTTPRequest.WindowForFixedFireEarly())
+            .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
+
+    PCollection<Long> count =
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(600000L)))
+        .isEqualTo(1L);
+
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(1200000L), new Instant(1800000L)))
+        .isEqualTo(1L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void endpointAbuseTestExtendedVariance() throws Exception {
     PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_endpointabuse2.txt", p);
 
