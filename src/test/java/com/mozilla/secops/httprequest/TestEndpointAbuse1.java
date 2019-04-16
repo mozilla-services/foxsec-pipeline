@@ -37,6 +37,7 @@ public class TestEndpointAbuse1 {
     String v[] = new String[1];
     v[0] = "8:GET:/test";
     options.setEndpointAbusePath(v);
+    options.setEndpointAbuseSuppressRecovery(60);
 
     PCollection<Alert> results =
         input
@@ -61,6 +62,7 @@ public class TestEndpointAbuse1 {
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("endpoint_abuse", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
+                assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
                 assertEquals("1970-01-01T00:09:59.999Z", a.getMetadataValue("window_timestamp"));

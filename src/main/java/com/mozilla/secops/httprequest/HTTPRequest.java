@@ -547,6 +547,7 @@ public class HTTPRequest implements Serializable {
     private final Boolean enableIprepdDatastoreWhitelist;
     private final Boolean varianceSupportingOnly;
     private final String iprepdDatastoreWhitelistProject;
+    private final Integer suppressRecovery;
 
     /** Internal class for configured endpoints in EPA */
     public static class EndpointAbuseEndpointInfo implements Serializable {
@@ -572,6 +573,7 @@ public class HTTPRequest implements Serializable {
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       varianceSupportingOnly = options.getEndpointAbuseExtendedVariance();
+      suppressRecovery = options.getEndpointAbuseSuppressRecovery();
 
       String[] cfgEndpoints = options.getEndpointAbusePath();
       endpoints = new EndpointAbuseEndpointInfo[cfgEndpoints.length];
@@ -744,6 +746,10 @@ public class HTTPRequest implements Serializable {
                         }
                       } catch (IOException exc) {
                         return;
+                      }
+
+                      if (suppressRecovery != null) {
+                        IprepdIO.addMetadataSuppressRecovery(suppressRecovery, a);
                       }
 
                       a.addMetadata("endpoint", comparePath);
@@ -1052,6 +1058,12 @@ public class HTTPRequest implements Serializable {
     Boolean getEndpointAbuseExtendedVariance();
 
     void setEndpointAbuseExtendedVariance(Boolean value);
+
+    @Description(
+        "In endpoint abuse analysis, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getEndpointAbuseSuppressRecovery();
+
+    void setEndpointAbuseSuppressRecovery(Integer value);
 
     @Description("Filter successful requests for path before analysis; e.g., method:/path")
     String[] getFilterRequestPath();
