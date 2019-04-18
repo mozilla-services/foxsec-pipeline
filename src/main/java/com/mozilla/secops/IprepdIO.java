@@ -24,7 +24,11 @@ import org.slf4j.LoggerFactory;
 
 /** {@link IprepdIO} provides an IO transform for writing violation messages to iprepd */
 public class IprepdIO {
+  /** Metadata tag in an alert to indicate iprepd exemption */
   public static final String IPREPD_EXEMPT = "iprepd_exempt";
+
+  /** Metadata tag in an alert to indicate recovery suppression */
+  public static final String IPREPD_SUPPRESS_RECOVERY = "iprepd_suppress_recovery";
 
   /**
    * Return {@link PTransform} to emit violations to iprepd
@@ -189,6 +193,16 @@ public class IprepdIO {
         log.error(exc.getMessage());
       }
     }
+  }
+
+  /**
+   * Add iprepd recovery suppression metadata to an alert
+   *
+   * @param value Seconds for recovery suppression
+   * @param a Alert
+   */
+  public static void addMetadataSuppressRecovery(Integer value, Alert a) {
+    a.addMetadata(IPREPD_SUPPRESS_RECOVERY, value.toString());
   }
 
   /** WhitelistedIp contains the metadata associated with a whitelisted ip. */

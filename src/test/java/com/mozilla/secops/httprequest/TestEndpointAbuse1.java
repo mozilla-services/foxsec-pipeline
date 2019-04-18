@@ -37,6 +37,81 @@ public class TestEndpointAbuse1 {
     String v[] = new String[1];
     v[0] = "8:GET:/test";
     options.setEndpointAbusePath(v);
+    options.setEndpointAbuseSuppressRecovery(60);
+
+    PCollection<Alert> results =
+        input
+            .apply(new HTTPRequest.Parse(options))
+            .apply(new HTTPRequest.WindowForFixedFireEarly())
+            .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
+
+    PCollection<Long> count =
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(600000L)))
+        .isEqualTo(1L);
+
+    PAssert.that(results)
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(600000L)))
+        .satisfies(
+            i -> {
+              for (Alert a : i) {
+                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals(
+                    "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
+                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("endpoint_abuse", a.getMetadataValue("category"));
+                assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
+                assertEquals("Mozilla", a.getMetadataValue("useragent"));
+                assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals("1970-01-01T00:09:59.999Z", a.getMetadataValue("window_timestamp"));
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void endpointAbuseTestIgnoreWindowPrelude() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_endpointabuse3.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    String v[] = new String[1];
+    v[0] = "3:GET:/test";
+    options.setEndpointAbusePath(v);
+    options.setEndpointAbuseEarlyWindowIgnore(60000L);
+
+    PCollection<Alert> results =
+        input
+            .apply(new HTTPRequest.Parse(options))
+            .apply(new HTTPRequest.WindowForFixedFireEarly())
+            .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
+
+    PCollection<Long> count =
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(600000L)))
+        .isEqualTo(1L);
+
+    PAssert.thatSingleton(count)
+        .inOnlyPane(new IntervalWindow(new Instant(1200000L), new Instant(1800000L)))
+        .isEqualTo(1L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void endpointAbuseTestExtendedVariance() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_endpointabuse2.txt", p);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    String v[] = new String[1];
+    v[0] = "8:GET:/test";
+    options.setEndpointAbusePath(v);
+    options.setEndpointAbuseExtendedVariance(true);
 
     PCollection<Alert> results =
         input

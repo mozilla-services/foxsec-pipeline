@@ -1,5 +1,7 @@
 package com.mozilla.secops;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,9 +15,11 @@ import java.util.Map;
  *
  * <p>See <a href="https://github.com/mozilla-services/iprepd">iprepd</a>
  */
+@JsonInclude(Include.NON_NULL)
 public class Violation {
   private final String sourceAddress;
   private final String violation;
+  private Integer suppressRecovery;
 
   /** Valid violation types */
   public enum ViolationType {
@@ -80,6 +84,18 @@ public class Violation {
   }
 
   /**
+   * Create new {@link Violation} with recovery suppression value
+   *
+   * @param soureAddress Source address as string
+   * @param violation ViolationType as string
+   * @param suppressRecovery Recovery suppression value in seconds
+   */
+  public Violation(String sourceAddress, String violation, Integer suppressRecovery) {
+    this(sourceAddress, violation);
+    this.suppressRecovery = suppressRecovery;
+  }
+
+  /**
    * Get source address
    *
    * @return Source address string
@@ -97,6 +113,11 @@ public class Violation {
   @JsonProperty("violation")
   public String getViolation() {
     return violation;
+  }
+
+  @JsonProperty("suppress_recovery")
+  public Integer getSuppressRecovery() {
+    return suppressRecovery;
   }
 
   /**
@@ -138,6 +159,11 @@ public class Violation {
     if (vt == null) {
       return null;
     }
-    return new Violation(sourceAddress, vt.toString());
+    String suppressValue = a.getMetadataValue(IprepdIO.IPREPD_SUPPRESS_RECOVERY);
+    if (suppressValue != null) {
+      return new Violation(sourceAddress, vt.toString(), new Integer(suppressValue));
+    } else {
+      return new Violation(sourceAddress, vt.toString());
+    }
   }
 }
