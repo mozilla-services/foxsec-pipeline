@@ -14,8 +14,16 @@ import org.apache.beam.sdk.values.PDone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** {@link AlertIO} provides an IO transform handling {@link Alert} output */
+/**
+ * {@link AlertIO} provides an IO transform handling {@link Alert} output
+ *
+ * <p>Alerts that have the metadata field corresponding to ALERTIO_IGNORE_EVENT set will be ignored
+ * by AlertIO.
+ */
 public class AlertIO {
+  /** Metadata tag to inform {@link AlertIO} to skip an event */
+  public static final String ALERTIO_IGNORE_EVENT = "alertio_ignore_event";
+
   /**
    * Return {@link PTransform} to handle alerting output
    *
@@ -176,6 +184,11 @@ public class AlertIO {
 
       if (!a.hasCorrectFields()) {
         log.warn("dropping incorrectly formatted alert: {}", raw);
+        return;
+      }
+
+      if (a.getMetadataValue(ALERTIO_IGNORE_EVENT) != null) {
+        log.info("skipping alert with ignore field set: {}", raw);
         return;
       }
 

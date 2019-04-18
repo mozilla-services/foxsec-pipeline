@@ -11,6 +11,7 @@ import static org.junit.Assert.fail;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertConfiguration;
+import com.mozilla.secops.alert.AlertIO;
 import com.mozilla.secops.alert.TemplateManager;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
@@ -136,6 +137,7 @@ public class TestAuthProfile {
                 assertEquals("authprofile", a.getCategory());
                 assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
                 assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
+                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.equals(
                     "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
@@ -216,6 +218,7 @@ public class TestAuthProfile {
                 assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
                 assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                 assertEquals("state_analyze", a.getMetadataValue("category"));
+                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.contains("new source")) {
                   newCnt++;
@@ -274,6 +277,7 @@ public class TestAuthProfile {
               long infoCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
+                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.contains("new source")) {
                   newCnt++;
@@ -285,6 +289,34 @@ public class TestAuthProfile {
               // Should have one informational since the rest of the duplicates will be
               // filtered in window since they were already seen
               assertEquals(1L, infoCnt);
+              return null;
+            });
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void analyzeGcpAlertIOIgnoreTest() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer5.txt", p);
+
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long cnt = 0;
+              for (Alert a : results) {
+                // GCP origin and GcpAudit event, AlertIO ignore flag should be set
+                assertEquals("true", a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                assertEquals("authprofile", a.getCategory());
+                assertEquals(
+                    "authentication event observed laforge@mozilla.com [untracked] to "
+                        + "projects/test, 35.232.216.1 [unknown/unknown]",
+                    a.getSummary());
+                cnt++;
+              }
+              assertEquals(1L, cnt);
               return null;
             });
     p.run().waitUntilFinish();
@@ -306,6 +338,7 @@ public class TestAuthProfile {
               long infoCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
+                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.contains("new source")) {
                   newCnt++;
@@ -339,6 +372,7 @@ public class TestAuthProfile {
                 assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
                 assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
                 assertEquals("state_analyze", a.getMetadataValue("category"));
+                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.matches("(.*)new source fd00(.*)")) {
                   newCnt++;

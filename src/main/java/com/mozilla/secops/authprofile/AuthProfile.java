@@ -6,6 +6,7 @@ import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.alert.AlertIO;
 import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.Event;
@@ -14,6 +15,7 @@ import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
+import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.MemcachedStateInterface;
 import com.mozilla.secops.state.State;
@@ -489,10 +491,15 @@ public class AuthProfile implements Serializable {
         Alert a = AuthProfile.createBaseAlert(e);
         a.addMetadata("category", "state_analyze");
 
-        if (cidrGcp.contains(e.getNormalized().getSourceAddress())) {
-          // At some point we may want some special handling here, but for now just add an
-          // additional metadata tag indicating the event had a GCP origin.
-          a.addMetadata("gcp_origin", "true");
+        if (cidrGcp.contains(e.getNormalized().getSourceAddress())
+            && e.getPayloadType().equals(Payload.PayloadType.GCPAUDIT)) {
+          // Skip AlertIO if it's a GCP event from GCP source, we can also skip the remainder of the
+          // logic here
+          a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
+          buildAlertSummary(e, a);
+          buildAlertPayload(e, a);
+          c.output(a);
+          continue;
         }
 
         if (identity == null) {
