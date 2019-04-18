@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
@@ -43,6 +44,47 @@ public class Parser {
   private IdentityManager idmanager;
 
   /**
+   * Parse syslog timestamp date time string and return a {@link DateTime} object.
+   *
+   * @param in Input string
+   * @return Parsed {@link DateTime}, null if string could not be parsed
+   */
+  public static DateTime parseSyslogTs(String in) {
+    try {
+      // "Apr 13 xx:xx:xx"
+      return DateTime.parse(in, DateTimeFormat.forPattern("MMM dd HH:mm:ss"));
+    } catch (IllegalArgumentException e) {
+      // "Feb  8 xx:xx:xx"
+      try {
+        return DateTime.parse(in, DateTimeFormat.forPattern("MMM  d HH:mm:ss"));
+      } catch (IllegalArgumentException exc) {
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Parse syslog timestamp date time string and return a {@link DateTime} object using {@link
+   * parseSyslogTs}, and then correct the year if the parsed timestamp is further than three days
+   * from the event timestamp.
+   *
+   * @param in Input string
+   * @param e {@link Event}
+   * @return Parsed {@link DateTime}, null if string could not be parsed
+   */
+  public static DateTime parseAndCorrectSyslogTs(String in, Event e) {
+    DateTime et = parseSyslogTs(in);
+    if (et == null) {
+      return null;
+    }
+
+    if (et.isAfter(e.getTimestamp().minusDays(3)) && et.isBefore(e.getTimestamp().plusDays(3))) {
+      return et;
+    }
+    return et.withYear(e.getTimestamp().year().get());
+  }
+
+  /**
    * Parse an ISO8601 date string and return a {@link DateTime} object.
    *
    * @param in Input string
@@ -50,7 +92,11 @@ public class Parser {
    */
   public static DateTime parseISO8601(String in) {
     DateTimeFormatter fmt = ISODateTimeFormat.dateTimeParser();
-    return fmt.parseDateTime(in);
+    try {
+      return fmt.parseDateTime(in);
+    } catch (IllegalArgumentException exc) {
+      return null;
+    }
   }
 
   /**
@@ -140,6 +186,12 @@ public class Parser {
 
       e.setStackdriverProject(getStackdriverProject(entry));
       e.setStackdriverLabels(entry.getLabels());
+      if (entry.getTimestamp() != null) {
+        DateTime et = Parser.parseISO8601(entry.getTimestamp());
+        if (et != null) {
+          e.setTimestamp(et);
+        }
+      }
 
       // We were able to deserialize the LogEntry so store it as a hint in the state
       state.setLogEntryHint(entry);

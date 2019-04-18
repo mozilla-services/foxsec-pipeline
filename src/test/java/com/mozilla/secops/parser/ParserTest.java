@@ -1,6 +1,7 @@
 package com.mozilla.secops.parser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -139,6 +140,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.OPENSSH, e.getPayloadType());
+    assertEquals("2019-09-18T22:15:38.000Z", e.getTimestamp().toString());
     OpenSSH o = e.getPayload();
     assertNotNull(o);
     assertEquals("riker", o.getUser());
@@ -165,6 +167,7 @@ public class ParserTest {
     Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
+    assertEquals("2018-09-18T22:15:38.000Z", e.getTimestamp().toString());
     assertNotNull(e);
     assertEquals(Payload.PayloadType.OPENSSH, e.getPayloadType());
     OpenSSH o = e.getPayload();
@@ -193,6 +196,7 @@ public class ParserTest {
     e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.OPENSSH, e.getPayloadType());
+    assertEquals("2018-02-08T22:15:38.000Z", e.getTimestamp().toString());
     o = e.getPayload();
     assertNotNull(o);
     assertEquals("riker", o.getUser());
@@ -222,6 +226,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.OPENSSH, e.getPayloadType());
+    assertEquals("2018-09-18T22:15:38.000Z", e.getTimestamp().toString());
     OpenSSH o = e.getPayload();
     assertNotNull(o);
     assertEquals("riker", o.getUser());
@@ -366,6 +371,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.BMOAUDIT, e.getPayloadType());
+    assertEquals("2019-01-31T17:45:27.000Z", e.getTimestamp().toString());
     BmoAudit b = e.getPayload();
     assertEquals("216.160.83.56", b.getRemoteIp());
     assertEquals("00000000", b.getRequestId());
@@ -401,6 +407,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.BMOAUDIT, e.getPayloadType());
+    assertEquals("2019-01-31T17:48:26.000Z", e.getTimestamp().toString());
     BmoAudit b = e.getPayload();
     assertEquals("216.160.83.56", b.getRemoteIp());
     assertEquals("AAAAAAAA", b.getRequestId());
@@ -433,6 +440,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+    assertEquals("2018-06-29T14:31:43.000Z", e.getTimestamp().toString());
     Duopull d = e.getPayload();
     assertNotNull(d);
     com.mozilla.secops.parser.models.duopull.Duopull data = d.getDuopullData();
@@ -456,6 +464,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+    assertEquals("2018-06-29T14:31:43.000Z", e.getTimestamp().toString());
     Duopull d = e.getPayload();
     assertNotNull(d);
     com.mozilla.secops.parser.models.duopull.Duopull data = d.getDuopullData();
@@ -487,6 +496,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+    assertEquals("2018-06-29T14:31:43.000Z", e.getTimestamp().toString());
     Duopull d = e.getPayload();
     assertNotNull(d);
     com.mozilla.secops.parser.models.duopull.Duopull data = d.getDuopullData();
@@ -512,6 +522,8 @@ public class ParserTest {
     }
     assertEquals(1000L, Parser.parseISO8601("1970-01-01T00:00:01+00:00").getMillis());
     assertEquals(1000L, Parser.parseISO8601("1970-01-01T00:00:01").getMillis());
+    assertNull(Parser.parseISO8601("not a date"));
+    assertNull(Parser.parseISO8601("1970-01-01T00:00:00.00000000000000000000"));
   }
 
   @Test
@@ -615,6 +627,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2018-07-02T18:20:04.000Z", e.getTimestamp().toString());
     Cloudtrail ct = e.getPayload();
     assertNotNull(ct);
     assertEquals("uhura", ct.getUser());
@@ -641,6 +654,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2018-06-26T06:00:13.000Z", e.getTimestamp().toString());
     Cloudtrail ct = e.getPayload();
     assertNotNull(ct);
     assertEquals("riker", ct.getUser());
@@ -671,6 +685,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2018-10-25T01:23:46.000Z", e.getTimestamp().toString());
     Cloudtrail ct = e.getPayload();
     assertNotNull(ct);
     assertEquals("riker", ct.getUser());
@@ -708,6 +723,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2019-03-05T20:54:57.000Z", e.getTimestamp().toString());
     Cloudtrail ct = e.getPayload();
     assertNotNull(ct);
     assertEquals("uhura", ct.getUser());
@@ -754,6 +770,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2011-12-04T15:48:13.000Z", e.getTimestamp().toString());
     Cloudtrail ct = e.getPayload();
     assertNotNull(ct);
     assertEquals("uhura", ct.getUser());
@@ -791,6 +808,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2018-07-02T18:20:04.000Z", e.getTimestamp().toString());
     Cloudtrail ct = e.getPayload();
     assertNotNull(ct);
     assertEquals("uhura", ct.getUser());
@@ -830,6 +848,7 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.GCPAUDIT, e.getPayloadType());
+    assertEquals("2019-01-03T20:52:04.782Z", e.getTimestamp().toString());
     GcpAudit d = e.getPayload();
     assertNotNull(d);
     assertEquals("laforge@mozilla.com", d.getPrincipalEmail());
@@ -1169,7 +1188,7 @@ public class ParserTest {
     com.mozilla.secops.parser.models.duopull.Duopull data2 = d2.getDuopullData();
     assertNotNull(data2);
     assertEquals(e.getEventId(), e2.getEventId());
-    assertEquals(e.getTimestamp(), e2.getTimestamp());
+    assertNotEquals(e.getTimestamp(), e2.getTimestamp());
     assertEquals(e.getPayloadType(), e2.getPayloadType());
 
     assertEquals(data.getEventTimestamp(), data2.getEventTimestamp());
@@ -1177,5 +1196,33 @@ public class ParserTest {
 
     assertEquals(m.getHostname(), m2.getHostname());
     assertEquals(m.getLogger(), m2.getLogger());
+  }
+
+  @Test
+  public void testParseSyslogTs() {
+    String[] datelist = {
+      "Feb  8 20:23:32", "Sep 18 20:23:32", "Sep 18 15:23:32", "Dec 31 15:23:32",
+    };
+    Long[] inMs = {1549657412000L, 1568838212000L, 1568820212000L, 1577805812000L};
+
+    for (int i = 0; i < datelist.length; i++) {
+      Long d = Parser.parseSyslogTs(datelist[i]).withYear(2019).getMillis();
+
+      assertEquals(inMs[i], d);
+    }
+    assertNull(Parser.parseSyslogTs("not-a-date"));
+  }
+
+  @Test
+  public void testParseAndCorrectSyslogTs() {
+    Event e = new Event();
+    e.setTimestamp(Parser.parseISO8601("2018-09-19T18:55:12.469Z"));
+
+    String[] datelist = {"Feb  8 20:23:32", "Sep 18 20:23:32"};
+    for (String t : datelist) {
+      DateTime et = Parser.parseAndCorrectSyslogTs(t, e);
+      assertEquals(2018, et.year().get());
+    }
+    assertNull(Parser.parseAndCorrectSyslogTs("not-a-date", e));
   }
 }

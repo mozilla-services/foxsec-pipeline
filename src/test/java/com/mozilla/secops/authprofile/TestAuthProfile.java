@@ -186,6 +186,7 @@ public class TestAuthProfile {
                 assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
                 assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
                 assertEquals("US", a.getMetadataValue("sourceaddress_country"));
+                assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
               }
               assertEquals(1L, newCnt);
               // Should have one informational since the rest of the duplicates will be
@@ -233,12 +234,16 @@ public class TestAuthProfile {
                   assertEquals("127.0.0.1", a.getMetadataValue("sourceaddress"));
                   assertEquals("laforge@mozilla.com", a.getMetadataValue("username"));
                   assertThat(a.getSummary(), containsString("untracked"));
+                  assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
                 } else if ((iKey != null) && (iKey.equals("wriker@mozilla.com"))) {
                   if (a.getMetadataValue("username").equals("riker@mozilla.com")) {
                     // GcpAudit event should have generated a warning
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     assertEquals(
                         "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                    assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
+                    assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
+                    assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
                     assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                   }
                 }
@@ -355,6 +360,7 @@ public class TestAuthProfile {
                 assertEquals("emit-bastion", a.getMetadataValue("object"));
                 assertEquals("unknown", a.getMetadataValue("sourceaddress_city"));
                 assertEquals("unknown", a.getMetadataValue("sourceaddress_country"));
+                assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
               }
               assertEquals(2L, newCnt);
               return null;

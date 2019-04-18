@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serializable;
+import org.joda.time.DateTime;
 
 /**
  * Payload parser for Duopull audit trail log data
@@ -70,6 +71,9 @@ public class Duopull extends PayloadBase implements Serializable {
     ObjectMapper mapper = new ObjectMapper();
     try {
       duoPullData = mapper.readValue(input, com.mozilla.secops.parser.models.duopull.Duopull.class);
+      if (duoPullData.getEventTimestamp() != null) {
+        e.setTimestamp(new DateTime(duoPullData.getEventTimestamp() * 1000));
+      }
     } catch (IOException exc) {
       return;
     }
