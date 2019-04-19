@@ -7,6 +7,7 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertIO;
+import com.mozilla.secops.alert.TemplateManager;
 import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.Event;
@@ -639,8 +640,8 @@ public class AuthProfile implements Serializable {
     a.addMetadata("sourceaddress", n.getSourceAddress());
     a.setCategory("authprofile");
 
-    a.setEmailTemplateName("email/authprofile.ftlh");
-    a.setSlackTemplateName("slack/authprofile.ftlh");
+    a.setEmailTemplateName(TemplateManager.GcsTemplate.AUTHPROFILE_EMAIL.getPath());
+    a.setSlackTemplateName(TemplateManager.GcsTemplate.AUTHPROFILE_SLACK.getPath());
 
     String city = n.getSourceAddressCity();
     if (city != null) {
