@@ -7,7 +7,6 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertIO;
-import com.mozilla.secops.alert.AlertTemplate;
 import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.Event;
@@ -53,12 +52,9 @@ import org.slf4j.LoggerFactory;
 public class AuthProfile implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private static final AlertTemplate EMAIL_TEMPLATE =
-      new AlertTemplate("email", "authprofile.ftlh");
-  private static final AlertTemplate SLACK_TEMPLATE =
-      new AlertTemplate("slack", "authprofile.ftlh");
-  private static final AlertTemplate[] ALERT_TEMPLATES =
-      new AlertTemplate[] {EMAIL_TEMPLATE, SLACK_TEMPLATE};
+  private static final String EMAIL_TEMPLATE = "email/authprofile.ftlh";
+  private static final String SLACK_TEMPLATE = "slack/authprofile.ftlh";
+  private static final String[] ALERT_TEMPLATES = new String[] {EMAIL_TEMPLATE, SLACK_TEMPLATE};
 
   /**
    * Parse input strings returning applicable authentication events.
@@ -647,8 +643,8 @@ public class AuthProfile implements Serializable {
     a.addMetadata("sourceaddress", n.getSourceAddress());
     a.setCategory("authprofile");
 
-    a.setEmailTemplate(EMAIL_TEMPLATE.getPath());
-    a.setSlackTemplate(SLACK_TEMPLATE.getPath());
+    a.setEmailTemplate(EMAIL_TEMPLATE);
+    a.setSlackTemplate(SLACK_TEMPLATE);
 
     String city = n.getSourceAddressCity();
     if (city != null) {

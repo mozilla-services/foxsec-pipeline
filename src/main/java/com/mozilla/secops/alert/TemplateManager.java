@@ -21,7 +21,7 @@ import java.util.HashMap;
 public class TemplateManager {
   private Configuration cfg;
   private final AlertConfiguration alertCfg;
-  private ArrayList<AlertTemplate> registeredTemplates;
+  private ArrayList<String> registeredTemplates;
 
   /**
    * Create processed template using supplied template name and template variables
@@ -39,22 +39,25 @@ public class TemplateManager {
     return out.toString();
   }
 
+  /** Validate TemplateManager by checking that all registered templates can be found. */
   public void validate()
       throws TemplateNotFoundException, MalformedTemplateNameException, IOException {
-    for (AlertTemplate tmpl : registeredTemplates) {
-      Template temp = cfg.getTemplate(tmpl.getPath());
+    if (registeredTemplates == null) {
+      return;
+    }
+    for (String tmpl : registeredTemplates) {
+      Template temp = cfg.getTemplate(tmpl);
     }
   }
 
   private ByteArrayTemplateLoader loadTemplatesFromGCS(String basePath) {
     ByteArrayTemplateLoader baTemplateLoader = new ByteArrayTemplateLoader();
-    for (AlertTemplate tmpl : registeredTemplates) {
-      byte[] templateContents =
-          GcsUtil.fetchContent(String.format("%s%s", basePath, tmpl.getPath()));
+    for (String tmpl : registeredTemplates) {
+      byte[] templateContents = GcsUtil.fetchContent(String.format("%s%s", basePath, tmpl));
       // If we don't find the template, we just don't set it. This is done so that the
       // ClassTemplateLoader has a chance to try and find the template if it's not in GCS.
       if (templateContents != null) {
-        baTemplateLoader.putTemplate(tmpl.getPath(), templateContents);
+        baTemplateLoader.putTemplate(tmpl, templateContents);
       }
     }
     return baTemplateLoader;

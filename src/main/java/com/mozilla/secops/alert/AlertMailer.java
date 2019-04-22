@@ -113,8 +113,7 @@ public class AlertMailer {
   private String createAlertMailBody(Alert a) {
     if (a.getEmailTemplate() != null) {
       try {
-        return templateManager.processTemplate(
-            a.getEmailTemplate(), a.generateTemplateVariables());
+        return templateManager.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
       } catch (Exception exc) {
         log.error("email body creation failed: {}", exc.getMessage());
       }

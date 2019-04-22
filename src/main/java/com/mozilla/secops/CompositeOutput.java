@@ -4,7 +4,6 @@ import com.google.api.services.bigquery.model.TableRow;
 import com.google.gson.Gson;
 import com.mozilla.secops.alert.AlertConfiguration;
 import com.mozilla.secops.alert.AlertIO;
-import com.mozilla.secops.alert.AlertTemplate;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
@@ -44,7 +43,7 @@ public abstract class CompositeOutput {
     Logger log = LoggerFactory.getLogger(CompositeOutput.class);
 
     AlertConfiguration alertcfg = new AlertConfiguration();
-    for (AlertTemplate tmpl : options.getOutputAlertTemplates()) {
+    for (String tmpl : options.getOutputAlertTemplates()) {
       alertcfg.registerTemplate(tmpl);
     }
     alertcfg.setSmtpCredentials(options.getOutputAlertSmtpCredentials());

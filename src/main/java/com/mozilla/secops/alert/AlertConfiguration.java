@@ -19,7 +19,7 @@ public class AlertConfiguration implements Serializable {
   private String datastoreNamespace;
   private String datastoreKind;
   private String gcsTemplateBasePath;
-  private ArrayList<AlertTemplate> registeredTemplates;
+  private ArrayList<String> registeredTemplates;
 
   /**
    * Determine if {@link AlertIO} should be established in composite transform
@@ -246,17 +246,32 @@ public class AlertConfiguration implements Serializable {
     return this.gcsTemplateBasePath;
   }
 
-  public void registerTemplate(AlertTemplate tmpl) {
+  /**
+   * Register a template
+   *
+   * @param tmpl Template path
+   */
+  public void registerTemplate(String tmpl) {
     if (registeredTemplates == null) {
-      registeredTemplates = new ArrayList<AlertTemplate>();
+      registeredTemplates = new ArrayList<String>();
     }
     registeredTemplates.add(tmpl);
   }
 
-  public ArrayList<AlertTemplate> getRegisteredTemplates() {
+  /**
+   * Return a list of registered templates
+   *
+   * @return ArrayList<String> registered templates
+   */
+  public ArrayList<String> getRegisteredTemplates() {
     return registeredTemplates;
   }
 
+  /**
+   * Create a new template manager
+   *
+   * @return {@link TemplateManager}
+   */
   public TemplateManager getTemplateManager() {
     return new TemplateManager(this);
   }

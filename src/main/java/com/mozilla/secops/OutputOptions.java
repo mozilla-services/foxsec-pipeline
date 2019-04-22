@@ -1,6 +1,5 @@
 package com.mozilla.secops;
 
-import com.mozilla.secops.alert.AlertTemplate;
 import org.apache.beam.sdk.extensions.gcp.options.GcpOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -121,9 +120,9 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
   void setOutputAlertGcsTemplateBasePath(String value);
 
   @Description("[set within pipeline]")
-  AlertTemplate[] getOutputAlertTemplates();
+  String[] getOutputAlertTemplates();
 
-  void setOutputAlertTemplates(AlertTemplate[] value);
+  void setOutputAlertTemplates(String[] value);
 
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);

@@ -149,10 +149,12 @@ public class TestAuthProfile {
 
                   // Verify sample rendered email template for known source
                   try {
-                    TemplateManager tmgr = new TemplateManager(new AlertConfiguration());
+                    AlertConfiguration alertCfg = new AlertConfiguration();
+                    alertCfg.registerTemplate("email/authprofile.ftlh");
+                    TemplateManager tmgr = new TemplateManager(alertCfg);
+                    tmgr.validate();
                     String templateOutput =
-                        tmgr.processTemplate(
-                            a.getEmailTemplate(), a.generateTemplateVariables());
+                        tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
                     assertEquals(
                         renderTestTemplate("/testdata/templateoutput/authprof_state_known.html", a),
                         templateOutput);
@@ -171,9 +173,9 @@ public class TestAuthProfile {
                   // Verify sample rendered email template for new source
                   try {
                     TemplateManager tmgr = new TemplateManager(new AlertConfiguration());
+                    tmgr.validate();
                     String templateOutput =
-                        tmgr.processTemplate(
-                            a.getEmailTemplate(), a.generateTemplateVariables());
+                        tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
                     assertEquals(
                         renderTestTemplate("/testdata/templateoutput/authprof_state_new.html", a),
                         templateOutput);
