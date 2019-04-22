@@ -135,8 +135,8 @@ public class TestAuthProfile {
               long infoCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
-                assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
-                assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
+                assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
+                assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                 assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.equals(
@@ -152,7 +152,7 @@ public class TestAuthProfile {
                     TemplateManager tmgr = new TemplateManager(new AlertConfiguration());
                     String templateOutput =
                         tmgr.processTemplate(
-                            a.getEmailTemplateName(), a.generateTemplateVariables());
+                            a.getEmailTemplate(), a.generateTemplateVariables());
                     assertEquals(
                         renderTestTemplate("/testdata/templateoutput/authprof_state_known.html", a),
                         templateOutput);
@@ -173,7 +173,7 @@ public class TestAuthProfile {
                     TemplateManager tmgr = new TemplateManager(new AlertConfiguration());
                     String templateOutput =
                         tmgr.processTemplate(
-                            a.getEmailTemplateName(), a.generateTemplateVariables());
+                            a.getEmailTemplate(), a.generateTemplateVariables());
                     assertEquals(
                         renderTestTemplate("/testdata/templateoutput/authprof_state_new.html", a),
                         templateOutput);
@@ -215,8 +215,8 @@ public class TestAuthProfile {
               long infoCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
-                assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
-                assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
+                assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
+                assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                 assertEquals("state_analyze", a.getMetadataValue("category"));
                 assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
@@ -244,8 +244,8 @@ public class TestAuthProfile {
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     assertEquals(
                         "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
-                    assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
-                    assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
+                    assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
+                    assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                     assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
                     assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                   }
@@ -369,8 +369,8 @@ public class TestAuthProfile {
               long newCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
-                assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
-                assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
+                assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
+                assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                 assertEquals("state_analyze", a.getMetadataValue("category"));
                 assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();

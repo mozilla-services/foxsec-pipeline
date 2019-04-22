@@ -14,31 +14,14 @@ import freemarker.template.TemplateNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.EnumSet;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /** Manager class for processing templates using Freemarker */
 public class TemplateManager {
   private Configuration cfg;
   private final AlertConfiguration alertCfg;
-
-  // Templates that are stored in GCS.
-  public enum GcsTemplate {
-    AUTHPROFILE_EMAIL("email/authprofile.ftlh"),
-    AUTHPROFILE_SLACK("slack/authprofile.ftlh");
-
-    private String path;
-
-    GcsTemplate(String path) {
-      this.path = path;
-    }
-
-    public String getPath() {
-      return path;
-    }
-  }
-
-  private EnumSet<GcsTemplate> gcsTemplates;
+  private ArrayList<AlertTemplate> registeredTemplates;
 
   /**
    * Create processed template using supplied template name and template variables
@@ -56,9 +39,16 @@ public class TemplateManager {
     return out.toString();
   }
 
-  private ByteArrayTemplateLoader getGcsTemplates(String basePath) {
+  public void validate()
+      throws TemplateNotFoundException, MalformedTemplateNameException, IOException {
+    for (AlertTemplate tmpl : registeredTemplates) {
+      Template temp = cfg.getTemplate(tmpl.getPath());
+    }
+  }
+
+  private ByteArrayTemplateLoader loadTemplatesFromGCS(String basePath) {
     ByteArrayTemplateLoader baTemplateLoader = new ByteArrayTemplateLoader();
-    for (GcsTemplate tmpl : gcsTemplates) {
+    for (AlertTemplate tmpl : registeredTemplates) {
       byte[] templateContents =
           GcsUtil.fetchContent(String.format("%s%s", basePath, tmpl.getPath()));
       // If we don't find the template, we just don't set it. This is done so that the
@@ -72,9 +62,8 @@ public class TemplateManager {
 
   /** Construct new template manager object */
   public TemplateManager(AlertConfiguration alertCfg) {
-    gcsTemplates = EnumSet.allOf(GcsTemplate.class);
-
     this.alertCfg = alertCfg;
+    registeredTemplates = alertCfg.getRegisteredTemplates();
     cfg = new Configuration(Configuration.VERSION_2_3_28);
     cfg.setDefaultEncoding("UTF-8");
     cfg.setLogTemplateExceptions(false);
@@ -83,7 +72,7 @@ public class TemplateManager {
 
     ClassTemplateLoader ctl = new ClassTemplateLoader(TemplateManager.class, "/alert/templates");
     if (alertCfg.getGcsTemplateBasePath() != null) {
-      ByteArrayTemplateLoader stl = getGcsTemplates(alertCfg.getGcsTemplateBasePath());
+      ByteArrayTemplateLoader stl = loadTemplatesFromGCS(alertCfg.getGcsTemplateBasePath());
       MultiTemplateLoader mtl = new MultiTemplateLoader(new TemplateLoader[] {stl, ctl});
       cfg.setTemplateLoader(mtl);
     } else {

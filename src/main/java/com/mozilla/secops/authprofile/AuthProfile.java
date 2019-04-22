@@ -7,7 +7,7 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertIO;
-import com.mozilla.secops.alert.TemplateManager;
+import com.mozilla.secops.alert.AlertTemplate;
 import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.Event;
@@ -52,6 +52,13 @@ import org.slf4j.LoggerFactory;
  */
 public class AuthProfile implements Serializable {
   private static final long serialVersionUID = 1L;
+
+  private static final AlertTemplate EMAIL_TEMPLATE =
+      new AlertTemplate("email", "authprofile.ftlh");
+  private static final AlertTemplate SLACK_TEMPLATE =
+      new AlertTemplate("slack", "authprofile.ftlh");
+  private static final AlertTemplate[] ALERT_TEMPLATES =
+      new AlertTemplate[] {EMAIL_TEMPLATE, SLACK_TEMPLATE};
 
   /**
    * Parse input strings returning applicable authentication events.
@@ -640,8 +647,8 @@ public class AuthProfile implements Serializable {
     a.addMetadata("sourceaddress", n.getSourceAddress());
     a.setCategory("authprofile");
 
-    a.setEmailTemplateName(TemplateManager.GcsTemplate.AUTHPROFILE_EMAIL.getPath());
-    a.setSlackTemplateName(TemplateManager.GcsTemplate.AUTHPROFILE_SLACK.getPath());
+    a.setEmailTemplate(EMAIL_TEMPLATE.getPath());
+    a.setSlackTemplate(SLACK_TEMPLATE.getPath());
 
     String city = n.getSourceAddressCity();
     if (city != null) {
@@ -701,6 +708,9 @@ public class AuthProfile implements Serializable {
 
   private static void runAuthProfile(AuthProfileOptions options) throws IllegalArgumentException {
     Pipeline p = Pipeline.create(options);
+
+    // Register email and slack alert templates
+    options.setOutputAlertTemplates(ALERT_TEMPLATES);
 
     PCollection<String> input = p.apply("input", new CompositeInput(options));
     processInput(input, options)

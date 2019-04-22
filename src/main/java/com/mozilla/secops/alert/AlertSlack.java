@@ -188,10 +188,10 @@ public class AlertSlack {
   }
 
   private String createAlertBody(Alert a) {
-    if (a.getSlackTemplateName() != null) {
+    if (a.getSlackTemplate() != null) {
       try {
         return templateManager.processTemplate(
-            a.getSlackTemplateName(), a.generateTemplateVariables());
+            a.getSlackTemplate(), a.generateTemplateVariables());
       } catch (Exception exc) {
         log.error("slack template processing failed: {}", exc.getMessage());
       }

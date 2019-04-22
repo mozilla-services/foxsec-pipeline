@@ -1,6 +1,8 @@
 package com.mozilla.secops.alert;
 
 import com.mozilla.secops.window.GlobalTriggers;
+import freemarker.template.MalformedTemplateNameException;
+import freemarker.template.TemplateNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -157,7 +159,8 @@ public class AlertIO {
     }
 
     @Setup
-    public void setup() throws IOException {
+    public void setup()
+        throws TemplateNotFoundException, MalformedTemplateNameException, IOException {
       log = LoggerFactory.getLogger(WriteFn.class);
       log.info("creating new alert output handler");
 
@@ -168,6 +171,10 @@ public class AlertIO {
       if (cfg.getSlackToken() != null) {
         log.info("configuration requires AlertSlack");
         slack = new AlertSlack(cfg);
+      }
+      if (cfg.getRegisteredTemplates() != null) {
+        log.info("validating all registered templates exist");
+        cfg.getTemplateManager().validate();
       }
     }
 
