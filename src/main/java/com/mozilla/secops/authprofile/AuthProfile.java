@@ -52,6 +52,10 @@ import org.slf4j.LoggerFactory;
 public class AuthProfile implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  private static final String EMAIL_TEMPLATE = "email/authprofile.ftlh";
+  private static final String SLACK_TEMPLATE = "slack/authprofile.ftlh";
+  private static final String[] ALERT_TEMPLATES = new String[] {EMAIL_TEMPLATE, SLACK_TEMPLATE};
+
   /**
    * Parse input strings returning applicable authentication events.
    *
@@ -639,8 +643,8 @@ public class AuthProfile implements Serializable {
     a.addMetadata("sourceaddress", n.getSourceAddress());
     a.setCategory("authprofile");
 
-    a.setEmailTemplateName("email/authprofile.ftlh");
-    a.setSlackTemplateName("slack/authprofile.ftlh");
+    a.setEmailTemplate(EMAIL_TEMPLATE);
+    a.setSlackTemplate(SLACK_TEMPLATE);
 
     String city = n.getSourceAddressCity();
     if (city != null) {
@@ -700,6 +704,9 @@ public class AuthProfile implements Serializable {
 
   private static void runAuthProfile(AuthProfileOptions options) throws IllegalArgumentException {
     Pipeline p = Pipeline.create(options);
+
+    // Register email and slack alert templates
+    options.setOutputAlertTemplates(ALERT_TEMPLATES);
 
     PCollection<String> input = p.apply("input", new CompositeInput(options));
     processInput(input, options)

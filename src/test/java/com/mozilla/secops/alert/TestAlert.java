@@ -49,7 +49,7 @@ public class TestAlert {
     a.setCategory("test");
     UUID u = UUID.fromString("d14277bb-8d69-4cd8-b83d-3ccdaf17c7b9");
     a.setAlertId(u);
-    a.setEmailTemplateName("test.fthl");
+    a.setEmailTemplate("test.fthl");
     a.setTimestamp(new DateTime(0L));
 
     a.addToPayload("first line");

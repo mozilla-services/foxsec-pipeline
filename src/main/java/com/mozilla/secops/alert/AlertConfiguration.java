@@ -1,6 +1,7 @@
 package com.mozilla.secops.alert;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /** Configuration for {@link AlertIO} */
 public class AlertConfiguration implements Serializable {
@@ -18,6 +19,7 @@ public class AlertConfiguration implements Serializable {
   private String datastoreNamespace;
   private String datastoreKind;
   private String gcsTemplateBasePath;
+  private ArrayList<String> registeredTemplates;
 
   /**
    * Determine if {@link AlertIO} should be established in composite transform
@@ -242,6 +244,36 @@ public class AlertConfiguration implements Serializable {
    */
   public String getGcsTemplateBasePath() {
     return this.gcsTemplateBasePath;
+  }
+
+  /**
+   * Register a template
+   *
+   * @param tmpl Template path
+   */
+  public void registerTemplate(String tmpl) {
+    if (registeredTemplates == null) {
+      registeredTemplates = new ArrayList<String>();
+    }
+    registeredTemplates.add(tmpl);
+  }
+
+  /**
+   * Return a list of registered templates
+   *
+   * @return ArrayList<String> registered templates
+   */
+  public ArrayList<String> getRegisteredTemplates() {
+    return registeredTemplates;
+  }
+
+  /**
+   * Create a new template manager
+   *
+   * @return {@link TemplateManager}
+   */
+  public TemplateManager getTemplateManager() {
+    return new TemplateManager(this);
   }
 
   /** Create new empty {@link AlertConfiguration} */

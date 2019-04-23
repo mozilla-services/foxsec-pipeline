@@ -61,15 +61,15 @@ public class TestCritObject {
                 assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
                 assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
                 assertEquals("US", a.getMetadataValue("sourceaddress_country"));
-                assertEquals("email/authprofile.ftlh", a.getEmailTemplateName());
-                assertEquals("slack/authprofile.ftlh", a.getSlackTemplateName());
+                assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
+                assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                 assertEquals("auth_session", a.getMetadataValue("auth_alert_type"));
 
                 // Verify sample rendered email template for critical object
                 try {
                   TemplateManager tmgr = new TemplateManager(new AlertConfiguration());
                   String templateOutput =
-                      tmgr.processTemplate(a.getEmailTemplateName(), a.generateTemplateVariables());
+                      tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
                   assertEquals(
                       TestAuthProfile.renderTestTemplate(
                           "/testdata/templateoutput/authprof_critobj.html", a),

@@ -119,6 +119,11 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputAlertGcsTemplateBasePath(String value);
 
+  @Description("[set within pipeline]")
+  String[] getOutputAlertTemplates();
+
+  void setOutputAlertTemplates(String[] value);
+
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);
   }

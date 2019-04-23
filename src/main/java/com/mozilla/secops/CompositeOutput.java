@@ -43,6 +43,9 @@ public abstract class CompositeOutput {
     Logger log = LoggerFactory.getLogger(CompositeOutput.class);
 
     AlertConfiguration alertcfg = new AlertConfiguration();
+    for (String tmpl : options.getOutputAlertTemplates()) {
+      alertcfg.registerTemplate(tmpl);
+    }
     alertcfg.setSmtpCredentials(options.getOutputAlertSmtpCredentials());
     alertcfg.setSmtpRelay(options.getOutputAlertSmtpRelay());
     alertcfg.setEmailCatchall(options.getOutputAlertEmailCatchall());

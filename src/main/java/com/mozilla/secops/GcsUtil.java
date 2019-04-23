@@ -1,42 +1,17 @@
 package com.mozilla.secops;
 
-import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Utilities for requesting content from Google Cloud Storage */
 public final class GcsUtil {
   private static final String gcsUrlRe = "^gs://([^/]+)/(\\S+)";
-
-  /**
-   * Get signed url from GCS Url (gs://...)
-   *
-   * @param input Input string
-   * @return java.net.URL signed url
-   */
-  public static java.net.URL signedUrlFromGcsUrl(String input)
-      throws IllegalStateException, IllegalArgumentException,
-          com.google.auth.ServiceAccountSigner.SigningException {
-    BlobId bid = blobIdFromUrl(input);
-    if (bid == null) {
-      return null;
-    }
-    Storage storage = StorageOptions.getDefaultInstance().getService();
-    // check if blob exists
-    Blob blob = storage.get(bid);
-    if (blob == null || !blob.exists()) {
-      return null;
-    }
-    return storage.signUrl(BlobInfo.newBuilder(bid).build(), 10, TimeUnit.MINUTES);
-  }
 
   /**
    * Return true if the input string looks like a Google Cloud Storage URL
