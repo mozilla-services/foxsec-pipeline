@@ -149,6 +149,64 @@ public class TestEndpointAbuse1 {
   }
 
   @Test
+  public void endpointAbuseTestStreamCustomVariance() throws Exception {
+    String[] eb1 =
+        TestUtil.getTestInputArray("/testdata/httpreq_endpointabuse5/httpreq_endpointabuse5_1.txt");
+    String[] eb2 =
+        TestUtil.getTestInputArray("/testdata/httpreq_endpointabuse5/httpreq_endpointabuse5_2.txt");
+    String[] eb3 =
+        TestUtil.getTestInputArray("/testdata/httpreq_endpointabuse5/httpreq_endpointabuse5_3.txt");
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    String v[] = new String[1];
+    v[0] = "8:GET:/test";
+    options.setEndpointAbusePath(v);
+    options.setEndpointAbuseExtendedVariance(true);
+    options.setEndpointAbuseCustomVarianceSubstrings(new String[] {"init?"});
+
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkTo(new Instant(0L).plus(Duration.standardSeconds(15)))
+            .advanceProcessingTime(Duration.standardSeconds(15))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
+            .advanceWatermarkTo(new Instant(0L).plus(Duration.standardSeconds(45)))
+            .advanceProcessingTime(Duration.standardSeconds(30))
+            .addElements(eb3[0], Arrays.copyOfRange(eb3, 1, eb3.length))
+            .advanceProcessingTime(Duration.standardSeconds(60))
+            .advanceWatermarkToInfinity();
+
+    PCollection<Alert> results =
+        p.apply(s)
+            .apply(new HTTPRequest.Parse(options))
+            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly())
+            .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
+
+    PCollection<Long> count = results.apply(Count.globally());
+
+    PAssert.that(count).containsInAnyOrder(0L, 1L);
+
+    PAssert.that(results)
+        .satisfies(
+            i -> {
+              for (Alert a : i) {
+                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals(
+                    "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
+                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("endpoint_abuse", a.getMetadataValue("category"));
+                assertEquals("Mozilla", a.getMetadataValue("useragent"));
+                assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals("1970-01-01T00:20:14.999Z", a.getMetadataValue("window_timestamp"));
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void endpointAbuseTestStreamStateExpiry() throws Exception {
     String[] eb1 =
         TestUtil.getTestInputArray("/testdata/httpreq_endpointabuse4/httpreq_endpointabuse4_1.txt");

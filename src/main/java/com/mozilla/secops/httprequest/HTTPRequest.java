@@ -195,7 +195,11 @@ public class HTTPRequest implements Serializable {
                       String requestMethod = n.getRequestMethod();
                       String userAgent = n.getUserAgent();
                       String rpath = n.getUrlRequestPath();
-                      if (sourceAddress == null || requestMethod == null || rpath == null) {
+                      String url = n.getRequestUrl();
+                      if (sourceAddress == null
+                          || requestMethod == null
+                          || rpath == null
+                          || url == null) {
                         return;
                       }
                       if (userAgent == null) {
@@ -207,6 +211,7 @@ public class HTTPRequest implements Serializable {
                       v.add(rpath);
                       v.add(userAgent);
                       v.add(eTime);
+                      v.add(url);
                       c.output(KV.of(sourceAddress, v));
                     }
                   }))
@@ -581,6 +586,7 @@ public class HTTPRequest implements Serializable {
     private final String monitoredResource;
     private final Boolean enableIprepdDatastoreWhitelist;
     private final Boolean varianceSupportingOnly;
+    private final String[] customVarianceSubstrings;
     private final String iprepdDatastoreWhitelistProject;
     private final Integer suppressRecovery;
 
@@ -621,6 +627,7 @@ public class HTTPRequest implements Serializable {
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       varianceSupportingOnly = options.getEndpointAbuseExtendedVariance();
       suppressRecovery = options.getEndpointAbuseSuppressRecovery();
+      customVarianceSubstrings = options.getEndpointAbuseCustomVarianceSubstrings();
 
       String[] cfgEndpoints = options.getEndpointAbusePath();
       endpoints = new EndpointAbuseEndpointInfo[cfgEndpoints.length];
@@ -667,6 +674,14 @@ public class HTTPRequest implements Serializable {
                       for (ArrayList<String> i : paths) {
                         Integer abIdx = indexEndpoint(i.get(1), i.get(0));
                         if (abIdx == null) {
+                          if (customVarianceSubstrings != null) {
+                            for (String s : customVarianceSubstrings) {
+                              if (i.get(4).contains(s)) {
+                                basicVariance = true;
+                                extendedVariance = true;
+                              }
+                            }
+                          }
                           basicVariance = true;
                           if (considerSupporting(i.get(1))) {
                             extendedVariance = true;
@@ -1124,6 +1139,11 @@ public class HTTPRequest implements Serializable {
     Boolean getEndpointAbuseExtendedVariance();
 
     void setEndpointAbuseExtendedVariance(Boolean value);
+
+    @Description("Custom variance substrings (multiple allowed); string")
+    String[] getEndpointAbuseCustomVarianceSubstrings();
+
+    void setEndpointAbuseCustomVarianceSubstrings(String[] value);
 
     @Description(
         "In endpoint abuse analysis, optionally use supplied suppress_recovery for violations; seconds")
