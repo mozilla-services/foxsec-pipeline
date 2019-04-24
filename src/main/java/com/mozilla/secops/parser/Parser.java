@@ -3,6 +3,7 @@ package com.mozilla.secops.parser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -362,6 +363,8 @@ public class Parser {
     // Not all Mozlog implementations use lower case field names, and we will reuse this mapper
     // for Mozlog conversion
     mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+    // Allows for null values in the JsonPayload in a LogEntry
+    mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
     googleJacksonFactory = new JacksonFactory();
 

@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser.models.duopull;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
@@ -29,6 +30,7 @@ public class Duopull implements Serializable {
    *
    * @return String
    */
+  @JsonAlias({"event_user_key", "event_description_user_id"})
   @JsonProperty("event_description_user_id")
   public String getEventDescriptionUserId() {
     return eventDescriptionUserId;
@@ -59,6 +61,7 @@ public class Duopull implements Serializable {
    *
    * @return String
    */
+  @JsonAlias({"event_user_name", "event_username"})
   @JsonProperty("event_username")
   public String getEventUsername() {
     return eventUsername;
