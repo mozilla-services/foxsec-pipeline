@@ -171,12 +171,18 @@ public class HTTPRequest implements Serializable {
   /**
    * Key requests for session analysis and window into sessions
    *
-   * <p>This currently uses a session gap duration of 20 minutes, and applies a trigger to fire
-   * early every 10 seconds and accumulate panes.
+   * <p>Windows are configured to fire early every 10 seconds, and accumulate panes.
    */
   public static class KeyAndWindowForSessionsFireEarly
       extends PTransform<PCollection<Event>, PCollection<KV<String, ArrayList<String>>>> {
     private static final long serialVersionUID = 1L;
+
+    private final Long gapDurationMinutes;
+    private final Long paneFiringDelaySeconds = 10L;
+
+    public KeyAndWindowForSessionsFireEarly(HTTPRequestOptions options) {
+      gapDurationMinutes = options.getSessionGapDurationMinutes();
+    }
 
     @Override
     public PCollection<KV<String, ArrayList<String>>> expand(PCollection<Event> input) {
@@ -218,13 +224,14 @@ public class HTTPRequest implements Serializable {
           .apply(
               "window for sessions",
               Window.<KV<String, ArrayList<String>>>into(
-                      Sessions.withGapDuration(Duration.standardMinutes(20)))
+                      Sessions.withGapDuration(Duration.standardMinutes(gapDurationMinutes)))
                   .triggering(
                       Repeatedly.forever(
                           AfterWatermark.pastEndOfWindow()
                               .withEarlyFirings(
                                   AfterProcessingTime.pastFirstElementInPane()
-                                      .plusDelayOf(Duration.standardSeconds(10L)))))
+                                      .plusDelayOf(
+                                          Duration.standardSeconds(paneFiringDelaySeconds)))))
                   .withAllowedLateness(Duration.ZERO)
                   .accumulatingFiredPanes());
     }
@@ -1171,6 +1178,12 @@ public class HTTPRequest implements Serializable {
     String getCidrExclusionList();
 
     void setCidrExclusionList(String value);
+
+    @Description("Gap duration to consider for sessions; minutes")
+    @Default.Long(45L)
+    Long getSessionGapDurationMinutes();
+
+    void setSessionGapDurationMinutes(Long value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {
@@ -1231,7 +1244,7 @@ public class HTTPRequest implements Serializable {
               events
                   .apply(
                       "key and window for sessions fire early",
-                      new KeyAndWindowForSessionsFireEarly())
+                      new KeyAndWindowForSessionsFireEarly(options))
                   // No requirement for follow up application of GlobalTriggers here since
                   // EndpointAbuseAnalysis will do this for us
                   .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options)));
