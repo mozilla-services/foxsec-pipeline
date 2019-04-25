@@ -506,6 +506,74 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseStackdriverJsonDuopullBypass() {
+    String buf =
+        "{\"insertId\":\"f8p4mz1a3ldcos1xz\",\"labels\":{\"compute.googleapis.com/resource_"
+            + "name\":\"emit-bastion\"},\"logName\":\"projects/sandbox-00/logs/syslog\",\"receiveTimestamp\":"
+            + "\"2018-09-20T18:43:38.318580313Z\",\"resource\":{\"labels\":{\"instance_id\":\"999999999"
+            + "9999999999\",\"project_id\":\"sandbox-00\",\"zone\":\"us-east1-b\"},\"type\":\"gce_instance"
+            + "\"},\"jsonPayload\":{\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Fields\""
+            + ": {\"event_description_valid_secs\": 3600, \"event_description_count\": 1, "
+            + "\"event_description_user_id\": \"ZZZZZZZZZZZZZZZZZZZZ\", \"event_object\": \"worf\""
+            + ", \"event_timestamp\": 1530282703, \"event_username\": \"First Last\", "
+            + "\"event_description_bypass_code_ids\": [\"XXXXXXXXXXXXXXXXXXXX\"], \"event_description_by"
+            + "pass\": \"\", \"path\": \"/admin/v1/logs/administrator\", \"msg\": "
+            + "\"duopull event\", \"event_action\": \"bypass_create\", "
+            + "\"event_description_auto_generated\": true, \"event_description_remaining_uses\": 1}, \"Hostname\": \"test"
+            + "\", \"Pid\": 62312, \"Time\": \"2018-07-04T15:49:46Z\", \"Logger\": "
+            + "\"duopull\", \"Type\": \"app.log\", \"Timestamp\": 1530719386349480000},\"timestamp\":\"2018-09-18T22:15:38Z\"}";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+    assertEquals("2018-06-29T14:31:43.000Z", e.getTimestamp().toString());
+    Duopull d = e.getPayload();
+    assertNotNull(d);
+    com.mozilla.secops.parser.models.duopull.Duopull data = d.getDuopullData();
+    assertEquals("duopull event", data.getMsg());
+    assertEquals("bypass_create", data.getEventAction());
+    assertEquals("/admin/v1/logs/administrator", data.getPath());
+  }
+
+  @Test
+  public void testParseStackdriverJsonDuopullAuthV2() {
+    String buf =
+        "{\"insertId\": \"18osuk3fbh39dp\",\"jsonPayload\": {\"Fields\":"
+            + "{\"event_access_device_hostname\": null,\"event_access_device_location_city\":"
+            + "\"woff\",\"event_user_key\": \"xxxxxx\",\"path\": \"/admin/v2/logs/authentication\","
+            + "\"event_auth_device_location_state\": \"worf\",\"event_application_name\": "
+            + "\"access\",\"event_access_device_location_country\": \"nation state\","
+            + "\"event_application_key\": \"xxxxxxxx\",\"msg\": \"duopull event\","
+            + "\"event_auth_device_location_country\": \"nation state\",\"event_auth_device_ip\": "
+            + "\"127.0.0.1\",\"event_timestamp\": 1556134128,\"event_event_type\": "
+            + "\"authentication\",\"event_factor\": \"duo_push\",\"event_access_device_location_state\": "
+            + "\"worf\",\"event_result\": \"success\",\"event_auth_device_name\": "
+            + "\"555-555-5555\",\"event_txid\": \"4a8293de-df14-4a7a-98ae-8ed36f155853\","
+            + "\"event_user_name\": \"doggo\",\"event_reason\": \"user_approved\","
+            + "\"event_auth_device_location_city\": \"worf\",\"event_access_device_ip\": "
+            + "\"127.0.0.1\"},\"Hostname\": \"localhost\",\"Pid\": 1,\"EnvVersion\": "
+            + "\"2.0\",\"Type\": \"app.log\",\"Timestamp\": 1556134201997608700,"
+            + "\"Severity\": 6,\"Logger\": \"duopull\",\"Time\": \"2019-04-24T19:30:01Z\"},"
+            + "\"resource\": {\"type\": \"project\",\"labels\": {\"project_id\": \"pipeline\"}},"
+            + "\"timestamp\": \"2019-04-24T19:30:01.997770950Z\",\"logName\": \"projects/pipeline/logs/duopull\","
+            + "\"receiveTimestamp\": \"2019-04-24T19:30:02.013133847Z\"}";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+    assertEquals("2019-04-24T19:28:48.000Z", e.getTimestamp().toString());
+    Duopull d = e.getPayload();
+    assertNotNull(d);
+    com.mozilla.secops.parser.models.duopull.Duopull data = d.getDuopullData();
+    assertEquals("duopull event", data.getMsg());
+    assertEquals("doggo", data.getEventUsername());
+    assertEquals("user_approved", data.getEventReason());
+    assertEquals("/admin/v2/logs/authentication", data.getPath());
+  }
+
+  @Test
   public void testParseISO8601() throws Exception {
     String[] datelist = {
       "2018-09-28T18:55:12.469",
