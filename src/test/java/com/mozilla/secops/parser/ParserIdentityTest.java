@@ -84,4 +84,45 @@ public class ParserIdentityTest {
     assertNull(n.getSourceAddressCity());
     assertNull(n.getSourceAddressCountry());
   }
+
+  @Test
+  public void testDuopullStackdriverAdminLoginWithIdentity() throws Exception {
+    String buf =
+        "{\"insertId\": \"gh39djdfyz4lya\",\"jsonPayload\": {\"Fields\": {\"event_object\": null,"
+            + "\"event_username\": \"riker\",\"event_description_factor\": \"push\",\"msg\": \"duopull event\","
+            + "\"event_timestamp\": 1556216112,\"event_description_device\": \"555-555-5555\","
+            + "\"event_action\": \"admin_login\",\"event_description_primary_auth_method\": \"Password\","
+            + "\"path\": \"/admin/v1/logs/administrator\",\"event_description_ip_address\": \"127.0.0.1\""
+            + "},\"Pid\": 1,\"Hostname\": \"localhost\","
+            + "\"EnvVersion\": \"2.0\",\"Type\": \"app.log\",\"Timestamp\": 1556216660526927000,"
+            + "\"Severity\": 6,\"Logger\": \"duopull\",\"Time\": \"2019-04-25T18:24:20Z\"},"
+            + "\"resource\": {\"type\": \"project\",\"labels\": {\"project_id\": \"pipeline\"}},"
+            + "\"timestamp\": \"2019-04-25T18:24:20.527024712Z\","
+            + "\"logName\": \"projects/pipeline/logs/duopull\","
+            + "\"receiveTimestamp\": \"2019-04-25T18:24:20.555273442Z\"}";
+
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
+    Parser p = new Parser();
+    p.setIdentityManager(mgr);
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.DUOPULL, e.getPayloadType());
+    assertEquals("2019-04-25T18:15:12.000Z", e.getTimestamp().toString());
+    Duopull d = e.getPayload();
+    assertNotNull(d);
+    com.mozilla.secops.parser.models.duopull.Duopull data = d.getDuopullData();
+    assertNotNull(data);
+    assertEquals("riker", data.getEventUsername());
+    assertEquals("127.0.0.1", data.getEventDescriptionIpAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("riker", n.getSubjectUser());
+    assertEquals("127.0.0.1", n.getSourceAddress());
+    assertEquals("wriker@mozilla.com", n.getSubjectUserIdentity());
+    assertEquals("admin_login", n.getObject());
+    assertNull(n.getSourceAddressCity());
+    assertNull(n.getSourceAddressCountry());
+  }
 }

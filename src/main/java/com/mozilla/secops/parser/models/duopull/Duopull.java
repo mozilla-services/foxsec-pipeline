@@ -8,13 +8,14 @@ import java.io.Serializable;
 /**
  * Describes the format of a duopull event
  *
- * <p>See also https://github.com/mozilla-services/duopull-lambda
+ * <p>See also https://github.com/mozilla-services/foxsec-pipeline-contrib/tree/master/duopull
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Duopull implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String eventDescriptionUserId;
+  private String eventDescriptionIpAddress;
   private String eventObject;
   private Long eventTimestamp;
   private String eventUsername;
@@ -34,6 +35,16 @@ public class Duopull implements Serializable {
   @JsonProperty("event_description_user_id")
   public String getEventDescriptionUserId() {
     return eventDescriptionUserId;
+  }
+
+  /**
+   * Get event description ip address
+   *
+   * @return String source ip
+   */
+  @JsonProperty("event_description_ip_address")
+  public String getEventDescriptionIpAddress() {
+    return eventDescriptionIpAddress;
   }
 
   /**
