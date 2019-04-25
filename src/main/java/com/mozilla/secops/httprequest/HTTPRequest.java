@@ -44,6 +44,7 @@ import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Repeatedly;
+import org.apache.beam.sdk.transforms.windowing.Sessions;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -168,26 +169,64 @@ public class HTTPRequest implements Serializable {
   }
 
   /**
-   * Window events into fixed ten minute windows with early firings
+   * Key requests for session analysis and window into sessions
    *
-   * <p>Panes are accumulated.
+   * <p>This currently uses a session gap duration of 20 minutes, and applies a trigger to fire
+   * early every 10 seconds and accumulate panes.
    */
-  public static class WindowForFixedFireEarly
-      extends PTransform<PCollection<Event>, PCollection<Event>> {
+  public static class KeyAndWindowForSessionsFireEarly
+      extends PTransform<PCollection<Event>, PCollection<KV<String, ArrayList<String>>>> {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public PCollection<Event> expand(PCollection<Event> input) {
-      return input.apply(
-          Window.<Event>into(FixedWindows.of(Duration.standardMinutes(10)))
-              .triggering(
-                  Repeatedly.forever(
-                      AfterWatermark.pastEndOfWindow()
-                          .withEarlyFirings(
-                              AfterProcessingTime.pastFirstElementInPane()
-                                  .plusDelayOf(Duration.standardSeconds(10L)))))
-              .withAllowedLateness(Duration.ZERO)
-              .accumulatingFiredPanes());
+    public PCollection<KV<String, ArrayList<String>>> expand(PCollection<Event> input) {
+      return input
+          .apply(
+              "key for session analysis",
+              ParDo.of(
+                  new DoFn<Event, KV<String, ArrayList<String>>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Normalized n = c.element().getNormalized();
+
+                      String sourceAddress = n.getSourceAddress();
+                      String requestMethod = n.getRequestMethod();
+                      String userAgent = n.getUserAgent();
+                      String rpath = n.getUrlRequestPath();
+                      String url = n.getRequestUrl();
+                      if (sourceAddress == null
+                          || requestMethod == null
+                          || rpath == null
+                          || url == null) {
+                        return;
+                      }
+                      if (userAgent == null) {
+                        userAgent = "unknown";
+                      }
+                      String eTime = c.element().getTimestamp().toString();
+                      ArrayList<String> v = new ArrayList<>();
+                      v.add(requestMethod);
+                      v.add(rpath);
+                      v.add(userAgent);
+                      v.add(eTime);
+                      v.add(url);
+                      c.output(KV.of(sourceAddress, v));
+                    }
+                  }))
+          .apply(
+              "window for sessions",
+              Window.<KV<String, ArrayList<String>>>into(
+                      Sessions.withGapDuration(Duration.standardMinutes(20)))
+                  .triggering(
+                      Repeatedly.forever(
+                          AfterWatermark.pastEndOfWindow()
+                              .withEarlyFirings(
+                                  AfterProcessingTime.pastFirstElementInPane()
+                                      .plusDelayOf(Duration.standardSeconds(10L)))))
+                  .withAllowedLateness(Duration.ZERO)
+                  .accumulatingFiredPanes());
     }
   }
 
@@ -538,7 +577,7 @@ public class HTTPRequest implements Serializable {
    * endpointAbusePath pipeline option configuration.
    */
   public static class EndpointAbuseAnalysis
-      extends PTransform<PCollection<Event>, PCollection<Alert>> {
+      extends PTransform<PCollection<KV<String, ArrayList<String>>>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
     private Logger log;
@@ -547,9 +586,9 @@ public class HTTPRequest implements Serializable {
     private final String monitoredResource;
     private final Boolean enableIprepdDatastoreWhitelist;
     private final Boolean varianceSupportingOnly;
+    private final String[] customVarianceSubstrings;
     private final String iprepdDatastoreWhitelistProject;
     private final Integer suppressRecovery;
-    private final Long earlyWindowIgnore;
 
     /** Internal class for configured endpoints in EPA */
     public static class EndpointAbuseEndpointInfo implements Serializable {
@@ -561,6 +600,18 @@ public class HTTPRequest implements Serializable {
       public String path;
       /** Threshold */
       public Integer threshold;
+    }
+
+    /** Internal class for endpoint abuse state */
+    public static class EndpointAbuseState implements Serializable {
+      private static final long serialVersionUID = 1L;
+
+      /** Remote address */
+      public String remoteAddress;
+      /** Request count */
+      public Integer count;
+      /** Timestamp */
+      public Instant timestamp;
     }
 
     /**
@@ -576,7 +627,7 @@ public class HTTPRequest implements Serializable {
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       varianceSupportingOnly = options.getEndpointAbuseExtendedVariance();
       suppressRecovery = options.getEndpointAbuseSuppressRecovery();
-      earlyWindowIgnore = options.getEndpointAbuseEarlyWindowIgnore();
+      customVarianceSubstrings = options.getEndpointAbuseCustomVarianceSubstrings();
 
       String[] cfgEndpoints = options.getEndpointAbusePath();
       endpoints = new EndpointAbuseEndpointInfo[cfgEndpoints.length];
@@ -595,52 +646,17 @@ public class HTTPRequest implements Serializable {
     }
 
     @Override
-    public PCollection<Alert> expand(PCollection<Event> input) {
+    public PCollection<Alert> expand(PCollection<KV<String, ArrayList<String>>> input) {
       return input
-          .apply(
-              "filter inapplicable requests",
-              ParDo.of(
-                  new DoFn<Event, KV<String, ArrayList<String>>>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @ProcessElement
-                    public void processElement(ProcessContext c) {
-                      Normalized n = c.element().getNormalized();
-
-                      String sourceAddress = n.getSourceAddress();
-                      String requestMethod = n.getRequestMethod();
-                      String userAgent = n.getUserAgent();
-                      String rpath = n.getUrlRequestPath();
-                      if (sourceAddress == null || requestMethod == null || rpath == null) {
-                        return;
-                      }
-                      if (userAgent == null) {
-                        userAgent = "unknown";
-                      }
-                      String eTime = c.element().getTimestamp().toString();
-                      ArrayList<String> v = new ArrayList<>();
-                      v.add(requestMethod);
-                      v.add(rpath);
-                      v.add(userAgent);
-                      v.add(eTime);
-                      c.output(KV.of(sourceAddress, v));
-                    }
-                  }))
           .apply(GroupByKey.<String, ArrayList<String>>create())
           .apply(
               "analyze per-client",
               ParDo.of(
-                  new DoFn<KV<String, Iterable<ArrayList<String>>>, Alert>() {
+                  new DoFn<KV<String, Iterable<ArrayList<String>>>, KV<String, Alert>>() {
                     private static final long serialVersionUID = 1L;
 
-                    @StateId("counter")
-                    private final StateSpec<ValueState<Integer>> counterState = StateSpecs.value();
-
                     @ProcessElement
-                    public void processElement(
-                        ProcessContext c,
-                        BoundedWindow w,
-                        @StateId("counter") ValueState<Integer> counter) {
+                    public void processElement(ProcessContext c, BoundedWindow w) {
                       String remoteAddress = c.element().getKey();
                       Iterable<ArrayList<String>> paths = c.element().getValue();
                       int[] endCounter = new int[endpoints.length];
@@ -648,33 +664,35 @@ public class HTTPRequest implements Serializable {
                       Boolean basicVariance = false;
                       Boolean extendedVariance = false;
 
-                      // Calculate the start of the window so we can use it for early window results
-                      // ignore if required; assumes fixed window length of 10 minutes
-                      Instant cutoff = null;
-                      Boolean allEarlyWindow = true;
-                      Instant windowStart = new Instant(w.maxTimestamp().getMillis() - 599999L);
-                      if (earlyWindowIgnore != null) {
-                        cutoff = new Instant(windowStart.getMillis() + earlyWindowIgnore);
-                      }
+                      // Used to track the latest applicable EPA request, so we can use it as the
+                      // alert timestamp if we need to generate an alert.
+                      Instant latestEpaRequest = null;
 
                       // Count the number of requests in-window for this source that map to
                       // monitored endpoints. Set a basic variance flag if we see a request
                       // that was made to something that is not monitored.
                       for (ArrayList<String> i : paths) {
-
-                        if (earlyWindowIgnore != null) {
-                          if (Instant.parse(i.get(3)).getMillis() > cutoff.getMillis()) {
-                            allEarlyWindow = false;
-                          }
-                        }
-
                         Integer abIdx = indexEndpoint(i.get(1), i.get(0));
                         if (abIdx == null) {
+                          if (customVarianceSubstrings != null) {
+                            for (String s : customVarianceSubstrings) {
+                              if (i.get(4).contains(s)) {
+                                basicVariance = true;
+                                extendedVariance = true;
+                              }
+                            }
+                          }
                           basicVariance = true;
                           if (considerSupporting(i.get(1))) {
                             extendedVariance = true;
                           }
                           continue;
+                        }
+                        Instant t = Instant.parse(i.get(3));
+                        if (latestEpaRequest == null) {
+                          latestEpaRequest = t;
+                        } else if (t.getMillis() > latestEpaRequest.getMillis()) {
+                          latestEpaRequest = t;
                         }
                         // XXX Just pick up the user agent here; with agent variance this could
                         // result in a different agent being included in the alert than the one
@@ -695,12 +713,6 @@ public class HTTPRequest implements Serializable {
                         if (basicVariance) {
                           return;
                         }
-                      }
-
-                      // If we have an early window ignore interval configured and the requests fell
-                      // within it, just return here.
-                      if ((earlyWindowIgnore != null) && (allEarlyWindow)) {
-                        return;
                       }
 
                       // If we get here, there was not enough variance present, identify if any
@@ -727,37 +739,13 @@ public class HTTPRequest implements Serializable {
                         return;
                       }
 
-                      // If we already have counter state for this key, compare it against what
-                      // the path count was. If they are the same, this is likely a
-                      // duplicate associated with the window closing so we just
-                      // ignore it.
-                      Integer rCount = counter.read();
-                      if (rCount != null && rCount.equals(count)) {
-                        log.info("suppressing additional in-window alert for {}", remoteAddress);
-                        return;
-                      }
-                      counter.write(count);
-
-                      if (rCount != null && rCount < count) {
-                        // If we had counter state for this key and it is less than the
-                        // path component count, this is a supplemental pane with more
-                        // requests in it.
-                        //
-                        // Generate another alert, but decrement the count value in the
-                        // alert to reflect the delta between what we have already alerted
-                        // on and this new alert.
-                        count = count - rCount;
-                        log.info(
-                            "{}: supplemental alert for {} {}", w.toString(), remoteAddress, count);
-                      } else {
-                        log.info(
-                            "{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
-                      }
+                      log.info("{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
 
                       String compareMethod = endpoints[abmaxIndex].method;
                       String comparePath = endpoints[abmaxIndex].path;
 
                       Alert a = new Alert();
+                      a.setTimestamp(latestEpaRequest.toDateTime());
                       a.setSummary(
                           String.format(
                               "%s httprequest endpoint_abuse %s %s %s %d",
@@ -789,6 +777,72 @@ public class HTTPRequest implements Serializable {
                       if (!a.hasCorrectFields()) {
                         throw new IllegalArgumentException("alert has invalid field configuration");
                       }
+                      c.output(KV.of(remoteAddress, a));
+                    }
+                  }))
+          // Rewindow into global windows so we can use state in the next step
+          //
+          // Ideally we would apply state in the previous step, but this is not currently
+          // supported by DataflowRunner.
+          //
+          // See also https://issues.apache.org/jira/browse/BEAM-2507
+          .apply("endpoint abuse analysis global", new GlobalTriggers<KV<String, Alert>>(5))
+          .apply(
+              "endpoint abuse alert suppression",
+              ParDo.of(
+                  new DoFn<KV<String, Alert>, Alert>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @StateId("counter")
+                    private final StateSpec<ValueState<EndpointAbuseState>> counterState =
+                        StateSpecs.value();
+
+                    @ProcessElement
+                    public void processElement(
+                        ProcessContext c,
+                        BoundedWindow w,
+                        @StateId("counter") ValueState<EndpointAbuseState> counter) {
+                      String remoteAddress = c.element().getKey();
+                      Alert a = c.element().getValue();
+
+                      // Prepare a new state value to use if we need to set it later
+                      EndpointAbuseState newepas = new EndpointAbuseState();
+                      newepas.remoteAddress = remoteAddress;
+                      newepas.timestamp = a.getTimestamp().toInstant();
+                      newepas.count = new Integer(a.getMetadataValue("count"));
+
+                      EndpointAbuseState epas = counter.read();
+
+                      if (epas == null) {
+                        // This is a new alert, set values in state and emit
+                        counter.write(newepas);
+                        c.output(a);
+                        return;
+                      }
+
+                      // Otherwise, we have state stored for this source. First, take a look
+                      // at the timestamp associated with the state and see if we should invalidate
+                      // it.
+                      //
+                      // XXX Currently this invalidates existing state after 10 minutes, this should
+                      // be configurable or handled via a timer.
+                      if ((newepas.timestamp.getMillis() - epas.timestamp.getMillis()) > 600000) {
+                        // The old state data is too old for consideration, so just update with the
+                        // new information and emit.
+                        counter.write(newepas);
+                        c.output(a);
+                        return;
+                      }
+
+                      // If we get here, we have state that should be considered. If the counter
+                      // value is the same we just ignore the extra event. Otherwise, update the
+                      // counter with the new value and update state.
+                      if (newepas.count.equals(epas.count)) {
+                        log.info(
+                            "suppressing additional alert for {} based on state", remoteAddress);
+                        return;
+                      }
+                      counter.write(newepas);
                       c.output(a);
                     }
                   }));
@@ -1086,17 +1140,16 @@ public class HTTPRequest implements Serializable {
 
     void setEndpointAbuseExtendedVariance(Boolean value);
 
+    @Description("Custom variance substrings (multiple allowed); string")
+    String[] getEndpointAbuseCustomVarianceSubstrings();
+
+    void setEndpointAbuseCustomVarianceSubstrings(String[] value);
+
     @Description(
         "In endpoint abuse analysis, optionally use supplied suppress_recovery for violations; seconds")
     Integer getEndpointAbuseSuppressRecovery();
 
     void setEndpointAbuseSuppressRecovery(Integer value);
-
-    @Description(
-        "In endpoint abuse analysis, suppress results for requests within ms of window start; ms")
-    Long getEndpointAbuseEarlyWindowIgnore();
-
-    void setEndpointAbuseEarlyWindowIgnore(Long value);
 
     @Description("Filter successful requests for path before analysis; e.g., method:/path")
     String[] getFilterRequestPath();
@@ -1176,9 +1229,12 @@ public class HTTPRequest implements Serializable {
       resultsList =
           resultsList.and(
               events
-                  .apply("window for fixed fire early", new WindowForFixedFireEarly())
-                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options))
-                  .apply("endpoint abuse analysis global", new GlobalTriggers<Alert>(5)));
+                  .apply(
+                      "key and window for sessions fire early",
+                      new KeyAndWindowForSessionsFireEarly())
+                  // No requirement for follow up application of GlobalTriggers here since
+                  // EndpointAbuseAnalysis will do this for us
+                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options)));
     }
 
     resultsList
