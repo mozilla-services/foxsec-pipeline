@@ -30,6 +30,7 @@ public class TestEndpointAbuse1 {
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setMonitoredResourceIndicator("test");
+    ret.setSessionGapDurationMinutes(20L);
     return ret;
   }
 
@@ -63,7 +64,7 @@ public class TestEndpointAbuse1 {
     PCollection<Alert> results =
         p.apply(s)
             .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly())
+            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
     PCollection<Long> count = results.apply(Count.globally());
@@ -122,7 +123,7 @@ public class TestEndpointAbuse1 {
     PCollection<Alert> results =
         p.apply(s)
             .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly())
+            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
     PCollection<Long> count = results.apply(Count.globally());
@@ -180,7 +181,7 @@ public class TestEndpointAbuse1 {
     PCollection<Alert> results =
         p.apply(s)
             .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly())
+            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
     PCollection<Long> count = results.apply(Count.globally());
@@ -236,7 +237,7 @@ public class TestEndpointAbuse1 {
     PCollection<Alert> results =
         p.apply(s)
             .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly())
+            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
     PCollection<Long> count = results.apply(Count.globally());
@@ -292,7 +293,7 @@ public class TestEndpointAbuse1 {
     PCollection<Alert> results =
         p.apply(s)
             .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly())
+            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
     PAssert.that(results).empty();
