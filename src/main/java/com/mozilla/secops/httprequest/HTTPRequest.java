@@ -197,6 +197,11 @@ public class HTTPRequest implements Serializable {
                     public void processElement(ProcessContext c) {
                       Normalized n = c.element().getNormalized();
 
+                      // Don't include requests that involve a server side error
+                      if ((n.getRequestStatus() == null) || (n.getRequestStatus() >= 500)) {
+                        return;
+                      }
+
                       String sourceAddress = n.getSourceAddress();
                       String requestMethod = n.getRequestMethod();
                       String userAgent = n.getUserAgent();
