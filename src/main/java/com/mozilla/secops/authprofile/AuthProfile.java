@@ -25,7 +25,6 @@ import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
@@ -338,7 +337,6 @@ public class AuthProfile implements Serializable {
     private final String datastoreKind;
     private final String idmanagerPath;
     private CidrUtil cidrGcp;
-    private Map<String, String> namedSubnets;
     private IdentityManager idmanager;
     private Logger log;
     private State state;
@@ -361,7 +359,6 @@ public class AuthProfile implements Serializable {
       log = LoggerFactory.getLogger(StateAnalyze.class);
 
       idmanager = IdentityManager.load(idmanagerPath);
-      namedSubnets = idmanager.getNamedSubnets();
 
       cidrGcp = new CidrUtil();
       cidrGcp.loadGcpSubnets();
@@ -384,13 +381,9 @@ public class AuthProfile implements Serializable {
     }
 
     private String getEntryKey(String ipAddr) {
-      if (namedSubnets == null) {
-        return ipAddr;
-      }
-      for (Map.Entry<String, String> namedSubnet : namedSubnets.entrySet()) {
-        if (CidrUtil.addressInCidr(ipAddr, namedSubnet.getValue())) {
-          return namedSubnet.getKey();
-        }
+      String ret = idmanager.lookupNamedSubnet(ipAddr);
+      if (ret != null) {
+        return ret;
       }
       return ipAddr;
     }

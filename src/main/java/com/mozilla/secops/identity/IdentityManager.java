@@ -2,6 +2,7 @@ package com.mozilla.secops.identity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.GcsUtil;
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,6 +124,24 @@ public class IdentityManager {
         if (alias.equals(username)) {
           return entry.getKey();
         }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Given supplied IP address, return matching named subnet
+   *
+   * @param address IP address for lookup
+   * @return Named subnet, or null if no match
+   */
+  public String lookupNamedSubnet(String address) {
+    if (namedSubnets == null || address == null) {
+      return null;
+    }
+    for (Map.Entry<String, String> namedSubnet : namedSubnets.entrySet()) {
+      if (CidrUtil.addressInCidr(address, namedSubnet.getValue())) {
+        return namedSubnet.getKey();
       }
     }
     return null;

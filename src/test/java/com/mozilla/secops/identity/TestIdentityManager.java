@@ -20,6 +20,8 @@ public class TestIdentityManager {
     assertEquals("testuser@mozilla.com", mgr.lookupAlias("testuser"));
     assertEquals("testuser@mozilla.com", mgr.lookupAlias("test user"));
     assertNull(mgr.lookupAlias("unknown"));
+    assertNull(mgr.lookupAlias(""));
+    assertNull(mgr.lookupAlias(null));
     assertEquals("testuser@mozilla.com", mgr.lookupAlias("testuser@mozilla.com"));
 
     assertNull(mgr.getIdentity("worf@mozilla.com"));
@@ -93,5 +95,21 @@ public class TestIdentityManager {
     String ret = m.get("123456789");
     assertNotNull(ret);
     assertEquals("riker-vacationing-on-risa", ret);
+  }
+
+  @Test
+  public void identityManagerNamedSubnetTest() throws Exception {
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
+    assertNotNull(mgr);
+    assertEquals("office", mgr.lookupNamedSubnet("fd00:0:0:0:0:0:0:1"));
+    assertNull(mgr.lookupNamedSubnet("fd01:0:0:0:0:0:0:1"));
+    assertNull(mgr.lookupNamedSubnet(null));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void identityManagerNamedSubnetInvalidTest() throws Exception {
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
+    assertNotNull(mgr);
+    mgr.lookupNamedSubnet("invalid");
   }
 }
