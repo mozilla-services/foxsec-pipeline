@@ -121,7 +121,7 @@ public class ParserIdentityTest {
     assertEquals("riker", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("wriker@mozilla.com", n.getSubjectUserIdentity());
-    assertEquals("admin_login", n.getObject());
+    assertEquals("duo_admin_login", n.getObject());
     assertNull(n.getSourceAddressCity());
     assertNull(n.getSourceAddressCountry());
   }

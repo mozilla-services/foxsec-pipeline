@@ -606,7 +606,7 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH));
     assertEquals("riker", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
-    assertEquals("admin_login", n.getObject());
+    assertEquals("duo_admin_login", n.getObject());
   }
 
   @Test

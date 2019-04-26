@@ -16,6 +16,8 @@ import org.joda.time.DateTime;
 public class Duopull extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  private static final String DUO_OBJECT = "duo";
+
   private static final String ADMIN_LOGIN_EVENT = "admin_login";
 
   private com.mozilla.secops.parser.models.duopull.Duopull duoPullData;
@@ -88,7 +90,7 @@ public class Duopull extends PayloadBase implements Serializable {
         Normalized n = e.getNormalized();
         n.addType(Normalized.Type.AUTH);
         n.setSubjectUser(user);
-        n.setObject(duoPullData.getEventAction());
+        n.setObject(String.format("duo_%s", duoPullData.getEventAction()));
         n.setSourceAddress(sourceAddress);
 
         // If we have an instance of IdentityManager in the parser, see if we can
