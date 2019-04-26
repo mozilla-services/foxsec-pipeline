@@ -2,6 +2,8 @@ package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.maxmind.geoip2.model.CityResponse;
+import com.mozilla.secops.identity.IdentityManager;
 import java.io.IOException;
 import java.io.Serializable;
 import org.joda.time.DateTime;
@@ -13,6 +15,8 @@ import org.joda.time.DateTime;
  */
 public class Duopull extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
+
+  private static final String ADMIN_LOGIN_EVENT = "admin_login";
 
   private com.mozilla.secops.parser.models.duopull.Duopull duoPullData;
 
@@ -73,6 +77,39 @@ public class Duopull extends PayloadBase implements Serializable {
       duoPullData = mapper.readValue(input, com.mozilla.secops.parser.models.duopull.Duopull.class);
       if (duoPullData.getEventTimestamp() != null) {
         e.setTimestamp(new DateTime(duoPullData.getEventTimestamp() * 1000));
+      }
+
+      // Create Normalized AUTH event for admin logins
+      if (duoPullData.getEventAction() != null
+          && duoPullData.getEventAction().equals(ADMIN_LOGIN_EVENT)) {
+        String user = duoPullData.getEventUsername();
+        String sourceAddress = duoPullData.getEventDescriptionIpAddress();
+
+        Normalized n = e.getNormalized();
+        n.addType(Normalized.Type.AUTH);
+        n.setSubjectUser(user);
+        n.setObject(duoPullData.getEventAction());
+        n.setSourceAddress(sourceAddress);
+
+        // If we have an instance of IdentityManager in the parser, see if we can
+        // also set the resolved subject identity
+        IdentityManager mgr = state.getParser().getIdentityManager();
+        if (mgr != null) {
+          String resId = mgr.lookupAlias(user);
+          if (resId != null) {
+            n.setSubjectUserIdentity(resId);
+          }
+        }
+
+        if (sourceAddress != null) {
+          CityResponse cr = state.getParser().geoIp(sourceAddress);
+          if (cr != null) {
+            String sourceAddressCity = cr.getCity().getName();
+            String sourceAddressCountry = cr.getCountry().getIsoCode();
+            n.setSourceAddressCity(sourceAddressCity);
+            n.setSourceAddressCountry(sourceAddressCountry);
+          }
+        }
       }
     } catch (IOException exc) {
       return;

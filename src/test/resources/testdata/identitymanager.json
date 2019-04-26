@@ -1,7 +1,7 @@
 {
     "identities": {
         "testuser@mozilla.com": {
-            "aliases": [ "testuser" ]
+            "aliases": [ "testuser", "test user" ]
         },
 
         "wcrusher@mozilla.com": {
