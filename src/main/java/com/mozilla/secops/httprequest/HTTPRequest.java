@@ -79,6 +79,8 @@ public class HTTPRequest implements Serializable {
     private final String[] stackdriverLabelFilters;
     private final String cidrExclusionList;
     private final String[] includeUrlHostRegex;
+    private final Boolean ignoreCp;
+    private final Boolean ignoreInternal;
     private ParserCfg cfg;
 
     /**
@@ -93,6 +95,8 @@ public class HTTPRequest implements Serializable {
       filterRequestPath = options.getFilterRequestPath();
       cidrExclusionList = options.getCidrExclusionList();
       includeUrlHostRegex = options.getIncludeUrlHostRegex();
+      ignoreCp = options.getIgnoreCloudProviderRequests();
+      ignoreInternal = options.getIgnoreInternalRequests();
       cfg = ParserCfg.fromInputOptions(options);
     }
 
@@ -149,10 +153,20 @@ public class HTTPRequest implements Serializable {
       PCollection<Event> parsed =
           col.apply(
               ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)));
+      int exclmask = 0;
       if (cidrExclusionList != null) {
+        exclmask |= CidrUtil.CIDRUTIL_FILE;
+      }
+      if (ignoreCp) {
+        exclmask |= CidrUtil.CIDRUTIL_CLOUDPROVIDERS;
+      }
+      if (ignoreInternal) {
+        exclmask |= CidrUtil.CIDRUTIL_INTERNAL;
+      }
+      if (exclmask != 0) {
         return parsed.apply(
             "cidr exclusion",
-            ParDo.of(CidrUtil.excludeNormalizedSourceAddresses(cidrExclusionList)));
+            ParDo.of(CidrUtil.excludeNormalizedSourceAddresses(exclmask, cidrExclusionList)));
       }
       return parsed;
     }
@@ -1189,6 +1203,18 @@ public class HTTPRequest implements Serializable {
     Long getSessionGapDurationMinutes();
 
     void setSessionGapDurationMinutes(Long value);
+
+    @Description("Ignore requests from whitelisted cloud providers (GCP, AWS)")
+    @Default.Boolean(true)
+    Boolean getIgnoreCloudProviderRequests();
+
+    void setIgnoreCloudProviderRequests(Boolean value);
+
+    @Description("Ignore requests from internal subnets (e.g., RFC1918)")
+    @Default.Boolean(true)
+    Boolean getIgnoreInternalRequests();
+
+    void setIgnoreInternalRequests(Boolean value);
   }
 
   private static void runHTTPRequest(HTTPRequestOptions options) {

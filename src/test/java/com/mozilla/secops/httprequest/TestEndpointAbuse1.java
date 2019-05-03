@@ -31,6 +31,7 @@ public class TestEndpointAbuse1 {
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setMonitoredResourceIndicator("test");
     ret.setSessionGapDurationMinutes(20L);
+    ret.setIgnoreInternalRequests(false); // Tests use internal subnets
     return ret;
   }
 

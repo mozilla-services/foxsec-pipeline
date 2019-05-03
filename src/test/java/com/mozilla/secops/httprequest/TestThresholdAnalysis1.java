@@ -33,6 +33,7 @@ public class TestThresholdAnalysis1 {
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setAnalysisThresholdModifier(1.0);
     ret.setMonitoredResourceIndicator("test");
+    ret.setIgnoreInternalRequests(false); // Tests use internal subnets
     return ret;
   }
 

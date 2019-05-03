@@ -22,6 +22,7 @@ public class TestFilter {
     HTTPRequest.HTTPRequestOptions ret =
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
+    ret.setIgnoreInternalRequests(false); // Tests use internal subnets
     return ret;
   }
 
