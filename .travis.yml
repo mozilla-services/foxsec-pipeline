@@ -1,5 +1,8 @@
 sudo: required
 
+env:
+  - DOCKER_HOST_NETWORK=1
+
 services:
   - docker
 
