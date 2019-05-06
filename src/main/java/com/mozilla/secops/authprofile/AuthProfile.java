@@ -488,8 +488,10 @@ public class AuthProfile implements Serializable {
         Alert a = AuthProfile.createBaseAlert(e);
         a.addMetadata("category", "state_analyze");
 
-        if (cidrGcp.contains(e.getNormalized().getSourceAddress())
-            && e.getPayloadType().equals(Payload.PayloadType.GCPAUDIT)) {
+        if ((e.getPayloadType().equals(Payload.PayloadType.GCPAUDIT))
+            && ((cidrGcp.contains(e.getNormalized().getSourceAddress()))
+                || (CidrUtil.resolvedCanonicalHostMatches(
+                    e.getNormalized().getSourceAddress(), ".*\\.google\\.com$")))) {
           // Skip AlertIO if it's a GCP event from GCP source, we can also skip the remainder of the
           // logic here
           a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
