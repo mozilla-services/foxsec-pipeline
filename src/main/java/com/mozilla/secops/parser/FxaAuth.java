@@ -44,6 +44,12 @@ public class FxaAuth extends PayloadBase implements Serializable {
       public String toString() {
         return "sendSmsConnectDevice";
       }
+    },
+    ACCOUNT_CREATE {
+      @Override
+      public String toString() {
+        return "accountCreate";
+      }
     }
   }
 
@@ -233,6 +239,20 @@ public class FxaAuth extends PayloadBase implements Serializable {
     return true;
   }
 
+  private Boolean discernAccountCreate() {
+    if (!(fxaAuthData.getPath().equals("/v1/account/create"))) {
+      return false;
+    }
+    if (!(fxaAuthData.getStatus().equals(200))) {
+      return false;
+    }
+    if (!(fxaAuthData.getMethod().toLowerCase().equals("post"))) {
+      return false;
+    }
+    eventSummary = EventSummary.ACCOUNT_CREATE;
+    return true;
+  }
+
   private void discernEventSummary() {
     if (fxaAuthData.getPath() == null) {
       return;
@@ -252,6 +272,8 @@ public class FxaAuth extends PayloadBase implements Serializable {
     } else if (discernSendRecoveryEmail()) {
       return;
     } else if (discernSendSmsConnectDevice()) {
+      return;
+    } else if (discernAccountCreate()) {
       return;
     }
   }

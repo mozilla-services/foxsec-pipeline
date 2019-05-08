@@ -1193,6 +1193,7 @@ public class ParserTest {
     assertNotNull(d);
 
     com.mozilla.secops.parser.models.fxaauth.FxaAuth f = d.getFxaAuthData();
+    assertEquals("sync", f.getService());
     assertEquals("Mozilla/5.0", f.getAgent());
     assertEquals("/v1/account/login", f.getPath());
     assertEquals(400, (int) f.getStatus());
