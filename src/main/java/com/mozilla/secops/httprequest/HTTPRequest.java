@@ -10,6 +10,7 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.Stats;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.alert.AlertSuppressorCount;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterPayload;
@@ -29,9 +30,6 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.state.StateSpec;
-import org.apache.beam.sdk.state.StateSpecs;
-import org.apache.beam.sdk.state.ValueState;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
@@ -813,65 +811,7 @@ public class HTTPRequest implements Serializable {
           //
           // See also https://issues.apache.org/jira/browse/BEAM-2507
           .apply("endpoint abuse analysis global", new GlobalTriggers<KV<String, Alert>>(5))
-          .apply(
-              "endpoint abuse alert suppression",
-              ParDo.of(
-                  new DoFn<KV<String, Alert>, Alert>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @StateId("counter")
-                    private final StateSpec<ValueState<EndpointAbuseState>> counterState =
-                        StateSpecs.value();
-
-                    @ProcessElement
-                    public void processElement(
-                        ProcessContext c,
-                        BoundedWindow w,
-                        @StateId("counter") ValueState<EndpointAbuseState> counter) {
-                      String remoteAddress = c.element().getKey();
-                      Alert a = c.element().getValue();
-
-                      // Prepare a new state value to use if we need to set it later
-                      EndpointAbuseState newepas = new EndpointAbuseState();
-                      newepas.remoteAddress = remoteAddress;
-                      newepas.timestamp = a.getTimestamp().toInstant();
-                      newepas.count = new Integer(a.getMetadataValue("count"));
-
-                      EndpointAbuseState epas = counter.read();
-
-                      if (epas == null) {
-                        // This is a new alert, set values in state and emit
-                        counter.write(newepas);
-                        c.output(a);
-                        return;
-                      }
-
-                      // Otherwise, we have state stored for this source. First, take a look
-                      // at the timestamp associated with the state and see if we should invalidate
-                      // it.
-                      //
-                      // XXX Currently this invalidates existing state after 10 minutes, this should
-                      // be configurable or handled via a timer.
-                      if ((newepas.timestamp.getMillis() - epas.timestamp.getMillis()) > 600000) {
-                        // The old state data is too old for consideration, so just update with the
-                        // new information and emit.
-                        counter.write(newepas);
-                        c.output(a);
-                        return;
-                      }
-
-                      // If we get here, we have state that should be considered. If the counter
-                      // value is the same we just ignore the extra event. Otherwise, update the
-                      // counter with the new value and update state.
-                      if (newepas.count.equals(epas.count)) {
-                        log.info(
-                            "suppressing additional alert for {} based on state", remoteAddress);
-                        return;
-                      }
-                      counter.write(newepas);
-                      c.output(a);
-                    }
-                  }));
+          .apply(ParDo.of(new AlertSuppressorCount(600L))); // 10 mins, should be configurable
     }
 
     private Boolean considerSupporting(String path) {

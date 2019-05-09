@@ -1,6 +1,7 @@
 package com.mozilla.secops.customs;
 
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertSuppressor;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.window.GlobalTriggers;
@@ -63,7 +64,7 @@ public class RateLimitAnalyzer extends PTransform<PCollection<Event>, PCollectio
             ParDo.of(new RateLimitCriterion(detectorName, cfg, eventView, monitoredResource))
                 .withSideInputs(eventView))
         .apply("suppression windows", new GlobalTriggers<KV<String, Alert>>(5))
-        .apply(ParDo.of(new RateLimitSuppressor(cfg)));
+        .apply(ParDo.of(new AlertSuppressor(cfg.getAlertSuppressionLength())));
   }
 
   /**

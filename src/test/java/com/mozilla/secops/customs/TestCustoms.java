@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
-import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.ParserTest;
 import java.util.Arrays;
@@ -64,13 +63,7 @@ public class TestCustoms {
     // Force use of event timestamp for testing purposes
     cfg.setTimestampOverride(true);
 
-    PCollection<Alert> alerts =
-        input
-            .apply(
-                ParDo.of(
-                    new ParserDoFn()
-                        .withConfiguration(ParserCfg.fromInputOptions(getTestOptions()))))
-            .apply(new Customs.Detectors(cfg, getTestOptions()));
+    PCollection<Alert> alerts = Customs.executePipeline(p, input, getTestOptions());
 
     PCollection<Long> count =
         alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
@@ -124,13 +117,8 @@ public class TestCustoms {
             .addElements(eb3[0], Arrays.copyOfRange(eb3, 1, eb3.length))
             .advanceWatermarkToInfinity();
 
-    PCollection<Alert> alerts =
-        p.apply(s)
-            .apply(
-                ParDo.of(
-                    new ParserDoFn()
-                        .withConfiguration(ParserCfg.fromInputOptions(getTestOptions()))))
-            .apply(new Customs.Detectors(cfg, getTestOptions()));
+    PCollection<String> input = p.apply(s);
+    PCollection<Alert> alerts = Customs.executePipeline(p, input, getTestOptions());
 
     PCollection<Long> count =
         alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
@@ -147,17 +135,49 @@ public class TestCustoms {
     // Force use of event timestamp for testing purposes
     cfg.setTimestampOverride(true);
 
-    PCollection<Alert> alerts =
-        input
-            .apply(
-                ParDo.of(
-                    new ParserDoFn()
-                        .withConfiguration(ParserCfg.fromInputOptions(getTestOptions()))))
-            .apply(new Customs.Detectors(cfg, getTestOptions()));
+    PCollection<Alert> alerts = Customs.executePipeline(p, input, getTestOptions());
 
     PCollection<Long> count =
         alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.thatSingleton(count).isEqualTo(6L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void accountCreationAbuseTest() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/customs_createacctabuse.txt", p);
+
+    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
+    // Force use of event timestamp for testing purposes
+    cfg.setTimestampOverride(true);
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableRateLimitDetectors(false);
+    options.setEnableAccountCreationAbuseDetector(true);
+    options.setXffAddressSelector("127.0.0.1/32");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, input, options);
+
+    PCollection<Long> count =
+        alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+    PAssert.thatSingleton(count).isEqualTo(1L);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                assertEquals("customs", a.getCategory());
+                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                assertEquals("3", a.getMetadataValue("count"));
+                assertEquals("account_creation_abuse", a.getMetadataValue("customs_category"));
+                assertEquals("test suspicious account creation, 216.160.83.56 3", a.getSummary());
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
 
     p.run().waitUntilFinish();
   }
