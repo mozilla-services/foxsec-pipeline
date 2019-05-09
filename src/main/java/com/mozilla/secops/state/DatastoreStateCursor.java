@@ -5,6 +5,7 @@ import com.google.cloud.datastore.DatastoreException;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.KeyFactory;
+import com.google.cloud.datastore.StringValue;
 import com.google.cloud.datastore.Transaction;
 
 /** Datastore state cursor implementation */
@@ -39,7 +40,8 @@ public class DatastoreStateCursor extends StateCursor {
       throw new StateException(exc.getMessage());
     }
     Entity.Builder eb = Entity.newBuilder(nk);
-    eb.set("state", v);
+    StringValue value = StringValue.newBuilder(v).setExcludeFromIndexes(true).build();
+    eb.set("state", value);
     Entity e = eb.build();
     try {
       tx.put(e);
