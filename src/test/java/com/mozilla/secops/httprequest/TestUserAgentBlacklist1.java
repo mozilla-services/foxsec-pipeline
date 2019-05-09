@@ -30,6 +30,7 @@ public class TestUserAgentBlacklist1 {
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setUserAgentBlacklistPath("/testdata/uablacklist1.txt");
     ret.setMonitoredResourceIndicator("test");
+    ret.setIgnoreInternalRequests(false); // Tests use internal subnets
     return ret;
   }
 

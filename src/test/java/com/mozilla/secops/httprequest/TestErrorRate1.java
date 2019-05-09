@@ -35,6 +35,7 @@ public class TestErrorRate1 {
     ret.setMonitoredResourceIndicator("test");
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setMaxClientErrorRate(30L);
+    ret.setIgnoreInternalRequests(false); // Tests use internal subnets
     return ret;
   }
 

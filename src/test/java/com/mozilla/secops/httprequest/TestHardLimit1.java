@@ -33,6 +33,7 @@ public class TestHardLimit1 {
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setHardLimitRequestCount(10L);
     ret.setMonitoredResourceIndicator("test");
+    ret.setIgnoreInternalRequests(false); // Tests use internal subnets
     return ret;
   }
 

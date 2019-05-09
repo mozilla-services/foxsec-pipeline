@@ -46,4 +46,24 @@ public class TestCidrUtil {
     assertFalse(CidrUtil.resolvedCanonicalHostMatches("127.0.0.1", ".*google.com$"));
     assertFalse(CidrUtil.resolvedCanonicalHostMatches("0.0.0.0", ".*"));
   }
+
+  public void cidrLoadAwsSubnetsTest() throws Exception {
+    CidrUtil c = new CidrUtil();
+    c.add("192.168.1.0/24");
+    assertFalse(c.contains("52.204.100.1"));
+    assertTrue(c.contains("192.168.1.25"));
+    c.loadAwsSubnets();
+    assertTrue(c.contains("52.204.100.1"));
+    assertTrue(c.contains("192.168.1.25"));
+  }
+
+  @Test
+  public void cidrLoadInternalSubnetsTest() throws Exception {
+    CidrUtil c = new CidrUtil();
+    assertFalse(c.contains("52.204.100.1"));
+    assertFalse(c.contains("192.168.1.25"));
+    c.loadInternalSubnets();
+    assertFalse(c.contains("52.204.100.1"));
+    assertTrue(c.contains("192.168.1.25"));
+  }
 }

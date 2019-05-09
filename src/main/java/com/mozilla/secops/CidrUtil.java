@@ -1,5 +1,8 @@
 package com.mozilla.secops;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 import java.io.IOException;
@@ -14,11 +17,25 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
 /** CIDR matching utilities */
 public class CidrUtil {
+  private final String AWS_IP_RANGES_URL = "https://ip-ranges.amazonaws.com/ip-ranges.json";
+
   private ArrayList<IpAddressMatcher> subnets;
+
+  /** Load exclusion list from path resource */
+  public static final int CIDRUTIL_FILE = 1;
+  /** Load exclusion list with whitelisted cloud providers */
+  public static final int CIDRUTIL_CLOUDPROVIDERS = 1 << 1;
+  /** Load exclusion list for internal/RFC1918 subnets */
+  public static final int CIDRUTIL_INTERNAL = 1 << 2;
 
   /**
    * Reverse DNS query of provided IP and comparison of result against pattern
@@ -69,26 +86,67 @@ public class CidrUtil {
   }
 
   /**
-   * Returns a DoFn that filters any events that have a normalized source address field that is
-   * within subnets loaded from path.
+   * Returns a DoFn that filters any events that have a normalized source address field that matches
+   * the specified criteria.
    *
-   * @param path Resource path or GCS URL to load subnets from
+   * <p>The flags parameter is a bitmask used to control the input criteria used in the filtering
+   * operation.
+   *
+   * <p>{@value #CIDRUTIL_FILE} can be specified in the flags mask to indicate subnets should be
+   * loaded from the specified path and any matching addresses should be filtered. If this bit is
+   * included path must be non-null.
+   *
+   * <p>{@value #CIDRUTIL_CLOUDPROVIDERS} can be specified to load known cloud provider public
+   * address ranges into the filter for exclusion.
+   *
+   * <p>{@value #CIDRUTIL_INTERNAL} can be specified to load internal (e.g., RFC1918) subnets into
+   * the filter.
+   *
+   * @param flags Option bitmask
+   * @param path Resource path or GCS URL to load subnets from for {@value #CIDRUTIL_FILE}
    * @return {@link DoFn}
    */
-  public static DoFn<Event, Event> excludeNormalizedSourceAddresses(String path) {
+  public static DoFn<Event, Event> excludeNormalizedSourceAddresses(int flags, String path) {
     return new DoFn<Event, Event>() {
       private static final long serialVersionUID = 1L;
 
       private final String resourcePath;
+      private final Boolean addCp;
+      private final Boolean addInternal;
       private CidrUtil cidrs;
 
       {
-        this.resourcePath = path;
+        if ((flags & CIDRUTIL_FILE) == CIDRUTIL_FILE) {
+          resourcePath = path;
+        } else {
+          resourcePath = null;
+        }
+        if ((flags & CIDRUTIL_CLOUDPROVIDERS) == CIDRUTIL_CLOUDPROVIDERS) {
+          addCp = true;
+        } else {
+          addCp = false;
+        }
+        if ((flags & CIDRUTIL_INTERNAL) == CIDRUTIL_INTERNAL) {
+          addInternal = true;
+        } else {
+          addInternal = false;
+        }
       }
 
       @Setup
       public void setup() throws IOException {
-        cidrs = new CidrUtil(resourcePath);
+        if (resourcePath != null) {
+          cidrs = new CidrUtil(resourcePath);
+        } else {
+          cidrs = new CidrUtil();
+        }
+        if (addCp) {
+          cidrs.loadGcpSubnets();
+          cidrs.loadAwsSubnets();
+        }
+        if (addInternal) {
+          cidrs.loadInternalSubnets();
+        }
       }
 
       @ProcessElement
@@ -183,6 +241,83 @@ public class CidrUtil {
     // If we were not able to successfully add any subnet, throw an exception.
     if (pcnt == 0) {
       throw new IOException("unable to process GCP subnet list from SPF records");
+    }
+  }
+
+  /** Populate CidrUtil instance with internal/RFC1918 subnets */
+  public void loadInternalSubnets() {
+    add("10.0.0.0/8");
+    add("192.168.0.0/16");
+    add("172.16.0.0/12");
+    add("127.0.0.1/32");
+    add("::1/128");
+  }
+
+  private static class AwsCidrPrefixEntry {
+    String ip4Prefix;
+    String ip6Prefix;
+    String region;
+    String service;
+
+    @JsonProperty("ip_prefix")
+    public String getIp4Prefix() {
+      return ip4Prefix;
+    }
+
+    @JsonProperty("ipv6_prefix")
+    public String getIp6Prefix() {
+      return ip6Prefix;
+    }
+
+    @JsonProperty("region")
+    public String getRegion() {
+      return region;
+    }
+
+    @JsonProperty("service")
+    public String getService() {
+      return service;
+    }
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  private static class AwsCidrResponse {
+    AwsCidrPrefixEntry[] ip4Prefixes;
+    AwsCidrPrefixEntry[] ip6Prefixes;
+
+    @JsonProperty("prefixes")
+    public AwsCidrPrefixEntry[] getIp4Prefixes() {
+      return ip4Prefixes;
+    }
+
+    @JsonProperty("ipv6_prefixes")
+    public AwsCidrPrefixEntry[] getIp6Prefixes() {
+      return ip6Prefixes;
+    }
+  }
+
+  /**
+   * Load known AWS subnets into instance of {@link CidrUtil}
+   *
+   * <p>Utilizes information at https://ip-ranges.amazonaws.com/ip-ranges.json
+   */
+  public void loadAwsSubnets() throws IOException {
+    HttpClient httpClient = HttpClientBuilder.create().build();
+    HttpGet get = new HttpGet(AWS_IP_RANGES_URL);
+    HttpResponse resp = httpClient.execute(get);
+    if (resp.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+      throw new IOException(
+          String.format(
+              "request failed with status code %d", resp.getStatusLine().getStatusCode()));
+    }
+    ObjectMapper mapper = new ObjectMapper();
+    AwsCidrResponse awscidrs =
+        mapper.readValue(resp.getEntity().getContent(), AwsCidrResponse.class);
+    for (AwsCidrPrefixEntry e : awscidrs.getIp4Prefixes()) {
+      add(e.getIp4Prefix());
+    }
+    for (AwsCidrPrefixEntry e : awscidrs.getIp6Prefixes()) {
+      add(e.getIp6Prefix());
     }
   }
 
