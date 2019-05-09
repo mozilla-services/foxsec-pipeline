@@ -38,4 +38,12 @@ public class TestCidrUtil {
     assertTrue(c.contains("192.168.1.25"));
     assertTrue(c.contains("35.232.216.1"));
   }
+
+  @Test
+  public void resolvedHostMatchesTest() throws Exception {
+    assertFalse(CidrUtil.resolvedCanonicalHostMatches("8.8.8.8", "test"));
+    assertTrue(CidrUtil.resolvedCanonicalHostMatches("8.8.8.8", ".*google.com$"));
+    assertFalse(CidrUtil.resolvedCanonicalHostMatches("127.0.0.1", ".*google.com$"));
+    assertFalse(CidrUtil.resolvedCanonicalHostMatches("0.0.0.0", ".*"));
+  }
 }

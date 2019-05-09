@@ -3,8 +3,11 @@ package com.mozilla.secops;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.regex.Pattern;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -16,6 +19,54 @@ import org.springframework.security.web.util.matcher.IpAddressMatcher;
 /** CIDR matching utilities */
 public class CidrUtil {
   private ArrayList<IpAddressMatcher> subnets;
+
+  /**
+   * Reverse DNS query of provided IP and comparison of result against pattern
+   *
+   * <p>A reverse DNS query for the supplied IP address is performed and the resulting hostname is
+   * compared against the regular expression in pattern. If it matches, the function returns true
+   * otherwise false.
+   *
+   * <p>This function attempts to also perform a forward DNS query on the hostname returned by the
+   * reverse DNS query and ensures the IP address matches what was supplied as a function argument.
+   *
+   * @param ip IP address
+   * @param pattern Regular expression to match against
+   * @return True if hostname matches pattern, false otherwise
+   */
+  public static Boolean resolvedCanonicalHostMatches(String ip, String pattern) {
+    Pattern p = Pattern.compile(pattern);
+
+    InetAddress addr;
+    try {
+      addr = InetAddress.getByName(ip);
+    } catch (UnknownHostException exc) {
+      return false;
+    }
+    String hn = addr.getCanonicalHostName();
+    if (hn.equals(ip)) {
+      // If the returned value is the original address, the lookup operation could not be
+      // completed, so just return false.
+      return false;
+    }
+
+    InetAddress[] rlist;
+    try {
+      rlist = InetAddress.getAllByName(hn);
+    } catch (UnknownHostException exc) {
+      return false;
+    }
+
+    for (InetAddress r : rlist) {
+      if (r.equals(addr)) {
+        if (p.matcher(hn).matches()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
 
   /**
    * Returns a DoFn that filters any events that have a normalized source address field that is
