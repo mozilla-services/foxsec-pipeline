@@ -8,6 +8,8 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generic statistics class
@@ -114,6 +116,8 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
   public static class StatsCombiner extends CombineFn<Long, StatsCombiner.State, StatsOutput> {
     private static final long serialVersionUID = 1L;
 
+    private final Logger log;
+
     private static class State implements Serializable {
       private static final long serialVersionUID = 1L;
 
@@ -179,6 +183,8 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       if (state.total > 0L) {
         ret.setMean((double) state.sum / state.total);
       }
+      log.info(
+          "total: {} sum: {} mean: {}", ret.getTotalElements(), ret.getTotalSum(), ret.getMean());
       return ret;
     }
 
@@ -187,7 +193,9 @@ public class Stats extends PTransform<PCollection<Long>, PCollection<Stats.Stats
       return new StatsOutput();
     }
 
-    StatsCombiner() {}
+    StatsCombiner() {
+      log = LoggerFactory.getLogger(StatsCombiner.class);
+    }
   }
 
   Stats() {}
