@@ -76,7 +76,7 @@ public class TestAuthProfile {
     ret.setDatastoreNamespace("testauthprofileanalyze");
     ret.setDatastoreKind("authprofile");
     ret.setIdentityManagerPath("/testdata/identitymanager.json");
-    ret.setMaxmindDbPath(ParserTest.TEST_GEOIP_DBPATH);
+    ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
     return ret;
   }
 

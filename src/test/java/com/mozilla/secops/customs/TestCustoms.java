@@ -28,7 +28,7 @@ public class TestCustoms {
   private Customs.CustomsOptions getTestOptions() {
     Customs.CustomsOptions ret = PipelineOptionsFactory.as(Customs.CustomsOptions.class);
     ret.setMonitoredResourceIndicator("test");
-    ret.setMaxmindDbPath(ParserTest.TEST_GEOIP_DBPATH);
+    ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
     return ret;
   }
 

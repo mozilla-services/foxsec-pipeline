@@ -25,7 +25,7 @@ public class TestCritObject {
         PipelineOptionsFactory.as(AuthProfile.AuthProfileOptions.class);
     ret.setIdentityManagerPath("/testdata/identitymanager.json");
     ret.setEnableStateAnalysis(false);
-    ret.setMaxmindDbPath(ParserTest.TEST_GEOIP_DBPATH);
+    ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
     ret.setCritObjects(new String[] {"^projects/test$"});
     ret.setCriticalNotificationEmail("section31@mozilla.com");
     ret.setIgnoreUserRegex(new String[] {"^riker@mozilla.com$"});

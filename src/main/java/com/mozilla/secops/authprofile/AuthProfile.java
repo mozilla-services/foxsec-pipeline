@@ -2,7 +2,7 @@ package com.mozilla.secops.authprofile;
 
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.CompositeInput;
-import com.mozilla.secops.InputOptions;
+import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
@@ -565,7 +565,7 @@ public class AuthProfile implements Serializable {
   }
 
   /** Runtime options for {@link AuthProfile} pipeline. */
-  public interface AuthProfileOptions extends PipelineOptions, InputOptions, OutputOptions {
+  public interface AuthProfileOptions extends PipelineOptions, IOOptions {
     @Description("Enable state analysis")
     @Default.Boolean(true)
     Boolean getEnableStateAnalysis();

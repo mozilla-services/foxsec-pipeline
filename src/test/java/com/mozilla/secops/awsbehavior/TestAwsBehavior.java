@@ -29,7 +29,7 @@ public class TestAwsBehavior {
         PipelineOptionsFactory.as(AwsBehavior.AwsBehaviorOptions.class);
     ret.setIdentityManagerPath("/testdata/identitymanager.json");
     ret.setCloudtrailMatcherManagerPath("/testdata/event_matchers.json");
-    ret.setMaxmindDbPath(ParserTest.TEST_GEOIP_DBPATH);
+    ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
     return ret;
   }
 

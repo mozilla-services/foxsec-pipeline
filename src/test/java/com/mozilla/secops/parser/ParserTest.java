@@ -18,7 +18,7 @@ public class ParserTest {
 
   private Parser getTestParser() {
     ParserCfg cfg = new ParserCfg();
-    cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
+    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
     return new Parser(cfg);
   }
 
@@ -1065,7 +1065,7 @@ public class ParserTest {
             + ":\"i-00000000000000000\",\"project_id\":\"test\",\"region\":\"aws:us-west-2c\"},\"type\":"
             + "\"aws_ec2_instance\"},\"timestamp\":\"2019-01-31T17:49:57Z\"}";
     ParserCfg cfg = new ParserCfg();
-    cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
+    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
     Parser p = new Parser(cfg);
     assertNotNull(p);
     Event e = p.parse(buf);
@@ -1097,7 +1097,7 @@ public class ParserTest {
             + " 3697 \"https://mozilla.org/item/10\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:"
             + "65.0) Gecko/20100101 Firefox/65.0\"";
     ParserCfg cfg = new ParserCfg();
-    cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
+    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
     Parser p = new Parser(cfg);
     assertNotNull(p);
     Event e = p.parse(buf);
@@ -1134,7 +1134,7 @@ public class ParserTest {
             + " 3697 \"https://mozilla.org/item/10\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:"
             + "65.0) Gecko/20100101 Firefox/65.0\"";
     ParserCfg cfg = new ParserCfg();
-    cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
+    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
     Parser p = new Parser(cfg);
     assertNotNull(p);
     Event e = p.parse(buf);
@@ -1180,7 +1180,7 @@ public class ParserTest {
             + ":\"test\",\"zone\":\"us-west-2c\"},\"type\":\"gce_instance\"},\"timestamp\":\"20"
             + "19-02-15T16:56:33.121592986Z\"}";
     ParserCfg cfg = new ParserCfg();
-    cfg.setMaxmindDbPath(TEST_GEOIP_DBPATH);
+    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
     ArrayList<String> xffa = new ArrayList<>();
     xffa.add("127.0.0.1/32");
     cfg.setXffAddressSelector(xffa);

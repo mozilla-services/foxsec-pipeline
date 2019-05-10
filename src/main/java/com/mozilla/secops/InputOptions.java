@@ -23,10 +23,15 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
 
   void setInputKinesis(String[] value);
 
-  @Description("Path to load Maxmind database; resource path, gcs path")
-  String getMaxmindDbPath();
+  @Description("Path to load Maxmind City database; resource path, gcs path")
+  String getMaxmindCityDbPath();
 
-  void setMaxmindDbPath(String value);
+  void setMaxmindCityDbPath(String value);
+
+  @Description("Path to load Maxmind ISP database; resource path, gcs path")
+  String getMaxmindIspDbPath();
+
+  void setMaxmindIspDbPath(String value);
 
   @Description("Enable XFF address selector; comma delimited list of trusted CIDR format subnets")
   String getXffAddressSelector();

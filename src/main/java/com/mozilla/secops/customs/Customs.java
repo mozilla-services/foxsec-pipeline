@@ -1,7 +1,7 @@
 package com.mozilla.secops.customs;
 
 import com.mozilla.secops.CompositeInput;
-import com.mozilla.secops.InputOptions;
+import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
@@ -262,7 +262,7 @@ public class Customs implements Serializable {
   }
 
   /** Runtime options for {@link Customs} pipeline. */
-  public interface CustomsOptions extends PipelineOptions, InputOptions, OutputOptions {
+  public interface CustomsOptions extends PipelineOptions, IOOptions {
     @Description("path to customs rate limit configuration; resource path")
     @Default.String("/customs/customsdefault.json")
     String getConfigurationResourcePath();
