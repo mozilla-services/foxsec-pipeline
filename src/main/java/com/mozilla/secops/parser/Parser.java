@@ -45,6 +45,26 @@ public class Parser {
   private IdentityManager idmanager;
 
   /**
+   * Given an interable of events, return the latest timestamp
+   *
+   * @param events Event list
+   * @return Latest timestamp in event set
+   */
+  public static DateTime getLatestTimestamp(Iterable<Event> events) {
+    DateTime max = null;
+    for (Event e : events) {
+      if (max == null) {
+        max = e.getTimestamp();
+      } else {
+        if (max.isBefore(e.getTimestamp())) {
+          max = e.getTimestamp();
+        }
+      }
+    }
+    return max;
+  }
+
+  /**
    * Parse syslog timestamp date time string and return a {@link DateTime} object.
    *
    * @param in Input string

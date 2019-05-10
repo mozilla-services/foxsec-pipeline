@@ -104,7 +104,12 @@ public class AlertSuppressor extends DoFn<KV<String, Alert>, Alert> {
     // Finally, apply additional suppression logic, in this class we always return true here but
     // this is intended to be overridden as required
     if (shouldSuppress(ss, newss)) {
-      log.info("suppressing additional alert for {}", key);
+      // If the new alert timestamp precisely matched the timestamp we had stored in state, don't
+      // log it as it's likely the same alert being emitted in a different window or in the on-time
+      // pane, but drop it either way
+      if (!newss.timestamp.equals(ss.timestamp)) {
+        log.info("suppressing additional alert for {}", key);
+      }
       return;
     }
     counter.write(newss);
