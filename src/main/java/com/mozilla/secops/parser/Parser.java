@@ -277,7 +277,7 @@ public class Parser {
     if (geoip == null) {
       return null;
     }
-    return geoip.lookup(ip);
+    return geoip.lookupCity(ip);
   }
 
   /**
@@ -369,8 +369,8 @@ public class Parser {
     googleJacksonFactory = new JacksonFactory();
 
     this.cfg = cfg;
-    if (cfg.getMaxmindDbPath() != null) {
-      geoip = new GeoIP(cfg.getMaxmindDbPath());
+    if (cfg.getMaxmindCityDbPath() != null || cfg.getMaxmindIspDbPath() != null) {
+      geoip = new GeoIP(cfg.getMaxmindCityDbPath(), cfg.getMaxmindIspDbPath());
     }
     payloads = new ArrayList<PayloadBase>();
     payloads.add(new GLB());

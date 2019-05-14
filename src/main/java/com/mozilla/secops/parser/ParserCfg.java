@@ -10,7 +10,8 @@ import java.util.Arrays;
 public class ParserCfg implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private String maxmindDbPath;
+  private String maxmindCityDbPath;
+  private String maxmindIspDbPath;
   private String fastMatcher;
   private ArrayList<String> xffAddressSelectorSubnets;
   private String idmanagerPath;
@@ -23,7 +24,8 @@ public class ParserCfg implements Serializable {
    */
   public static ParserCfg fromInputOptions(InputOptions options) {
     ParserCfg cfg = new ParserCfg();
-    cfg.setMaxmindDbPath(options.getMaxmindDbPath());
+    cfg.setMaxmindCityDbPath(options.getMaxmindCityDbPath());
+    cfg.setMaxmindIspDbPath(options.getMaxmindIspDbPath());
     cfg.setIdentityManagerPath(options.getIdentityManagerPath());
     cfg.setParserFastMatcher(options.getParserFastMatcher());
     if (options.getXffAddressSelector() != null) {
@@ -81,21 +83,39 @@ public class ParserCfg implements Serializable {
   }
 
   /**
-   * Get Maxmind database path
+   * Get Maxmind City database path
    *
    * @return String or null if not specified
    */
-  public String getMaxmindDbPath() {
-    return maxmindDbPath;
+  public String getMaxmindCityDbPath() {
+    return maxmindCityDbPath;
   }
 
   /**
-   * Set Maxmind database path
+   * Set Maxmind City database path
    *
    * @param path Path
    */
-  public void setMaxmindDbPath(String path) {
-    maxmindDbPath = path;
+  public void setMaxmindCityDbPath(String path) {
+    maxmindCityDbPath = path;
+  }
+
+  /**
+   * Get Maxmind ISP database path
+   *
+   * @return String or null if not specified
+   */
+  public String getMaxmindIspDbPath() {
+    return maxmindIspDbPath;
+  }
+
+  /**
+   * Set Maxmind ISP database path
+   *
+   * @param path Path
+   */
+  public void setMaxmindIspDbPath(String path) {
+    maxmindIspDbPath = path;
   }
 
   /**

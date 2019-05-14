@@ -1,7 +1,7 @@
 package com.mozilla.secops.awsbehavior;
 
 import com.mozilla.secops.CompositeInput;
-import com.mozilla.secops.InputOptions;
+import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
@@ -172,7 +172,7 @@ public class AwsBehavior implements Serializable {
   }
 
   /** Runtime options for {@link AwsBehavior} pipeline. */
-  public interface AwsBehaviorOptions extends PipelineOptions, InputOptions, OutputOptions {
+  public interface AwsBehaviorOptions extends PipelineOptions, IOOptions {
     @Description("Override default identity manager configuration; resource path")
     String getIdentityManagerPath();
 

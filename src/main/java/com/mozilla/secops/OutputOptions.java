@@ -126,6 +126,12 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
   @Hidden
   void setOutputAlertTemplates(String[] value);
 
+  @Description(
+      "Adds GeoIP metadata to all fields specified (multiple allowed); keys names for alert metadata with an IP address, for example: sourceaddress")
+  String[] getAlertAddressFields();
+
+  void setAlertAddressFields(String[] value);
+
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);
   }

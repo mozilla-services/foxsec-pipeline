@@ -4,7 +4,7 @@ import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.FileUtil;
-import com.mozilla.secops.InputOptions;
+import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.Stats;
@@ -1004,7 +1004,7 @@ public class HTTPRequest implements Serializable {
   }
 
   /** Runtime options for {@link HTTPRequest} pipeline. */
-  public interface HTTPRequestOptions extends PipelineOptions, InputOptions, OutputOptions {
+  public interface HTTPRequestOptions extends PipelineOptions, IOOptions {
     @Description("Enable threshold analysis")
     @Default.Boolean(false)
     Boolean getEnableThresholdAnalysis();
