@@ -55,13 +55,13 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
 
   @ProcessElement
   public void processElement(ProcessContext c) {
-    String key = c.element().getKey();
     Long count = c.element().getValue();
-    Map<String, Iterable<Event>> eventMap = c.sideInput(eventView);
-
     if (count < cfg.getThreshold()) {
       return;
     }
+
+    String key = c.element().getKey();
+    Map<String, Iterable<Event>> eventMap = c.sideInput(eventView);
 
     Alert alert = new Alert();
     alert.setSeverity(severity);
