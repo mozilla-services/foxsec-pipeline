@@ -38,6 +38,7 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
       String email = CustomsUtil.authGetEmail(e);
       String remoteAddress = CustomsUtil.authGetSourceAddress(e);
 
+      Boolean addrVariance = false;
       ArrayList<String> cand = new ArrayList<>();
       for (Event f : events) {
         String candEmail = CustomsUtil.authGetEmail(f);
@@ -46,8 +47,16 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
         }
         if (StringDistance.ratio(email.split("@")[0], candEmail.split("@")[0])
             <= ratioConsiderationUpper) {
+          if (!remoteAddress.equals(CustomsUtil.authGetSourceAddress(f))) {
+            addrVariance = true;
+          }
           cand.add(candEmail);
         }
+      }
+
+      // No variance in the source address we are done
+      if (!addrVariance) {
+        return;
       }
 
       if (cand.size() >= ratioAlertCount) {
