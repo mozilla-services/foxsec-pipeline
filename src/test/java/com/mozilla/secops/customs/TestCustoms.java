@@ -227,6 +227,7 @@ public class TestCustoms {
     Customs.CustomsOptions options = getTestOptions();
     options.setEnableRateLimitDetectors(false);
     options.setEnableAccountCreationAbuseDetector(true);
+    options.setAccountCreationSessionLimit(3);
     options.setXffAddressSelector("127.0.0.1/32");
 
     PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
