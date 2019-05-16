@@ -4,10 +4,8 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.Parser;
-import java.util.Map;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +13,12 @@ import org.slf4j.LoggerFactory;
  * Operate in conjunction with {@link RateLimitAnalyzer} to apply analysis criterion to incoming
  * event stream.
  */
-public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>> {
+public class RateLimitCriterion extends DoFn<KV<String, RateLimitCandidate>, KV<String, Alert>> {
   private static final long serialVersionUID = 1L;
 
   private final String detectorName;
   private final String monitoredResource;
   private final CustomsCfgEntry cfg;
-  private final PCollectionView<Map<String, Iterable<Event>>> eventView;
   private final Alert.AlertSeverity severity;
 
   private Logger log;
@@ -34,14 +31,9 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
    * @param eventView Event view to use for side input
    * @param monitoredResource Monitored resource name
    */
-  public RateLimitCriterion(
-      String detectorName,
-      CustomsCfgEntry cfg,
-      PCollectionView<Map<String, Iterable<Event>>> eventView,
-      String monitoredResource) {
+  public RateLimitCriterion(String detectorName, CustomsCfgEntry cfg, String monitoredResource) {
     this.detectorName = detectorName;
     this.cfg = cfg;
-    this.eventView = eventView;
     this.monitoredResource = monitoredResource;
 
     severity = Alert.AlertSeverity.INFORMATIONAL;
@@ -55,22 +47,18 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
 
   @ProcessElement
   public void processElement(ProcessContext c) {
-    String key = c.element().getKey();
-    Long count = c.element().getValue();
-    Map<String, Iterable<Event>> eventMap = c.sideInput(eventView);
+    RateLimitCandidate rlc = c.element().getValue();
 
+    int count = rlc.getEventCount();
     if (count < cfg.getThreshold()) {
       return;
     }
 
+    String key = c.element().getKey();
+    Iterable<Event> eventList = rlc.getEvents();
+
     Alert alert = new Alert();
     alert.setSeverity(severity);
-
-    Iterable<Event> eventList = eventMap.get(key);
-    if (eventList == null) {
-      log.info("dropping alert for {}, event list was empty", key);
-      return;
-    }
 
     // Set the alert timestamp based on the latest event timestamp
     alert.setTimestamp(Parser.getLatestTimestamp(eventList));
@@ -78,7 +66,7 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     alert.setCategory("customs");
     alert.addMetadata("customs_category", detectorName);
     alert.addMetadata("threshold", cfg.getThreshold().toString());
-    alert.addMetadata("count", count.toString());
+    alert.addMetadata("count", new Integer(count).toString());
     alert.setNotifyMergeKey(detectorName);
 
     String[] kelements = EventFilter.splitKey(key);

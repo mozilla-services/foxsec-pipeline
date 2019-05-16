@@ -14,7 +14,7 @@ import org.apache.beam.sdk.values.PCollection;
 public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV<String, Alert>> {
   private static final long serialVersionUID = 1L;
 
-  private int sessionCreationLimit = 3;
+  private final int sessionCreationLimit;
   private final String monitoredResource;
 
   /**

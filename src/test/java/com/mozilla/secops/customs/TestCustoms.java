@@ -227,6 +227,7 @@ public class TestCustoms {
     Customs.CustomsOptions options = getTestOptions();
     options.setEnableRateLimitDetectors(false);
     options.setEnableAccountCreationAbuseDetector(true);
+    options.setAccountCreationSessionLimit(3);
     options.setXffAddressSelector("127.0.0.1/32");
 
     PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
@@ -271,6 +272,9 @@ public class TestCustoms {
     options.setEnableRateLimitDetectors(false);
     options.setEnableAccountCreationAbuseDetector(true);
     options.setXffAddressSelector("127.0.0.1/32");
+    // Increase session creation limit here so we don't trip an alert for that as part of
+    // the same address component of the test
+    options.setAccountCreationSessionLimit(10);
 
     PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
 

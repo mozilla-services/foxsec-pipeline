@@ -6,11 +6,10 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
-import java.util.Map;
-import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.Repeatedly;
@@ -18,7 +17,6 @@ import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.joda.time.Duration;
 
 /** Generic rate limiting heuristic */
@@ -38,7 +36,7 @@ public class RateLimitAnalyzer extends PTransform<PCollection<Event>, PCollectio
       return null;
     }
 
-    PCollection<KV<String, Event>> winevents =
+    PCollection<KV<String, RateLimitCandidate>> winevents =
         input
             .apply(EventFilter.getKeyingTransform(filter))
             .apply(
@@ -53,16 +51,30 @@ public class RateLimitAnalyzer extends PTransform<PCollection<Event>, PCollectio
                                     AfterProcessingTime.pastFirstElementInPane()
                                         .plusDelayOf(Duration.standardSeconds(5L)))))
                     .withAllowedLateness(Duration.ZERO)
-                    .accumulatingFiredPanes());
+                    .accumulatingFiredPanes())
+            .apply("gbk", GroupByKey.<String, Event>create())
+            .apply(
+                "candidate conversion",
+                ParDo.of(
+                    new DoFn<KV<String, Iterable<Event>>, KV<String, RateLimitCandidate>>() {
+                      private static final long serialVersionUID = 1L;
 
-    PCollectionView<Map<String, Iterable<Event>>> eventView =
-        winevents.apply(View.<String, Event>asMultimap());
+                      @ProcessElement
+                      public void processElement(ProcessContext c) {
+                        RateLimitCandidate r = new RateLimitCandidate();
+                        for (Event e : c.element().getValue()) {
+                          r.addEvent(e);
+                        }
+                        // Don't emit entries with single events since we will never alert on them
+                        if (r.getEventCount() <= 1) {
+                          return;
+                        }
+                        c.output(KV.of(c.element().getKey(), r));
+                      }
+                    }));
 
     return winevents
-        .apply(Count.<String, Event>perKey())
-        .apply(
-            ParDo.of(new RateLimitCriterion(detectorName, cfg, eventView, monitoredResource))
-                .withSideInputs(eventView))
+        .apply(ParDo.of(new RateLimitCriterion(detectorName, cfg, monitoredResource)))
         .apply("suppression windows", new GlobalTriggers<KV<String, Alert>>(5))
         .apply(ParDo.of(new AlertSuppressor(cfg.getAlertSuppressionLength())));
   }
