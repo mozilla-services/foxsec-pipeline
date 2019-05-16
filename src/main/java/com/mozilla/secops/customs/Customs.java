@@ -7,14 +7,11 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertSuppressorCount;
 import com.mozilla.secops.parser.Event;
-import com.mozilla.secops.parser.FxaAuth;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
-import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
@@ -26,8 +23,10 @@ import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Repeatedly;
 import org.apache.beam.sdk.transforms.windowing.Sessions;
 import org.apache.beam.sdk.transforms.windowing.Window;
@@ -72,162 +71,107 @@ public class Customs implements Serializable {
 
     @Override
     public PCollection<Alert> expand(PCollection<Event> col) {
-      return col.apply(new RateLimitAnalyzer(detectorName, cfg, monitoredResource));
+      return col.apply(detectorName, new RateLimitAnalyzer(detectorName, cfg, monitoredResource));
     }
   }
 
-  /** Analyze input stream for account creation abuse using client keyed sessions */
+  /** Analyze input stream for account creation abuse */
   public static class AccountCreationAbuse
       extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
     private final String monitoredResource;
-    private final String limitService;
+    private final int sessionGapSeconds = 1800;
+    private final Integer sessionCreationLimit;
+    private final int distanceThreshold;
+    private final Double distanceRatio;
 
+    /**
+     * Initialize account creation abuse
+     *
+     * @param options Pipeline options
+     */
     public AccountCreationAbuse(CustomsOptions options) {
-      limitService = options.getAccountCreationServiceLimit();
       monitoredResource = options.getMonitoredResourceIndicator();
+      sessionCreationLimit = options.getAccountCreationSessionLimit();
+      distanceThreshold = options.getAccountCreationDistanceThreshold();
+      distanceRatio = options.getAccountCreationDistanceRatio();
     }
 
     @Override
     public PCollection<Alert> expand(PCollection<Event> col) {
-      // Key and window for IP sessions with accumulating panes
-      PCollection<KV<String, Event>> keyed =
-          col.apply(
-                  "key for sessions",
-                  ParDo.of(
-                      new DoFn<Event, KV<String, Event>>() {
-                        private static final long serialVersionUID = 1L;
+      PCollectionList<Alert> resultsList = PCollectionList.empty(col.getPipeline());
 
-                        @ProcessElement
-                        public void processElement(ProcessContext c) {
-                          Event e = c.element();
+      // Apply initial filtering and keying
+      PCollection<KV<String, Event>> keyed = CustomsAccountCreation.keyCreationEvents(col);
 
-                          if (!(e.getPayloadType().equals(Payload.PayloadType.FXAAUTH))) {
-                            return;
-                          }
-                          FxaAuth d = e.getPayload();
-                          if (d == null) {
-                            return;
-                          }
-                          String remoteAddress = d.getSourceAddress();
-                          if (remoteAddress == null) {
-                            return;
-                          }
+      // Window into sessions and apply limit detection
+      resultsList =
+          resultsList.and(
+              keyed
+                  .apply(
+                      "account creation sessions",
+                      Window.<KV<String, Event>>into(
+                              Sessions.withGapDuration(Duration.standardSeconds(sessionGapSeconds)))
+                          .triggering(
+                              Repeatedly.forever(
+                                  AfterWatermark.pastEndOfWindow()
+                                      .withEarlyFirings(
+                                          AfterProcessingTime.pastFirstElementInPane()
+                                              .plusDelayOf(Duration.standardMinutes(5)))))
+                          .withAllowedLateness(Duration.ZERO)
+                          .accumulatingFiredPanes())
+                  .apply("account creation gbk", GroupByKey.<String, Event>create())
+                  .apply(
+                      "account creation",
+                      ParDo.of(new CustomsAccountCreation(monitoredResource, sessionCreationLimit)))
+                  .apply(
+                      "account creation global windows", new GlobalTriggers<KV<String, Alert>>(5))
+                  .apply(
+                      "account creation suppression",
+                      ParDo.of(new AlertSuppressorCount(new Long(sessionGapSeconds)))));
 
-                          // Likely should be expanded to include other event types in
-                          // relation to creation, but for now just look at creation
-                          if (d.getEventSummary() == null) {
-                            return;
-                          }
-                          if (!d.getEventSummary().equals(FxaAuth.EventSummary.ACCOUNT_CREATE)) {
-                            return;
-                          }
+      // Alerts for distributed string distance
+      resultsList =
+          resultsList.and(
+              keyed
+                  .apply("account creation dist values", Values.<Event>create())
+                  .apply(
+                      "account creation dist key for domain",
+                      ParDo.of(
+                          new DoFn<Event, KV<String, Event>>() {
+                            private static final long serialVersionUID = 1L;
 
-                          c.output(KV.of(remoteAddress, e));
-                        }
-                      }))
-              .apply(
-                  "window for sessions",
-                  Window.<KV<String, Event>>into(
-                          Sessions.withGapDuration(Duration.standardMinutes(30)))
-                      .triggering(
-                          Repeatedly.forever(
-                              AfterWatermark.pastEndOfWindow()
-                                  .withEarlyFirings(
-                                      AfterProcessingTime.pastFirstElementInPane()
-                                          .plusDelayOf(Duration.standardMinutes(5)))))
-                      .withAllowedLateness(Duration.ZERO)
-                      .accumulatingFiredPanes());
+                            @ProcessElement
+                            public void processElement(ProcessContext c) {
+                              Event e = c.element();
 
-      // Group session keyed events
-      PCollection<KV<String, Iterable<Event>>> grouped =
-          keyed.apply(GroupByKey.<String, Event>create());
+                              String[] parts = CustomsUtil.authGetEmail(e).split("@");
+                              if (parts.length != 2) {
+                                return;
+                              }
+                              c.output(KV.of(parts[1], e));
+                            }
+                          }))
+                  .apply(
+                      "account creation dist fixed windows",
+                      Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(30))))
+                  .apply("account creation dist gbk", GroupByKey.<String, Event>create())
+                  .apply(
+                      "account creation dist",
+                      ParDo.of(
+                          new CustomsAccountCreationDist(
+                              monitoredResource, distanceThreshold, distanceRatio)))
+                  .apply("account creation dist global windows", new GlobalTriggers<Alert>(5)));
 
-      // Analyze per key
-      return grouped
-          .apply(
-              "analyze sessions",
-              ParDo.of(
-                  new DoFn<KV<String, Iterable<Event>>, KV<String, Alert>>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @ProcessElement
-                    public void processElement(ProcessContext c) {
-                      String remoteAddress = c.element().getKey();
-                      Iterable<Event> events = c.element().getValue();
-
-                      Boolean principalVariance = false;
-                      int createCount = 0;
-
-                      String seenPrincipal = null;
-                      ArrayList<String> seenCreateAccounts = new ArrayList<>();
-                      for (Event e : events) {
-                        FxaAuth d = e.getPayload();
-                        if (d == null) {
-                          continue;
-                        }
-                        com.mozilla.secops.parser.models.fxaauth.FxaAuth authData =
-                            d.getFxaAuthData();
-                        if (authData == null) {
-                          continue;
-                        }
-                        String email = authData.getEmail();
-                        if (email == null) {
-                          continue;
-                        }
-
-                        if (d.getEventSummary().equals(FxaAuth.EventSummary.ACCOUNT_CREATE)) {
-                          String service = authData.getService();
-                          if ((limitService == null)
-                              || ((service != null) && (service.equals(limitService)))) {
-                            seenCreateAccounts.add(email);
-                            createCount++;
-                          }
-                        }
-
-                        if (seenPrincipal == null) {
-                          seenPrincipal = email;
-                        } else {
-                          if (!(seenPrincipal.equals(email))) {
-                            principalVariance = true;
-                          }
-                        }
-                      }
-
-                      if ((createCount < 3) || (!principalVariance)) {
-                        return;
-                      }
-
-                      Alert alert = new Alert();
-                      alert.setCategory("customs");
-                      alert.setNotifyMergeKey("account_creation_abuse");
-                      alert.addMetadata("customs_category", "account_creation_abuse");
-                      alert.addMetadata("sourceaddress", remoteAddress);
-                      alert.addMetadata("count", Integer.toString(createCount));
-                      alert.setSummary(
-                          String.format(
-                              "%s suspicious account creation, %s %d",
-                              monitoredResource, remoteAddress, createCount));
-                      String buf = "";
-                      for (String s : seenCreateAccounts) {
-                        if (buf.isEmpty()) {
-                          buf = s;
-                        } else {
-                          buf += ", " + s;
-                        }
-                      }
-                      alert.addMetadata("accounts", buf);
-                      System.out.println(alert.toJSON());
-                      c.output(KV.of(remoteAddress, alert));
-                    }
-                  }))
-          .apply("global windows", new GlobalTriggers<KV<String, Alert>>(5))
-          .apply(ParDo.of(new AlertSuppressorCount(1801L)));
+      return resultsList.apply("account creation flatten output", Flatten.<Alert>pCollections());
     }
   }
 
-  /** High level transform for invoking all detector instances given the customs configuration */
+  /**
+   * High level transform for invoking all rate limit detector instances given the customs
+   * configuration
+   */
   public static class Detectors extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
@@ -235,7 +179,7 @@ public class Customs implements Serializable {
     private final String monitoredResource;
 
     /**
-     * Initialize new flattening detectors instance
+     * Initialize new flattening rate limit detectors instance
      *
      * @param cfg Customs configuration
      * @param options Pipeline options
@@ -256,7 +200,8 @@ public class Customs implements Serializable {
                 col.apply(
                     detectorName, new Detector(detectorName, detectorCfg, monitoredResource)));
       }
-      PCollection<Alert> ret = alerts.apply(Flatten.<Alert>pCollections());
+      PCollection<Alert> ret =
+          alerts.apply("flatten rate limit output", Flatten.<Alert>pCollections());
       return ret;
     }
   }
@@ -281,10 +226,23 @@ public class Customs implements Serializable {
 
     void setEnableAccountCreationAbuseDetector(Boolean value);
 
-    @Description("Limit account creation abuse detection to specified FxaAuth service indicator")
-    String getAccountCreationServiceLimit();
+    @Description("Account creation limit for session abuse analysis")
+    @Default.Integer(3)
+    Integer getAccountCreationSessionLimit();
 
-    void setAccountCreationServiceLimit(String value);
+    void setAccountCreationSessionLimit(Integer value);
+
+    @Description("Account creation threshold for string distance analysis")
+    @Default.Integer(3)
+    Integer getAccountCreationDistanceThreshold();
+
+    void setAccountCreationDistanceThreshold(Integer value);
+
+    @Description("Account creation string distance upper ratio")
+    @Default.Double(0.35)
+    Double getAccountCreationDistanceRatio();
+
+    void setAccountCreationDistanceRatio(Double value);
   }
 
   /**
@@ -307,23 +265,25 @@ public class Customs implements Serializable {
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
 
     if (options.getEnableRateLimitDetectors()) {
-      resultsList = resultsList.and(events.apply(new Detectors(cfg, options)));
+      resultsList =
+          resultsList.and(events.apply("rate limit detectors", new Detectors(cfg, options)));
     }
     if (options.getEnableAccountCreationAbuseDetector()) {
-      resultsList = resultsList.and(events.apply(new AccountCreationAbuse(options)));
+      resultsList =
+          resultsList.and(
+              events.apply("account creation abuse", new AccountCreationAbuse(options)));
     }
-    return resultsList.apply("flatten output", Flatten.<Alert>pCollections());
+    return resultsList.apply("flatten all output", Flatten.<Alert>pCollections());
   }
 
   private static void runCustoms(CustomsOptions options) throws IOException {
     Pipeline p = Pipeline.create(options);
 
     PCollection<String> input = p.apply("input", new CompositeInput(options));
-
     PCollection<Alert> alerts = executePipeline(p, input, options);
 
     alerts
-        .apply(ParDo.of(new AlertFormatter(options)))
+        .apply("alert formatter", ParDo.of(new AlertFormatter(options)))
         .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();

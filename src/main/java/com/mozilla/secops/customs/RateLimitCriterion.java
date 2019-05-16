@@ -3,11 +3,11 @@ package com.mozilla.secops.customs;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.Parser;
 import java.util.Map;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,18 +73,7 @@ public class RateLimitCriterion extends DoFn<KV<String, Long>, KV<String, Alert>
     }
 
     // Set the alert timestamp based on the latest event timestamp
-    DateTime max = null;
-    for (Event e : eventList) {
-      if (max == null) {
-        max = e.getTimestamp();
-        alert.setTimestamp(max);
-      } else {
-        if (max.isBefore(e.getTimestamp())) {
-          max = e.getTimestamp();
-          alert.setTimestamp(max);
-        }
-      }
-    }
+    alert.setTimestamp(Parser.getLatestTimestamp(eventList));
 
     alert.setCategory("customs");
     alert.addMetadata("customs_category", detectorName);
