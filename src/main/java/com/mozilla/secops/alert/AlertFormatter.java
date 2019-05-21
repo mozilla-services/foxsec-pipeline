@@ -50,9 +50,15 @@ public class AlertFormatter extends DoFn<Alert, String> {
             && a.getMetadataValue(addressField + "_as_org") == null) {
           IspResponse ir = geoip.lookupIsp(address);
           if (ir != null) {
-            a.addMetadata(addressField + "_isp", ir.getIsp());
-            a.addMetadata(addressField + "_asn", ir.getAutonomousSystemNumber().toString());
-            a.addMetadata(addressField + "_as_org", ir.getAutonomousSystemOrganization());
+            if (ir.getIsp() != null) {
+              a.addMetadata(addressField + "_isp", ir.getIsp());
+            }
+            if (ir.getAutonomousSystemNumber() != null) {
+              a.addMetadata(addressField + "_asn", ir.getAutonomousSystemNumber().toString());
+            }
+            if (ir.getAutonomousSystemOrganization() != null) {
+              a.addMetadata(addressField + "_as_org", ir.getAutonomousSystemOrganization());
+            }
           }
         }
       }
