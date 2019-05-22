@@ -610,6 +610,42 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseTaskcluster() {
+    String buf =
+        "{\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
+            + "\":{\"apiVersion\":\"v1\",\"clientId\":\"mozilla-auth0/ad|Mozilla-LDAP|riker/servi"
+            + "ces\",\"duration\":20159.035803,\"expires\":\"3017-02-01T05:00:00.000Z\",\"hasAuth"
+            + "ed\":true,\"method\":\"POST\",\"name\":\"claimWork\",\"public\":false,\"resource\""
+            + ":\"/v1/claim-work/test-provisioner/macos-workers\",\"satisfyingScopes\":[\"queue:c"
+            + "laim-work:test-provisioner/macos-workers\",\"queue:worker-id:test-worker-group/test\""
+            + "],\"sourceIp\":\"216.160.83.56\",\"statusCode\":200,\"v\":1},\"Hostname\":\"000000"
+            + "00-0000-0000-0000-000000000000\",\"Logger\":\"taskcluster.queue.api\",\"Pid\":37,\""
+            + "Severity\":5,\"Timestamp\":1558469098790000000,\"Type\":\"monitor.apiMethod\",\"ser"
+            + "viceContext\":{\"service\":\"queue\",\"version\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            + "aaaaaaaa\"}},\"labels\":{\"compute.googleapis.com/resource_name\":\"00000000-0000-0"
+            + "000-0000-000000000000\"},\"logName\":\"projects/logging/logs/queue\",\"receiveTimes"
+            + "tamp\":\"2019-05-21T20:05:00.544662934Z\",\"resource\":{\"labels\":{\"instance_id\""
+            + ":\"test\",\"project_id\":\"test-logging\",\"zone\":\"test\"},\"type\":\"gce_instanc"
+            + "e\"},\"severity\":\"NOTICE\",\"timestamp\":\"2019-05-21T20:04:58.790308Z\"}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.TASKCLUSTER, e.getPayloadType());
+    Taskcluster d = e.getPayload();
+    assertNotNull(d);
+    com.mozilla.secops.parser.models.taskcluster.Taskcluster data = d.getTaskclusterData();
+    assertNotNull(data);
+    assertEquals("mozilla-auth0/ad|Mozilla-LDAP|riker/services", data.getClientId());
+    assertEquals(20159.03, (double) data.getDuration(), 0.5);
+    assertEquals("3017-02-01T05:00:00.000Z", data.getExpires());
+    assertTrue(data.getHasAuthed());
+    assertEquals("216.160.83.56", data.getSourceIp());
+    assertEquals(200, (int) data.getStatusCode());
+  }
+
+  @Test
   public void testParseISO8601() throws Exception {
     String[] datelist = {
       "2018-09-28T18:55:12.469",
