@@ -643,6 +643,13 @@ public class ParserTest {
     assertTrue(data.getHasAuthed());
     assertEquals("216.160.83.56", data.getSourceIp());
     assertEquals(200, (int) data.getStatusCode());
+    assertEquals("riker", d.getResolvedSubject());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH_SESSION));
+    assertEquals("riker", n.getSubjectUser());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("taskcluster-/v1/claim-work/test-provisioner/macos-workers", n.getObject());
   }
 
   @Test

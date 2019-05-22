@@ -4,12 +4,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.regex.Pattern;
 
 /** Payload parser for Taskcluster log data */
 public class Taskcluster extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private com.mozilla.secops.parser.models.taskcluster.Taskcluster data;
+  private String subject;
+
+  private final Pattern emailPattern;
 
   @Override
   public Boolean matcher(String input, ParserState state) {
@@ -34,10 +38,79 @@ public class Taskcluster extends PayloadBase implements Serializable {
     return false;
   }
 
+  /**
+   * Get resolved subject ID
+   *
+   * @return Subject identifier, or null if unset
+   */
+  public String getResolvedSubject() {
+    return subject;
+  }
+
   @Override
   @JsonProperty("type")
   public Payload.PayloadType getType() {
     return Payload.PayloadType.TASKCLUSTER;
+  }
+
+  private Boolean processClientIdAuth0(String[] parts) {
+    if (!parts[0].equals("mozilla-auth0")) {
+      return false;
+    }
+    String[] ps = parts[1].split("\\|");
+    if (ps.length != 3) {
+      return false;
+    }
+    if (ps[0].equals("ad") && ps[1].equals("Mozilla-LDAP")) {
+      subject = ps[2];
+      return true;
+    }
+    return false;
+  }
+
+  private Boolean processClientIdEmail(String[] parts) {
+    if (!parts[0].equals("email")) {
+      return false;
+    }
+    if (emailPattern.matcher(parts[1]).matches()) {
+      subject = parts[1];
+      return true;
+    }
+    return false;
+  }
+
+  private Boolean processClientIdLdap(String[] parts) {
+    if (!parts[0].equals("mozilla-ldap")) {
+      return false;
+    }
+    if (emailPattern.matcher(parts[1]).matches()) {
+      subject = parts[1];
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Extract identity information from the client ID
+   *
+   * <p>See also https://docs.taskcluster.net/docs/manual/design/namespaces#clients
+   */
+  private void processClientId() {
+    String idcomp = data.getClientId();
+    if (idcomp == null) {
+      return;
+    }
+    String[] parts = idcomp.split("/");
+    if (parts.length < 2) {
+      return;
+    }
+    if (processClientIdEmail(parts)) {
+      return;
+    } else if (processClientIdAuth0(parts)) {
+      return;
+    } else {
+      processClientIdLdap(parts);
+    }
   }
 
   /**
@@ -60,7 +133,9 @@ public class Taskcluster extends PayloadBase implements Serializable {
   }
 
   /** Construct matcher object. */
-  public Taskcluster() {}
+  public Taskcluster() {
+    emailPattern = null;
+  }
 
   /**
    * Construct parser object.
@@ -70,11 +145,31 @@ public class Taskcluster extends PayloadBase implements Serializable {
    * @param state State
    */
   public Taskcluster(String input, Event e, ParserState state) {
+    emailPattern =
+        Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+
     ObjectMapper mapper = new ObjectMapper();
     try {
       data =
           mapper.readValue(input, com.mozilla.secops.parser.models.taskcluster.Taskcluster.class);
     } catch (IOException exc) {
+      return;
+    }
+
+    processClientId();
+
+    // If we were able to get a resolved subject ID, and we have a source IP address then add
+    // normalized session information to the event
+    if ((subject != null) && (data.getSourceIp() != null)) {
+      Normalized n = e.getNormalized();
+      n.addType(Normalized.Type.AUTH_SESSION);
+      n.setSubjectUser(subject);
+      n.setSourceAddress(data.getSourceIp());
+      if (data.getResource() != null) {
+        n.setObject("taskcluster-" + data.getResource());
+      } else {
+        n.setObject("taskcluster");
+      }
       return;
     }
   }
