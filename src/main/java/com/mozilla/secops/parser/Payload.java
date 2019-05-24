@@ -28,6 +28,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     FXAAUTH,
     /** Apache Combined */
     APACHE_COMBINED,
+    /** Taskcluster */
+    TASKCLUSTER,
     /** Raw */
     RAW
   }

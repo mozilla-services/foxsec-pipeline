@@ -15,7 +15,7 @@ import org.joda.time.DateTime;
  *
  * <p>See also https://wiki.mozilla.org/Firefox/Services/Logging#MozLog_application_logging_standard
  */
-@JsonIgnoreProperties({"EnvVersion"})
+@JsonIgnoreProperties({"EnvVersion", "serviceContext"})
 public class Mozlog implements Serializable {
   private static final long serialVersionUID = 1L;
 
