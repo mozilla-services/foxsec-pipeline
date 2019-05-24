@@ -391,16 +391,6 @@ public class AuthProfile implements Serializable {
       return ipAddr;
     }
 
-    private Boolean ignoreDuplicateSourceAddress(Event e, ArrayList<String> list) {
-      for (String s : list) {
-        if (s.equals(e.getNormalized().getSourceAddress())) {
-          return true;
-        }
-      }
-      list.add(e.getNormalized().getSourceAddress());
-      return false;
-    }
-
     private void addEscalationMetadata(Alert a, Identity identity) {
       if (identity.getEscalateTo() != null) {
         a.addMetadata("escalate_to", identity.getEscalateTo());
@@ -482,12 +472,24 @@ public class AuthProfile implements Serializable {
       String userIdentity = c.element().getKey();
       Identity identity = idmanager.getIdentity(userIdentity);
 
-      ArrayList<String> seenNewAddresses = new ArrayList<>();
       ArrayList<String> seenKnownAddresses = new ArrayList<>();
 
       for (Event e : events) {
         Alert a = AuthProfile.createBaseAlert(e);
         a.addMetadata("category", "state_analyze");
+
+        // If the address is already in the known address list, we have already processed it
+        // as known so just skip the state logic
+        Boolean isSeen = false;
+        for (String s : seenKnownAddresses) {
+          if (s.equals(e.getNormalized().getSourceAddress())) {
+            isSeen = true;
+            break;
+          }
+        }
+        if (isSeen) {
+          continue;
+        }
 
         if ((e.getPayloadType().equals(Payload.PayloadType.GCPAUDIT))
             && ((cidrGcp.contains(e.getNormalized().getSourceAddress()))
@@ -504,10 +506,9 @@ public class AuthProfile implements Serializable {
 
         if (identity == null) {
           a.addMetadata("identity_untracked", "true");
-          // New/known do not apply for untracked, but just use the new address ignore list here
-          if (ignoreDuplicateSourceAddress(e, seenNewAddresses)) {
-            continue;
-          }
+          // We do not keep state for untracked identities, but just use the known address
+          // list here to filter any duplicates that are part of this batch
+          seenKnownAddresses.add(e.getNormalized().getSourceAddress());
         } else {
           StateCursor cur = state.newCursor();
 
@@ -524,11 +525,6 @@ public class AuthProfile implements Serializable {
           }
 
           if (sm.updateEntry(entryKey)) {
-            // Check new address ignore list
-            if (ignoreDuplicateSourceAddress(e, seenNewAddresses)) {
-              cur.commit();
-              continue;
-            }
             // Address was new
             log.info(
                 "{}: escalating alert criteria for new source: {} {}",
@@ -538,11 +534,7 @@ public class AuthProfile implements Serializable {
             a.setSeverity(Alert.AlertSeverity.WARNING);
             addEscalationMetadata(a, identity);
           } else {
-            // Check known address ignore list
-            if (ignoreDuplicateSourceAddress(e, seenKnownAddresses)) {
-              cur.commit();
-              continue;
-            }
+            seenKnownAddresses.add(e.getNormalized().getSourceAddress());
 
             // Address was known
             log.info(
