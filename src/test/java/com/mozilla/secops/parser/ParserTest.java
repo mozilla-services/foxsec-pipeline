@@ -649,6 +649,8 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH_SESSION));
     assertEquals("riker", n.getSubjectUser());
     assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
     assertEquals("taskcluster-/v1/claim-work/test-provisioner/macos-workers", n.getObject());
   }
 
