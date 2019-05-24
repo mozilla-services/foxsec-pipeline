@@ -86,6 +86,9 @@ public class AuthProfile implements Serializable {
             "cluster-autoscaler",
             "system:unsecured",
             "system:serviceaccount:kube-system:endpoint-controller",
+            "system:serviceaccount:kube-system:daemon-set-controller",
+            "system:serviceaccount:kube-system:horizontal-pod-autoscaler",
+            "system:serviceaccount:kube-system:node-controller",
             "system:kube-proxy"
           };
       cfg = ParserCfg.fromInputOptions(options);
