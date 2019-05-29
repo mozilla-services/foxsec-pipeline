@@ -17,7 +17,6 @@ public class EventFilter implements Serializable {
   private ArrayList<EventFilterRule> keySelectors;
 
   private Boolean wantUTC;
-  private Boolean outputWithTimestamp;
   private Boolean matchAny; // If true, match on any input event
 
   private static final String keyChar = " ";
@@ -45,11 +44,7 @@ public class EventFilter implements Serializable {
                   public void processElement(ProcessContext c) {
                     Event e = c.element();
                     if (filter.matches(e)) {
-                      if (filter.getOutputWithTimestamp()) {
-                        c.outputWithTimestamp(e, e.getTimestamp().toInstant());
-                      } else {
-                        c.output(e);
-                      }
+                      c.output(e);
                     }
                   }
                 }));
@@ -172,26 +167,6 @@ public class EventFilter implements Serializable {
   }
 
   /**
-   * Set timestamp handling for event output
-   *
-   * @param flag If true use event timestamp on output
-   * @return EventFilter for chaining
-   */
-  public EventFilter setOutputWithTimestamp(Boolean flag) {
-    outputWithTimestamp = flag;
-    return this;
-  }
-
-  /**
-   * Get timestamp handling for event output
-   *
-   * @return True if events should be emitted with timestamp
-   */
-  public Boolean getOutputWithTimestamp() {
-    return outputWithTimestamp;
-  }
-
-  /**
    * Choose to ignore non-UTC timezone events
    *
    * @param flag If true, drop events with parsed timezones that are not UTC
@@ -222,6 +197,5 @@ public class EventFilter implements Serializable {
     keySelectors = new ArrayList<EventFilterRule>();
     wantUTC = false;
     matchAny = false;
-    outputWithTimestamp = false;
   }
 }

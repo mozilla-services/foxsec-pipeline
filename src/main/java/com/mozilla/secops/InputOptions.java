@@ -2,11 +2,18 @@ package com.mozilla.secops;
 
 import org.apache.beam.sdk.extensions.gcp.options.GcpOptions;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 
 /** Standard input options for pipelines. */
 public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions {
+  @Description("Use event timestamps on output in parser DoFn")
+  @Default.Boolean(false)
+  Boolean getUseEventTimestamp();
+
+  void setUseEventTimestamp(Boolean value);
+
   @Description("Read from Pubsub (multiple allowed); Pubsub topic")
   String[] getInputPubsub();
 
