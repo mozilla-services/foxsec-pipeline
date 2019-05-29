@@ -15,6 +15,7 @@ public class ParserCfg implements Serializable {
   private String fastMatcher;
   private ArrayList<String> xffAddressSelectorSubnets;
   private String idmanagerPath;
+  private Boolean useEventTimestamp;
 
   /**
    * Create a parser configuration from pipeline {@link InputOptions}
@@ -24,6 +25,7 @@ public class ParserCfg implements Serializable {
    */
   public static ParserCfg fromInputOptions(InputOptions options) {
     ParserCfg cfg = new ParserCfg();
+    cfg.setUseEventTimestamp(options.getUseEventTimestamp());
     cfg.setMaxmindCityDbPath(options.getMaxmindCityDbPath());
     cfg.setMaxmindIspDbPath(options.getMaxmindIspDbPath());
     cfg.setIdentityManagerPath(options.getIdentityManagerPath());
@@ -156,6 +158,29 @@ public class ParserCfg implements Serializable {
    */
   public void setParserFastMatcher(String fastMatcher) {
     this.fastMatcher = fastMatcher;
+  }
+
+  /**
+   * Get event timestamp emission setting
+   *
+   * @return Boolean
+   */
+  public Boolean getUseEventTimestamp() {
+    return useEventTimestamp;
+  }
+
+  /**
+   * Set event timestamp emission setting
+   *
+   * <p>This option is only applicable when the parser is being used within {@link ParserDoFn}.
+   *
+   * <p>If true, events will be output in the pipeline using the timestamp within the event rather
+   * than the default timestamp that would be assigned.
+   *
+   * @param useEventTimestamp Boolean
+   */
+  public void setUseEventTimestamp(Boolean useEventTimestamp) {
+    this.useEventTimestamp = useEventTimestamp;
   }
 
   /** Construct default parser configuration */

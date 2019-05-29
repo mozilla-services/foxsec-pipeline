@@ -78,7 +78,6 @@ class FilterCfg implements Serializable {
 
   private ArrayList<FilterRule> filterRules;
   private ArrayList<FilterRule> keyingRules;
-  private Boolean outputWithTimestamp;
 
   @JsonProperty("rules")
   public ArrayList<FilterRule> getFilterRules() {
@@ -88,11 +87,6 @@ class FilterCfg implements Serializable {
   @JsonProperty("keying")
   public ArrayList<FilterRule> getKeyingRules() {
     return keyingRules;
-  }
-
-  @JsonProperty("output_with_timestamp")
-  public Boolean getOutputWithTimestamp() {
-    return outputWithTimestamp;
   }
 
   /** Validate filter configuration */
@@ -106,7 +100,6 @@ class FilterCfg implements Serializable {
   }
 
   FilterCfg() {
-    outputWithTimestamp = false;
     filterRules = new ArrayList<FilterRule>();
     keyingRules = new ArrayList<FilterRule>();
   }
@@ -142,15 +135,6 @@ public class EventFilterCfg implements Serializable {
     for (FilterCfg cfg : filterCfgs.values()) {
       cfg.validate();
     }
-  }
-
-  /**
-   * Set to manually override timestamp emission setting in filter configuration
-   *
-   * @param flag True to emit with timestamps, false to disable
-   */
-  public void setTimestampOverride(Boolean flag) {
-    timestampOverride = flag;
   }
 
   @SuppressWarnings("unchecked")
@@ -206,12 +190,7 @@ public class EventFilterCfg implements Serializable {
       return null;
     }
 
-    EventFilter ret;
-    if (timestampOverride == null) {
-      ret = new EventFilter().setOutputWithTimestamp(cfg.getOutputWithTimestamp());
-    } else {
-      ret = new EventFilter().setOutputWithTimestamp(timestampOverride);
-    }
+    EventFilter ret = new EventFilter();
 
     for (FilterRule rule : cfg.getFilterRules()) {
       ret.addRule(processRuleConfiguration(rule));

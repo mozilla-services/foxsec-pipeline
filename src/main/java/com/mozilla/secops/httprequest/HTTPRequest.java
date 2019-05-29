@@ -71,7 +71,6 @@ public class HTTPRequest implements Serializable {
   public static class Parse extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
-    private final Boolean emitEventTimestamps;
     private final String stackdriverProjectFilter;
     private final String[] filterRequestPath;
     private final String[] stackdriverLabelFilters;
@@ -87,7 +86,6 @@ public class HTTPRequest implements Serializable {
      * @param options Pipeline options
      */
     public Parse(HTTPRequestOptions options) {
-      emitEventTimestamps = options.getUseEventTimestamp();
       stackdriverProjectFilter = options.getStackdriverProjectFilter();
       stackdriverLabelFilters = options.getStackdriverLabelFilters();
       filterRequestPath = options.getFilterRequestPath();
@@ -100,8 +98,7 @@ public class HTTPRequest implements Serializable {
 
     @Override
     public PCollection<Event> expand(PCollection<String> col) {
-      EventFilter filter =
-          new EventFilter().setWantUTC(true).setOutputWithTimestamp(emitEventTimestamps);
+      EventFilter filter = new EventFilter().setWantUTC(true);
       EventFilterRule rule = new EventFilterRule().wantNormalizedType(Normalized.Type.HTTP_REQUEST);
       if (stackdriverProjectFilter != null) {
         rule.wantStackdriverProject(stackdriverProjectFilter);
@@ -1126,12 +1123,6 @@ public class HTTPRequest implements Serializable {
     String[] getIncludeUrlHostRegex();
 
     void setIncludeUrlHostRegex(String[] value);
-
-    @Description("Use timestamp parsed from event instead of timestamp set in input transform")
-    @Default.Boolean(false)
-    Boolean getUseEventTimestamp();
-
-    void setUseEventTimestamp(Boolean value);
 
     @Description("Load CIDR exclusion list; resource path, gcs path")
     String getCidrExclusionList();

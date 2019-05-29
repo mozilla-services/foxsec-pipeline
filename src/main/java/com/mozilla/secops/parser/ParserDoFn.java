@@ -53,12 +53,12 @@ public class ParserDoFn extends DoFn<String, Event> {
         if (!(inlineFilter.matches(e))) {
           return;
         }
-        if (inlineFilter.getOutputWithTimestamp()) {
-          c.outputWithTimestamp(e, e.getTimestamp().toInstant());
-          return;
-        }
       }
-      c.output(e);
+      if ((cfg != null) && cfg.getUseEventTimestamp()) {
+        c.outputWithTimestamp(e, e.getTimestamp().toInstant());
+      } else {
+        c.output(e);
+      }
     }
   }
 }

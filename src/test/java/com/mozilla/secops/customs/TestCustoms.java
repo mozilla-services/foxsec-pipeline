@@ -28,6 +28,7 @@ public class TestCustoms {
 
   private Customs.CustomsOptions getTestOptions() {
     Customs.CustomsOptions ret = PipelineOptionsFactory.as(Customs.CustomsOptions.class);
+    ret.setUseEventTimestamp(true);
     ret.setMonitoredResourceIndicator("test");
     ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
     return ret;
@@ -72,8 +73,6 @@ public class TestCustoms {
             .advanceWatermarkToInfinity();
 
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-    // Force use of event timestamp for testing purposes
-    cfg.setTimestampOverride(true);
 
     // Should create two alerts given the sliding window configuration, however one will
     // be suppressed
@@ -115,8 +114,6 @@ public class TestCustoms {
   @Test
   public void rlLoginFailureSourceAddressTestStream() throws Exception {
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-    // Force use of event timestamp for testing purposes
-    cfg.setTimestampOverride(true);
 
     String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
     String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple2.txt");
@@ -160,8 +157,6 @@ public class TestCustoms {
   @Test
   public void rlLoginFailureSourceAddressSuppressTestStream() throws Exception {
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-    // Force use of event timestamp for testing purposes
-    cfg.setTimestampOverride(true);
 
     String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
     String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_suppress.txt");
@@ -194,8 +189,6 @@ public class TestCustoms {
             .advanceWatermarkToInfinity();
 
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-    // Force use of event timestamp for testing purposes
-    cfg.setTimestampOverride(true);
 
     PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), getTestOptions());
 
@@ -221,8 +214,6 @@ public class TestCustoms {
             .advanceWatermarkToInfinity();
 
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-    // Force use of event timestamp for testing purposes
-    cfg.setTimestampOverride(true);
 
     Customs.CustomsOptions options = getTestOptions();
     options.setEnableRateLimitDetectors(false);
@@ -265,8 +256,6 @@ public class TestCustoms {
             .advanceWatermarkToInfinity();
 
     CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-    // Force use of event timestamp for testing purposes
-    cfg.setTimestampOverride(true);
 
     Customs.CustomsOptions options = getTestOptions();
     options.setEnableRateLimitDetectors(false);
