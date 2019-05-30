@@ -57,7 +57,7 @@ public class TestCustoms {
             .apply(new GlobalTriggers<Event>(5))
             .apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.thatSingleton(count).isEqualTo(5L);
+    PAssert.thatSingleton(count).isEqualTo(10L);
 
     p.run().waitUntilFinish();
   }
@@ -90,8 +90,8 @@ public class TestCustoms {
                 assertEquals("customs", a.getCategory());
                 assertEquals("spock@mozilla.com", a.getMetadataValue("accountid"));
                 assertEquals("127.0.0.1", a.getMetadataValue("sourceaddress"));
-                assertEquals("5", a.getMetadataValue("count"));
-                assertEquals("3", a.getMetadataValue("threshold"));
+                assertEquals("10", a.getMetadataValue("count"));
+                assertEquals("10", a.getMetadataValue("threshold"));
                 assertEquals(
                     "rl_login_failure_sourceaddress_accountid",
                     a.getMetadataValue("customs_category"));
