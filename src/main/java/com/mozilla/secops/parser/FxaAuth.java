@@ -180,6 +180,19 @@ public class FxaAuth extends PayloadBase implements Serializable {
       return false;
     }
 
+    // Confirm we have specific errno values here related to credential verification
+    // before we classify the event, we don't want to include other types or errors
+    if (fxaAuthData.getErrno() == null) {
+      return false;
+    }
+
+    if ((fxaAuthData.getErrno()
+            != com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.INCORRECT_PASSWORD)
+        && (fxaAuthData.getErrno()
+            != com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.ACCOUNT_UNKNOWN)) {
+      return false;
+    }
+
     eventSummary = EventSummary.LOGIN_FAILURE;
     return true;
   }
