@@ -625,11 +625,38 @@ public class ParserTest {
     assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
     AmoDocker d = e.getPayload();
     assertNotNull(d);
+    assertEquals(AmoDocker.EventType.LOGIN, d.getEventType());
     assertEquals("username-00000000000000000000000000000000", d.getUid());
     assertEquals("216.160.83.56", d.getRemoteIp());
     assertEquals(
         "User (00000000: username-00000000000000000000000000000000) logged in successfully",
         d.getMsg());
+  }
+
+  @Test
+  public void testParseAmoDockerAmoNewVersion() {
+    String buf =
+        "{\"Timestamp\": 1559088455564122624, \"Type\": \"z.versions\", \"Logger\": \"http_"
+            + "app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2"
+            + ".0\", \"Severity\": 6, \"Pid\": 3379, \"Fields\": {\"uid\": \"devinoni_ral\""
+            + ", \"remoteAddressChain\": \"216.160.83.56\", \"msg\": \"New version: <Version:"
+            + " 1.0.0> (0000000) from <FileUpload: 00000000000000000000000000000000>\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.NEWVERSION, d.getEventType());
+    assertEquals("devinoni_ral", d.getUid());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+    assertEquals(
+        "New version: <Version: 1.0.0> (0000000) from <FileUpload: 00000000000000000000000000000000>",
+        d.getMsg());
+    assertEquals("1.0.0", d.getAddonVersion());
+    assertEquals("0000000", d.getAddonId());
   }
 
   @Test

@@ -16,10 +16,14 @@ public class AmoDocker extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private final String reLogin = "^User \\(\\d+: (\\S+)\\) logged in successfully";
+  private final String reNewVersion =
+      "^New version: <Version: ([^>]+)> \\((\\d+)\\) from <FileUpload: [^>]+>";
 
   public enum EventType {
     /** Login event */
-    LOGIN
+    LOGIN,
+    /** New addon upload */
+    NEWVERSION
   }
 
   private String msg;
@@ -27,6 +31,9 @@ public class AmoDocker extends PayloadBase implements Serializable {
   private String remoteIpCity;
   private String remoteIpCountry;
   private String uid;
+
+  private String addonVersion;
+  private String addonId;
 
   private EventType type;
 
@@ -46,6 +53,24 @@ public class AmoDocker extends PayloadBase implements Serializable {
    */
   public String getMsg() {
     return msg;
+  }
+
+  /**
+   * Get addon version
+   *
+   * @return String
+   */
+  public String getAddonVersion() {
+    return addonVersion;
+  }
+
+  /**
+   * Get addon ID
+   *
+   * @return String
+   */
+  public String getAddonId() {
+    return addonId;
   }
 
   /**
@@ -135,6 +160,14 @@ public class AmoDocker extends PayloadBase implements Serializable {
       uid = mat.group(1);
       // XXX We could set normalized authentication fields here, but for now just leave
       // this out.
+      return;
+    }
+
+    mat = Pattern.compile(reNewVersion).matcher(msg);
+    if (mat.matches()) {
+      type = EventType.NEWVERSION;
+      addonVersion = mat.group(1);
+      addonId = mat.group(2);
       return;
     }
   }
