@@ -402,6 +402,7 @@ public class Parser {
     payloads.add(new BmoAudit());
     payloads.add(new FxaAuth());
     payloads.add(new Taskcluster());
+    payloads.add(new AmoDocker());
     payloads.add(new OpenSSH());
     payloads.add(new Duopull());
     payloads.add(new Raw());

@@ -610,6 +610,29 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseAmoDockerAmoLogin() {
+    String buf =
+        "{\"Timestamp\": 1559088435038770944, \"Type\": \"z.users\", \"Logger\": \"http_app_"
+            + "addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2.0\","
+            + " \"Severity\": 7, \"Pid\": 3435, \"Fields\": {\"uid\": \"<anon>\", \"remoteAddressCh"
+            + "ain\": \"216.160.83.56\", \"msg\": \"User (00000000: username-0000000000000000000000000000"
+            + "0000) logged in successfully\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals("username-00000000000000000000000000000000", d.getUid());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+    assertEquals(
+        "User (00000000: username-00000000000000000000000000000000) logged in successfully",
+        d.getMsg());
+  }
+
+  @Test
   public void testParseTaskcluster() {
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
