@@ -57,7 +57,7 @@ public class TestCustoms {
             .apply(new GlobalTriggers<Event>(5))
             .apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.thatSingleton(count).isEqualTo(10L);
+    PAssert.thatSingleton(count).isEqualTo(12L);
 
     p.run().waitUntilFinish();
   }

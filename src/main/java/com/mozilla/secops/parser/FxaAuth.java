@@ -179,6 +179,7 @@ public class FxaAuth extends PayloadBase implements Serializable {
     if (!fxaAuthData.getStatus().equals(400)) {
       return false;
     }
+
     eventSummary = EventSummary.LOGIN_FAILURE;
     return true;
   }
@@ -263,6 +264,15 @@ public class FxaAuth extends PayloadBase implements Serializable {
     if (fxaAuthData.getStatus() == null) {
       return;
     }
+
+    // If the request was already blocked, don't classify the event since the request
+    // would already have been rejected.
+    if ((fxaAuthData.getErrno() != null)
+        && (fxaAuthData.getErrno()
+            == com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.REQUEST_BLOCKED)) {
+      return;
+    }
+
     if (discernLoginFailure()) {
       return;
     } else if (discernStatusCheck()) {
