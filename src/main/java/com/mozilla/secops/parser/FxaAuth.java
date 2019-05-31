@@ -221,6 +221,14 @@ public class FxaAuth extends PayloadBase implements Serializable {
     if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
       return false;
     }
+
+    if ((fxaAuthData.getErrno()
+            != com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.INVALID_VERIFICATION_CODE)
+        && (fxaAuthData.getErrno()
+            != com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.ACCOUNT_UNKNOWN)) {
+      return false;
+    }
+
     eventSummary = EventSummary.RECOVERY_EMAIL_VERIFY_CODE_FAILURE;
     return true;
   }
