@@ -1,11 +1,7 @@
 package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -28,20 +24,9 @@ public class Alert extends PayloadBase implements Serializable {
     return alert;
   }
 
-  private Map<String, Object> convertInput(String input) {
-    ObjectMapper mapper = new ObjectMapper();
-    Map<String, Object> fields = new HashMap<String, Object>();
-    try {
-      fields = mapper.readValue(input, new TypeReference<Map<String, Object>>() {});
-    } catch (IOException exc) {
-      return null;
-    }
-    return fields;
-  }
-
   @Override
   public Boolean matcher(String input, ParserState state) {
-    Map<String, Object> fields = convertInput(input);
+    Map<String, Object> fields = Parser.convertJsonToMap(input);
     if (fields == null) {
       return false;
     }

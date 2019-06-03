@@ -1,12 +1,8 @@
 package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxmind.geoip2.model.CityResponse;
-import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -88,17 +84,6 @@ public class BmoAudit extends PayloadBase implements Serializable {
     return userAgent;
   }
 
-  private Map<String, String> convertInput(String input) {
-    ObjectMapper mapper = new ObjectMapper();
-    Map<String, String> fields = new HashMap<String, String>();
-    try {
-      fields = mapper.readValue(input, new TypeReference<Map<String, String>>() {});
-    } catch (IOException exc) {
-      return null;
-    }
-    return fields;
-  }
-
   @Override
   public Boolean matcher(String input, ParserState state) {
     // There should always have an associated Mozlog hint
@@ -110,7 +95,7 @@ public class BmoAudit extends PayloadBase implements Serializable {
     if ((type == null) || (!(type.equals("audit")))) {
       return false;
     }
-    Map<String, String> fields = convertInput(input);
+    Map<String, String> fields = Parser.convertJsonToMap(input);
     if (fields == null) {
       return false;
     }
@@ -144,7 +129,7 @@ public class BmoAudit extends PayloadBase implements Serializable {
    * @param state State
    */
   public BmoAudit(String input, Event e, ParserState state) {
-    Map<String, String> fields = convertInput(input);
+    Map<String, String> fields = Parser.convertJsonToMap(input);
     if (fields == null) {
       return;
     }

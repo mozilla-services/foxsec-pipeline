@@ -1,6 +1,7 @@
 package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -14,6 +15,7 @@ import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.identity.IdentityManager;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.validator.routines.InetAddressValidator;
@@ -160,6 +162,23 @@ public class Parser {
       }
     }
     return parts[parts.length - 1];
+  }
+
+  /**
+   * Utility function to convert a JSON string into the desired map type
+   *
+   * @param input Input JSON
+   * @return HashMap
+   */
+  public static <T, U> HashMap<T, U> convertJsonToMap(String input) {
+    ObjectMapper mapper = new ObjectMapper();
+    HashMap<T, U> fields = new HashMap<T, U>();
+    try {
+      fields = mapper.readValue(input, new TypeReference<Map<T, U>>() {});
+    } catch (IOException exc) {
+      return null;
+    }
+    return fields;
   }
 
   /**
