@@ -660,6 +660,30 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseAmoGotProfile() {
+    String buf =
+        "{\"Timestamp\": 1559088104777733120, \"Type\": \"accounts.verify\", \"Logger\":"
+            + " \"http_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVers"
+            + "ion\": \"2.0\", \"Severity\": 7, \"Pid\": 3415, \"Fields\": {\"uid\": \"<anon>\""
+            + ", \"remoteAddressChain\": \"216.160.83.56\", \"msg\": \"Got profile {'email': 'riker@m"
+            + "ozilla.com', 'locale': 'en,en-US', 'amrValues': ['pwd', 'email'], 'twoFactorAuth"
+            + "entication': False, 'uid': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'avatar': 'https:"
+            + "//firefoxusercontent.com/00000000000000000000000000000000', 'avatarDefault': Tru"
+            + "e} [0000000000000000000000000000000000000000000000000000000000000000]\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.GOTPROFILE, d.getEventType());
+    assertEquals("riker@mozilla.com", d.getFxaEmail());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+  }
+
+  @Test
   public void testParseAlert() {
     String buf =
         "{\"severity\":\"info\",\"id\":\"3ddcbcff-f334-4189-953c-14a34a2cc030\",\"summa"
