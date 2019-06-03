@@ -32,6 +32,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     TASKCLUSTER,
     /** AMO Docker */
     AMODOCKER,
+    /** Alert */
+    ALERT,
     /** Raw */
     RAW
   }

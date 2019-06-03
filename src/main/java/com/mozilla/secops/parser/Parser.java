@@ -405,6 +405,7 @@ public class Parser {
     payloads.add(new AmoDocker());
     payloads.add(new OpenSSH());
     payloads.add(new Duopull());
+    payloads.add(new Alert());
     payloads.add(new Raw());
 
     if (cfg.getIdentityManagerPath() != null) {
