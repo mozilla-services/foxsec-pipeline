@@ -52,6 +52,9 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
 
                     if (e.getPayloadType().equals(Payload.PayloadType.AMODOCKER)) {
                       AmoDocker d = e.getPayload();
+                      if ((d == null) || (d.getEventType() == null)) {
+                        return;
+                      }
                       if ((d.getEventType().equals(AmoDocker.EventType.NEWVERSION))
                           || (d.getEventType().equals(AmoDocker.EventType.GOTPROFILE))) {
                         c.output(e);
