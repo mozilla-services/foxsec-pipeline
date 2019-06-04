@@ -30,6 +30,10 @@ public class Payload<T extends PayloadBase> implements Serializable {
     APACHE_COMBINED,
     /** Taskcluster */
     TASKCLUSTER,
+    /** AMO Docker */
+    AMODOCKER,
+    /** Alert */
+    ALERT,
     /** Raw */
     RAW
   }

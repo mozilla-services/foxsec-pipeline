@@ -610,6 +610,105 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseAmoDockerAmoLogin() {
+    String buf =
+        "{\"Timestamp\": 1559088435038770944, \"Type\": \"z.users\", \"Logger\": \"http_app_"
+            + "addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2.0\","
+            + " \"Severity\": 7, \"Pid\": 3435, \"Fields\": {\"uid\": \"<anon>\", \"remoteAddressCh"
+            + "ain\": \"216.160.83.56\", \"msg\": \"User (00000000: username-0000000000000000000000000000"
+            + "0000) logged in successfully\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.LOGIN, d.getEventType());
+    assertEquals("username-00000000000000000000000000000000", d.getUid());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+    assertEquals(
+        "User (00000000: username-00000000000000000000000000000000) logged in successfully",
+        d.getMsg());
+  }
+
+  @Test
+  public void testParseAmoDockerAmoNewVersion() {
+    String buf =
+        "{\"Timestamp\": 1559088455564122624, \"Type\": \"z.versions\", \"Logger\": \"http_"
+            + "app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2"
+            + ".0\", \"Severity\": 6, \"Pid\": 3379, \"Fields\": {\"uid\": \"devinoni_ral\""
+            + ", \"remoteAddressChain\": \"216.160.83.56\", \"msg\": \"New version: <Version:"
+            + " 1.0.0> (0000000) from <FileUpload: 00000000000000000000000000000000>\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.NEWVERSION, d.getEventType());
+    assertEquals("devinoni_ral", d.getUid());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+    assertEquals(
+        "New version: <Version: 1.0.0> (0000000) from <FileUpload: 00000000000000000000000000000000>",
+        d.getMsg());
+    assertEquals("1.0.0", d.getAddonVersion());
+    assertEquals("0000000", d.getAddonId());
+  }
+
+  @Test
+  public void testParseAmoGotProfile() {
+    String buf =
+        "{\"Timestamp\": 1559088104777733120, \"Type\": \"accounts.verify\", \"Logger\":"
+            + " \"http_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVers"
+            + "ion\": \"2.0\", \"Severity\": 7, \"Pid\": 3415, \"Fields\": {\"uid\": \"<anon>\""
+            + ", \"remoteAddressChain\": \"216.160.83.56\", \"msg\": \"Got profile {'email': 'riker@m"
+            + "ozilla.com', 'locale': 'en,en-US', 'amrValues': ['pwd', 'email'], 'twoFactorAuth"
+            + "entication': False, 'uid': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'avatar': 'https:"
+            + "//firefoxusercontent.com/00000000000000000000000000000000', 'avatarDefault': Tru"
+            + "e} [0000000000000000000000000000000000000000000000000000000000000000]\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.GOTPROFILE, d.getEventType());
+    assertEquals("riker@mozilla.com", d.getFxaEmail());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+  }
+
+  @Test
+  public void testParseAlert() {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"3ddcbcff-f334-4189-953c-14a34a2cc030\",\"summa"
+            + "ry\":\"test suspicious account creation, 216.160.83.56 3\",\"category\":\"cust"
+            + "oms\",\"timestamp\":\"1970-01-01T00:00:00.000Z\",\"metadata\":[{\"key\":\"noti"
+            + "fy_merge\",\"value\":\"account_creation_abuse\"},{\"key\":\"customs_category\""
+            + ",\"value\":\"account_creation_abuse\"},{\"key\":\"sourceaddress\",\"value\":\""
+            + "216.160.83.56\"},{\"key\":\"count\",\"value\":\"3\"},{\"key\":\"email\",\"valu"
+            + "e\":\"user@mail.com, user.1@mail.com, user.1.@mail.com\"}]}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.ALERT, e.getPayloadType());
+    Alert d = e.getPayload();
+    assertNotNull(d);
+    com.mozilla.secops.alert.Alert a = d.getAlert();
+    assertNotNull(a);
+    assertEquals("test suspicious account creation, 216.160.83.56 3", a.getSummary());
+    assertEquals("customs", a.getCategory());
+    assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+  }
+
+  @Test
   public void testParseTaskcluster() {
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
