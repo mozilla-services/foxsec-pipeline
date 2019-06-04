@@ -20,6 +20,8 @@ import org.apache.beam.sdk.values.PCollection;
 public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PCollection<Alert>> {
   private static final long serialVersionUID = 1L;
 
+  private final String monitoredResource;
+
   /** Used for state storage within the {@link FxaAccountAbuseNewVersion} transform */
   public static class FxaAccountAbuseNewVersionState implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -35,6 +37,15 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
       suspectedAccounts = new ArrayList<String>();
       suspectedAddress = new ArrayList<String>();
     }
+  }
+
+  /**
+   * Create new FxaAccountAbuseNewVersion
+   *
+   * @param monitoredResource Monitored resource indicator
+   */
+  public FxaAccountAbuseNewVersion(String monitoredResource) {
+    this.monitoredResource = monitoredResource;
   }
 
   @Override
@@ -146,6 +157,10 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                         alert.addMetadata("sourceaddress", d.getRemoteIp());
                         alert.addMetadata("email", d.getFxaEmail());
                         alert.addMetadata("amo_category", "fxa_account_abuse_new_version_login");
+                        alert.setSummary(
+                            String.format(
+                                "%s login to amo from suspected fraudulent account, %s from %s",
+                                monitoredResource, d.getFxaEmail(), d.getRemoteIp()));
                         c.output(alert);
                         return;
                       }
@@ -161,6 +176,11 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                       alert.addMetadata("amo_category", "fxa_account_abuse_new_version_submission");
                       alert.addMetadata("addon_id", d.getAddonId());
                       alert.addMetadata("addon_version", d.getAddonVersion());
+                      alert.setSummary(
+                          String.format(
+                              "%s addon submission from address associated with suspected "
+                                  + "fraudulent account, %s",
+                              monitoredResource, d.getRemoteIp()));
                       c.output(alert);
                     }
                   }

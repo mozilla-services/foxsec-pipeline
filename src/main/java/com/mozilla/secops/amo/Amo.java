@@ -43,7 +43,9 @@ public class Amo implements Serializable {
         input.apply(
             ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)));
 
-    return parsed.apply("fxa account abuse new version", new FxaAccountAbuseNewVersion());
+    return parsed.apply(
+        "fxa account abuse new version",
+        new FxaAccountAbuseNewVersion(options.getMonitoredResourceIndicator()));
   }
 
   /** Runtime options for {@link Customs} pipeline. */

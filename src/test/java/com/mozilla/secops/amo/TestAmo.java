@@ -61,10 +61,18 @@ public class TestAmo {
                     .equals("fxa_account_abuse_new_version_login")) {
                   assertEquals("fxa_account_abuse_new_version_login", a.getNotifyMergeKey());
                   assertEquals("kurn@mozilla.com", a.getMetadataValue("email"));
+                  assertEquals(
+                      "test login to amo from suspected fraudulent account, kurn@mozilla.com "
+                          + "from 216.160.83.56",
+                      a.getSummary());
                 } else {
                   assertEquals("fxa_account_abuse_new_version_submission", a.getNotifyMergeKey());
                   assertEquals("1.0.0", a.getMetadataValue("addon_version"));
                   assertEquals("0000001", a.getMetadataValue("addon_id"));
+                  assertEquals(
+                      "test addon submission from address associated with "
+                          + "suspected fraudulent account, 216.160.83.56",
+                      a.getSummary());
                 }
               }
               return null;
