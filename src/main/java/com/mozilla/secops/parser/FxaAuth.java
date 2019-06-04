@@ -179,6 +179,20 @@ public class FxaAuth extends PayloadBase implements Serializable {
     if (!fxaAuthData.getStatus().equals(400)) {
       return false;
     }
+
+    // Confirm we have specific errno values here related to credential verification
+    // before we classify the event, we don't want to include other types or errors
+    if (fxaAuthData.getErrno() == null) {
+      return false;
+    }
+
+    if ((fxaAuthData.getErrno()
+            != com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.INCORRECT_PASSWORD)
+        && (fxaAuthData.getErrno()
+            != com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.ACCOUNT_UNKNOWN)) {
+      return false;
+    }
+
     eventSummary = EventSummary.LOGIN_FAILURE;
     return true;
   }
@@ -207,6 +221,14 @@ public class FxaAuth extends PayloadBase implements Serializable {
     if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
       return false;
     }
+
+    if ((fxaAuthData.getErrno()
+            != com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.INVALID_VERIFICATION_CODE)
+        && (fxaAuthData.getErrno()
+            != com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.ACCOUNT_UNKNOWN)) {
+      return false;
+    }
+
     eventSummary = EventSummary.RECOVERY_EMAIL_VERIFY_CODE_FAILURE;
     return true;
   }
@@ -263,6 +285,15 @@ public class FxaAuth extends PayloadBase implements Serializable {
     if (fxaAuthData.getStatus() == null) {
       return;
     }
+
+    // If the request was already blocked, don't classify the event since the request
+    // would already have been rejected.
+    if ((fxaAuthData.getErrno() != null)
+        && (fxaAuthData.getErrno()
+            == com.mozilla.secops.parser.models.fxaauth.FxaAuth.Errno.REQUEST_BLOCKED)) {
+      return;
+    }
+
     if (discernLoginFailure()) {
       return;
     } else if (discernStatusCheck()) {
