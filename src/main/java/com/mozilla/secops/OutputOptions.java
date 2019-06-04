@@ -25,10 +25,10 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputBigQuery(String value);
 
-  @Description("Write output to Pubsub; Pubsub topic")
-  String getOutputPubsub();
+  @Description("Write output to Pubsub; Pubsub topic (multiple allowed)")
+  String[] getOutputPubsub();
 
-  void setOutputPubsub(String value);
+  void setOutputPubsub(String[] value);
 
   @Description("Write output to SQS; SQS queue specification (supports RuntimeSecrets)")
   String getOutputSqs();

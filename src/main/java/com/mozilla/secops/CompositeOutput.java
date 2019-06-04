@@ -35,7 +35,7 @@ public abstract class CompositeOutput {
   public static PTransform<PCollection<String>, PDone> withOptions(OutputOptions options) {
     final String outputFile = options.getOutputFile();
     final String outputBigQuery = options.getOutputBigQuery();
-    final String outputPubsub = options.getOutputPubsub();
+    final String[] outputPubsub = options.getOutputPubsub();
     final String outputSqs = options.getOutputSqs();
     final String outputIprepd = options.getOutputIprepd();
     final String outputIprepdApikey = options.getOutputIprepdApikey();
@@ -105,7 +105,9 @@ public abstract class CompositeOutput {
                   .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
         }
         if (outputPubsub != null) {
-          input.apply(PubsubIO.writeStrings().to(outputPubsub));
+          for (String s : outputPubsub) {
+            input.apply(PubsubIO.writeStrings().to(s));
+          }
         }
         if (outputIprepd != null) {
           input.apply(IprepdIO.write(outputIprepd, outputIprepdApikey, project));
