@@ -1,9 +1,12 @@
 package com.mozilla.secops.alert;
 
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.mozilla.secops.Violation;
@@ -81,6 +84,47 @@ public class TestAlert {
   }
 
   @Test
+  public void violationToJsonTest() throws Exception {
+    String expect =
+        "{\"object\":\"10.0.0.2\",\"type\":\"ip\",\"violation\":\"request_threshold_vio"
+            + "lation\",\"ip\":\"10.0.0.2\"}";
+    Violation v = new Violation("10.0.0.2", "ip", "request_threshold_violation");
+    assertEquals(expect, v.toJSON());
+
+    expect =
+        "{\"object\":\"riker@mozilla.com\",\"type\":\"email\",\"violation\":\"abusive_account_vio"
+            + "lation\"}";
+    v = new Violation("riker@mozilla.com", "email", "abusive_account_violation");
+    assertEquals(expect, v.toJSON());
+  }
+
+  @Test
+  public void alertToAbusiveAccountViolationTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"8c55dbae-b11f-467c-a2f6-5eafd8244cc1\",\"su"
+            + "mmary\":\"test suspicious account creation, 216.160.83.56 3\",\"category\":\""
+            + "customs\",\"timestamp\":\"1970-01-01T00:00:00.000Z\",\"metadata\":[{\"key\":"
+            + "\"notify_merge\",\"value\":\"account_creation_abuse\"},{\"key\":\"customs_ca"
+            + "tegory\",\"value\":\"account_creation_abuse\"},{\"key\":\"sourceaddress\",\""
+            + "value\":\"216.160.83.56\"},{\"key\":\"count\",\"value\":\"3\"},{\"key\":\"em"
+            + "ail\",\"value\":\"user@mail.com, user.1@mail.com, user.1.@mail.com\"}]}";
+    Alert a = Alert.fromJSON(buf);
+    assertEquals("customs", a.getCategory());
+    assertEquals("account_creation_abuse", a.getMetadataValue("customs_category"));
+    assertEquals("user@mail.com, user.1@mail.com, user.1.@mail.com", a.getMetadataValue("email"));
+    Violation[] v = Violation.fromAlert(a);
+    assertEquals(3, v.length);
+    for (Violation i : v) {
+      assertThat(
+          i.getObject(),
+          anyOf(equalTo("user@mail.com"), equalTo("user.1@mail.com"), equalTo("user.1.@mail.com")));
+      assertEquals("email", i.getType());
+      // Source address compatibility field should be null for non-IP type
+      assertNull(i.getSourceAddress());
+    }
+  }
+
+  @Test
   public void alertToErrorRateViolationTest() throws Exception {
     String buf =
         "{\"severity\":\"info\",\"id\":\"ebf9ec46-4137-416a-8b22-583f90a941ea\",\"category\""
@@ -96,10 +140,15 @@ public class TestAlert {
     assertEquals("10.0.0.2", a.getMetadataValue("sourceaddress"));
     assertEquals("30", a.getMetadataValue("error_threshold"));
     assertEquals("60", a.getMetadataValue("error_count"));
-    Violation v = Violation.fromAlert(a);
+    assertEquals(1, Violation.fromAlert(a).length);
+    Violation v = Violation.fromAlert(a)[0];
     assertNotNull(v);
     assertEquals("client_error_rate_violation", v.getViolation());
+    // Source address should contain the same value as the object for IP type violations
+    // to maintain compatibility with older versions of iprepd
     assertEquals("10.0.0.2", v.getSourceAddress());
+    assertEquals("ip", v.getType());
+    assertEquals("10.0.0.2", v.getObject());
   }
 
   @Test
@@ -116,10 +165,13 @@ public class TestAlert {
     assertEquals("httprequest", a.getCategory());
     assertEquals("useragent_blacklist", a.getMetadataValue("category"));
     assertEquals("10.0.0.2", a.getMetadataValue("sourceaddress"));
-    Violation v = Violation.fromAlert(a);
+    assertEquals(1, Violation.fromAlert(a).length);
+    Violation v = Violation.fromAlert(a)[0];
     assertNotNull(v);
     assertEquals("useragent_blacklist_violation", v.getViolation());
     assertEquals("10.0.0.2", v.getSourceAddress());
+    assertEquals("ip", v.getType());
+    assertEquals("10.0.0.2", v.getObject());
   }
 
   @Test
@@ -139,10 +191,13 @@ public class TestAlert {
     assertEquals("10.0.0.2", a.getMetadataValue("sourceaddress"));
     assertEquals("180.0", a.getMetadataValue("mean"));
     assertEquals("900", a.getMetadataValue("count"));
-    Violation v = Violation.fromAlert(a);
+    assertEquals(1, Violation.fromAlert(a).length);
+    Violation v = Violation.fromAlert(a)[0];
     assertNotNull(v);
     assertEquals("request_threshold_violation", v.getViolation());
     assertEquals("10.0.0.2", v.getSourceAddress());
+    assertEquals("ip", v.getType());
+    assertEquals("10.0.0.2", v.getObject());
   }
 
   @Test
@@ -163,10 +218,13 @@ public class TestAlert {
     assertEquals("/test", a.getMetadataValue("endpoint"));
     assertEquals("900", a.getMetadataValue("count"));
     assertNull(a.getMetadataValue("iprepd_suppress_recovery"));
-    Violation v = Violation.fromAlert(a);
+    assertEquals(1, Violation.fromAlert(a).length);
+    Violation v = Violation.fromAlert(a)[0];
     assertNotNull(v);
     assertEquals("endpoint_abuse_violation", v.getViolation());
     assertEquals("10.0.0.2", v.getSourceAddress());
+    assertEquals("ip", v.getType());
+    assertEquals("10.0.0.2", v.getObject());
     assertNull(v.getSuppressRecovery());
   }
 
@@ -189,10 +247,13 @@ public class TestAlert {
     assertEquals("/test", a.getMetadataValue("endpoint"));
     assertEquals("900", a.getMetadataValue("count"));
     assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
-    Violation v = Violation.fromAlert(a);
+    assertEquals(1, Violation.fromAlert(a).length);
+    Violation v = Violation.fromAlert(a)[0];
     assertNotNull(v);
     assertEquals("endpoint_abuse_violation", v.getViolation());
     assertEquals("10.0.0.2", v.getSourceAddress());
+    assertEquals("ip", v.getType());
+    assertEquals("10.0.0.2", v.getObject());
     assertEquals(60, (int) v.getSuppressRecovery());
   }
 
@@ -211,10 +272,13 @@ public class TestAlert {
     assertEquals("hard_limit", a.getMetadataValue("category"));
     assertEquals("10.0.0.2", a.getMetadataValue("sourceaddress"));
     assertEquals("900", a.getMetadataValue("count"));
-    Violation v = Violation.fromAlert(a);
+    assertEquals(1, Violation.fromAlert(a).length);
+    Violation v = Violation.fromAlert(a)[0];
     assertNotNull(v);
     assertEquals("hard_limit_violation", v.getViolation());
     assertEquals("10.0.0.2", v.getSourceAddress());
+    assertEquals("ip", v.getType());
+    assertEquals("10.0.0.2", v.getObject());
   }
 
   @Test
@@ -234,7 +298,7 @@ public class TestAlert {
     assertEquals("10.0.0.2", a.getMetadataValue("sourceaddress"));
     assertEquals("180.0", a.getMetadataValue("mean"));
     assertEquals("900", a.getMetadataValue("count"));
-    Violation v = Violation.fromAlert(a);
+    Violation[] v = Violation.fromAlert(a);
     assertNull(v);
   }
 

@@ -39,6 +39,7 @@ public abstract class CompositeOutput {
     final String outputSqs = options.getOutputSqs();
     final String outputIprepd = options.getOutputIprepd();
     final String outputIprepdApikey = options.getOutputIprepdApikey();
+    final Boolean outputIprepdLegacyMode = options.getOutputIprepdLegacyMode();
     final String project = options.getProject();
     Logger log = LoggerFactory.getLogger(CompositeOutput.class);
 
@@ -110,7 +111,9 @@ public abstract class CompositeOutput {
           }
         }
         if (outputIprepd != null) {
-          input.apply(IprepdIO.write(outputIprepd, outputIprepdApikey, project));
+          input.apply(
+              IprepdIO.write(outputIprepd, outputIprepdApikey, project)
+                  .setUseLegacySubmission(outputIprepdLegacyMode));
         }
         if (outputSqs != null) {
           input.apply(SqsIO.write(outputSqs, project));
