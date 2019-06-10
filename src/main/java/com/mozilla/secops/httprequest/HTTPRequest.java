@@ -319,7 +319,7 @@ public class HTTPRequest implements Serializable {
 
                       if (enableIprepdDatastoreWhitelist) {
                         try {
-                          IprepdIO.addMetadataIfWhitelisted(
+                          IprepdIO.addMetadataIfIpWhitelisted(
                               c.element().getKey(), a, iprepdDatastoreWhitelistProject);
                         } catch (IOException exc) {
                           return;
@@ -431,7 +431,7 @@ public class HTTPRequest implements Serializable {
 
                           try {
                             if (enableIprepdDatastoreWhitelist) {
-                              IprepdIO.addMetadataIfWhitelisted(
+                              IprepdIO.addMetadataIfIpWhitelisted(
                                   c.element().getKey(), a, iprepdDatastoreWhitelistProject);
                             }
                           } catch (IOException exc) {
@@ -568,7 +568,7 @@ public class HTTPRequest implements Serializable {
 
                           try {
                             if (enableIprepdDatastoreWhitelist) {
-                              IprepdIO.addMetadataIfWhitelisted(
+                              IprepdIO.addMetadataIfIpWhitelisted(
                                   saddr, a, iprepdDatastoreWhitelistProject);
                             }
                           } catch (IOException exc) {
@@ -777,7 +777,7 @@ public class HTTPRequest implements Serializable {
 
                       try {
                         if (enableIprepdDatastoreWhitelist) {
-                          IprepdIO.addMetadataIfWhitelisted(
+                          IprepdIO.addMetadataIfIpWhitelisted(
                               remoteAddress, a, iprepdDatastoreWhitelistProject);
                         }
                       } catch (IOException exc) {
@@ -975,7 +975,7 @@ public class HTTPRequest implements Serializable {
 
                             try {
                               if (enableIprepdDatastoreWhitelist) {
-                                IprepdIO.addMetadataIfWhitelisted(
+                                IprepdIO.addMetadataIfIpWhitelisted(
                                     c.element().getKey(), a, iprepdDatastoreWhitelistProject);
                               }
                             } catch (IOException exc) {

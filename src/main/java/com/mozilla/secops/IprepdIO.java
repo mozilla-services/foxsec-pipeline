@@ -61,6 +61,7 @@ public class IprepdIO {
     private final String url;
     private final String apiKey;
     private final String project;
+    private Boolean useLegacySubmission;
 
     /**
      * Create new iprepd write transform
@@ -73,6 +74,31 @@ public class IprepdIO {
       this.url = url;
       this.apiKey = apiKey;
       this.project = project;
+      useLegacySubmission = false;
+    }
+
+    /**
+     * Set legacy submission flag
+     *
+     * <p>If legacy submission mode is enabled, {@link IprepdIO} will post violation messages using
+     * the legacy IP submission endpoints. This is suitable for posting violation details associated
+     * with IP addresses, but will not work for submission for other types of objects.
+     *
+     * @param useLegacySubmission True to enable legacy submission
+     * @return this for chaining
+     */
+    public Write setUseLegacySubmission(Boolean useLegacySubmission) {
+      this.useLegacySubmission = useLegacySubmission;
+      return this;
+    }
+
+    /**
+     * Return legacy submission flag
+     *
+     * @return Boolean
+     */
+    public Boolean getUseLegacySubmission() {
+      return useLegacySubmission;
     }
 
     /**
@@ -117,6 +143,7 @@ public class IprepdIO {
     private HttpClient httpClient;
     private String apiKey;
     private String project;
+    private Boolean useLegacySubmission;
 
     public WriteFn(Write wTransform) {
       this.wTransform = wTransform;
@@ -133,6 +160,7 @@ public class IprepdIO {
       if (apiKey != null) {
         log.info("using iprepd apikey authentication");
       }
+      useLegacySubmission = wTransform.getUseLegacySubmission();
     }
 
     @ProcessElement
@@ -152,45 +180,60 @@ public class IprepdIO {
         return;
       }
 
-      Violation v = Violation.fromAlert(a);
-      if (v == null) {
-        // No need to log here, it's possible this is not an alert relavent for iprepd escalation
+      Violation[] vlist = Violation.fromAlert(a);
+      if (vlist == null) {
+        // No need to log here, it's possible this is not an alert relevant for iprepd escalation
         return;
       }
-      String sourceAddress = v.getSourceAddress();
+      for (Violation v : vlist) {
+        String object = v.getObject();
+        String type = v.getType();
 
-      String violationJSON = v.toJSON();
-      if (violationJSON == null) {
-        log.error("violation serialization failed");
-        return;
-      }
-
-      try {
-        String reqPath =
-            new StringJoiner("/")
-                .add(wTransform.getURL())
-                .add("violations")
-                .add(sourceAddress)
-                .toString();
-        StringEntity body = new StringEntity(violationJSON);
-
-        log.info("notify iprepd client {} violation {}", sourceAddress, v.getViolation());
-        HttpPut put = new HttpPut(reqPath);
-        put.addHeader("Content-Type", "application/json");
-        put.setEntity(body);
-
-        if (apiKey != null) {
-          put.addHeader("Authorization", "APIKey " + apiKey);
+        String violationJSON = v.toJSON();
+        if (violationJSON == null) {
+          log.error("violation serialization failed");
+          return;
         }
 
-        HttpResponse resp = httpClient.execute(put);
-        log.info(
-            "PUT to iprepd for {} returned with status code {}",
-            sourceAddress,
-            resp.getStatusLine().getStatusCode());
-        put.reset();
-      } catch (IOException exc) {
-        log.error(exc.getMessage());
+        try {
+          String reqPath;
+          if (useLegacySubmission) {
+            reqPath =
+                new StringJoiner("/")
+                    .add(wTransform.getURL())
+                    .add("violations")
+                    .add(object)
+                    .toString();
+          } else {
+            reqPath =
+                new StringJoiner("/")
+                    .add(wTransform.getURL())
+                    .add("violations")
+                    .add("type")
+                    .add(type)
+                    .add(object)
+                    .toString();
+          }
+          StringEntity body = new StringEntity(violationJSON);
+
+          log.info("notify iprepd object {} type {} violation {}", object, type, v.getViolation());
+          HttpPut put = new HttpPut(reqPath);
+          put.addHeader("Content-Type", "application/json");
+          put.setEntity(body);
+
+          if (apiKey != null) {
+            put.addHeader("Authorization", "APIKey " + apiKey);
+          }
+
+          HttpResponse resp = httpClient.execute(put);
+          log.info(
+              "PUT to iprepd for {} returned with status code {}",
+              object,
+              resp.getStatusLine().getStatusCode());
+          put.reset();
+        } catch (IOException exc) {
+          log.error(exc.getMessage());
+        }
       }
     }
   }
@@ -236,8 +279,8 @@ public class IprepdIO {
    * @param ip IP address to check
    * @param a Alert to add metadata to
    */
-  public static void addMetadataIfWhitelisted(String ip, Alert a) throws IOException {
-    addMetadataIfWhitelisted(ip, a, null);
+  public static void addMetadataIfIpWhitelisted(String ip, Alert a) throws IOException {
+    addMetadataIfIpWhitelisted(ip, a, null);
   }
 
   /**
@@ -250,7 +293,7 @@ public class IprepdIO {
    * @param a Alert to add metadata to
    * @param datastoreProject If Datastore is in another project, non-null project ID
    */
-  public static void addMetadataIfWhitelisted(String ip, Alert a, String datastoreProject)
+  public static void addMetadataIfIpWhitelisted(String ip, Alert a, String datastoreProject)
       throws IOException {
     if (ip == null || a == null) {
       return;

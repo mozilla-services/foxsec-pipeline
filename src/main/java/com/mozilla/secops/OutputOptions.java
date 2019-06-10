@@ -46,6 +46,12 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setOutputIprepdApikey(String value);
 
+  @Description("Use legacy IP submission endpoints with iprepd")
+  @Default.Boolean(false)
+  Boolean getOutputIprepdLegacyMode();
+
+  void setOutputIprepdLegacyMode(Boolean value);
+
   @Description("Enable use of whitelisted ips saved in datastore; requires deployment in GCP")
   @Default.Boolean(false)
   Boolean getOutputIprepdEnableDatastoreWhitelist();
