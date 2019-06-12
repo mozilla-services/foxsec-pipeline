@@ -416,6 +416,7 @@ public class Parser {
     payloads.add(new Nginx());
     payloads.add(new SecEvent());
     payloads.add(new Cloudtrail());
+    payloads.add(new CloudWatch());
     payloads.add(new GcpAudit());
     payloads.add(new ApacheCombined());
     payloads.add(new BmoAudit());

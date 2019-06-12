@@ -1,10 +1,6 @@
 package com.mozilla.secops.parser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import com.maxmind.geoip2.model.CityResponse;
 import java.util.ArrayList;
@@ -1061,6 +1057,32 @@ public class ParserTest {
     assertNotNull(ct);
     assertEquals("uhura", ct.getUser());
     assertEquals("127.0.0.1", ct.getSourceAddress());
+  }
+
+  @Test
+  public void testParseCloudWatchEvent() throws Exception {
+    String buf =
+        "{\"version\": \"0\", \"id\": \"c8c4daa7-a20c-2f03-0070-b7393dd542ad\","
+            + "\"detail-type\": \"GuardDuty Finding\", \"source\": \"aws.guardduty\", \"account\": \"123456789012\","
+            + " \"time\": \"1970-01-01T00:00:00Z\", \"region\": \"us-east-1\", \"resources\": [],"
+            + " \"detail\": {} }";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CLOUDWATCH, e.getPayloadType());
+
+    CloudWatch cw = e.getPayload();
+    assertNotNull(cw);
+
+    assertEquals("c8c4daa7-a20c-2f03-0070-b7393dd542ad", cw.getEvent().getId());
+    assertEquals("GuardDuty Finding", cw.getEvent().getDetailType());
+    assertEquals("aws.guardduty", cw.getEvent().getSource());
+    assertEquals("123456789012", cw.getEvent().getAccount());
+    assertEquals("1970-01-01T00:00:00Z", cw.getEvent().getTime());
+    assertEquals("us-east-1", cw.getEvent().getRegion());
   }
 
   @Test
