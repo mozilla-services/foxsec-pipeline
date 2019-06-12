@@ -1,5 +1,6 @@
 package com.mozilla.secops.customs;
 
+import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
@@ -16,16 +17,22 @@ public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV
 
   private final int sessionCreationLimit;
   private final String monitoredResource;
+  private final Integer accountAbuseSuppressRecovery;
 
   /**
    * Create new CustomsAccountCreation
    *
    * @param monitoredResource Monitored resource indicator
    * @param sessionCreationLimit Number of creations after which an alert is generated
+   * @param accountAbuseSuppressRecovery Optional recovery suppression metadata to add for IprepdIO
    */
-  public CustomsAccountCreation(String monitoredResource, Integer sessionCreationLimit) {
+  public CustomsAccountCreation(
+      String monitoredResource,
+      Integer sessionCreationLimit,
+      Integer accountAbuseSuppressRecovery) {
     this.monitoredResource = monitoredResource;
     this.sessionCreationLimit = sessionCreationLimit;
+    this.accountAbuseSuppressRecovery = accountAbuseSuppressRecovery;
   }
 
   /**
@@ -126,6 +133,9 @@ public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV
       }
     }
     alert.addMetadata("email", buf);
+    if (accountAbuseSuppressRecovery != null) {
+      IprepdIO.addMetadataSuppressRecovery(accountAbuseSuppressRecovery, alert);
+    }
     c.output(KV.of(remoteAddress, alert));
   }
 }

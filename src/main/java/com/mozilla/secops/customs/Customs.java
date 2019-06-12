@@ -85,6 +85,7 @@ public class Customs implements Serializable {
     private final Integer sessionCreationLimit;
     private final int distanceThreshold;
     private final Double distanceRatio;
+    private final Integer accountAbuseSuppressRecovery;
 
     /**
      * Initialize account creation abuse
@@ -96,6 +97,7 @@ public class Customs implements Serializable {
       sessionCreationLimit = options.getAccountCreationSessionLimit();
       distanceThreshold = options.getAccountCreationDistanceThreshold();
       distanceRatio = options.getAccountCreationDistanceRatio();
+      accountAbuseSuppressRecovery = options.getAccountAbuseSuppressRecovery();
     }
 
     @Override
@@ -124,7 +126,11 @@ public class Customs implements Serializable {
                   .apply("account creation gbk", GroupByKey.<String, Event>create())
                   .apply(
                       "account creation",
-                      ParDo.of(new CustomsAccountCreation(monitoredResource, sessionCreationLimit)))
+                      ParDo.of(
+                          new CustomsAccountCreation(
+                              monitoredResource,
+                              sessionCreationLimit,
+                              accountAbuseSuppressRecovery)))
                   .apply(
                       "account creation global windows", new GlobalTriggers<KV<String, Alert>>(5))
                   .apply(
@@ -243,6 +249,12 @@ public class Customs implements Serializable {
     Double getAccountCreationDistanceRatio();
 
     void setAccountCreationDistanceRatio(Double value);
+
+    @Description(
+        "For account abuse, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getAccountAbuseSuppressRecovery();
+
+    void setAccountAbuseSuppressRecovery(Integer value);
   }
 
   /**
