@@ -2,6 +2,7 @@ package com.mozilla.secops.parser.models.aws.cloudwatch;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -23,7 +24,7 @@ public class CloudWatchEvent implements Serializable {
   private String time;
   private String region;
   private ArrayList<String> resources;
-  private Object detail;
+  private JsonNode detail;
 
   /**
    * Get event message version
@@ -100,7 +101,7 @@ public class CloudWatchEvent implements Serializable {
   /**
    * Get event resources, typically in the form of ARNs
    *
-   * @return String[]
+   * @return ArrayList<String>
    */
   @JsonProperty("resources")
   public ArrayList<String> getResources() {
@@ -113,10 +114,10 @@ public class CloudWatchEvent implements Serializable {
    * <p>This is a JSON format payload which must be parsed further in accordance to the "source" or
    * "detail-type" of the CloudWatch Event
    *
-   * @return Object
+   * @return JsonNode
    */
   @JsonProperty("detail")
-  public Object getDetail() {
+  public JsonNode getDetail() {
     return detail;
   }
 
