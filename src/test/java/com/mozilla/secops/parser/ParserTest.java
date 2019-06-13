@@ -1062,34 +1062,6 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseCloudWatchEvent() throws Exception {
-    String buf =
-        "{\"version\": \"0\", \"id\": \"c8c4daa7-a20c-2f03-0070-b7393dd542ad\","
-            + "\"detail-type\": \"GuardDuty Finding\", \"source\": \"aws.guardduty\", \"account\": \"123456789012\","
-            + " \"time\": \"1970-01-01T00:00:00Z\", \"region\": \"us-east-1\", \"resources\": [],"
-            + " \"detail\": {} }";
-
-    Parser p = getTestParser();
-    assertNotNull(p);
-
-    Event e = p.parse(buf);
-    assertNotNull(e);
-    assertEquals(Payload.PayloadType.CLOUDWATCH, e.getPayloadType());
-
-    CloudWatch cw = e.getPayload();
-    assertNotNull(cw);
-
-    CloudWatchEvent cwEvent = cw.getEvent();
-
-    assertEquals("c8c4daa7-a20c-2f03-0070-b7393dd542ad", cwEvent.getId());
-    assertEquals("GuardDuty Finding", cwEvent.getDetailType());
-    assertEquals("aws.guardduty", cwEvent.getSource());
-    assertEquals("123456789012", cwEvent.getAccount());
-    assertEquals("1970-01-01T00:00:00Z", cwEvent.getTime());
-    assertEquals("us-east-1", cwEvent.getRegion());
-  }
-
-  @Test
   public void testParseGuardDutyFinding() throws Exception {
     String buf =
         "{\"version\": \"0\", \"id\": \"c8c4daa7-a20c-2f03-0070-b7393dd542ad\","
@@ -1121,12 +1093,12 @@ public class ParserTest {
 
     Event e = p.parse(buf);
     assertNotNull(e);
-    assertEquals(Payload.PayloadType.CLOUDWATCH, e.getPayloadType());
+    assertEquals(Payload.PayloadType.GUARDDUTY, e.getPayloadType());
 
-    CloudWatch cw = e.getPayload();
-    assertNotNull(cw);
+    GuardDuty gde = e.getPayload();
+    assertNotNull(gde);
 
-    GuardDutyFinding gdf = cw.getGuardDutyFinding();
+    GuardDutyFinding gdf = gde.getFinding();
     assertNotNull(gdf);
 
     assertEquals("2.0", gdf.getSchemaVersion());
@@ -1149,6 +1121,51 @@ public class ParserTest {
     assertEquals(
         "APIs commonly used to discover the users, groups, policies and permissions in an account, was invoked by IAM principal GeneratedFindingUserName under unusual circumstances. Such activity is not typically seen from this principal.",
         gdf.getDescription());
+  }
+
+  @Test
+  public void testParseCloudWatchEventWrapper() throws Exception {
+    String buf =
+        "{\"version\": \"0\", \"id\": \"c8c4daa7-a20c-2f03-0070-b7393dd542ad\","
+            + "\"detail-type\": \"GuardDuty Finding\", \"source\": \"aws.guardduty\", \"account\": \"123456789012\","
+            + " \"time\": \"1970-01-01T00:00:00Z\", \"region\": \"us-west-2\", \"resources\": [],"
+            + " \"detail\": "
+            + "{\"schemaVersion\":\"2.0\",\"accountId\":\"123456789012\",\"region\":\"us-west-2\","
+            + "\"partition\":\"aws\",\"id\":\"591f8d2ed2edaf6a96ad486b59ed8428\","
+            + "\"arn\":\"arn:aws:guardduty:us-west-2:123456789012:detector/cab59ed1d9760dbaa8930337156d4547/finding/56b59ed2edaf6a84291f8d2ed96ad488\","
+            + "\"type\":\"Recon:IAMUser/UserPermissions\","
+            + "\"resource\":{\"resourceType\":\"AccessKey\",\"accessKeyDetails\":{\"accessKeyId\":\"GeneratedFindingAccessKeyId\","
+            + "\"principalId\":\"GeneratedFindingPrincipalId\",\"userType\":\"IAMUser\",\"userName\":\"GeneratedFindingUserName\"}},"
+            + "\"service\":{\"serviceName\":\"guardduty\",\"detectorId\":\"cab59ed1d9760dbaa8930337156d4547\","
+            + "\"action\":{\"actionType\":\"AWS_API_CALL\",\"awsApiCallAction\":{\"api\":\"GeneratedFindingAPIName\","
+            + "\"serviceName\":\"GeneratedFindingAPIServiceName\",\"callerType\":\"Remote IP\",\"remoteIpDetails\":{\"ipAddressV4\":\"198.51.100.0\","
+            + "\"organization\":{\"asn\":\"-1\",\"asnOrg\":\"GeneratedFindingASNOrg\",\"isp\":\"GeneratedFindingISP\",\"org\":\"GeneratedFindingORG\"},"
+            + "\"country\":{\"countryName\":\"GeneratedFindingCountryName\"},\"city\":{\"cityName\":\"GeneratedFindingCityName\"},"
+            + "\"geoLocation\":{\"lat\":0,\"lon\":0}},\"affectedResources\":{}}},\"resourceRole\":\"TARGET\","
+            + "\"additionalInfo\":{\"recentApiCalls\":[{\"api\":\"GeneratedFindingAPIName1\",\"count\":2},{\"api\":\"GeneratedFindingAPIName2\","
+            + "\"count\":2}],\"sample\":true},\"eventFirstSeen\":\"2019-06-09T19:10:08.222Z\",\"eventLastSeen\":\"2019-06-09T19:10:23.301Z\","
+            + "\"archived\":false,\"count\":2},\"severity\":5,\"createdAt\":\"2019-06-09T19:10:08.222Z\",\"updatedAt\":\"2019-06-09T19:10:23.301Z\","
+            + "\"title\":\"Unusual user permission reconnaissance activity by GeneratedFindingUserName.\","
+            + "\"description\":\"APIs commonly used to discover the users, groups, policies and permissions in an account,"
+            + " was invoked by IAM principal GeneratedFindingUserName under unusual circumstances. "
+            + "Such activity is not typically seen from this principal.\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.GUARDDUTY, e.getPayloadType());
+
+    CloudWatchEvent cwe = e.getCloudWatchEvent();
+    assertNotNull(cwe);
+
+    assertEquals("c8c4daa7-a20c-2f03-0070-b7393dd542ad", cwe.getId());
+    assertEquals("GuardDuty Finding", cwe.getDetailType());
+    assertEquals("aws.guardduty", cwe.getSource());
+    assertEquals("123456789012", cwe.getAccount());
+    assertEquals("1970-01-01T00:00:00Z", cwe.getTime());
+    assertEquals("us-west-2", cwe.getRegion());
   }
 
   @Test
