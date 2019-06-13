@@ -15,7 +15,16 @@ public class GuardDutyFinding implements Serializable {
   private String accountId;
   private String region;
   private String partition;
-  // TODO: add remaining fields here
+  private String id;
+  private String arn;
+  private String type;
+  // TODO: private ? resource
+  // TODO: private ? service
+  private int severity;
+  private String createdAt;
+  private String updatedAt;
+  private String title;
+  private String description;
 
   /**
    * Get finding schema version
@@ -55,6 +64,86 @@ public class GuardDutyFinding implements Serializable {
   @JsonProperty("partition")
   public String getPartition() {
     return partition;
+  }
+
+  /**
+   * Get finding id
+   *
+   * @return String
+   */
+  @JsonProperty("id")
+  public String getId() {
+    return id;
+  }
+
+  /**
+   * Get finding arn
+   *
+   * @return String
+   */
+  @JsonProperty("arn")
+  public String getArn() {
+    return arn;
+  }
+
+  /**
+   * Get finding type
+   *
+   * @return String
+   */
+  @JsonProperty("type")
+  public String getType() {
+    return type;
+  }
+
+  /**
+   * Get the finding's aws severity score
+   *
+   * @return String
+   */
+  @JsonProperty("severity")
+  public int getSeverity() {
+    return severity;
+  }
+
+  /**
+   * Get a finding creation timestamp
+   *
+   * @return String
+   */
+  @JsonProperty("createdAt")
+  public String getCreatedAt() {
+    return createdAt;
+  }
+
+  /**
+   * Get a finding modification timestamp
+   *
+   * @return String
+   */
+  @JsonProperty("updatedAt")
+  public String getUpdatedAt() {
+    return updatedAt;
+  }
+
+  /**
+   * Get finding title
+   *
+   * @return String
+   */
+  @JsonProperty("title")
+  public String getTitle() {
+    return title;
+  }
+
+  /**
+   * Get finding description
+   *
+   * @return String
+   */
+  @JsonProperty("description")
+  public String getDescription() {
+    return description;
   }
 
   public GuardDutyFinding() {}

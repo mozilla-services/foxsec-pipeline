@@ -1129,11 +1129,26 @@ public class ParserTest {
     GuardDutyFinding gdf = cw.getGuardDutyFinding();
     assertNotNull(gdf);
 
-    assertEquals("aws", gdf.getPartition());
     assertEquals("2.0", gdf.getSchemaVersion());
     assertEquals("123456789012", gdf.getAccountId());
     assertEquals("us-west-2", gdf.getRegion());
-    // TODO: add all fields
+    assertEquals("aws", gdf.getPartition());
+    assertEquals("591f8d2ed2edaf6a96ad486b59ed8428", gdf.getId());
+    assertEquals(
+        "arn:aws:guardduty:us-west-2:123456789012:detector/cab59ed1d9760dbaa8930337156d4547/finding/56b59ed2edaf6a84291f8d2ed96ad488",
+        gdf.getArn());
+    assertEquals("Recon:IAMUser/UserPermissions", gdf.getType());
+    // TODO: assertEquals(?, gdf.getResource());
+    // TODO: assertEquals(?, gdf.getService());
+    assertEquals(5, gdf.getSeverity());
+    assertEquals("2019-06-09T19:10:08.222Z", gdf.getCreatedAt());
+    assertEquals("2019-06-09T19:10:23.301Z", gdf.getUpdatedAt());
+    assertEquals(
+        "Unusual user permission reconnaissance activity by GeneratedFindingUserName.",
+        gdf.getTitle());
+    assertEquals(
+        "APIs commonly used to discover the users, groups, policies and permissions in an account, was invoked by IAM principal GeneratedFindingUserName under unusual circumstances. Such activity is not typically seen from this principal.",
+        gdf.getDescription());
   }
 
   @Test
