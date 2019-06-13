@@ -12,8 +12,6 @@ public class Payload<T extends PayloadBase> implements Serializable {
     GLB,
     /** AWS CloudTrail */
     CLOUDTRAIL,
-    /** AWS CloudWatch */
-    CLOUDWATCH,
     /** AWS GuardDuty */
     GUARDDUTY,
     /** OpenSSH */
