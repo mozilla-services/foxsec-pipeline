@@ -13,6 +13,7 @@ import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.identity.IdentityManager;
+import com.mozilla.secops.parser.models.aws.cloudwatch.CloudWatchEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -293,6 +294,21 @@ public class Parser {
     return input;
   }
 
+  private String stripCloudWatch(Event e, String input, ParserState state) {
+    try {
+      CloudWatchEvent cwe = mapper.readValue(input, CloudWatchEvent.class);
+      if (cwe.getDetail() == null || cwe.getDetail().equals(null)) {
+        return input;
+      }
+      e.setCloudWatchEvent(cwe);
+      return mapper.writeValueAsString(cwe.getDetail());
+    } catch (Exception exc) {
+      // pass
+    }
+    // If the input data could not be converted into a CloudWatch Event just return it as is
+    return input;
+  }
+
   private String stripEncapsulation(Event e, String input, ParserState state) {
     input = stripStackdriverEncapsulation(e, input, state);
     // If stripping the encapsulation returns null, just return null here to ignore the event. This
@@ -301,6 +317,7 @@ public class Parser {
       return null;
     }
     input = stripMozlog(e, input, state);
+    input = stripCloudWatch(e, input, state);
     return input;
   }
 
@@ -416,7 +433,6 @@ public class Parser {
     payloads.add(new Nginx());
     payloads.add(new SecEvent());
     payloads.add(new Cloudtrail());
-    payloads.add(new CloudWatch());
     payloads.add(new GuardDuty());
     payloads.add(new GcpAudit());
     payloads.add(new ApacheCombined());
