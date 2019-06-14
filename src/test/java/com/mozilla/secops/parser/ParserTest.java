@@ -1110,8 +1110,6 @@ public class ParserTest {
         "arn:aws:guardduty:us-west-2:123456789012:detector/cab59ed1d9760dbaa8930337156d4547/finding/56b59ed2edaf6a84291f8d2ed96ad488",
         gdf.getArn());
     assertEquals("Recon:IAMUser/UserPermissions", gdf.getType());
-    // TODO: assertEquals(?, gdf.getResource());
-    // TODO: assertEquals(?, gdf.getService());
     assertEquals(5.0, gdf.getSeverity(), 0.0);
     assertEquals("2019-06-09T19:10:08.222Z", gdf.getCreatedAt());
     assertEquals("2019-06-09T19:10:23.301Z", gdf.getUpdatedAt());

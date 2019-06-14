@@ -1,15 +1,14 @@
 package com.mozilla.secops.parser;
 
 import com.amazonaws.services.guardduty.model.Finding;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mozilla.secops.parser.models.aws.guardduty.GuardDutyFinding;
 import java.io.Serializable;
 
 /** Payload parser for AWS GuardDuty Finding data */
 public class GuardDuty extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private ObjectMapper mapper;
   private Finding gdf;
 
   @Override
@@ -22,7 +21,7 @@ public class GuardDuty extends PayloadBase implements Serializable {
     return Payload.PayloadType.GUARDDUTY;
   }
 
-  /** get underlying {@link GuardDutyFinding} */
+  /** get underlying {@link Finding} */
   public Finding getFinding() {
     return gdf;
   }
@@ -36,12 +35,16 @@ public class GuardDuty extends PayloadBase implements Serializable {
    * @param input Input string
    */
   public GuardDuty(String input, Event e, ParserState s) {
-    mapper = new ObjectMapper();
+    ObjectMapper mapper = new ObjectMapper();
+
+    // our input JSON may have properties not represented in AWS SDK's Class :(
+    // e.g. ignore errors such as 'Unrecognized field "affectedResources"....'
+    mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
     try {
       gdf = mapper.readValue(input, Finding.class);
     } catch (Exception exc) {
       System.out.println(exc.getMessage());
-
       return;
     }
   }
