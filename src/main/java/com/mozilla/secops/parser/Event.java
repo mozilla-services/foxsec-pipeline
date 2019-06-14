@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.mozilla.secops.parser.models.aws.cloudwatch.CloudWatchEvent;
+import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;

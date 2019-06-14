@@ -13,7 +13,7 @@ import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.identity.IdentityManager;
-import com.mozilla.secops.parser.models.aws.cloudwatch.CloudWatchEvent;
+import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -2,9 +2,9 @@ package com.mozilla.secops.parser;
 
 import static org.junit.Assert.*;
 
+import com.amazonaws.services.guardduty.model.Finding;
 import com.maxmind.geoip2.model.CityResponse;
-import com.mozilla.secops.parser.models.aws.cloudwatch.CloudWatchEvent;
-import com.mozilla.secops.parser.models.aws.guardduty.GuardDutyFinding;
+import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 import java.util.ArrayList;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -1098,7 +1098,7 @@ public class ParserTest {
     GuardDuty gde = e.getPayload();
     assertNotNull(gde);
 
-    GuardDutyFinding gdf = gde.getFinding();
+    Finding gdf = gde.getFinding();
     assertNotNull(gdf);
 
     assertEquals("2.0", gdf.getSchemaVersion());
@@ -1112,7 +1112,7 @@ public class ParserTest {
     assertEquals("Recon:IAMUser/UserPermissions", gdf.getType());
     // TODO: assertEquals(?, gdf.getResource());
     // TODO: assertEquals(?, gdf.getService());
-    assertEquals(5, gdf.getSeverity());
+    assertEquals(5.0, gdf.getSeverity(), 0.0);
     assertEquals("2019-06-09T19:10:08.222Z", gdf.getCreatedAt());
     assertEquals("2019-06-09T19:10:23.301Z", gdf.getUpdatedAt());
     assertEquals(

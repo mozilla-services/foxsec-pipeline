@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser;
 
+import com.amazonaws.services.guardduty.model.Finding;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozilla.secops.parser.models.aws.guardduty.GuardDutyFinding;
 import java.io.Serializable;
@@ -9,7 +10,7 @@ public class GuardDuty extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private ObjectMapper mapper;
-  private GuardDutyFinding gdf;
+  private Finding gdf;
 
   @Override
   public Boolean matcher(String input, ParserState state) {
@@ -22,7 +23,7 @@ public class GuardDuty extends PayloadBase implements Serializable {
   }
 
   /** get underlying {@link GuardDutyFinding} */
-  public GuardDutyFinding getFinding() {
+  public Finding getFinding() {
     return gdf;
   }
 
@@ -37,8 +38,10 @@ public class GuardDuty extends PayloadBase implements Serializable {
   public GuardDuty(String input, Event e, ParserState s) {
     mapper = new ObjectMapper();
     try {
-      gdf = mapper.readValue(input, GuardDutyFinding.class);
+      gdf = mapper.readValue(input, Finding.class);
     } catch (Exception exc) {
+      System.out.println(exc.getMessage());
+
       return;
     }
   }

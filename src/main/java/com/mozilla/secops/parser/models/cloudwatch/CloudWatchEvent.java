@@ -1,4 +1,4 @@
-package com.mozilla.secops.parser.models.aws.cloudwatch;
+package com.mozilla.secops.parser.models.cloudwatch;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
