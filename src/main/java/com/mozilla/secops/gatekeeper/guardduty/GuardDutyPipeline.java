@@ -75,15 +75,14 @@ public class GuardDutyPipeline implements Serializable {
   }
 
   /** An output transform that simply prints a string */
-  public static class PrintKeys
-      extends PTransform<PCollection<KV<String, Iterable<Event>>>, PDone> {
+  public static class PrintKeys extends PTransform<PCollection<KV<String, Event>>, PDone> {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public PDone expand(PCollection<KV<String, Iterable<Event>>> input) {
+    public PDone expand(PCollection<KV<String, Event>> input) {
       input.apply(
           ParDo.of(
-              new DoFn<KV<String, Iterable<Event>>, Void>() {
+              new DoFn<KV<String, Event>, Void>() {
                 private static final long serialVersionUID = 1L;
 
                 @ProcessElement
@@ -115,10 +114,7 @@ public class GuardDutyPipeline implements Serializable {
                   }
                 }));
 
-    PCollection<KV<String, Iterable<Event>>> groupedByFindingType =
-        byFindingType.apply(GroupByKey.<String, Event>create());
-
-    groupedByFindingType.apply(new PrintKeys());
+    byFindingType.apply(new PrintKeys());
 
     p.run().waitUntilFinish();
   }
