@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class Event implements Serializable {
   private final UUID eventId;
   private DateTime timestamp;
   private Normalized normalized;
+  private CloudWatchEvent cloudwatchEvent;
   private Mozlog mozlog;
   private String stackdriverProject;
   private Map<String, String> stackdriverLabels;
@@ -100,6 +102,24 @@ public class Event implements Serializable {
   @JsonProperty("id")
   public UUID getEventId() {
     return eventId;
+  }
+
+  /**
+   * Get cloudwatch event value
+   *
+   * @return {@link CloudWatchEvent} value or null if not available
+   */
+  public CloudWatchEvent getCloudWatchEvent() {
+    return cloudwatchEvent;
+  }
+
+  /**
+   * Set cloudwatch event value
+   *
+   * @param cwe CloudWatchEvent encapsulating generic AWS event
+   */
+  public void setCloudWatchEvent(CloudWatchEvent cwe) {
+    this.cloudwatchEvent = cwe;
   }
 
   /**
