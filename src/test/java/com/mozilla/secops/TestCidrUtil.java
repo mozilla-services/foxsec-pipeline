@@ -42,8 +42,8 @@ public class TestCidrUtil {
   @Test
   public void resolvedHostMatchesTest() throws Exception {
     assertFalse(CidrUtil.resolvedCanonicalHostMatches("8.8.8.8", "test"));
-    assertTrue(CidrUtil.resolvedCanonicalHostMatches("8.8.8.8", ".*google.com$"));
-    assertFalse(CidrUtil.resolvedCanonicalHostMatches("127.0.0.1", ".*google.com$"));
+    assertTrue(CidrUtil.resolvedCanonicalHostMatches("8.8.8.8", "dns\\.google$"));
+    assertFalse(CidrUtil.resolvedCanonicalHostMatches("127.0.0.1", "dns\\.google$"));
     assertFalse(CidrUtil.resolvedCanonicalHostMatches("0.0.0.0", ".*"));
   }
 
