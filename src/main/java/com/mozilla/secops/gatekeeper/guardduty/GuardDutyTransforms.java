@@ -2,15 +2,81 @@ package com.mozilla.secops.gatekeeper.guardduty;
 
 import com.mozilla.secops.parser.*;
 import java.io.Serializable;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.PTransform;
-import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
 
 public class GuardDutyTransforms implements Serializable {
   private static final long serialVersionUID = 1L;
+
+  /**
+   * A grouping transform that groups Events by their inner GuardDuty Finding's source AWS account
+   * ID
+   */
+  public static class ByAccount
+      extends PTransform<PCollection<Event>, PCollection<KV<String, Event>>> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public PCollection<KV<String, Event>> expand(PCollection<Event> input) {
+      return input.apply(
+          WithKeys.of(
+              new SerializableFunction<Event, String>() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public String apply(Event input) {
+                  GuardDuty gde = input.getPayload();
+                  return gde.getFinding().getAccountId();
+                }
+              }));
+    }
+  }
+
+  /**
+   * A grouping transform that groups Events by their inner GuardDuty Finding's source AWS region
+   */
+  public static class ByRegion
+      extends PTransform<PCollection<Event>, PCollection<KV<String, Event>>> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public PCollection<KV<String, Event>> expand(PCollection<Event> input) {
+      return input.apply(
+          WithKeys.of(
+              new SerializableFunction<Event, String>() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public String apply(Event input) {
+                  GuardDuty gde = input.getPayload();
+                  return gde.getFinding().getRegion();
+                }
+              }));
+    }
+  }
+
+  /** A grouping transform that groups Events by their inner GuardDuty Finding's Type */
+  public static class ByType
+      extends PTransform<PCollection<Event>, PCollection<KV<String, Event>>> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public PCollection<KV<String, Event>> expand(PCollection<Event> input) {
+      return input.apply(
+          WithKeys.of(
+              new SerializableFunction<Event, String>() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public String apply(Event input) {
+                  GuardDuty gde = input.getPayload();
+                  return gde.getFinding().getType();
+                }
+              }));
+    }
+  }
 
   /** An output transform that simply prints the string Key in the KV given */
   public static class PrintKeys extends PTransform<PCollection<KV<String, Event>>, PDone> {

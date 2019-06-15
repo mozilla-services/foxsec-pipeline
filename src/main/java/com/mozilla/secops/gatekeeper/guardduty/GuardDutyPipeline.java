@@ -10,9 +10,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
 /**
- * {@link GuardDutyPipeline} describes and implements a Beam pipeline for analysis of AWS CloudWatch
- * events, which may come from distinct source AWS services. CloudWatch from all services consist of
- * a set of common fields and a service specific "detail" JSON object
+ * {@link GuardDutyPipeline} describes and implements a Beam pipeline for analysis of AWS GuardDuty
+ * Findings, which come with a wrapper AWS CloudWatch Event
  */
 public class GuardDutyPipeline implements Serializable {
   private static final long serialVersionUID = 1L;
@@ -35,17 +34,7 @@ public class GuardDutyPipeline implements Serializable {
             .apply("parse", new GuardDutyParser.Parse(options));
 
     PCollection<KV<String, Event>> byFindingType =
-        events.apply(
-            WithKeys.of(
-                new SerializableFunction<Event, String>() {
-                  private static final long serialVersionUID = 1L;
-
-                  @Override
-                  public String apply(Event input) {
-                    GuardDuty gde = input.getPayload();
-                    return gde.getFinding().getType();
-                  }
-                }));
+        events.apply("group by type", new GuardDutyTransforms.ByType());
 
     byFindingType.apply(new GuardDutyTransforms.PrintKeys());
 
