@@ -55,6 +55,54 @@ To get familiar with developing pipelines in Beam, this repository also contains
 provides some guidance on building basic pipelines. The introduction document can be found
 [here](docs/beam-intro/INTRO.md).
 
+## Pipeline Options and Arguments
+
+To run a pipeline compile the Maven project and run the entrypoint class (containing main):
+
+```
+mvn compile exec:java -Dexec.mainClass={PIPELINE_ENTRYPOINT_CLASS}
+```
+
+Depending on the type of input from which you wish to feed data to a Beam pipeline, you will need to provide input-specific arguments to the java program. This is done with Maven's "-Dexec.args" command line flag as follows (with closing single quotes):
+
+```
+-Dexec.args='--argument1={ARG_VALUE} --argument2=${ARG_VALUE}'
+```
+
+#### All use cases:
+
+* The following argument is mandatory for all input options:
+
+```
+--monitoredResourceIndicator=${PIPELINE_DESCRIPTION}
+```
+
+#### Data From File:
+
+* Each line in the file will be received as a distinct element to be parsed and processed in the pipeline
+
+```
+--inputFile={PATH_TO_INPUT_FILE}
+```
+
+#### Data From AWS Kinesis Stream:
+
+* Each entry in the Kinesis stream will be received as a distinct element to be parsed and processed in the pipeline
+
+```
+--inputKinesis={KINESIS_STREAM_NAME}:{AWS_ACCESS_KEY_ID}:{AWS_SECRET_ACCESS_KEY}:{AWS_REGION}
+```
+
+#### Data From GCP Pub/Sub Topic:
+
+* If no arguments are provided, the program will attempt to use the host machine's gcloud default configuration (typically found in ```~/.config/gcloud/configurations/config_default```) 
+
+* Each message in the topic will be received as a distinct element to be parsed and processed in the pipeline
+
+```
+--inputPubsub={PUB_SUB_TOPIC_NAME} --project={GCP_PROJECT_NAME}
+```
+
 ## Contributing
 
 See the [contributing guidelines](./CONTRIBUTING.md).
