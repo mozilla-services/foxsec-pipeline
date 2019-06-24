@@ -1,11 +1,13 @@
 package com.mozilla.secops.parser;
 
 import com.google.api.services.logging.v2.model.LogEntry;
+import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 
 /** Stores per-event state of parser */
 class ParserState {
   private final Parser parser;
   private LogEntry logEntryHint;
+  private CloudWatchEvent cloudwatchEvent;
   private Mozlog mozLogHint;
   private com.google.api.client.json.jackson2.JacksonFactory googleJacksonFactory;
 
@@ -25,6 +27,24 @@ class ParserState {
    */
   public void setLogEntryHint(LogEntry entry) {
     logEntryHint = entry;
+  }
+
+  /**
+   * Get cloudwatch event value
+   *
+   * @return {@link CloudWatchEvent} value or null if not available
+   */
+  public CloudWatchEvent getCloudWatchEvent() {
+    return cloudwatchEvent;
+  }
+
+  /**
+   * Set cloudwatch event value
+   *
+   * @param cwe CloudWatchEvent encapsulating generic AWS event
+   */
+  public void setCloudWatchEvent(CloudWatchEvent cwe) {
+    this.cloudwatchEvent = cwe;
   }
 
   /**

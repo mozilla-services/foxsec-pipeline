@@ -1,11 +1,8 @@
 package com.mozilla.secops.parser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import com.amazonaws.services.guardduty.model.Finding;
 import com.maxmind.geoip2.model.CityResponse;
 import java.util.ArrayList;
 import org.joda.time.DateTime;
@@ -1061,6 +1058,122 @@ public class ParserTest {
     assertNotNull(ct);
     assertEquals("uhura", ct.getUser());
     assertEquals("127.0.0.1", ct.getSourceAddress());
+  }
+
+  @Test
+  public void testParseGuardDutyFinding() throws Exception {
+    String buf =
+        "{\"schemaVersion\":\"2.0\",\"accountId\":\"123456789012\",\"region\":\"us-west-2\","
+            + "\"partition\":\"aws\",\"id\":\"591f8d2ed2edaf6a96ad486b59ed8428\","
+            + "\"arn\":\"arn:aws:guardduty:us-west-2:123456789012:detector/cab59ed1d9760dbaa8930337156d4547/finding/56b59ed2edaf6a84291f8d2ed96ad488\","
+            + "\"type\":\"Recon:IAMUser/UserPermissions\","
+            + "\"resource\":{\"resourceType\":\"AccessKey\",\"accessKeyDetails\":{\"accessKeyId\":\"GeneratedFindingAccessKeyId\","
+            + "\"principalId\":\"GeneratedFindingPrincipalId\",\"userType\":\"IAMUser\",\"userName\":\"GeneratedFindingUserName\"}},"
+            + "\"service\":{\"serviceName\":\"guardduty\",\"detectorId\":\"cab59ed1d9760dbaa8930337156d4547\","
+            + "\"action\":{\"actionType\":\"AWS_API_CALL\",\"awsApiCallAction\":{\"api\":\"GeneratedFindingAPIName\","
+            + "\"serviceName\":\"GeneratedFindingAPIServiceName\",\"callerType\":\"Remote IP\",\"remoteIpDetails\":{\"ipAddressV4\":\"198.51.100.0\","
+            + "\"organization\":{\"asn\":\"-1\",\"asnOrg\":\"GeneratedFindingASNOrg\",\"isp\":\"GeneratedFindingISP\",\"org\":\"GeneratedFindingORG\"},"
+            + "\"country\":{\"countryName\":\"GeneratedFindingCountryName\"},\"city\":{\"cityName\":\"GeneratedFindingCityName\"},"
+            + "\"geoLocation\":{\"lat\":0,\"lon\":0}},\"affectedResources\":{}}},\"resourceRole\":\"TARGET\","
+            + "\"additionalInfo\":{\"recentApiCalls\":[{\"api\":\"GeneratedFindingAPIName1\",\"count\":2},{\"api\":\"GeneratedFindingAPIName2\","
+            + "\"count\":2}],\"sample\":true},\"eventFirstSeen\":\"2019-06-09T19:10:08.222Z\",\"eventLastSeen\":\"2019-06-09T19:10:23.301Z\","
+            + "\"archived\":false,\"count\":2},\"severity\":5,\"createdAt\":\"2019-06-09T19:10:08.222Z\",\"updatedAt\":\"2019-06-09T19:10:23.301Z\","
+            + "\"title\":\"Unusual user permission reconnaissance activity by GeneratedFindingUserName.\","
+            + "\"description\":\"APIs commonly used to discover the users, groups, policies and permissions in an account,"
+            + " was invoked by IAM principal GeneratedFindingUserName under unusual circumstances. "
+            + "Such activity is not typically seen from this principal.\"}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.GUARDDUTY, e.getPayloadType());
+
+    GuardDuty gde = e.getPayload();
+    assertNotNull(gde);
+
+    Finding gdf = gde.getFinding();
+    assertNotNull(gdf);
+
+    assertEquals("2.0", gdf.getSchemaVersion());
+    assertEquals("123456789012", gdf.getAccountId());
+    assertEquals("us-west-2", gdf.getRegion());
+    assertEquals("aws", gdf.getPartition());
+    assertEquals("591f8d2ed2edaf6a96ad486b59ed8428", gdf.getId());
+    assertEquals(
+        "arn:aws:guardduty:us-west-2:123456789012:detector/cab59ed1d9760dbaa8930337156d4547/finding/56b59ed2edaf6a84291f8d2ed96ad488",
+        gdf.getArn());
+    assertEquals("Recon:IAMUser/UserPermissions", gdf.getType());
+    assertEquals(5.0, gdf.getSeverity(), 0.0);
+    assertEquals("2019-06-09T19:10:08.222Z", gdf.getCreatedAt());
+    assertEquals("2019-06-09T19:10:23.301Z", gdf.getUpdatedAt());
+    assertEquals(
+        "Unusual user permission reconnaissance activity by GeneratedFindingUserName.",
+        gdf.getTitle());
+    assertEquals(
+        "APIs commonly used to discover the users, groups, policies and permissions in an account, was invoked by IAM principal GeneratedFindingUserName under unusual circumstances. Such activity is not typically seen from this principal.",
+        gdf.getDescription());
+  }
+
+  @Test
+  public void testParseGuardDutyFindingWithCloudWatchEventWrapper() throws Exception {
+    String buf =
+        "{\"version\": \"0\", \"id\": \"c8c4daa7-a20c-2f03-0070-b7393dd542ad\","
+            + "\"detail-type\": \"GuardDuty Finding\", \"source\": \"aws.guardduty\",\"account\": \"123456789012\","
+            + " \"time\": \"1970-01-01T00:00:00Z\", \"region\": \"us-west-2\", \"resources\": [],"
+            + " \"detail\": "
+            + "{\"schemaVersion\":\"2.0\",\"accountId\":\"123456789012\",\"region\":\"us-west-2\","
+            + "\"partition\":\"aws\",\"id\":\"591f8d2ed2edaf6a96ad486b59ed8428\","
+            + "\"arn\":\"arn:aws:guardduty:us-west-2:123456789012:detector/cab59ed1d9760dbaa8930337156d4547/finding/56b59ed2edaf6a84291f8d2ed96ad488\","
+            + "\"type\":\"Recon:IAMUser/UserPermissions\","
+            + "\"resource\":{\"resourceType\":\"AccessKey\",\"accessKeyDetails\":{\"accessKeyId\":\"GeneratedFindingAccessKeyId\","
+            + "\"principalId\":\"GeneratedFindingPrincipalId\",\"userType\":\"IAMUser\",\"userName\":\"GeneratedFindingUserName\"}},"
+            + "\"service\":{\"serviceName\":\"guardduty\",\"detectorId\":\"cab59ed1d9760dbaa8930337156d4547\","
+            + "\"action\":{\"actionType\":\"AWS_API_CALL\",\"awsApiCallAction\":{\"api\":\"GeneratedFindingAPIName\","
+            + "\"serviceName\":\"GeneratedFindingAPIServiceName\",\"callerType\":\"Remote IP\",\"remoteIpDetails\":{\"ipAddressV4\":\"198.51.100.0\","
+            + "\"organization\":{\"asn\":\"-1\",\"asnOrg\":\"GeneratedFindingASNOrg\",\"isp\":\"GeneratedFindingISP\",\"org\":\"GeneratedFindingORG\"},"
+            + "\"country\":{\"countryName\":\"GeneratedFindingCountryName\"},\"city\":{\"cityName\":\"GeneratedFindingCityName\"},"
+            + "\"geoLocation\":{\"lat\":0,\"lon\":0}},\"affectedResources\":{}}},\"resourceRole\":\"TARGET\","
+            + "\"additionalInfo\":{\"recentApiCalls\":[{\"api\":\"GeneratedFindingAPIName1\",\"count\":2},{\"api\":\"GeneratedFindingAPIName2\","
+            + "\"count\":2}],\"sample\":true},\"eventFirstSeen\":\"2019-06-09T19:10:08.222Z\",\"eventLastSeen\":\"2019-06-09T19:10:23.301Z\","
+            + "\"archived\":false,\"count\":2},\"severity\":5,\"createdAt\":\"2019-06-09T19:10:08.222Z\",\"updatedAt\":\"2019-06-09T19:10:23.301Z\","
+            + "\"title\":\"Unusual user permission reconnaissance activity by GeneratedFindingUserName.\","
+            + "\"description\":\"APIs commonly used to discover the users, groups, policies and permissions in an account,"
+            + " was invoked by IAM principal GeneratedFindingUserName under unusual circumstances. "
+            + "Such activity is not typically seen from this principal.\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.GUARDDUTY, e.getPayloadType());
+
+    GuardDuty gde = e.getPayload();
+    assertNotNull(gde);
+
+    Finding gdf = gde.getFinding();
+    assertNotNull(gdf);
+
+    assertEquals("2.0", gdf.getSchemaVersion());
+    assertEquals("123456789012", gdf.getAccountId());
+    assertEquals("us-west-2", gdf.getRegion());
+    assertEquals("aws", gdf.getPartition());
+    assertEquals("591f8d2ed2edaf6a96ad486b59ed8428", gdf.getId());
+    assertEquals(
+        "arn:aws:guardduty:us-west-2:123456789012:detector/cab59ed1d9760dbaa8930337156d4547/finding/56b59ed2edaf6a84291f8d2ed96ad488",
+        gdf.getArn());
+    assertEquals("Recon:IAMUser/UserPermissions", gdf.getType());
+    assertEquals(5.0, gdf.getSeverity(), 0.0);
+    assertEquals("2019-06-09T19:10:08.222Z", gdf.getCreatedAt());
+    assertEquals("2019-06-09T19:10:23.301Z", gdf.getUpdatedAt());
+    assertEquals(
+        "Unusual user permission reconnaissance activity by GeneratedFindingUserName.",
+        gdf.getTitle());
+    assertEquals(
+        "APIs commonly used to discover the users, groups, policies and permissions in an account, was invoked by IAM principal GeneratedFindingUserName under unusual circumstances. Such activity is not typically seen from this principal.",
+        gdf.getDescription());
   }
 
   @Test
