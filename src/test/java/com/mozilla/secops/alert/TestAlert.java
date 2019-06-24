@@ -201,6 +201,61 @@ public class TestAlert {
   }
 
   @Test
+  public void alertToAmoNewVersionLoginEndpointAbuseViolationTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"64d03714-9d49-4269-a341-4be55145fb4d\",\"summ"
+            + "ary\":\"test login to amo from suspected fraudulent account, kurn@mozilla.com"
+            + " from 216.160.83.56\",\"category\":\"amo\",\"timestamp\":\"2019-06-24T19:04:41"
+            + ".507Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"fxa_account_abuse_"
+            + "new_version_login\"},{\"key\":\"sourceaddress\",\"value\":\"216.160.83.56\"},{"
+            + "\"key\":\"email\",\"value\":\"kurn@mozilla.com\"},{\"key\":\"amo_category\",\""
+            + "value\":\"fxa_account_abuse_new_version_login\"}]}";
+
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("amo", a.getCategory());
+    assertEquals("fxa_account_abuse_new_version_login", a.getMetadataValue("amo_category"));
+    assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+    assertEquals(1, Violation.fromAlert(a).length);
+    Violation v = Violation.fromAlert(a)[0];
+    assertNotNull(v);
+    assertEquals("endpoint_abuse_violation", v.getViolation());
+    assertEquals("216.160.83.56", v.getSourceAddress());
+    assertEquals("ip", v.getType());
+    assertEquals("216.160.83.56", v.getObject());
+    assertNull(v.getSuppressRecovery());
+  }
+
+  @Test
+  public void alertToAmoNewVersionSubmissionEndpointAbuseViolationTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"d18cfcaa-8f72-48db-9ec6-5cbcb0225fb6\",\"summ"
+            + "ary\":\"test addon submission from address associated with suspected fraudule"
+            + "nt account, 216.160.83.56\",\"category\":\"amo\",\"timestamp\":\"2019-06-24T1"
+            + "9:09:20.749Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"fxa_accoun"
+            + "t_abuse_new_version_submission\"},{\"key\":\"sourceaddress\",\"value\":\"216."
+            + "160.83.56\"},{\"key\":\"amo_category\",\"value\":\"fxa_account_abuse_new_vers"
+            + "ion_submission\"},{\"key\":\"addon_id\",\"value\":\"0000001\"},{\"key\":\"add"
+            + "on_version\",\"value\":\"1.0.0\"}]}";
+
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("amo", a.getCategory());
+    assertEquals("fxa_account_abuse_new_version_submission", a.getMetadataValue("amo_category"));
+    assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+    assertEquals(1, Violation.fromAlert(a).length);
+    Violation v = Violation.fromAlert(a)[0];
+    assertNotNull(v);
+    assertEquals("endpoint_abuse_violation", v.getViolation());
+    assertEquals("216.160.83.56", v.getSourceAddress());
+    assertEquals("ip", v.getType());
+    assertEquals("216.160.83.56", v.getObject());
+    assertNull(v.getSuppressRecovery());
+  }
+
+  @Test
   public void alertToEndpointAbuseViolationTest() throws Exception {
     String buf =
         "{\"severity\":\"info\",\"id\":\"620171b5-6597-48a7-94c2-006cc2b83c96\",\"category\""
