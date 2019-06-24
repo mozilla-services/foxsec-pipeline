@@ -67,6 +67,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                         return;
                       }
                       if ((d.getEventType().equals(AmoDocker.EventType.NEWVERSION))
+                          || (d.getEventType().equals(AmoDocker.EventType.FILEUPLOAD))
                           || (d.getEventType().equals(AmoDocker.EventType.GOTPROFILE))) {
                         c.output(e);
                         return;
@@ -164,7 +165,8 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                         c.output(alert);
                         return;
                       }
-                    } else if (d.getEventType().equals(AmoDocker.EventType.NEWVERSION)) {
+                    } else if ((d.getEventType().equals(AmoDocker.EventType.NEWVERSION))
+                        || (d.getEventType().equals(AmoDocker.EventType.FILEUPLOAD))) {
                       if (!s.suspectedAddress.contains(d.getRemoteIp())) {
                         return;
                       }
@@ -174,8 +176,12 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                       alert.setNotifyMergeKey("fxa_account_abuse_new_version_submission");
                       alert.addMetadata("sourceaddress", d.getRemoteIp());
                       alert.addMetadata("amo_category", "fxa_account_abuse_new_version_submission");
-                      alert.addMetadata("addon_id", d.getAddonId());
-                      alert.addMetadata("addon_version", d.getAddonVersion());
+                      if (d.getAddonId() != null) {
+                        alert.addMetadata("addon_id", d.getAddonId());
+                      }
+                      if (d.getAddonVersion() != null) {
+                        alert.addMetadata("addon_version", d.getAddonVersion());
+                      }
                       alert.setSummary(
                           String.format(
                               "%s addon submission from address associated with suspected "

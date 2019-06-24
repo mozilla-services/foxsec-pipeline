@@ -1,6 +1,7 @@
 package com.mozilla.secops.amo;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
@@ -49,7 +50,7 @@ public class TestAmo {
     PCollection<Alert> alerts = Amo.executePipeline(p, p.apply(s), getTestOptions());
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(2L);
+    PAssert.that(count).containsInAnyOrder(3L);
 
     PAssert.that(alerts)
         .satisfies(
@@ -66,13 +67,23 @@ public class TestAmo {
                           + "from 216.160.83.56",
                       a.getSummary());
                 } else {
-                  assertEquals("fxa_account_abuse_new_version_submission", a.getNotifyMergeKey());
-                  assertEquals("1.0.0", a.getMetadataValue("addon_version"));
-                  assertEquals("0000001", a.getMetadataValue("addon_id"));
-                  assertEquals(
-                      "test addon submission from address associated with "
-                          + "suspected fraudulent account, 216.160.83.56",
-                      a.getSummary());
+                  if (a.getMetadataValue("addon_version") != null) {
+                    assertEquals("fxa_account_abuse_new_version_submission", a.getNotifyMergeKey());
+                    assertEquals("1.0.0", a.getMetadataValue("addon_version"));
+                    assertEquals("0000001", a.getMetadataValue("addon_id"));
+                    assertEquals(
+                        "test addon submission from address associated with "
+                            + "suspected fraudulent account, 216.160.83.56",
+                        a.getSummary());
+                  } else {
+                    assertEquals("fxa_account_abuse_new_version_submission", a.getNotifyMergeKey());
+                    assertNull(a.getMetadataValue("addon_version"));
+                    assertNull(a.getMetadataValue("addon_id"));
+                    assertEquals(
+                        "test addon submission from address associated with "
+                            + "suspected fraudulent account, 216.160.83.56",
+                        a.getSummary());
+                  }
                 }
               }
               return null;
