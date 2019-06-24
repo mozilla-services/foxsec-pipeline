@@ -15,6 +15,7 @@ public class AmoDocker extends PayloadBase implements Serializable {
   private final String reNewVersion =
       "^New version: <Version: ([^>]+)> \\((\\d+)\\) from <FileUpload: [^>]+>";
   private final String reGotProfile = "^Got profile.*'email': ?'([^']+)'.*";
+  private final String reFileUpload = "^FileUpload created: \\S+$";
 
   public enum EventType {
     /** Login event */
@@ -22,7 +23,9 @@ public class AmoDocker extends PayloadBase implements Serializable {
     /** New addon upload */
     NEWVERSION,
     /** FxA profile fetch */
-    GOTPROFILE
+    GOTPROFILE,
+    /** File upload */
+    FILEUPLOAD
   }
 
   private String msg;
@@ -173,6 +176,12 @@ public class AmoDocker extends PayloadBase implements Serializable {
     if (mat.matches()) {
       type = EventType.GOTPROFILE;
       fxaEmail = mat.group(1);
+      return;
+    }
+
+    mat = Pattern.compile(reFileUpload).matcher(msg);
+    if (mat.matches()) {
+      type = EventType.FILEUPLOAD;
       return;
     }
   }
