@@ -1,20 +1,25 @@
 package com.mozilla.secops;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.crypto.RuntimeSecrets;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.StringJoiner;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -29,6 +34,182 @@ public class IprepdIO {
 
   /** Metadata tag in an alert to indicate recovery suppression */
   public static final String IPREPD_SUPPRESS_RECOVERY = "iprepd_suppress_recovery";
+
+  /** A reputation response from iprepd */
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class ReputationValue {
+    private String object;
+    private String type;
+    private Integer reputation;
+
+    /**
+     * Get object field
+     *
+     * @return String
+     */
+    @JsonProperty("object")
+    public String getObject() {
+      return object;
+    }
+
+    /**
+     * Set object field
+     *
+     * @param object Object string
+     */
+    public void setObject(String object) {
+      this.object = object;
+    }
+
+    /**
+     * Get type
+     *
+     * @return String
+     */
+    @JsonProperty("type")
+    public String getType() {
+      return type;
+    }
+
+    /**
+     * Set type value
+     *
+     * @param type Type string
+     */
+    public void setType(String type) {
+      this.type = type;
+    }
+
+    /**
+     * Get reputation value
+     *
+     * @return Integer
+     */
+    @JsonProperty("reputation")
+    public Integer getReputation() {
+      return reputation;
+    }
+
+    /**
+     * Set reputation value
+     *
+     * @param reputation Reputation integer
+     */
+    public void setReputation(Integer reputation) {
+      this.reputation = reputation;
+    }
+  }
+
+  /**
+   * Return a new reader for reading reputation from iprepd
+   *
+   * @param url URL for iprepd service
+   * @param apiKey API key as specified in pipeline options
+   * @param project GCP project name, only required if decrypting apiKey via cloudkms
+   * @return Reader
+   */
+  public static Reader getReader(String url, String apiKey, String project) {
+    String key;
+    try {
+      key = RuntimeSecrets.interpretSecret(apiKey, project);
+    } catch (IOException exc) {
+      throw new RuntimeException(exc.getMessage());
+    }
+    return new Reader(url, key);
+  }
+
+  public static class Reader {
+    private static final long serialVersionUID = 1L;
+    private final String url;
+    private final String apiKey;
+    private final Logger log;
+    private final HttpClient httpClient;
+
+    /**
+     * Read a reputation
+     *
+     * @param type Type of object to make request for
+     * @param value Object to make request for
+     * @return Reputation integer value
+     */
+    public Integer getReputation(String type, String value) {
+      HttpResponse resp;
+
+      String reqPath = new StringJoiner("/").add(url).add("type").add(type).add(value).toString();
+      HttpGet get = new HttpGet(reqPath);
+      if (apiKey != null) {
+        get.addHeader("Authorization", "APIKey " + apiKey);
+      }
+      try {
+        resp = httpClient.execute(get);
+      } catch (IOException exc) {
+        log.error(exc.getMessage());
+        return new Integer(100);
+      }
+      int sc = resp.getStatusLine().getStatusCode();
+      if (sc == 404) {
+        // Reputation not found, report 100
+        return new Integer(100);
+      }
+      if (sc != 200) {
+        log.error("GET from iprepd returned with status code {}", sc);
+        return new Integer(100);
+      }
+      HttpEntity entity = resp.getEntity();
+      if (entity == null) {
+        log.error("200 response from iprepd contained no response entity");
+        return new Integer(100);
+      }
+
+      ReputationValue rval = null;
+      InputStream is = null;
+
+      try {
+        is = entity.getContent();
+      } catch (IOException exc) {
+        log.error(exc.getMessage());
+        return new Integer(100);
+      }
+
+      if (is == null) {
+        log.error("200 response from iprepd contained no response content");
+        return new Integer(100);
+      }
+
+      try {
+        rval = new ObjectMapper().readValue(is, ReputationValue.class);
+      } catch (IOException exc) {
+        log.error(exc.getMessage());
+        return new Integer(100);
+      } finally {
+        try {
+          is.close();
+        } catch (IOException exc) {
+          throw new RuntimeException(exc.getMessage());
+        }
+      }
+
+      if (rval.getReputation() == null) {
+        log.error("response from iprepd contained no reputation value");
+        return new Integer(100);
+      }
+
+      return rval.getReputation();
+    }
+
+    /**
+     * Create new iprepd reader
+     *
+     * @param url URL for iprepd daemon (e.g., http://iprepd.example.host)
+     * @param apiKey Use API key for auth, should be formatted for {@link RuntimeSecrets}
+     */
+    public Reader(String url, String apiKey) {
+      log = LoggerFactory.getLogger(Reader.class);
+      this.url = url;
+      this.apiKey = apiKey;
+      httpClient = HttpClientBuilder.create().build();
+    }
+  }
 
   /**
    * Return {@link PTransform} to emit violations to iprepd
