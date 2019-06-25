@@ -50,7 +50,7 @@ public class TestAmo {
     PCollection<Alert> alerts = Amo.executePipeline(p, p.apply(s), getTestOptions());
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(3L);
+    PAssert.that(count).containsInAnyOrder(4L);
 
     PAssert.that(alerts)
         .satisfies(
@@ -65,6 +65,12 @@ public class TestAmo {
                   assertEquals(
                       "test login to amo from suspected fraudulent account, kurn@mozilla.com "
                           + "from 216.160.83.56",
+                      a.getSummary());
+                } else if (a.getMetadataValue("amo_category").equals("amo_restriction")) {
+                  assertEquals("amo_restriction", a.getNotifyMergeKey());
+                  assertEquals("kurn@mozilla.com", a.getMetadataValue("restricted_value"));
+                  assertEquals(
+                      "test request to amo from kurn@mozilla.com restricted based on reputation",
                       a.getSummary());
                 } else {
                   if (a.getMetadataValue("addon_version") != null) {
