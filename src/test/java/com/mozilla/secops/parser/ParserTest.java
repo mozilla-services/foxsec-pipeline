@@ -703,6 +703,50 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseAmoRestrictedEmail() {
+    String buf =
+        "{\"Timestamp\": 1560523200813063936, \"Type\": \"z.users\", \"Logger\": \"http"
+            + "_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \""
+            + "EnvVersion\": \"2.0\", \"Severity\": 6, \"Pid\": 578, \"Fields\": {\"uid\": \"a"
+            + "nonymous\", \"remoteAddressChain\": \"216.160.83."
+            + "56\", \"msg\": \"Restricting request from email riker"
+            + "@mozilla.com (reputation=0)\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.RESTRICTED, d.getEventType());
+    assertEquals("riker@mozilla.com", d.getRestrictedValue());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+  }
+
+  @Test
+  public void testParseAmoRestrictedIp() {
+    String buf =
+        "{\"Timestamp\": 1560523200813063936, \"Type\": \"z.users\", \"Logger\": \"http"
+            + "_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \""
+            + "EnvVersion\": \"2.0\", \"Severity\": 6, \"Pid\": 578, \"Fields\": {\"uid\": \"a"
+            + "nonymous\", \"remoteAddressChain\": \"216.160.83."
+            + "56\", \"msg\": \"Restricting request from ip 216.160.83.56"
+            + " (reputation=49)\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.RESTRICTED, d.getEventType());
+    assertEquals("216.160.83.56", d.getRestrictedValue());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+  }
+
+  @Test
   public void testParseAlert() {
     String buf =
         "{\"severity\":\"info\",\"id\":\"3ddcbcff-f334-4189-953c-14a34a2cc030\",\"summa"
