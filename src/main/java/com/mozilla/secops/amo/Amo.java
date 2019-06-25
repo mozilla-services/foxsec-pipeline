@@ -35,11 +35,14 @@ public class Amo implements Serializable {
    */
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, AmoOptions options) throws IOException {
+    // A valid iprepd configuration is required here, as values are pulled from iprepd
+    if ((options.getOutputIprepd() == null) || (options.getOutputIprepdApikey() == null)) {
+      throw new RuntimeException("iprepd pipeline configuration options are required");
+    }
 
     ParserCfg cfg = ParserCfg.fromInputOptions(options);
 
     EventFilter filter = new EventFilter();
-    filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.ALERT));
     filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.AMODOCKER));
     PCollection<Event> parsed =
         input.apply(
@@ -50,7 +53,11 @@ public class Amo implements Serializable {
         resultsList.and(
             parsed.apply(
                 "fxa account abuse new version",
-                new FxaAccountAbuseNewVersion(options.getMonitoredResourceIndicator())));
+                new FxaAccountAbuseNewVersion(
+                    options.getMonitoredResourceIndicator(),
+                    options.getOutputIprepd(),
+                    options.getOutputIprepdApikey(),
+                    options.getProject())));
     resultsList =
         resultsList.and(
             parsed.apply(

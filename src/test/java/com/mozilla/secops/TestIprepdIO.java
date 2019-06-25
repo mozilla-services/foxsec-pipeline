@@ -16,7 +16,8 @@ import org.junit.Test;
 public class TestIprepdIO {
   public TestIprepdIO() {}
 
-  public void putReputation(String type, String object, Integer reputation) throws IOException {
+  public static void putReputation(String type, String object, Integer reputation)
+      throws IOException {
     HttpClient httpClient = HttpClientBuilder.create().build();
 
     IprepdIO.ReputationValue repValue = new IprepdIO.ReputationValue();
