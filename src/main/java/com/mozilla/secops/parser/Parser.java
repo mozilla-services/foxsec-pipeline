@@ -443,6 +443,7 @@ public class Parser {
     payloads.add(new Duopull());
     payloads.add(new Alert());
     payloads.add(new GuardDuty());
+    payloads.add(new ETDBeta());
     payloads.add(new Raw());
 
     if (cfg.getIdentityManagerPath() != null) {

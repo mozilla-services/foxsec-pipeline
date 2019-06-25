@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import com.amazonaws.services.guardduty.model.Finding;
 import com.maxmind.geoip2.model.CityResponse;
+import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
 import java.util.ArrayList;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -1345,6 +1346,178 @@ public class ParserTest {
     assertEquals("/rest/bug_user_last_visit/000000?t=t", n.getRequestUrl());
     assertEquals("/rest/bug_user_last_visit/000000", n.getUrlRequestPath());
     assertEquals("216.160.83.56", n.getSourceAddress());
+  }
+
+  @Test
+  public void testParseETDFindingStackdriver() {
+    String buf =
+        "{ \"insertId\": \"-7744mva3\","
+            + "  \"logName\": \"projects/eap-testing-project/logs/threatdetection.googleapis.com%2Fdetection\","
+            + "  \"receiveTimestamp\": \"2019-01-29T20:54:12.014780631Z\","
+            + "  \"severity\": \"CRITICAL\","
+            + "  \"timestamp\": \"2019-01-29T20:54:10.606Z\","
+            + "  \"resource\": {"
+            + "    \"labels\": {"
+            + "      \"detector_name\": \"bad_domain\","
+            + "      \"project_id\": \"eap-testing-project\""
+            + "    },"
+            + "    \"type\": \"threat_detector\""
+            + "  },"
+            + "  \"jsonPayload\": {"
+            + "    \"detectionCategory\": {"
+            + "      \"indicator\": \"domain\","
+            + "      \"ruleName\": \"bad_domain\","
+            + "      \"technique\": \"Malware\""
+            + "    },"
+            + "    \"detectionPriority\": \"HIGH\","
+            + "    \"eventTime\": \"2019-01-29T20:54:10.606Z\","
+            + "    \"evidence\": ["
+            + "      {"
+            + "        \"sourceLogId\": {"
+            + "          \"insertId\": \"abm9qg1umid1u\","
+            + "          \"timestamp\": \"2019-01-29T20:54:09.379016055Z\""
+            + "        }"
+            + "      }"
+            + "    ],"
+            + "    \"properties\": {"
+            + "      \"domain\": ["
+            + "        \"3322.org\""
+            + "      ],"
+            + "      \"location\": \"us-east1-b\","
+            + "      \"project_id\": \"eap-testing-project\","
+            + "      \"subnetwork_id\": \"6331192180620506838\","
+            + "      \"subnetwork_name\": \"default\""
+            + "    },"
+            + "    \"sourceId\": {"
+            + "      \"customerOrganizationNumber\": \"556172058706\","
+            + "      \"projectId\": \"eap-testing-project\""
+            + "    }"
+            + "  }"
+            + "}";
+
+    ParserCfg cfg = new ParserCfg();
+    assertNotNull(cfg);
+
+    Parser p = new Parser(cfg);
+    assertNotNull(p);
+
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.ETD, e.getPayloadType());
+
+    ETDBeta etdParser = e.getPayload();
+    assertNotNull(etdParser);
+
+    EventThreatDetectionFinding etdf = etdParser.getFinding();
+    assertNotNull(etdf);
+
+    assertEquals("HIGH", etdf.getDetectionPriority());
+    assertEquals("2019-01-29T20:54:10.606Z", etdf.getEventTime());
+
+    assertNotNull(etdf.getDetectionCategory());
+    assertEquals("domain", etdf.getDetectionCategory().getIndicator());
+    assertEquals("bad_domain", etdf.getDetectionCategory().getRuleName());
+    assertEquals("Malware", etdf.getDetectionCategory().getTechnique());
+
+    assertNotNull(etdf.getProperties());
+    assertEquals("us-east1-b", etdf.getProperties().getLocation());
+    assertEquals("eap-testing-project", etdf.getProperties().getProject_id());
+    assertEquals("6331192180620506838", etdf.getProperties().getSubnetwork_id());
+    assertEquals("default", etdf.getProperties().getSubnetwork_name());
+    assertEquals(1, etdf.getProperties().getDomain().size());
+    assertEquals("3322.org", etdf.getProperties().getDomain().get(0));
+
+    assertNotNull(etdf.getEvidence());
+    assertEquals(1, etdf.getEvidence().size());
+    assertNotNull(etdf.getEvidence().get(0));
+    assertNotNull(etdf.getEvidence().get(0).getSourceLogId());
+    assertEquals("abm9qg1umid1u", etdf.getEvidence().get(0).getSourceLogId().getInsertId());
+    assertEquals(
+        "2019-01-29T20:54:09.379016055Z",
+        etdf.getEvidence().get(0).getSourceLogId().getTimestamp());
+
+    assertNotNull(etdf.getSourceId());
+    assertEquals("556172058706", etdf.getSourceId().getCustomerOrganizationNumber());
+    assertEquals("eap-testing-project", etdf.getSourceId().getProjectId());
+  }
+
+  @Test
+  public void testParseETDFinding() {
+    String buf =
+        "  {  \"detectionCategory\": {"
+            + "      \"indicator\": \"domain\","
+            + "      \"ruleName\": \"bad_domain\","
+            + "      \"technique\": \"Malware\""
+            + "    },"
+            + "    \"detectionPriority\": \"HIGH\","
+            + "    \"eventTime\": \"2019-01-29T20:54:10.606Z\","
+            + "    \"evidence\": ["
+            + "        {"
+            + "        \"sourceLogId\": {"
+            + "          \"insertId\": \"abm9qg1umid1u\","
+            + "          \"timestamp\": \"2019-01-29T20:54:09.379016055Z\""
+            + "        }"
+            + "      }"
+            + "    ],"
+            + "    \"properties\": {"
+            + "      \"domain\": ["
+            + "        \"3322.org\""
+            + "      ],"
+            + "      \"location\": \"us-east1-b\","
+            + "      \"project_id\": \"eap-testing-project\","
+            + "      \"subnetwork_id\": \"6331192180620506838\","
+            + "      \"subnetwork_name\": \"default\""
+            + "    },"
+            + "    \"sourceId\": {"
+            + "      \"customerOrganizationNumber\": \"556172058706\","
+            + "      \"projectId\": \"eap-testing-project\""
+            + "    }"
+            + "}";
+
+    ParserCfg cfg = new ParserCfg();
+    assertNotNull(cfg);
+
+    Parser p = new Parser(cfg);
+    assertNotNull(p);
+
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.ETD, e.getPayloadType());
+
+    ETDBeta etdParser = e.getPayload();
+    assertNotNull(etdParser);
+
+    EventThreatDetectionFinding etdf = etdParser.getFinding();
+    assertNotNull(etdf);
+
+    assertEquals("HIGH", etdf.getDetectionPriority());
+    assertEquals("2019-01-29T20:54:10.606Z", etdf.getEventTime());
+
+    assertNotNull(etdf.getDetectionCategory());
+    assertEquals("domain", etdf.getDetectionCategory().getIndicator());
+    assertEquals("bad_domain", etdf.getDetectionCategory().getRuleName());
+    assertEquals("Malware", etdf.getDetectionCategory().getTechnique());
+
+    assertNotNull(etdf.getProperties());
+    assertEquals("us-east1-b", etdf.getProperties().getLocation());
+    assertEquals("eap-testing-project", etdf.getProperties().getProject_id());
+    assertEquals("6331192180620506838", etdf.getProperties().getSubnetwork_id());
+    assertEquals("default", etdf.getProperties().getSubnetwork_name());
+    assertEquals(1, etdf.getProperties().getDomain().size());
+    assertEquals("3322.org", etdf.getProperties().getDomain().get(0));
+
+    assertNotNull(etdf.getEvidence());
+    assertEquals(1, etdf.getEvidence().size());
+    assertNotNull(etdf.getEvidence().get(0));
+    assertNotNull(etdf.getEvidence().get(0).getSourceLogId());
+    assertEquals("abm9qg1umid1u", etdf.getEvidence().get(0).getSourceLogId().getInsertId());
+    assertEquals(
+        "2019-01-29T20:54:09.379016055Z",
+        etdf.getEvidence().get(0).getSourceLogId().getTimestamp());
+
+    assertNotNull(etdf.getSourceId());
+    assertEquals("556172058706", etdf.getSourceId().getCustomerOrganizationNumber());
+    assertEquals("eap-testing-project", etdf.getSourceId().getProjectId());
   }
 
   @Test
