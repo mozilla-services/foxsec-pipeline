@@ -16,8 +16,10 @@ import java.io.Serializable;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 
 /** Various heuristics for AMO analysis */
 public class Amo implements Serializable {
@@ -33,19 +35,35 @@ public class Amo implements Serializable {
    */
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, AmoOptions options) throws IOException {
+    // A valid iprepd configuration is required here, as values are pulled from iprepd
+    if ((options.getOutputIprepd() == null) || (options.getOutputIprepdApikey() == null)) {
+      throw new RuntimeException("iprepd pipeline configuration options are required");
+    }
 
     ParserCfg cfg = ParserCfg.fromInputOptions(options);
 
     EventFilter filter = new EventFilter();
-    filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.ALERT));
     filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.AMODOCKER));
     PCollection<Event> parsed =
         input.apply(
             ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)));
 
-    return parsed.apply(
-        "fxa account abuse new version",
-        new FxaAccountAbuseNewVersion(options.getMonitoredResourceIndicator()));
+    PCollectionList<Alert> resultsList = PCollectionList.empty(p);
+    resultsList =
+        resultsList.and(
+            parsed.apply(
+                "fxa account abuse new version",
+                new FxaAccountAbuseNewVersion(
+                    options.getMonitoredResourceIndicator(),
+                    options.getOutputIprepd(),
+                    options.getOutputIprepdApikey(),
+                    options.getProject())));
+    resultsList =
+        resultsList.and(
+            parsed.apply(
+                "amo report restriction",
+                new ReportRestriction(options.getMonitoredResourceIndicator())));
+    return resultsList.apply("amo flatten output", Flatten.<Alert>pCollections());
   }
 
   /** Runtime options for {@link Customs} pipeline. */

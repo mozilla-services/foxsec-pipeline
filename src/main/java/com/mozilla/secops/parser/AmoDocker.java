@@ -15,6 +15,9 @@ public class AmoDocker extends PayloadBase implements Serializable {
   private final String reNewVersion =
       "^New version: <Version: ([^>]+)> \\((\\d+)\\) from <FileUpload: [^>]+>";
   private final String reGotProfile = "^Got profile.*'email': ?'([^']+)'.*";
+  private final String reFileUpload = "^FileUpload created: \\S+$";
+  private final String reRestricted =
+      "^Restricting request from (email|ip) (\\S+) \\(reputation=.*";
 
   public enum EventType {
     /** Login event */
@@ -22,7 +25,11 @@ public class AmoDocker extends PayloadBase implements Serializable {
     /** New addon upload */
     NEWVERSION,
     /** FxA profile fetch */
-    GOTPROFILE
+    GOTPROFILE,
+    /** File upload */
+    FILEUPLOAD,
+    /** Restricted request */
+    RESTRICTED
   }
 
   private String msg;
@@ -31,6 +38,7 @@ public class AmoDocker extends PayloadBase implements Serializable {
   private String remoteIpCountry;
   private String uid;
   private String fxaEmail;
+  private String restrictedValue;
 
   private String addonVersion;
   private String addonId;
@@ -98,6 +106,15 @@ public class AmoDocker extends PayloadBase implements Serializable {
    */
   public String getUid() {
     return uid;
+  }
+
+  /**
+   * Get restricted value
+   *
+   * @return String
+   */
+  public String getRestrictedValue() {
+    return restrictedValue;
   }
 
   @Override
@@ -174,6 +191,25 @@ public class AmoDocker extends PayloadBase implements Serializable {
       type = EventType.GOTPROFILE;
       fxaEmail = mat.group(1);
       return;
+    }
+
+    mat = Pattern.compile(reFileUpload).matcher(msg);
+    if (mat.matches()) {
+      type = EventType.FILEUPLOAD;
+      return;
+    }
+
+    mat = Pattern.compile(reRestricted).matcher(msg);
+    if (mat.matches()) {
+      // Only set the restricted type field if it is a type of restriction message
+      // that is applicable to the pipeline
+      if (mat.group(1).equals("email")) {
+        restrictedValue = mat.group(2);
+        type = EventType.RESTRICTED;
+      } else if (mat.group(1).equals("ip")) {
+        restrictedValue = remoteIp;
+        type = EventType.RESTRICTED;
+      }
     }
   }
 }

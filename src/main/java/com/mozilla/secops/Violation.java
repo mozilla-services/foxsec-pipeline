@@ -78,6 +78,10 @@ public class Violation {
     tMap.put("hard_limit", ViolationType.HARD_LIMIT_VIOLATION);
     tMap.put("useragent_blacklist", ViolationType.USERAGENT_BLACKLIST_VIOLATION);
     tMap.put("account_creation_abuse", ViolationType.ABUSIVE_ACCOUNT_VIOLATION);
+    // XXX Just reuse ENDPOINT_ABUSE_VIOLATION here for specific Amo pipeline alerts.
+    // These should eventually be moved to a dedicated violation type.
+    tMap.put("fxa_account_abuse_new_version_login", ViolationType.ENDPOINT_ABUSE_VIOLATION);
+    tMap.put("fxa_account_abuse_new_version_submission", ViolationType.ENDPOINT_ABUSE_VIOLATION);
     violationMap = Collections.unmodifiableMap(tMap);
   }
 
@@ -192,6 +196,8 @@ public class Violation {
       categoryField = "category";
     } else if (a.getCategory().equals("customs")) {
       categoryField = "customs_category";
+    } else if (a.getCategory().equals("amo")) {
+      categoryField = "amo_category";
     } else {
       return null;
     }

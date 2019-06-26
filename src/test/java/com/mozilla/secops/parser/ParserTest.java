@@ -657,6 +657,28 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseAmoDockerAmoFileUpload() {
+    String buf =
+        "{\"Timestamp\": 1561211871139126528, \"Type\": \"z\", \"Logger\": \"htt"
+            + "p_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", "
+            + "\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Pid\": 5190, \"Fields\": {\"uid\":"
+            + " \"devinoni_ral\", \"remoteAddressChain\": \"216.160.83.56\", \"msg\": \"FileUp"
+            + "load created: 00000000000000000000000000000000\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.FILEUPLOAD, d.getEventType());
+    assertEquals("devinoni_ral", d.getUid());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+    assertEquals("FileUpload created: 00000000000000000000000000000000", d.getMsg());
+  }
+
+  @Test
   public void testParseAmoGotProfile() {
     String buf =
         "{\"Timestamp\": 1559088104777733120, \"Type\": \"accounts.verify\", \"Logger\":"
@@ -677,6 +699,50 @@ public class ParserTest {
     assertNotNull(d);
     assertEquals(AmoDocker.EventType.GOTPROFILE, d.getEventType());
     assertEquals("riker@mozilla.com", d.getFxaEmail());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+  }
+
+  @Test
+  public void testParseAmoRestrictedEmail() {
+    String buf =
+        "{\"Timestamp\": 1560523200813063936, \"Type\": \"z.users\", \"Logger\": \"http"
+            + "_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \""
+            + "EnvVersion\": \"2.0\", \"Severity\": 6, \"Pid\": 578, \"Fields\": {\"uid\": \"a"
+            + "nonymous\", \"remoteAddressChain\": \"216.160.83."
+            + "56\", \"msg\": \"Restricting request from email riker"
+            + "@mozilla.com (reputation=0)\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.RESTRICTED, d.getEventType());
+    assertEquals("riker@mozilla.com", d.getRestrictedValue());
+    assertEquals("216.160.83.56", d.getRemoteIp());
+  }
+
+  @Test
+  public void testParseAmoRestrictedIp() {
+    String buf =
+        "{\"Timestamp\": 1560523200813063936, \"Type\": \"z.users\", \"Logger\": \"http"
+            + "_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \""
+            + "EnvVersion\": \"2.0\", \"Severity\": 6, \"Pid\": 578, \"Fields\": {\"uid\": \"a"
+            + "nonymous\", \"remoteAddressChain\": \"216.160.83."
+            + "56\", \"msg\": \"Restricting request from ip 216.160.83.56"
+            + " (reputation=49)\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.RESTRICTED, d.getEventType());
+    assertEquals("216.160.83.56", d.getRestrictedValue());
     assertEquals("216.160.83.56", d.getRemoteIp());
   }
 
