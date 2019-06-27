@@ -19,7 +19,7 @@ import org.joda.time.DateTime;
 public class Nginx extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private final JacksonFactory jfmatcher;
+  private final transient JacksonFactory jfmatcher;
 
   private String xForwardedProto;
   private String remoteAddr;
@@ -108,7 +108,7 @@ public class Nginx extends PayloadBase implements Serializable {
     if (entry == null) {
       // Use method local JacksonFactory as the object is not serializable, and this event
       // may be passed around
-      JacksonFactory jf = new JacksonFactory();
+      JacksonFactory jf = state.getGoogleJacksonFactory();
       try {
         JsonParser jp = jf.createJsonParser(input);
         entry = jp.parse(LogEntry.class);
