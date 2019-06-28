@@ -76,22 +76,5 @@ public class Properties implements Serializable {
     return domain;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    Properties pr = (Properties) o;
-    return pr.getProject_id().equals(project_id)
-        && pr.getLocation().equals(location)
-        && pr.getSubnetwork_id().equals(subnetwork_id)
-        && pr.getSubnetwork_name().equals(subnetwork_name);
-  }
-
-  @Override
-  public int hashCode() {
-    return project_id.hashCode()
-        * location.hashCode()
-        * subnetwork_id.hashCode()
-        * subnetwork_id.hashCode();
-  }
-
   public Properties() {}
 }

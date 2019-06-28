@@ -42,18 +42,5 @@ public class DetectionCategory implements Serializable {
     return technique;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    DetectionCategory dc = (DetectionCategory) o;
-    return dc.getIndicator().equals(indicator)
-        && dc.getRuleName().equals(ruleName)
-        && dc.getTechnique().equals(technique);
-  }
-
-  @Override
-  public int hashCode() {
-    return indicator.hashCode();
-  }
-
   public DetectionCategory() {}
 }

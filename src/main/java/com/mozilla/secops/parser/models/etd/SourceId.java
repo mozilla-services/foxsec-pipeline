@@ -31,17 +31,5 @@ public class SourceId implements Serializable {
     return projectId;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    SourceId sid = (SourceId) o;
-    return sid.getCustomerOrganizationNumber().equals(customerOrganizationNumber)
-        && sid.getProjectId().equals(projectId);
-  }
-
-  @Override
-  public int hashCode() {
-    return customerOrganizationNumber.hashCode() * projectId.hashCode();
-  }
-
   public SourceId() {}
 }
