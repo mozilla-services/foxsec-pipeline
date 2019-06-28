@@ -10,6 +10,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
   public enum PayloadType {
     /** Google load balancer */
     GLB,
+    /** GCP Event Threat Detection */
+    ETD,
     /** AWS CloudTrail */
     CLOUDTRAIL,
     /** AWS GuardDuty */
