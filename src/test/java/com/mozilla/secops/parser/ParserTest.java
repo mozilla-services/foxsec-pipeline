@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import com.amazonaws.services.guardduty.model.Finding;
 import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
+import com.mozilla.secops.parser.models.etd.Evidence;
 import java.util.ArrayList;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -1584,6 +1585,105 @@ public class ParserTest {
     assertNotNull(etdf.getSourceId());
     assertEquals("556172058706", etdf.getSourceId().getCustomerOrganizationNumber());
     assertEquals("eap-testing-project", etdf.getSourceId().getProjectId());
+  }
+
+  @Test
+  // this tests the behavior of the overridden equals in the class
+  // com.mozilla.secops.parser.models.etd.Evidence
+  // note that the findings being compared differ only in the insertId field
+  public void testETDEvidenceEquals() {
+    String findingA =
+        "  {  \"detectionCategory\": {"
+            + "      \"indicator\": \"domain\","
+            + "      \"ruleName\": \"bad_domain\","
+            + "      \"technique\": \"Malware\""
+            + "    },"
+            + "    \"detectionPriority\": \"HIGH\","
+            + "    \"eventTime\": \"2019-01-29T20:54:10.606Z\","
+            + "    \"evidence\": ["
+            + "        {"
+            + "        \"sourceLogId\": {"
+            + "          \"insertId\": \"abm9qg1umid1u\","
+            + "          \"timestamp\": \"2019-01-29T20:54:09.379016055Z\""
+            + "        }"
+            + "      }"
+            + "    ],"
+            + "    \"properties\": {"
+            + "      \"domain\": ["
+            + "        \"3322.org\""
+            + "      ],"
+            + "      \"location\": \"us-east1-b\","
+            + "      \"project_id\": \"eap-testing-project\","
+            + "      \"subnetwork_id\": \"6331192180620506838\","
+            + "      \"subnetwork_name\": \"default\""
+            + "    },"
+            + "    \"sourceId\": {"
+            + "      \"customerOrganizationNumber\": \"556172058706\","
+            + "      \"projectId\": \"eap-testing-project\""
+            + "    }"
+            + "}";
+
+    String findingB =
+        "  {  \"detectionCategory\": {"
+            + "      \"indicator\": \"domain\","
+            + "      \"ruleName\": \"bad_domain\","
+            + "      \"technique\": \"Malware\""
+            + "    },"
+            + "    \"detectionPriority\": \"HIGH\","
+            + "    \"eventTime\": \"2019-01-29T20:54:10.606Z\","
+            + "    \"evidence\": ["
+            + "        {"
+            + "        \"sourceLogId\": {"
+            + "          \"insertId\": \"1umid1uabm9qg\","
+            + "          \"timestamp\": \"2019-01-29T20:54:09.379016055Z\""
+            + "        }"
+            + "      }"
+            + "    ],"
+            + "    \"properties\": {"
+            + "      \"domain\": ["
+            + "        \"3322.org\""
+            + "      ],"
+            + "      \"location\": \"us-east1-b\","
+            + "      \"project_id\": \"eap-testing-project\","
+            + "      \"subnetwork_id\": \"6331192180620506838\","
+            + "      \"subnetwork_name\": \"default\""
+            + "    },"
+            + "    \"sourceId\": {"
+            + "      \"customerOrganizationNumber\": \"556172058706\","
+            + "      \"projectId\": \"eap-testing-project\""
+            + "    }"
+            + "}";
+
+    ParserCfg cfg = new ParserCfg();
+    assertNotNull(cfg);
+
+    Parser p = new Parser(cfg);
+    assertNotNull(p);
+
+    Event a = p.parse(findingA);
+    assertNotNull(a);
+    assertEquals(Payload.PayloadType.ETD, a.getPayloadType());
+
+    Event b = p.parse(findingB);
+    assertNotNull(b);
+    assertEquals(Payload.PayloadType.ETD, b.getPayloadType());
+
+    ETDBeta etdParsera = a.getPayload();
+    assertNotNull(etdParsera);
+    assertNotNull(etdParsera.getFinding());
+
+    ETDBeta etdParserb = b.getPayload();
+    assertNotNull(etdParserb);
+    assertNotNull(etdParserb.getFinding());
+
+    ArrayList<Evidence> eva = etdParsera.getFinding().getEvidence();
+    assertNotNull(eva);
+
+    ArrayList<Evidence> evb = etdParserb.getFinding().getEvidence();
+    assertNotNull(evb);
+
+    assertTrue(eva.equals(eva));
+    assertFalse(eva.equals(evb));
   }
 
   @Test
