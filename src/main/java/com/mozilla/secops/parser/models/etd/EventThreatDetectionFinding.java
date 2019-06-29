@@ -10,6 +10,195 @@ import java.util.ArrayList;
 public class EventThreatDetectionFinding implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public class DetectionCategory implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private String indicator;
+    private String ruleName;
+    private String technique;
+
+    /**
+     * Get indicator
+     *
+     * @return String
+     */
+    @JsonProperty("indicator")
+    public String getIndicator() {
+      return indicator;
+    }
+
+    /**
+     * Get rule name which triggered finding
+     *
+     * @return String
+     */
+    @JsonProperty("ruleName")
+    public String getRuleName() {
+      return ruleName;
+    }
+
+    /**
+     * Get bad-actor's suspected technique, i.e. "Malware", "Bruteforce", etc...
+     *
+     * @return String
+     */
+    @JsonProperty("technique")
+    public String getTechnique() {
+      return technique;
+    }
+
+    public DetectionCategory() {}
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class Evidence implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public class SourceLogId implements Serializable {
+      private static final long serialVersionUID = 1L;
+
+      private String insertId;
+      private String timestamp;
+
+      /**
+       * Get insert id
+       *
+       * @return String
+       */
+      @JsonProperty("insertId")
+      public String getInsertId() {
+        return insertId;
+      }
+
+      /**
+       * Get timestamp
+       *
+       * @return String
+       */
+      @JsonProperty("timestamp")
+      public String getTimestamp() {
+        return timestamp;
+      }
+
+      public SourceLogId() {}
+    }
+
+    private SourceLogId sourceLogId;
+
+    @JsonProperty("sourceLogId")
+    public SourceLogId getSourceLogId() {
+      return sourceLogId;
+    }
+
+    public Evidence() {}
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public class Properties implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private String ip;
+    private String location;
+    private String project_id;
+    private String subnetwork_id;
+    private String subnetwork_name;
+    private ArrayList<String> domain;
+
+    /**
+     * Get IP
+     *
+     * @return String
+     */
+    @JsonProperty("ip")
+    public String getIp() {
+      return ip;
+    }
+
+    /**
+     * Get GCP location (analogous to AWS region)
+     *
+     * @return String
+     */
+    @JsonProperty("location")
+    public String getLocation() {
+      return location;
+    }
+
+    /**
+     * Get GCP project id for ETD
+     *
+     * @return String
+     */
+    @JsonProperty("project_id")
+    public String getProject_id() {
+      return project_id;
+    }
+
+    /**
+     * Get subnet id
+     *
+     * @return String
+     */
+    @JsonProperty("subnetwork_id")
+    public String getSubnetwork_id() {
+      return subnetwork_id;
+    }
+
+    /**
+     * Get subnet name
+     *
+     * @return String
+     */
+    @JsonProperty("subnetwork_name")
+    public String getSubnetwork_name() {
+      return subnetwork_name;
+    }
+
+    /**
+     * Get domain list
+     *
+     * @return ArrayList<String>
+     */
+    @JsonProperty("domain")
+    public ArrayList<String> getDomain() {
+      return domain;
+    }
+
+    public Properties() {}
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public class SourceId implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private String customerOrganizationNumber;
+    private String projectId;
+
+    /**
+     * Get GCP org number
+     *
+     * @return String
+     */
+    @JsonProperty("customerOrganizationNumber")
+    public String getCustomerOrganizationNumber() {
+      return customerOrganizationNumber;
+    }
+
+    /**
+     * Get GCP project id for source of Finding
+     *
+     * @return String
+     */
+    @JsonProperty("projectId")
+    public String getProjectId() {
+      return projectId;
+    }
+
+    public SourceId() {}
+  }
+
   private String detectionPriority;
   private String eventTime;
   private DetectionCategory detectionCategory;
@@ -75,17 +264,6 @@ public class EventThreatDetectionFinding implements Serializable {
   @JsonProperty("sourceId")
   public SourceId getSourceId() {
     return sourceId;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    EventThreatDetectionFinding etdf = (EventThreatDetectionFinding) o;
-    return etdf.getEventTime().equals(eventTime) && (etdf.getEvidence().equals(evidence));
-  }
-
-  @Override
-  public int hashCode() {
-    return evidence.hashCode();
   }
 
   public EventThreatDetectionFinding() {}
