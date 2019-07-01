@@ -48,18 +48,18 @@ public class TestStateModel {
     assertEquals(sm.getEntries().size(), 0);
 
     // Reuse existing cursor from previous step
-    assertTrue(sm.updateEntry("127.0.0.1")); // Assert true for new address
+    assertTrue(sm.updateEntry("127.0.0.1", 1.0, 1.0)); // Assert true for new address
     assertEquals(sm.getEntries().size(), 1);
     sm.set(c);
 
     c = s.newCursor();
     sm = StateModel.get("riker", c);
     assertEquals(sm.getEntries().size(), 1);
-    assertFalse(sm.updateEntry("127.0.0.1")); // Assert false for update existing
+    assertFalse(sm.updateEntry("127.0.0.1", 1.0, 1.0)); // Assert false for update existing
     sm.set(c);
 
     c = s.newCursor();
-    assertTrue(sm.updateEntry("10.0.0.1"));
+    assertTrue(sm.updateEntry("10.0.0.1", 44.0, 44.0));
     assertEquals(sm.getEntries().size(), 2);
     sm.set(c);
     c = s.newCursor();
@@ -69,14 +69,14 @@ public class TestStateModel {
 
     sm = new StateModel("picard");
     assertNotNull(sm);
-    assertTrue(sm.updateEntry("127.0.0.1"));
+    assertTrue(sm.updateEntry("127.0.0.1", 1.0, 1.0));
     assertEquals(sm.getEntries().size(), 1);
     c = s.newCursor();
     sm.set(c);
 
     c = s.newCursor();
     sm = StateModel.get("picard", c);
-    assertTrue(sm.updateEntry("10.0.0.1", new DateTime().minusDays(1)));
+    assertTrue(sm.updateEntry("10.0.0.1", new DateTime().minusDays(1), 44.0, 44.0));
     sm.set(c);
 
     c = s.newCursor();

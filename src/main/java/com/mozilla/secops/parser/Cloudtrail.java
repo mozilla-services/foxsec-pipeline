@@ -69,7 +69,7 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
       }
       if (isAuthEvent()) {
         Normalized n = e.getNormalized();
-        n.setType(Normalized.Type.AUTH);
+        n.addType(Normalized.Type.AUTH);
         n.setSubjectUser(getUser());
         n.setObject(event.getRecipientAccountId());
 
