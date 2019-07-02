@@ -18,6 +18,7 @@ public class AmoDocker extends PayloadBase implements Serializable {
   private final String reFileUpload = "^FileUpload created: \\S+$";
   private final String reRestricted =
       "^Restricting request from (email|ip) (\\S+) \\(reputation=.*";
+  private final String reFileUploadMnt = "^UPLOAD: '([^']+)' \\((\\d+) bytes\\).*";
 
   public enum EventType {
     /** Login event */
@@ -29,7 +30,9 @@ public class AmoDocker extends PayloadBase implements Serializable {
     /** File upload */
     FILEUPLOAD,
     /** Restricted request */
-    RESTRICTED
+    RESTRICTED,
+    /** File upload with file system indicator */
+    FILEUPLOADMNT
   }
 
   private String msg;
@@ -42,6 +45,8 @@ public class AmoDocker extends PayloadBase implements Serializable {
 
   private String addonVersion;
   private String addonId;
+  private String fileName;
+  private Integer bytes;
 
   private EventType type;
 
@@ -115,6 +120,24 @@ public class AmoDocker extends PayloadBase implements Serializable {
    */
   public String getRestrictedValue() {
     return restrictedValue;
+  }
+
+  /**
+   * Get file name
+   *
+   * @return String
+   */
+  public String getFileName() {
+    return fileName;
+  }
+
+  /**
+   * Get bytes
+   *
+   * @return Integer
+   */
+  public Integer getBytes() {
+    return bytes;
   }
 
   @Override
@@ -210,6 +233,15 @@ public class AmoDocker extends PayloadBase implements Serializable {
         restrictedValue = remoteIp;
         type = EventType.RESTRICTED;
       }
+      return;
+    }
+
+    mat = Pattern.compile(reFileUploadMnt).matcher(msg);
+    if (mat.matches()) {
+      type = EventType.FILEUPLOADMNT;
+      fileName = mat.group(1);
+      bytes = new Integer(mat.group(2));
+      return;
     }
   }
 }

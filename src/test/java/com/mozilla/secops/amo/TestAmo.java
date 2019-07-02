@@ -32,6 +32,8 @@ public class TestAmo {
     ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
     ret.setOutputIprepd("http://127.0.0.1:8080");
     ret.setOutputIprepdApikey("test");
+    ret.setAccountMatchBanOnLogin(new String[] {"locutus.*"});
+    ret.setAddonMatchCriteria(new String[] {".*test_submission.*:7500:7500"});
     return ret;
   }
 
@@ -66,7 +68,7 @@ public class TestAmo {
         .apply(OutputOptions.compositeOutput(getTestOptions()));
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(4L);
+    PAssert.that(count).containsInAnyOrder(7L);
 
     PAssert.that(alerts)
         .satisfies(
@@ -87,6 +89,27 @@ public class TestAmo {
                   assertEquals("kurn@mozilla.com", a.getMetadataValue("restricted_value"));
                   assertEquals(
                       "test request to amo from kurn@mozilla.com restricted based on reputation",
+                      a.getSummary());
+                } else if (a.getMetadataValue("amo_category")
+                    .equals("fxa_account_abuse_new_version_login_banpattern")) {
+                  assertEquals(
+                      "fxa_account_abuse_new_version_login_banpattern", a.getNotifyMergeKey());
+                  assertEquals("locutus@mozilla.com", a.getMetadataValue("email"));
+                } else if (a.getMetadataValue("amo_category").equals("fxa_account_abuse_alias")) {
+                  assertEquals("fxa_account_abuse_alias", a.getNotifyMergeKey());
+                  assertEquals("6", a.getMetadataValue("count"));
+                  assertEquals(
+                      "test possible alias abuse in amo, laforge@mozilla.com has 6 aliases",
+                      a.getSummary());
+                } else if (a.getMetadataValue("amo_category").equals("amo_abuse_matched_addon")) {
+                  assertEquals("amo_abuse_matched_addon", a.getNotifyMergeKey());
+                  assertEquals("216.160.83.63", a.getMetadataValue("sourceaddress"));
+                  assertEquals(
+                      "00000000000000000000000000000000_test_submission.zip",
+                      a.getMetadataValue("addon_filename"));
+                  assertEquals("7500", a.getMetadataValue("addon_size"));
+                  assertEquals(
+                      "test suspected malicious addon submission from 216.160.83.63",
                       a.getSummary());
                 } else {
                   assertEquals("255.255.25.25", a.getMetadataValue("sourceaddress"));
