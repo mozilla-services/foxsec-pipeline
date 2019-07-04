@@ -97,6 +97,20 @@
 <!--   -->
 </a>
 <h3>Uses of <a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a> in <a href="../../../../../com/mozilla/secops/authprofile/package-summary.html">com.mozilla.secops.authprofile</a></h3>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
+<caption><span>Methods in <a href="../../../../../com/mozilla/secops/authprofile/package-summary.html">com.mozilla.secops.authprofile</a> with parameters of type <a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>static org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">AuthProfile.</span><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.html#processInput-org.apache.beam.sdk.values.PCollection-com.mozilla.secops.authprofile.AuthProfile.AuthProfileOptions-">processInput</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;input,
+            <a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>&nbsp;options)</code>&nbsp;</td>
+</tr>
+</tbody>
+</table>
 <table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing constructors, and an explanation">
 <caption><span>Constructors in <a href="../../../../../com/mozilla/secops/authprofile/package-summary.html">com.mozilla.secops.authprofile</a> with parameters of type <a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a></span><span class="tabEnd">&nbsp;</span></caption>
 <tr>
@@ -104,13 +118,23 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.Analyze.html#Analyze-com.mozilla.secops.authprofile.AuthProfile.AuthProfileOptions-">Analyze</a></span>(<a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>&nbsp;options)</code>
-<div class="block">Static initializer for <a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.Analyze.html" title="class in com.mozilla.secops.authprofile"><code>AuthProfile.Analyze</code></a> using specified pipeline options</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.CritObjectAnalyze.html#CritObjectAnalyze-com.mozilla.secops.authprofile.AuthProfile.AuthProfileOptions-">CritObjectAnalyze</a></span>(<a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>&nbsp;options)</code>
+<div class="block">Initialize new critical object analysis</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html#ParseAndWindow-com.mozilla.secops.authprofile.AuthProfile.AuthProfileOptions-">ParseAndWindow</a></span>(<a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>&nbsp;options)</code>
-<div class="block">Static initializer for <a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html" title="class in com.mozilla.secops.authprofile"><code>AuthProfile.ParseAndWindow</code></a> using specified pipeline options</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.ExtractIdentity.html#ExtractIdentity-com.mozilla.secops.authprofile.AuthProfile.AuthProfileOptions-">ExtractIdentity</a></span>(<a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>&nbsp;options)</code>
+<div class="block">Static initializer for <a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.ExtractIdentity.html" title="class in com.mozilla.secops.authprofile"><code>AuthProfile.ExtractIdentity</code></a></div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.Parse.html#Parse-com.mozilla.secops.authprofile.AuthProfile.AuthProfileOptions-">Parse</a></span>(<a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>&nbsp;options)</code>
+<div class="block">Static initializer for <a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.Parse.html" title="class in com.mozilla.secops.authprofile"><code>AuthProfile.Parse</code></a> using specified pipeline options</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.StateAnalyze.html#StateAnalyze-com.mozilla.secops.authprofile.AuthProfile.AuthProfileOptions-">StateAnalyze</a></span>(<a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>&nbsp;options)</code>
+<div class="block">Static initializer for <a href="../../../../../com/mozilla/secops/authprofile/AuthProfile.StateAnalyze.html" title="class in com.mozilla.secops.authprofile"><code>AuthProfile.StateAnalyze</code></a> using specified pipeline options</div>
 </td>
 </tr>
 </tbody>

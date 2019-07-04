@@ -111,7 +111,7 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">AlertMailer</span>
 extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></pre>
-<div class="block"><a href="../../../../com/mozilla/secops/alert/AlertMailer.html" title="class in com.mozilla.secops.alert"><code>AlertMailer</code></a> handles SES based alerting output</div>
+<div class="block"><a href="../../../../com/mozilla/secops/alert/AlertMailer.html" title="class in com.mozilla.secops.alert"><code>AlertMailer</code></a> handles email based alerting output</div>
 </li>
 </ul>
 </div>
@@ -190,11 +190,14 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <ul class="blockListLast">
 <li class="blockList">
 <h4>AlertMailer</h4>
-<pre>public&nbsp;AlertMailer(<a href="../../../../com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert">AlertConfiguration</a>&nbsp;cfg)</pre>
+<pre>public&nbsp;AlertMailer(<a href="../../../../com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert">AlertConfiguration</a>&nbsp;cfg)
+            throws <a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a></pre>
 <div class="block">Create new <a href="../../../../com/mozilla/secops/alert/AlertMailer.html" title="class in com.mozilla.secops.alert"><code>AlertMailer</code></a> with specified <a href="../../../../com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert"><code>AlertConfiguration</code></a></div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>cfg</code> - <a href="../../../../com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert"><code>AlertConfiguration</code></a></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a></code></dd>
 </dl>
 </li>
 </ul>

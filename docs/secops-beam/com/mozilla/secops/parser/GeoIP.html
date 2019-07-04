@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10};
+var methods = {"i0":10,"i1":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -130,8 +130,9 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/GeoIP.html#GeoIP-java.lang.String-">GeoIP</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;path)</code>
-<div class="block">Initialize new <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a>, load database from specified path</div>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/GeoIP.html#GeoIP-java.lang.String-java.lang.String-">GeoIP</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;cityPath,
+     <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ispPath)</code>
+<div class="block">Initialize new <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a>, load databases from specified paths</div>
 </td>
 </tr>
 </table>
@@ -151,8 +152,14 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>com.maxmind.geoip2.model.CityResponse</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/GeoIP.html#lookup-java.lang.String-">lookup</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ip)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/GeoIP.html#lookupCity-java.lang.String-">lookupCity</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ip)</code>
 <div class="block">Lookup city/country from IP address string</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>com.maxmind.geoip2.model.IspResponse</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/GeoIP.html#lookupIsp-java.lang.String-">lookupIsp</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ip)</code>
+<div class="block">Lookup ISP from IP address string</div>
 </td>
 </tr>
 </table>
@@ -177,17 +184,21 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="GeoIP-java.lang.String-">
+<a name="GeoIP-java.lang.String-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>GeoIP</h4>
-<pre>public&nbsp;GeoIP(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;path)</pre>
-<div class="block">Initialize new <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a>, load database from specified path</div>
+<pre>public&nbsp;GeoIP(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;cityPath,
+             <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ispPath)</pre>
+<div class="block">Initialize new <a href="../../../../com/mozilla/secops/parser/GeoIP.html" title="class in com.mozilla.secops.parser"><code>GeoIP</code></a>, load databases from specified paths
+
+ <p>If you don't want to initialize one of the DB's (City or ISP), pass in `null` as the path.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>path</code> - Resource or GCS path to load database from</dd>
+<dd><code>cityPath</code> - Resource or GCS path to load City database from</dd>
+<dd><code>ispPath</code> - Resource or GCS path to load ISP database from</dd>
 </dl>
 </li>
 </ul>
@@ -199,19 +210,35 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="lookup-java.lang.String-">
+<a name="lookupCity-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
-<h4>lookup</h4>
-<pre>public&nbsp;com.maxmind.geoip2.model.CityResponse&nbsp;lookup(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ip)</pre>
+<h4>lookupCity</h4>
+<pre>public&nbsp;com.maxmind.geoip2.model.CityResponse&nbsp;lookupCity(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ip)</pre>
 <div class="block">Lookup city/country from IP address string</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>ip</code> - IP address string</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>MaxmindDB <code>CityResponse</code>, or null on failure</dd>
+</dl>
+</li>
+</ul>
+<a name="lookupIsp-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>lookupIsp</h4>
+<pre>public&nbsp;com.maxmind.geoip2.model.IspResponse&nbsp;lookupIsp(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ip)</pre>
+<div class="block">Lookup ISP from IP address string</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>ip</code> - IP address string</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>MaxmindDB <code>IspResponse</code>, or null on failure</dd>
 </dl>
 </li>
 </ul>

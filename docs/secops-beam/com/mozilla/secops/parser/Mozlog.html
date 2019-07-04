@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/parser/GLB.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/parser/KeyedEvent.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../com/mozilla/secops/parser/Nginx.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -160,7 +160,8 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>static <a href="../../../../com/mozilla/secops/parser/Mozlog.html" title="class in com.mozilla.secops.parser">Mozlog</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Mozlog.html#fromJSON-java.lang.String-">fromJSON</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Mozlog.html#fromJSON-java.lang.String-com.fasterxml.jackson.databind.ObjectMapper-">fromJSON</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
+        com.fasterxml.jackson.databind.ObjectMapper&nbsp;mapper)</code>
 <div class="block">Create a new <a href="../../../../com/mozilla/secops/parser/Mozlog.html" title="class in com.mozilla.secops.parser"><code>Mozlog</code></a> object using a JSON string as input</div>
 </td>
 </tr>
@@ -385,17 +386,19 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </dl>
 </li>
 </ul>
-<a name="fromJSON-java.lang.String-">
+<a name="fromJSON-java.lang.String-com.fasterxml.jackson.databind.ObjectMapper-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>fromJSON</h4>
-<pre>public static&nbsp;<a href="../../../../com/mozilla/secops/parser/Mozlog.html" title="class in com.mozilla.secops.parser">Mozlog</a>&nbsp;fromJSON(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input)</pre>
+<pre>public static&nbsp;<a href="../../../../com/mozilla/secops/parser/Mozlog.html" title="class in com.mozilla.secops.parser">Mozlog</a>&nbsp;fromJSON(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input,
+                              com.fasterxml.jackson.databind.ObjectMapper&nbsp;mapper)</pre>
 <div class="block">Create a new <a href="../../../../com/mozilla/secops/parser/Mozlog.html" title="class in com.mozilla.secops.parser"><code>Mozlog</code></a> object using a JSON string as input</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>input</code> - Mozlog JSON event</dd>
+<dd><code>mapper</code> - ObjectMapper to use</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Mozlog event or null if deserialization failed</dd>
 </dl>
@@ -429,7 +432,7 @@ implements <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializab
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/parser/GLB.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/parser/KeyedEvent.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../com/mozilla/secops/parser/Nginx.html" title="class in com.mozilla.secops.parser"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">

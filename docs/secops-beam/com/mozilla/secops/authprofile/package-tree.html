@@ -43,7 +43,7 @@
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/alert/package-tree.html">Prev</a></li>
+<li><a href="../../../../com/mozilla/secops/amo/package-tree.html">Prev</a></li>
 <li><a href="../../../../com/mozilla/secops/awsbehavior/package-tree.html">Next</a></li>
 </ul>
 <ul class="navList">
@@ -84,12 +84,14 @@
 <li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile</span></a> (implements java.io.<a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</a>)</li>
 <li type="circle">org.apache.beam.sdk.transforms.DoFn&lt;InputT,OutputT&gt; (implements org.apache.beam.sdk.transforms.display.HasDisplayData, java.io.<a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</a>)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.Analyze.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.Analyze</span></a></li>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.CritObjectAnalyze.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.CritObjectAnalyze</span></a></li>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ExtractIdentity.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.ExtractIdentity</span></a></li>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.StateAnalyze.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.StateAnalyze</span></a></li>
 </ul>
 </li>
 <li type="circle">org.apache.beam.sdk.transforms.PTransform&lt;InputT,OutputT&gt; (implements org.apache.beam.sdk.transforms.display.HasDisplayData, java.io.<a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</a>)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.ParseAndWindow</span></a></li>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.Parse.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.Parse</span></a></li>
 </ul>
 </li>
 <li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/StateModel.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">StateModel</span></a></li>
@@ -108,7 +110,11 @@
 <ul>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">InputOptions</span></a> (also extends org.apache.beam.sdk.extensions.gcp.options.GcpOptions, org.apache.beam.sdk.options.PipelineOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -119,7 +125,9 @@
 <ul>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">InputOptions</span></a> (also extends org.apache.beam.sdk.extensions.gcp.options.GcpOptions, org.apache.beam.sdk.options.PipelineOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
 </ul>
 </li>
 </ul>
@@ -128,24 +136,38 @@
 </li>
 </ul>
 </li>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>, com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)</li>
+</ul>
+</li>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops">IOOptions</a>)</li>
 <li type="circle">org.apache.beam.sdk.extensions.gcp.options.GcpOptions (also extends org.apache.beam.sdk.extensions.gcp.options.GoogleApiDebugOptions)
 <ul>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">InputOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">OutputOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 <li type="circle">org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions (also extends org.apache.beam.sdk.options.ApplicationNameOptions, org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.options.StreamingOptions)
 <ul>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">InputOptions</span></a> (also extends org.apache.beam.sdk.extensions.gcp.options.GcpOptions, org.apache.beam.sdk.options.PipelineOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -158,19 +180,31 @@
 <ul>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">InputOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">OutputOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 <li type="circle">org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions (also extends org.apache.beam.sdk.options.ApplicationNameOptions, org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.options.StreamingOptions)
 <ul>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">InputOptions</span></a> (also extends org.apache.beam.sdk.extensions.gcp.options.GcpOptions, org.apache.beam.sdk.options.PipelineOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -181,19 +215,31 @@
 </li>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">InputOptions</span></a> (also extends org.apache.beam.sdk.extensions.gcp.options.GcpOptions, org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">OutputOptions</span></a> (also extends org.apache.beam.sdk.extensions.gcp.options.GcpOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops">InputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 <li type="circle">org.apache.beam.sdk.io.gcp.pubsub.PubsubOptions (also extends org.apache.beam.sdk.options.ApplicationNameOptions, org.apache.beam.sdk.extensions.gcp.options.GcpOptions, org.apache.beam.sdk.options.StreamingOptions)
 <ul>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">InputOptions</span></a> (also extends org.apache.beam.sdk.extensions.gcp.options.GcpOptions, org.apache.beam.sdk.options.PipelineOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -204,7 +250,11 @@
 <ul>
 <li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/InputOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">InputOptions</span></a> (also extends org.apache.beam.sdk.extensions.gcp.options.GcpOptions, org.apache.beam.sdk.options.PipelineOptions)
 <ul>
-<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>, org.apache.beam.sdk.options.PipelineOptions)</li>
+<li type="circle">com.mozilla.secops.<a href="../../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops"><span class="typeNameLink">IOOptions</span></a> (also extends com.mozilla.secops.<a href="../../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>)
+<ul>
+<li type="circle">com.mozilla.secops.authprofile.<a href="../../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile"><span class="typeNameLink">AuthProfile.AuthProfileOptions</span></a> (also extends org.apache.beam.sdk.options.PipelineOptions)</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -238,7 +288,7 @@
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/alert/package-tree.html">Prev</a></li>
+<li><a href="../../../../com/mozilla/secops/amo/package-tree.html">Prev</a></li>
 <li><a href="../../../../com/mozilla/secops/awsbehavior/package-tree.html">Next</a></li>
 </ul>
 <ul class="navList">

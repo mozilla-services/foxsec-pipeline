@@ -110,27 +110,52 @@
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="../../../../com/mozilla/secops/customs/Customs.AccountCreationAbuse.html" title="class in com.mozilla.secops.customs">Customs.AccountCreationAbuse</a></td>
+<td class="colLast">
+<div class="block">Analyze input stream for account creation abuse</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../com/mozilla/secops/customs/Customs.Detector.html" title="class in com.mozilla.secops.customs">Customs.Detector</a></td>
 <td class="colLast">
 <div class="block">Generic rate limiting detector driven by <a href="../../../../com/mozilla/secops/customs/CustomsCfgEntry.html" title="class in com.mozilla.secops.customs"><code>CustomsCfgEntry</code></a></div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../com/mozilla/secops/customs/Customs.Detectors.html" title="class in com.mozilla.secops.customs">Customs.Detectors</a></td>
 <td class="colLast">
-<div class="block">High level transform for invoking all detector instances given the customs configuration</div>
+<div class="block">High level transform for invoking all rate limit detector instances given the customs
+ configuration</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../com/mozilla/secops/customs/CustomsAccountCreation.html" title="class in com.mozilla.secops.customs">CustomsAccountCreation</a></td>
+<td class="colLast">
+<div class="block"><code>DoFn</code> for analysis of account creation abuse applied to sessions</div>
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="../../../../com/mozilla/secops/customs/CustomsAccountCreationDist.html" title="class in com.mozilla.secops.customs">CustomsAccountCreationDist</a></td>
+<td class="colLast">
+<div class="block"><code>DoFn</code> for analysis of distributed account creation abuse</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../com/mozilla/secops/customs/CustomsCfg.html" title="class in com.mozilla.secops.customs">CustomsCfg</a></td>
 <td class="colLast">
 <div class="block">Maps to a customs pipeline configuration file</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../com/mozilla/secops/customs/CustomsCfgEntry.html" title="class in com.mozilla.secops.customs">CustomsCfgEntry</a></td>
 <td class="colLast">
 <div class="block">An individual detector configuration within the customs configuration</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../com/mozilla/secops/customs/CustomsUtil.html" title="class in com.mozilla.secops.customs">CustomsUtil</a></td>
+<td class="colLast">
+<div class="block">Utility functions for working with <a href="../../../../com/mozilla/secops/parser/FxaAuth.html" title="class in com.mozilla.secops.parser"><code>FxaAuth</code></a> events in customs</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -140,16 +165,16 @@
 </td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><a href="../../../../com/mozilla/secops/customs/RateLimitCandidate.html" title="class in com.mozilla.secops.customs">RateLimitCandidate</a></td>
+<td class="colLast">
+<div class="block">Describes candidate information used in <a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs"><code>RateLimitCriterion</code></a></div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs">RateLimitCriterion</a></td>
 <td class="colLast">
 <div class="block">Operate in conjunction with <a href="../../../../com/mozilla/secops/customs/RateLimitAnalyzer.html" title="class in com.mozilla.secops.customs"><code>RateLimitAnalyzer</code></a> to apply analysis criterion to incoming
  event stream.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><a href="../../../../com/mozilla/secops/customs/RateLimitSuppressor.html" title="class in com.mozilla.secops.customs">RateLimitSuppressor</a></td>
-<td class="colLast">
-<div class="block"><code>DoFn</code> to apply suppression of alerts.</div>
 </td>
 </tr>
 </tbody>

@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -128,7 +128,7 @@ var activeTableTab = "activeTableTab";
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#deleteAll--">deleteAll</a></span>()</code>
-<div class="block">Delete all keys from state</div>
+<div class="block">Flush all keys in the state implementation</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
@@ -138,22 +138,15 @@ var activeTableTab = "activeTableTab";
 </td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#getObject-java.lang.String-">getObject</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s)</code>
-<div class="block">Retrieve object from state</div>
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#initialize--">initialize</a></span>()</code>
+<div class="block">Perform any setup required to read and write state</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#initialize--">initialize</a></span>()</code>
-<div class="block">Perform and setup required to read and write state</div>
-</td>
-</tr>
-<tr id="i4" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#saveObject-java.lang.String-java.lang.String-">saveObject</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s,
-          <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;v)</code>
-<div class="block">Save object to state</div>
+<td class="colFirst"><code><a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state">StateCursor</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/StateInterface.html#newCursor--">newCursor</a></span>()</code>
+<div class="block">Allocate new state cursor</div>
 </td>
 </tr>
 </table>
@@ -171,59 +164,6 @@ var activeTableTab = "activeTableTab";
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="getObject-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getObject</h4>
-<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getObject(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s)
-          throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
-<div class="block">Retrieve object from state</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>s</code> - State key</dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>Stored state JSON</dd>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="deleteAll--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>deleteAll</h4>
-<pre>void&nbsp;deleteAll()
-        throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
-<div class="block">Delete all keys from state</div>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="saveObject-java.lang.String-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>saveObject</h4>
-<pre>void&nbsp;saveObject(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s,
-                <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;v)
-         throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
-<div class="block">Save object to state</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>s</code> - State key</dd>
-<dd><code>v</code> - State JSON</dd>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
-</dl>
-</li>
-</ul>
 <a name="done--">
 <!--   -->
 </a>
@@ -234,19 +174,44 @@ var activeTableTab = "activeTableTab";
 <div class="block">Notify state implementation no further processing will occur</div>
 </li>
 </ul>
-<a name="initialize--">
+<a name="deleteAll--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
-<h4>initialize</h4>
-<pre>void&nbsp;initialize()
-         throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
-<div class="block">Perform and setup required to read and write state</div>
+<h4>deleteAll</h4>
+<pre>void&nbsp;deleteAll()
+        throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
+<div class="block">Flush all keys in the state implementation</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
 </dl>
+</li>
+</ul>
+<a name="initialize--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>initialize</h4>
+<pre>void&nbsp;initialize()
+         throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
+<div class="block">Perform any setup required to read and write state</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="newCursor--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>newCursor</h4>
+<pre><a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state">StateCursor</a>&nbsp;newCursor()</pre>
+<div class="block">Allocate new state cursor</div>
 </li>
 </ul>
 </li>

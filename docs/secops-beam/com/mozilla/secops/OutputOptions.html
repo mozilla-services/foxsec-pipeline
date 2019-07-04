@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":17,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":6,"i13":6,"i14":6,"i15":6,"i16":6,"i17":6,"i18":6,"i19":6,"i20":6,"i21":6,"i22":6,"i23":6,"i24":6,"i25":6,"i26":6,"i27":6,"i28":6,"i29":6,"i30":6,"i31":6,"i32":6,"i33":6,"i34":6,"i35":6,"i36":6};
+var methods = {"i0":17,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":6,"i13":6,"i14":6,"i15":6,"i16":6,"i17":6,"i18":6,"i19":6,"i20":6,"i21":6,"i22":6,"i23":6,"i24":6,"i25":6,"i26":6,"i27":6,"i28":6,"i29":6,"i30":6,"i31":6,"i32":6,"i33":6,"i34":6,"i35":6,"i36":6,"i37":6,"i38":6,"i39":6,"i40":6,"i41":6,"i42":6,"i43":6,"i44":6,"i45":6,"i46":6};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],16:["t5","Default Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../com/mozilla/secops/IprepdIO.Write.html" title="class in com.mozilla.secops"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../com/mozilla/secops/Stats.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../com/mozilla/secops/ScriptRunner.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?com/mozilla/secops/OutputOptions.html" target="_top">Frames</a></li>
@@ -105,7 +105,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>All Known Subinterfaces:</dt>
-<dd><a href="../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>, <a href="../../../com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html" title="interface in com.mozilla.secops.awsbehavior">AwsBehavior.AwsBehaviorOptions</a>, <a href="../../../com/mozilla/secops/customs/Customs.CustomsOptions.html" title="interface in com.mozilla.secops.customs">Customs.CustomsOptions</a>, <a href="../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>, <a href="../../../com/mozilla/secops/streamwriter/StreamWriter.StreamWriterOptions.html" title="interface in com.mozilla.secops.streamwriter">StreamWriter.StreamWriterOptions</a></dd>
+<dd><a href="../../../com/mozilla/secops/amo/Amo.AmoOptions.html" title="interface in com.mozilla.secops.amo">Amo.AmoOptions</a>, <a href="../../../com/mozilla/secops/authprofile/AuthProfile.AuthProfileOptions.html" title="interface in com.mozilla.secops.authprofile">AuthProfile.AuthProfileOptions</a>, <a href="../../../com/mozilla/secops/awsbehavior/AwsBehavior.AwsBehaviorOptions.html" title="interface in com.mozilla.secops.awsbehavior">AwsBehavior.AwsBehaviorOptions</a>, <a href="../../../com/mozilla/secops/customs/Customs.CustomsOptions.html" title="interface in com.mozilla.secops.customs">Customs.CustomsOptions</a>, <a href="../../../com/mozilla/secops/httprequest/HTTPRequest.HTTPRequestOptions.html" title="interface in com.mozilla.secops.httprequest">HTTPRequest.HTTPRequestOptions</a>, <a href="../../../com/mozilla/secops/IOOptions.html" title="interface in com.mozilla.secops">IOOptions</a>, <a href="../../../com/mozilla/secops/streamwriter/StreamWriter.StreamWriterOptions.html" title="interface in com.mozilla.secops.streamwriter">StreamWriter.StreamWriterOptions</a></dd>
 </dl>
 <hr>
 <br>
@@ -180,148 +180,188 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.extensi
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#compositeOutput-com.mozilla.secops.OutputOptions-">compositeOutput</a></span>(<a href="../../../com/mozilla/secops/OutputOptions.html" title="interface in com.mozilla.secops">OutputOptions</a>&nbsp;o)</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getAlertStateDatastoreKind--">getAlertStateDatastoreKind</a></span>()</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getAlertAddressFields--">getAlertAddressFields</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getAlertStateDatastoreNamespace--">getAlertStateDatastoreNamespace</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getAlertStateDatastoreKind--">getAlertStateDatastoreKind</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getAlertStateMemcachedHost--">getAlertStateMemcachedHost</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getAlertStateDatastoreNamespace--">getAlertStateDatastoreNamespace</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getAlertStateMemcachedHost--">getAlertStateMemcachedHost</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getAlertStateMemcachedPort--">getAlertStateMemcachedPort</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getMonitoredResourceIndicator--">getMonitoredResourceIndicator</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailCatchall--">getOutputAlertEmailCatchall</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertEmailFrom--">getOutputAlertEmailFrom</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackCatchall--">getOutputAlertSlackCatchall</a></span>()</code>&nbsp;</td>
-</tr>
 <tr id="i9" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackToken--">getOutputAlertSlackToken</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertGcsTemplateBasePath--">getOutputAlertGcsTemplateBasePath</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpCredentials--">getOutputAlertSmtpCredentials</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackCatchall--">getOutputAlertSlackCatchall</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i11" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpRelay--">getOutputAlertSmtpRelay</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSlackToken--">getOutputAlertSlackToken</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i12" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputBigQuery--">getOutputBigQuery</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpCredentials--">getOutputAlertSmtpCredentials</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i13" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputFile--">getOutputFile</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertSmtpRelay--">getOutputAlertSmtpRelay</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i14" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputIprepd--">getOutputIprepd</a></span>()</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputAlertTemplates--">getOutputAlertTemplates</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i15" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdApikey--">getOutputIprepdApikey</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputBigQuery--">getOutputBigQuery</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i16" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdDatastoreWhitelistProject--">getOutputIprepdDatastoreWhitelistProject</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputFile--">getOutputFile</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i17" class="rowColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdEnableDatastoreWhitelist--">getOutputIprepdEnableDatastoreWhitelist</a></span>()</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputIprepd--">getOutputIprepd</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i18" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputPubsub--">getOutputPubsub</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdApikey--">getOutputIprepdApikey</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i19" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setAlertStateDatastoreKind-java.lang.String-">setAlertStateDatastoreKind</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdDatastoreWhitelistProject--">getOutputIprepdDatastoreWhitelistProject</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i20" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setAlertStateDatastoreNamespace-java.lang.String-">setAlertStateDatastoreNamespace</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdEnableDatastoreWhitelist--">getOutputIprepdEnableDatastoreWhitelist</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i21" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setAlertStateMemcachedHost-java.lang.String-">setAlertStateMemcachedHost</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputIprepdLegacyMode--">getOutputIprepdLegacyMode</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i22" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setAlertStateMemcachedPort-java.lang.Integer-">setAlertStateMemcachedPort</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputPubsub--">getOutputPubsub</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i23" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setMonitoredResourceIndicator-java.lang.String-">setMonitoredResourceIndicator</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#getOutputSqs--">getOutputSqs</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i24" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailCatchall-java.lang.String-">setOutputAlertEmailCatchall</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setAlertAddressFields-java.lang.String:A-">setAlertAddressFields</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i25" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailFrom-java.lang.String-">setOutputAlertEmailFrom</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setAlertStateDatastoreKind-java.lang.String-">setAlertStateDatastoreKind</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i26" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackCatchall-java.lang.String-">setOutputAlertSlackCatchall</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setAlertStateDatastoreNamespace-java.lang.String-">setAlertStateDatastoreNamespace</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i27" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackToken-java.lang.String-">setOutputAlertSlackToken</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setAlertStateMemcachedHost-java.lang.String-">setAlertStateMemcachedHost</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i28" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpCredentials-java.lang.String-">setOutputAlertSmtpCredentials</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setAlertStateMemcachedPort-java.lang.Integer-">setAlertStateMemcachedPort</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i29" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpRelay-java.lang.String-">setOutputAlertSmtpRelay</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setMonitoredResourceIndicator-java.lang.String-">setMonitoredResourceIndicator</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i30" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputBigQuery-java.lang.String-">setOutputBigQuery</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailCatchall-java.lang.String-">setOutputAlertEmailCatchall</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i31" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputFile-java.lang.String-">setOutputFile</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertEmailFrom-java.lang.String-">setOutputAlertEmailFrom</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i32" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputIprepd-java.lang.String-">setOutputIprepd</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertGcsTemplateBasePath-java.lang.String-">setOutputAlertGcsTemplateBasePath</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i33" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdApikey-java.lang.String-">setOutputIprepdApikey</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackCatchall-java.lang.String-">setOutputAlertSlackCatchall</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i34" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdDatastoreWhitelistProject-java.lang.String-">setOutputIprepdDatastoreWhitelistProject</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSlackToken-java.lang.String-">setOutputAlertSlackToken</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i35" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdEnableDatastoreWhitelist-java.lang.Boolean-">setOutputIprepdEnableDatastoreWhitelist</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpCredentials-java.lang.String-">setOutputAlertSmtpCredentials</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 <tr id="i36" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputPubsub-java.lang.String-">setOutputPubsub</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertSmtpRelay-java.lang.String-">setOutputAlertSmtpRelay</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i37" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputAlertTemplates-java.lang.String:A-">setOutputAlertTemplates</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i38" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputBigQuery-java.lang.String-">setOutputBigQuery</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i39" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputFile-java.lang.String-">setOutputFile</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i40" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputIprepd-java.lang.String-">setOutputIprepd</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i41" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdApikey-java.lang.String-">setOutputIprepdApikey</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i42" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdDatastoreWhitelistProject-java.lang.String-">setOutputIprepdDatastoreWhitelistProject</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i43" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdEnableDatastoreWhitelist-java.lang.Boolean-">setOutputIprepdEnableDatastoreWhitelist</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i44" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputIprepdLegacyMode-java.lang.Boolean-">setOutputIprepdLegacyMode</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i45" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputPubsub-java.lang.String:A-">setOutputPubsub</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i46" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/OutputOptions.html#setOutputSqs-java.lang.String-">setOutputSqs</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -408,16 +448,34 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.extensi
 <ul class="blockList">
 <li class="blockList">
 <h4>getOutputPubsub</h4>
-<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getOutputPubsub()</pre>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;getOutputPubsub()</pre>
 </li>
 </ul>
-<a name="setOutputPubsub-java.lang.String-">
+<a name="setOutputPubsub-java.lang.String:A-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>setOutputPubsub</h4>
-<pre>void&nbsp;setOutputPubsub(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
+<pre>void&nbsp;setOutputPubsub(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getOutputSqs--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getOutputSqs</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getOutputSqs()</pre>
+</li>
+</ul>
+<a name="setOutputSqs-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setOutputSqs</h4>
+<pre>void&nbsp;setOutputSqs(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
 </li>
 </ul>
 <a name="getOutputIprepd--">
@@ -454,6 +512,25 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.extensi
 <li class="blockList">
 <h4>setOutputIprepdApikey</h4>
 <pre>void&nbsp;setOutputIprepdApikey(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getOutputIprepdLegacyMode--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getOutputIprepdLegacyMode</h4>
+<pre>@Default.Boolean(value=false)
+<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;getOutputIprepdLegacyMode()</pre>
+</li>
+</ul>
+<a name="setOutputIprepdLegacyMode-java.lang.Boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setOutputIprepdLegacyMode</h4>
+<pre>void&nbsp;setOutputIprepdLegacyMode(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;value)</pre>
 </li>
 </ul>
 <a name="getOutputIprepdEnableDatastoreWhitelist--">
@@ -693,6 +770,62 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.extensi
 <pre>void&nbsp;setAlertStateDatastoreKind(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
 </li>
 </ul>
+<a name="getOutputAlertGcsTemplateBasePath--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getOutputAlertGcsTemplateBasePath</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getOutputAlertGcsTemplateBasePath()</pre>
+</li>
+</ul>
+<a name="setOutputAlertGcsTemplateBasePath-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setOutputAlertGcsTemplateBasePath</h4>
+<pre>void&nbsp;setOutputAlertGcsTemplateBasePath(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getOutputAlertTemplates--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getOutputAlertTemplates</h4>
+<pre>@Hidden
+<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;getOutputAlertTemplates()</pre>
+</li>
+</ul>
+<a name="setOutputAlertTemplates-java.lang.String:A-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setOutputAlertTemplates</h4>
+<pre>@Hidden
+void&nbsp;setOutputAlertTemplates(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</pre>
+</li>
+</ul>
+<a name="getAlertAddressFields--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getAlertAddressFields</h4>
+<pre><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;getAlertAddressFields()</pre>
+</li>
+</ul>
+<a name="setAlertAddressFields-java.lang.String:A-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setAlertAddressFields</h4>
+<pre>void&nbsp;setAlertAddressFields(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;value)</pre>
+</li>
+</ul>
 <a name="compositeOutput-com.mozilla.secops.OutputOptions-">
 <!--   -->
 </a>
@@ -731,7 +864,7 @@ extends org.apache.beam.sdk.options.PipelineOptions, org.apache.beam.sdk.extensi
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../com/mozilla/secops/IprepdIO.Write.html" title="class in com.mozilla.secops"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../com/mozilla/secops/Stats.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../com/mozilla/secops/ScriptRunner.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?com/mozilla/secops/OutputOptions.html" target="_top">Frames</a></li>

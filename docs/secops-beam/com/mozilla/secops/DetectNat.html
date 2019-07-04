@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../com/mozilla/secops/CompositeOutput.html" title="class in com.mozilla.secops"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../com/mozilla/secops/GcsUtil.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../com/mozilla/secops/FileUtil.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?com/mozilla/secops/DetectNat.html" target="_top">Frames</a></li>
@@ -122,7 +122,7 @@ var activeTableTab = "activeTableTab";
 extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&gt;&gt;&gt;</pre>
 <div class="block">Provides a basic NAT detection transform
 
- <p>Currently this transform only operates on GLB log data, and is based on the detection of
+ <p>Currently this transform only operates on normalized <a href="../../../com/mozilla/secops/parser/Normalized.Type.html#HTTP_REQUEST"><code>Normalized.Type.HTTP_REQUEST</code></a> events and is based on the detection of
  multiple user agents being identified for requests within the window for the same source IP
  address.
 
@@ -305,7 +305,7 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../com/mozilla/secops/CompositeOutput.html" title="class in com.mozilla.secops"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../com/mozilla/secops/GcsUtil.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../com/mozilla/secops/FileUtil.html" title="class in com.mozilla.secops"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?com/mozilla/secops/DetectNat.html" target="_top">Frames</a></li>

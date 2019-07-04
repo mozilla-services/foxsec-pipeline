@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.StateAnalyze.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
@@ -153,8 +153,8 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>static <a href="../../../../com/mozilla/secops/authprofile/StateModel.html" title="class in com.mozilla.secops.authprofile">StateModel</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/StateModel.html#get-java.lang.String-com.mozilla.secops.state.State-">get</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;user,
-   <a href="../../../../com/mozilla/secops/state/State.html" title="class in com.mozilla.secops.state">State</a>&nbsp;s)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/StateModel.html#get-java.lang.String-com.mozilla.secops.state.StateCursor-">get</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;user,
+   <a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state">StateCursor</a>&nbsp;s)</code>
 <div class="block">Retrieve state object for user</div>
 </td>
 </tr>
@@ -184,7 +184,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </tr>
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/StateModel.html#set-com.mozilla.secops.state.State-">set</a></span>(<a href="../../../../com/mozilla/secops/state/State.html" title="class in com.mozilla.secops.state">State</a>&nbsp;s)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/authprofile/StateModel.html#set-com.mozilla.secops.state.StateCursor-">set</a></span>(<a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state">StateCursor</a>&nbsp;s)</code>
 <div class="block">Persist state using state interface</div>
 </td>
 </tr>
@@ -359,20 +359,20 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </dl>
 </li>
 </ul>
-<a name="get-java.lang.String-com.mozilla.secops.state.State-">
+<a name="get-java.lang.String-com.mozilla.secops.state.StateCursor-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>get</h4>
 <pre>public static&nbsp;<a href="../../../../com/mozilla/secops/authprofile/StateModel.html" title="class in com.mozilla.secops.authprofile">StateModel</a>&nbsp;get(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;user,
-                             <a href="../../../../com/mozilla/secops/state/State.html" title="class in com.mozilla.secops.state">State</a>&nbsp;s)
+                             <a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state">StateCursor</a>&nbsp;s)
                       throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
 <div class="block">Retrieve state object for user</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>user</code> - Subject name to retrieve state for</dd>
-<dd><code>s</code> - Initialized state interface for request</dd>
+<dd><code>s</code> - Initialized state cursor for request</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>User <a href="../../../../com/mozilla/secops/authprofile/StateModel.html" title="class in com.mozilla.secops.authprofile"><code>StateModel</code></a> or null if it does not exist</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
@@ -380,18 +380,20 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </dl>
 </li>
 </ul>
-<a name="set-com.mozilla.secops.state.State-">
+<a name="set-com.mozilla.secops.state.StateCursor-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>set</h4>
-<pre>public&nbsp;void&nbsp;set(<a href="../../../../com/mozilla/secops/state/State.html" title="class in com.mozilla.secops.state">State</a>&nbsp;s)
+<pre>public&nbsp;void&nbsp;set(<a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state">StateCursor</a>&nbsp;s)
          throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
-<div class="block">Persist state using state interface</div>
+<div class="block">Persist state using state interface
+
+ <p>Calling set will also commit and close the cursor.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>s</code> - Initialized state interface for request</dd>
+<dd><code>s</code> - Initialized state cursor for request</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
 </dl>
@@ -425,7 +427,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.StateAnalyze.html" title="class in com.mozilla.secops.authprofile"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">

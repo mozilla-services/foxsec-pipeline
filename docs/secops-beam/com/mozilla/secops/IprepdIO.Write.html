@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -194,6 +194,18 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <div class="block">Get configured URL</div>
 </td>
 </tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/IprepdIO.Write.html#getUseLegacySubmission--">getUseLegacySubmission</a></span>()</code>
+<div class="block">Return legacy submission flag</div>
+</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code><a href="../../../com/mozilla/secops/IprepdIO.Write.html" title="class in com.mozilla.secops">IprepdIO.Write</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/IprepdIO.Write.html#setUseLegacySubmission-java.lang.Boolean-">setUseLegacySubmission</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;useLegacySubmission)</code>
+<div class="block">Set legacy submission flag</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.transforms.PTransform">
@@ -249,6 +261,40 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="setUseLegacySubmission-java.lang.Boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setUseLegacySubmission</h4>
+<pre>public&nbsp;<a href="../../../com/mozilla/secops/IprepdIO.Write.html" title="class in com.mozilla.secops">IprepdIO.Write</a>&nbsp;setUseLegacySubmission(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;useLegacySubmission)</pre>
+<div class="block">Set legacy submission flag
+
+ <p>If legacy submission mode is enabled, <a href="../../../com/mozilla/secops/IprepdIO.html" title="class in com.mozilla.secops"><code>IprepdIO</code></a> will post violation messages using
+ the legacy IP submission endpoints. This is suitable for posting violation details associated
+ with IP addresses, but will not work for submission for other types of objects.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>useLegacySubmission</code> - True to enable legacy submission</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>this for chaining</dd>
+</dl>
+</li>
+</ul>
+<a name="getUseLegacySubmission--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getUseLegacySubmission</h4>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;getUseLegacySubmission()</pre>
+<div class="block">Return legacy submission flag</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Boolean</dd>
+</dl>
+</li>
+</ul>
 <a name="getURL--">
 <!--   -->
 </a>

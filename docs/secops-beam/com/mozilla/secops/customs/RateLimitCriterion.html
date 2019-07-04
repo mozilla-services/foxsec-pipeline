@@ -49,8 +49,8 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/customs/RateLimitAnalyzer.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/customs/RateLimitSuppressor.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/customs/RateLimitCandidate.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/customs/RateLimitCriterion.html" target="_top">Frames</a></li>
@@ -100,7 +100,7 @@ var activeTableTab = "activeTableTab";
 <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;,org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</li>
+<li>org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../../com/mozilla/secops/customs/RateLimitCandidate.html" title="class in com.mozilla.secops.customs">RateLimitCandidate</a>&gt;,org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</li>
 <li>
 <ul class="inheritance">
 <li>com.mozilla.secops.customs.RateLimitCriterion</li>
@@ -119,7 +119,7 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">RateLimitCriterion</span>
-extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&gt;,org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</pre>
+extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../../com/mozilla/secops/customs/RateLimitCandidate.html" title="class in com.mozilla.secops.customs">RateLimitCandidate</a>&gt;,org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</pre>
 <div class="block">Operate in conjunction with <a href="../../../../com/mozilla/secops/customs/RateLimitAnalyzer.html" title="class in com.mozilla.secops.customs"><code>RateLimitAnalyzer</code></a> to apply analysis criterion to incoming
  event stream.</div>
 <dl>
@@ -159,9 +159,8 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html#RateLimitCriterion-java.lang.String-com.mozilla.secops.customs.CustomsCfgEntry-org.apache.beam.sdk.values.PCollectionView-java.lang.String-">RateLimitCriterion</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;detectorName,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html#RateLimitCriterion-java.lang.String-com.mozilla.secops.customs.CustomsCfgEntry-java.lang.String-">RateLimitCriterion</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;detectorName,
                   <a href="../../../../com/mozilla/secops/customs/CustomsCfgEntry.html" title="class in com.mozilla.secops.customs">CustomsCfgEntry</a>&nbsp;cfg,
-                  org.apache.beam.sdk.values.PCollectionView&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt;&gt;&nbsp;eventView,
                   <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;monitoredResource)</code>
 <div class="block">Constructor for <a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs"><code>RateLimitCriterion</code></a></div>
 </td>
@@ -218,7 +217,7 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="RateLimitCriterion-java.lang.String-com.mozilla.secops.customs.CustomsCfgEntry-org.apache.beam.sdk.values.PCollectionView-java.lang.String-">
+<a name="RateLimitCriterion-java.lang.String-com.mozilla.secops.customs.CustomsCfgEntry-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -226,14 +225,12 @@ extends org.apache.beam.sdk.transforms.DoFn&lt;org.apache.beam.sdk.values.KV&lt;
 <h4>RateLimitCriterion</h4>
 <pre>public&nbsp;RateLimitCriterion(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;detectorName,
                           <a href="../../../../com/mozilla/secops/customs/CustomsCfgEntry.html" title="class in com.mozilla.secops.customs">CustomsCfgEntry</a>&nbsp;cfg,
-                          org.apache.beam.sdk.values.PCollectionView&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&gt;&gt;&nbsp;eventView,
                           <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;monitoredResource)</pre>
 <div class="block">Constructor for <a href="../../../../com/mozilla/secops/customs/RateLimitCriterion.html" title="class in com.mozilla.secops.customs"><code>RateLimitCriterion</code></a></div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>detectorName</code> - Detector name</dd>
 <dd><code>cfg</code> - Customs configuration entry</dd>
-<dd><code>eventView</code> - Event view to use for side input</dd>
 <dd><code>monitoredResource</code> - Monitored resource name</dd>
 </dl>
 </li>
@@ -294,8 +291,8 @@ public&nbsp;void&nbsp;processElement(org.apache.beam.sdk.transforms.DoFn.Process
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/customs/RateLimitAnalyzer.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/customs/RateLimitSuppressor.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/customs/RateLimitCandidate.html" title="class in com.mozilla.secops.customs"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/customs/RateLimitCriterion.html" target="_top">Frames</a></li>

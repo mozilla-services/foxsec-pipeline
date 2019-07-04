@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":9,"i5":9,"i6":10};
+var methods = {"i0":10,"i1":9,"i2":10,"i3":10,"i4":9,"i5":10,"i6":9,"i7":9,"i8":9,"i9":9,"i10":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -182,37 +182,63 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>static &lt;T,U&gt;&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/HashMap.html?is-external=true" title="class or interface in java.util">HashMap</a>&lt;T,U&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#convertJsonToMap-java.lang.String-">convertJsonToMap</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input)</code>
+<div class="block">Utility function to convert a JSON string into the desired map type</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>com.maxmind.geoip2.model.CityResponse</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#geoIp-java.lang.String-">geoIp</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;ip)</code>
 <div class="block">Resolve GeoIP information from IP address string</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/identity/IdentityManager.html" title="class in com.mozilla.secops.identity">IdentityManager</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#getIdentityManager--">getIdentityManager</a></span>()</code>
 <div class="block">Get any configured identity manager from the parser</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>static org.joda.time.DateTime</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#getLatestTimestamp-java.lang.Iterable-">getLatestTimestamp</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;events)</code>
+<div class="block">Given an interable of events, return the latest timestamp</div>
+</td>
+</tr>
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#parse-java.lang.String-">parse</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input)</code>
 <div class="block">Parse an event</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i6" class="altColor">
+<td class="colFirst"><code>static org.joda.time.DateTime</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#parseAndCorrectSyslogTs-java.lang.String-com.mozilla.secops.parser.Event-">parseAndCorrectSyslogTs</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;in,
+                       <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</code>
+<div class="block">Parse syslog timestamp date time string and return a <code>DateTime</code> object using <a href="../../../../com/mozilla/secops/parser/Parser.html#parseSyslogTs-java.lang.String-"><code>parseSyslogTs(String)</code></a>, and then correct the year if the parsed timestamp is further than
+ three days from the event timestamp.</div>
+</td>
+</tr>
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>static org.joda.time.DateTime</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#parseISO8601-java.lang.String-">parseISO8601</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;in)</code>
 <div class="block">Parse an ISO8601 date string and return a <code>DateTime</code> object.</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>static org.joda.time.DateTime</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#parseSyslogTs-java.lang.String-">parseSyslogTs</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;in)</code>
+<div class="block">Parse syslog timestamp date time string and return a <code>DateTime</code> object.</div>
+</td>
+</tr>
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>static <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#parseXForwardedFor-java.lang.String-">parseXForwardedFor</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;in)</code>
 <div class="block">Process the value of an X-Forwarded-For header, returning an array of each address in the
  header or null if invalid</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/parser/Parser.html#setIdentityManager-com.mozilla.secops.identity.IdentityManager-">setIdentityManager</a></span>(<a href="../../../../com/mozilla/secops/identity/IdentityManager.html" title="class in com.mozilla.secops.identity">IdentityManager</a>&nbsp;idmanager)</code>
 <div class="block">Set an identity manager in the parser that can be used for lookups</div>
@@ -293,6 +319,57 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="getLatestTimestamp-java.lang.Iterable-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getLatestTimestamp</h4>
+<pre>public static&nbsp;org.joda.time.DateTime&nbsp;getLatestTimestamp(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;events)</pre>
+<div class="block">Given an interable of events, return the latest timestamp</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>events</code> - Event list</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Latest timestamp in event set</dd>
+</dl>
+</li>
+</ul>
+<a name="parseSyslogTs-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>parseSyslogTs</h4>
+<pre>public static&nbsp;org.joda.time.DateTime&nbsp;parseSyslogTs(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;in)</pre>
+<div class="block">Parse syslog timestamp date time string and return a <code>DateTime</code> object.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>in</code> - Input string</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Parsed <code>DateTime</code>, null if string could not be parsed</dd>
+</dl>
+</li>
+</ul>
+<a name="parseAndCorrectSyslogTs-java.lang.String-com.mozilla.secops.parser.Event-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>parseAndCorrectSyslogTs</h4>
+<pre>public static&nbsp;org.joda.time.DateTime&nbsp;parseAndCorrectSyslogTs(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;in,
+                                                             <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&nbsp;e)</pre>
+<div class="block">Parse syslog timestamp date time string and return a <code>DateTime</code> object using <a href="../../../../com/mozilla/secops/parser/Parser.html#parseSyslogTs-java.lang.String-"><code>parseSyslogTs(String)</code></a>, and then correct the year if the parsed timestamp is further than
+ three days from the event timestamp.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>in</code> - Input string</dd>
+<dd><code>e</code> - <a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser"><code>Event</code></a></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Parsed <code>DateTime</code>, null if string could not be parsed</dd>
+</dl>
+</li>
+</ul>
 <a name="parseISO8601-java.lang.String-">
 <!--   -->
 </a>
@@ -328,6 +405,22 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <dd>Results of address selector application</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/IllegalArgumentException.html?is-external=true" title="class or interface in java.lang">IllegalArgumentException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="convertJsonToMap-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>convertJsonToMap</h4>
+<pre>public static&nbsp;&lt;T,U&gt;&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/util/HashMap.html?is-external=true" title="class or interface in java.util">HashMap</a>&lt;T,U&gt;&nbsp;convertJsonToMap(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;input)</pre>
+<div class="block">Utility function to convert a JSON string into the desired map type</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>input</code> - Input JSON</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>HashMap</dd>
 </dl>
 </li>
 </ul>

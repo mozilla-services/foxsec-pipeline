@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.EndpointAbuseEndpointInfo.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html" target="_top">Frames</a></li>
@@ -74,7 +74,7 @@ var activeTableTab = "activeTableTab";
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
@@ -100,7 +100,7 @@ var activeTableTab = "activeTableTab";
 <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</li>
+<li>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</li>
 <li>
 <ul class="inheritance">
 <li>com.mozilla.secops.httprequest.HTTPRequest.EndpointAbuseAnalysis</li>
@@ -123,9 +123,9 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public static class <span class="typeNameLabel">HTTPRequest.EndpointAbuseAnalysis</span>
-extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</pre>
-<div class="block">Transform for detection of a single source endpoint making excessive requests of a specific
- endpoint path solely.
+extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</pre>
+<div class="block">Transform for detection of a single source making excessive requests of a specific endpoint
+ path solely.
 
  <p>Generates alerts where the request profile violates path thresholds specified in the
  endpointAbusePath pipeline option configuration.</div>
@@ -139,6 +139,33 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="nested.class.summary">
+<!--   -->
+</a>
+<h3>Nested Class Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Nested Class Summary table, listing nested classes, and an explanation">
+<caption><span>Nested Classes</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Class and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.EndpointAbuseEndpointInfo.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.EndpointAbuseAnalysis.EndpointAbuseEndpointInfo</a></span></code>
+<div class="block">Internal class for configured endpoints in EPA</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.EndpointAbuseState.html" title="class in com.mozilla.secops.httprequest">HTTPRequest.EndpointAbuseAnalysis.EndpointAbuseState</a></span></code>
+<div class="block">Internal class for endpoint abuse state</div>
+</td>
+</tr>
+</table>
+</li>
+</ul>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.summary">
@@ -172,7 +199,7 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html#expand-org.apache.beam.sdk.values.PCollection-">expand</a></span>(org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&gt;&gt;&nbsp;input)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -231,10 +258,10 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <ul class="blockListLast">
 <li class="blockList">
 <h4>expand</h4>
-<pre>public&nbsp;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&nbsp;expand(org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;&nbsp;input)</pre>
+<pre>public&nbsp;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&nbsp;expand(org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&gt;&gt;&nbsp;input)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>expand</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/parser/Event.html" title="class in com.mozilla.secops.parser">Event</a>&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</code></dd>
+<dd><code>expand</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.PCollection&lt;org.apache.beam.sdk.values.KV&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&gt;&gt;,org.apache.beam.sdk.values.PCollection&lt;<a href="../../../../com/mozilla/secops/alert/Alert.html" title="class in com.mozilla.secops.alert">Alert</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -267,7 +294,7 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.ErrorRateAnalysis.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.EndpointAbuseEndpointInfo.html" title="class in com.mozilla.secops.httprequest"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/httprequest/HTTPRequest.EndpointAbuseAnalysis.html" target="_top">Frames</a></li>
@@ -291,7 +318,7 @@ extends org.apache.beam.sdk.transforms.PTransform&lt;org.apache.beam.sdk.values.
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>

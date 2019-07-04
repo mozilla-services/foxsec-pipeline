@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/state/MemcachedStateInterface.html" title="class in com.mozilla.secops.state"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/state/State.html" target="_top">Frames</a></li>
@@ -153,7 +153,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/State.html#deleteAll--">deleteAll</a></span>()</code>
-<div class="block">Delete all keys</div>
+<div class="block">Flush all keys in the underlying state storage</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
@@ -166,7 +166,8 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <td class="colFirst"><code>&lt;T&gt;&nbsp;T</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/State.html#get-java.lang.String-java.lang.Class-">get</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s,
    <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</a>&lt;T&gt;&nbsp;cls)</code>
-<div class="block">Get a state value</div>
+<div class="block">Perform simple key fetch operation with no intended follow up modification and update of the
+ value.</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
@@ -176,10 +177,9 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </td>
 </tr>
 <tr id="i4" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/State.html#set-java.lang.String-java.lang.Object-">set</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s,
-   <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;o)</code>
-<div class="block">Set a state value</div>
+<td class="colFirst"><code><a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state">StateCursor</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/state/State.html#newCursor--">newCursor</a></span>()</code>
+<div class="block">Allocate new state cursor for a set of operations</div>
 </td>
 </tr>
 </table>
@@ -226,6 +226,65 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="deleteAll--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>deleteAll</h4>
+<pre>public&nbsp;void&nbsp;deleteAll()
+               throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
+<div class="block">Flush all keys in the underlying state storage</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="get-java.lang.String-java.lang.Class-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>get</h4>
+<pre>public&nbsp;&lt;T&gt;&nbsp;T&nbsp;get(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s,
+                 <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</a>&lt;T&gt;&nbsp;cls)
+          throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
+<div class="block">Perform simple key fetch operation with no intended follow up modification and update of the
+ value. For operations involving a fetch, update, and store a new cursor should be allocated by
+ the caller instead.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>s</code> - State key to fetch state for</dd>
+<dd><code>cls</code> - Class to deserialize state data into</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Returns an object containing state data for key, null if not found</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="newCursor--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>newCursor</h4>
+<pre>public&nbsp;<a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state">StateCursor</a>&nbsp;newCursor()</pre>
+<div class="block">Allocate new state cursor for a set of operations
+
+ <p>In cases where the underlying <a href="../../../../com/mozilla/secops/state/StateInterface.html" title="interface in com.mozilla.secops.state"><code>StateInterface</code></a> supports transactions, allocating a new
+ cursor will begin a new transaction, from which writes will not take effect until the
+ transaction has been commited.
+
+ <p>If the underlying interface does not support transactions, the new cursor will still provide
+ read and write functionality but it will not provide any form of transaction consistency.</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd><a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state"><code>StateCursor</code></a></dd>
+</dl>
+</li>
+</ul>
 <a name="initialize--">
 <!--   -->
 </a>
@@ -244,61 +303,6 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </dl>
 </li>
 </ul>
-<a name="deleteAll--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>deleteAll</h4>
-<pre>public&nbsp;void&nbsp;deleteAll()
-               throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
-<div class="block">Delete all keys</div>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="get-java.lang.String-java.lang.Class-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>get</h4>
-<pre>public&nbsp;&lt;T&gt;&nbsp;T&nbsp;get(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s,
-                 <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</a>&lt;T&gt;&nbsp;cls)
-          throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
-<div class="block">Get a state value</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>s</code> - State key to fetch state for</dd>
-<dd><code>cls</code> - Class to deserialize state data into</dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>Returns an object containing state data for key, null if not found</dd>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="set-java.lang.String-java.lang.Object-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>set</h4>
-<pre>public&nbsp;void&nbsp;set(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;s,
-                <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;o)
-         throws <a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></pre>
-<div class="block">Set a state value</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>s</code> - State key to store state for</dd>
-<dd><code>o</code> - Object containing state data to serialize into state storage</dd>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state">StateException</a></code></dd>
-</dl>
-</li>
-</ul>
 <a name="done--">
 <!--   -->
 </a>
@@ -306,7 +310,10 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <li class="blockList">
 <h4>done</h4>
 <pre>public&nbsp;void&nbsp;done()</pre>
-<div class="block">Inidicate state object will no longer be used</div>
+<div class="block">Inidicate state object will no longer be used
+
+ <p>The done function must be called to ensure any background threads and resources are
+ released.</div>
 </li>
 </ul>
 </li>
@@ -338,7 +345,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../com/mozilla/secops/state/MemcachedStateInterface.html" title="class in com.mozilla.secops.state"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../com/mozilla/secops/state/StateException.html" title="class in com.mozilla.secops.state"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/state/StateCursor.html" title="class in com.mozilla.secops.state"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?com/mozilla/secops/state/State.html" target="_top">Frames</a></li>

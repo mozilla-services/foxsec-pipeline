@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li>Prev&nbsp;Class</li>
+<li><a href="../../../../com/mozilla/secops/identity/FeatureFlags.html" title="class in com.mozilla.secops.identity"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../com/mozilla/secops/identity/IdentityManager.html" title="class in com.mozilla.secops.identity"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -161,17 +161,35 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/identity/Identity.html#getEscalateTo--">getEscalateTo</a></span>()</code>
+<div class="block">Get escalate to email address</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="../../../../com/mozilla/secops/identity/FeatureFlags.html" title="class in com.mozilla.secops.identity">FeatureFlags</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/identity/Identity.html#getFeatureFlags--">getFeatureFlags</a></span>()</code>
+<div class="block">Get feature flags for identity</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/identity/Identity.html#getFragment--">getFragment</a></span>()</code>
 <div class="block">Get identity fragment</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="../../../../com/mozilla/secops/identity/Notify.html" title="class in com.mozilla.secops.identity">Notify</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/identity/Identity.html#getNotify--">getNotify</a></span>()</code>
 <div class="block">Get notification preferences for identity</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i6" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/identity/Identity.html#getSlackConfirmationAlertFeatureFlag-com.mozilla.secops.identity.FeatureFlags-">getSlackConfirmationAlertFeatureFlag</a></span>(<a href="../../../../com/mozilla/secops/identity/FeatureFlags.html" title="class in com.mozilla.secops.identity">FeatureFlags</a>&nbsp;defaultFeatureFlags)</code>
+<div class="block">Returns boolean that is true if this identity shoud get a slack confirmation alert.</div>
+</td>
+</tr>
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/identity/Identity.html#getSlackNotifyDirect-com.mozilla.secops.identity.Notify-">getSlackNotifyDirect</a></span>(<a href="../../../../com/mozilla/secops/identity/Notify.html" title="class in com.mozilla.secops.identity">Notify</a>&nbsp;defaultNotification)</code>
 <div class="block">Returns boolean that is true if this identity should get a direct notification via Slack</div>
@@ -230,6 +248,20 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </dl>
 </li>
 </ul>
+<a name="getEscalateTo--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getEscalateTo</h4>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getEscalateTo()</pre>
+<div class="block">Get escalate to email address</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Escalation email</dd>
+</dl>
+</li>
+</ul>
 <a name="getAliases--">
 <!--   -->
 </a>
@@ -258,6 +290,20 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </dl>
 </li>
 </ul>
+<a name="getFeatureFlags--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getFeatureFlags</h4>
+<pre>public&nbsp;<a href="../../../../com/mozilla/secops/identity/FeatureFlags.html" title="class in com.mozilla.secops.identity">FeatureFlags</a>&nbsp;getFeatureFlags()</pre>
+<div class="block">Get feature flags for identity</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd><a href="../../../../com/mozilla/secops/identity/FeatureFlags.html" title="class in com.mozilla.secops.identity"><code>FeatureFlags</code></a></dd>
+</dl>
+</li>
+</ul>
 <a name="getEmailNotifyDirect-com.mozilla.secops.identity.Notify-">
 <!--   -->
 </a>
@@ -275,7 +321,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <a name="getSlackNotifyDirect-com.mozilla.secops.identity.Notify-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getSlackNotifyDirect</h4>
 <pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;getSlackNotifyDirect(<a href="../../../../com/mozilla/secops/identity/Notify.html" title="class in com.mozilla.secops.identity">Notify</a>&nbsp;defaultNotification)</pre>
@@ -283,6 +329,21 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>defaultNotification</code> - Default notification preferences if unset in identity</dd>
+</dl>
+</li>
+</ul>
+<a name="getSlackConfirmationAlertFeatureFlag-com.mozilla.secops.identity.FeatureFlags-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>getSlackConfirmationAlertFeatureFlag</h4>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang">Boolean</a>&nbsp;getSlackConfirmationAlertFeatureFlag(<a href="../../../../com/mozilla/secops/identity/FeatureFlags.html" title="class in com.mozilla.secops.identity">FeatureFlags</a>&nbsp;defaultFeatureFlags)</pre>
+<div class="block">Returns boolean that is true if this identity shoud get a slack confirmation alert.
+ getSlackNotifyDirect() must also return true for this feature flag to be used.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>defaultFeatureFlags</code> - Default feature flags if unset in identity</dd>
 </dl>
 </li>
 </ul>
@@ -314,7 +375,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </div>
 <div class="subNav">
 <ul class="navList">
-<li>Prev&nbsp;Class</li>
+<li><a href="../../../../com/mozilla/secops/identity/FeatureFlags.html" title="class in com.mozilla.secops.identity"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../com/mozilla/secops/identity/IdentityManager.html" title="class in com.mozilla.secops.identity"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">

@@ -100,7 +100,7 @@ var activeTableTab = "activeTableTab";
 <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</li>
+<li>org.apache.beam.sdk.transforms.Combine.CombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</li>
 <li>
 <ul class="inheritance">
 <li>com.mozilla.secops.Stats.StatsCombiner</li>
@@ -114,7 +114,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</a>, org.apache.beam.sdk.transforms.CombineFnBase.GlobalCombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;, org.apache.beam.sdk.transforms.CombineWithContext.RequiresContextInternal, org.apache.beam.sdk.transforms.display.HasDisplayData</dd>
+<dd><a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</a>, org.apache.beam.sdk.transforms.CombineFnBase.GlobalCombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;, org.apache.beam.sdk.transforms.display.HasDisplayData</dd>
 </dl>
 <dl>
 <dt>Enclosing class:</dt>
@@ -123,8 +123,8 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public static class <span class="typeNameLabel">Stats.StatsCombiner</span>
-extends org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</pre>
-<div class="block"><code>CombineWithContext.CombineFnWithContext</code> for performing statistics operations on a collection of values</div>
+extends org.apache.beam.sdk.transforms.Combine.CombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</pre>
+<div class="block"><code>Combine.CombineFn</code> for performing statistics operations on a collection of values</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../serialized-form.html#com.mozilla.secops.Stats.StatsCombiner">Serialized Form</a></dd>
@@ -149,13 +149,12 @@ extends org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&l
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>com.mozilla.secops.Stats.StatsCombiner.State</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/Stats.StatsCombiner.html#addInput-com.mozilla.secops.Stats.StatsCombiner.State-java.lang.Long-org.apache.beam.sdk.transforms.CombineWithContext.Context-">addInput</a></span>(com.mozilla.secops.Stats.StatsCombiner.State&nbsp;state,
-        <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;input,
-        org.apache.beam.sdk.transforms.CombineWithContext.Context&nbsp;c)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/Stats.StatsCombiner.html#addInput-com.mozilla.secops.Stats.StatsCombiner.State-java.lang.Long-">addInput</a></span>(com.mozilla.secops.Stats.StatsCombiner.State&nbsp;state,
+        <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;input)</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>com.mozilla.secops.Stats.StatsCombiner.State</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/Stats.StatsCombiner.html#createAccumulator-org.apache.beam.sdk.transforms.CombineWithContext.Context-">createAccumulator</a></span>(org.apache.beam.sdk.transforms.CombineWithContext.Context&nbsp;c)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/Stats.StatsCombiner.html#createAccumulator--">createAccumulator</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a></code></td>
@@ -163,21 +162,19 @@ extends org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&l
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/Stats.StatsCombiner.html#extractOutput-com.mozilla.secops.Stats.StatsCombiner.State-org.apache.beam.sdk.transforms.CombineWithContext.Context-">extractOutput</a></span>(com.mozilla.secops.Stats.StatsCombiner.State&nbsp;state,
-             org.apache.beam.sdk.transforms.CombineWithContext.Context&nbsp;c)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/Stats.StatsCombiner.html#extractOutput-com.mozilla.secops.Stats.StatsCombiner.State-">extractOutput</a></span>(com.mozilla.secops.Stats.StatsCombiner.State&nbsp;state)</code>&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>com.mozilla.secops.Stats.StatsCombiner.State</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/Stats.StatsCombiner.html#mergeAccumulators-java.lang.Iterable-org.apache.beam.sdk.transforms.CombineWithContext.Context-">mergeAccumulators</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;com.mozilla.secops.Stats.StatsCombiner.State&gt;&nbsp;states,
-                 org.apache.beam.sdk.transforms.CombineWithContext.Context&nbsp;c)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/mozilla/secops/Stats.StatsCombiner.html#mergeAccumulators-java.lang.Iterable-">mergeAccumulators</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;com.mozilla.secops.Stats.StatsCombiner.State&gt;&nbsp;states)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
-<li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext">
+<li class="blockList"><a name="methods.inherited.from.class.org.apache.beam.sdk.transforms.Combine.CombineFn">
 <!--   -->
 </a>
-<h3>Methods inherited from class&nbsp;org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext</h3>
-<code>apply, compact</code></li>
+<h3>Methods inherited from class&nbsp;org.apache.beam.sdk.transforms.Combine.CombineFn</h3>
+<code>apply, compact, getInputType, getOutputType</code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -200,59 +197,56 @@ extends org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&l
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="createAccumulator-org.apache.beam.sdk.transforms.CombineWithContext.Context-">
+<a name="createAccumulator--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createAccumulator</h4>
-<pre>public&nbsp;com.mozilla.secops.Stats.StatsCombiner.State&nbsp;createAccumulator(org.apache.beam.sdk.transforms.CombineWithContext.Context&nbsp;c)</pre>
+<pre>public&nbsp;com.mozilla.secops.Stats.StatsCombiner.State&nbsp;createAccumulator()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>createAccumulator</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
+<dd><code>createAccumulator</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.Combine.CombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
-<a name="addInput-com.mozilla.secops.Stats.StatsCombiner.State-java.lang.Long-org.apache.beam.sdk.transforms.CombineWithContext.Context-">
+<a name="addInput-com.mozilla.secops.Stats.StatsCombiner.State-java.lang.Long-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>addInput</h4>
 <pre>public&nbsp;com.mozilla.secops.Stats.StatsCombiner.State&nbsp;addInput(com.mozilla.secops.Stats.StatsCombiner.State&nbsp;state,
-                                                             <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;input,
-                                                             org.apache.beam.sdk.transforms.CombineWithContext.Context&nbsp;c)</pre>
+                                                             <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>&nbsp;input)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>addInput</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
+<dd><code>addInput</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.Combine.CombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
-<a name="mergeAccumulators-java.lang.Iterable-org.apache.beam.sdk.transforms.CombineWithContext.Context-">
+<a name="mergeAccumulators-java.lang.Iterable-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>mergeAccumulators</h4>
-<pre>public&nbsp;com.mozilla.secops.Stats.StatsCombiner.State&nbsp;mergeAccumulators(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;com.mozilla.secops.Stats.StatsCombiner.State&gt;&nbsp;states,
-                                                                      org.apache.beam.sdk.transforms.CombineWithContext.Context&nbsp;c)</pre>
+<pre>public&nbsp;com.mozilla.secops.Stats.StatsCombiner.State&nbsp;mergeAccumulators(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</a>&lt;com.mozilla.secops.Stats.StatsCombiner.State&gt;&nbsp;states)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>mergeAccumulators</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
+<dd><code>mergeAccumulators</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.Combine.CombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
-<a name="extractOutput-com.mozilla.secops.Stats.StatsCombiner.State-org.apache.beam.sdk.transforms.CombineWithContext.Context-">
+<a name="extractOutput-com.mozilla.secops.Stats.StatsCombiner.State-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>extractOutput</h4>
-<pre>public&nbsp;<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&nbsp;extractOutput(com.mozilla.secops.Stats.StatsCombiner.State&nbsp;state,
-                                       org.apache.beam.sdk.transforms.CombineWithContext.Context&nbsp;c)</pre>
+<pre>public&nbsp;<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&nbsp;extractOutput(com.mozilla.secops.Stats.StatsCombiner.State&nbsp;state)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>extractOutput</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
+<dd><code>extractOutput</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.Combine.CombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -267,7 +261,7 @@ extends org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&l
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code>defaultValue</code>&nbsp;in interface&nbsp;<code>org.apache.beam.sdk.transforms.CombineFnBase.GlobalCombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
-<dd><code>defaultValue</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.CombineWithContext.CombineFnWithContext&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
+<dd><code>defaultValue</code>&nbsp;in class&nbsp;<code>org.apache.beam.sdk.transforms.Combine.CombineFn&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</a>,com.mozilla.secops.Stats.StatsCombiner.State,<a href="../../../com/mozilla/secops/Stats.StatsOutput.html" title="class in com.mozilla.secops">Stats.StatsOutput</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>

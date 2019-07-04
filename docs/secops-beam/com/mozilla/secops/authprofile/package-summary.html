@@ -43,7 +43,7 @@
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/alert/package-summary.html">Prev&nbsp;Package</a></li>
+<li><a href="../../../../com/mozilla/secops/amo/package-summary.html">Prev&nbsp;Package</a></li>
 <li><a href="../../../../com/mozilla/secops/awsbehavior/package-summary.html">Next&nbsp;Package</a></li>
 </ul>
 <ul class="navList">
@@ -106,23 +106,32 @@
 <tr class="altColor">
 <td class="colFirst"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.html" title="class in com.mozilla.secops.authprofile">AuthProfile</a></td>
 <td class="colLast">
-<div class="block"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.html" title="class in com.mozilla.secops.authprofile"><code>AuthProfile</code></a> implements analysis of normalized authentication events to detect
- authentication for a given user from an unknown source IP address.</div>
+<div class="block"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.html" title="class in com.mozilla.secops.authprofile"><code>AuthProfile</code></a> implements analysis of normalized authentication events</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.Analyze.html" title="class in com.mozilla.secops.authprofile">AuthProfile.Analyze</a></td>
+<td class="colFirst"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.CritObjectAnalyze.html" title="class in com.mozilla.secops.authprofile">AuthProfile.CritObjectAnalyze</a></td>
 <td class="colLast">
-<div class="block">Analyze grouped events for a given user, generating alert messages based on the contents of the
- authentication event.</div>
+<div class="block">Analysis for authentication involving critical objects</div>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ParseAndWindow.html" title="class in com.mozilla.secops.authprofile">AuthProfile.ParseAndWindow</a></td>
+<td class="colFirst"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.ExtractIdentity.html" title="class in com.mozilla.secops.authprofile">AuthProfile.ExtractIdentity</a></td>
 <td class="colLast">
-<div class="block">Composite transform to parse a <code>PCollection</code> containing events as strings and emit a
- <code>PCollection</code> of <code>KV</code> objects where the key is a particular username and the value
- is a list of authentication events seen for that user within the window.</div>
+<div class="block">Extract subject user for each event in input <code>PCollection</code></div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.Parse.html" title="class in com.mozilla.secops.authprofile">AuthProfile.Parse</a></td>
+<td class="colLast">
+<div class="block">Parse input strings returning applicable authentication events.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../com/mozilla/secops/authprofile/AuthProfile.StateAnalyze.html" title="class in com.mozilla.secops.authprofile">AuthProfile.StateAnalyze</a></td>
+<td class="colLast">
+<div class="block">Analyze grouped events associated with a particular user or identity against persistent user
+ state</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -162,7 +171,7 @@
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/alert/package-summary.html">Prev&nbsp;Package</a></li>
+<li><a href="../../../../com/mozilla/secops/amo/package-summary.html">Prev&nbsp;Package</a></li>
 <li><a href="../../../../com/mozilla/secops/awsbehavior/package-summary.html">Next&nbsp;Package</a></li>
 </ul>
 <ul class="navList">

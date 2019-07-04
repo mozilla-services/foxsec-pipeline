@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10};
+var methods = {"i0":10,"i1":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/alert/AlertSlack.html" title="class in com.mozilla.secops.alert"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/alert/AlertSuppressorCount.html" title="class in com.mozilla.secops.alert"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
@@ -111,7 +111,7 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">TemplateManager</span>
 extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></pre>
-<div class="block">Manager class for generating html email templates using Freemarker</div>
+<div class="block">Manager class for processing templates using Freemarker</div>
 </li>
 </ul>
 </div>
@@ -130,7 +130,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/alert/TemplateManager.html#TemplateManager--">TemplateManager</a></span>()</code>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/alert/TemplateManager.html#TemplateManager-com.mozilla.secops.alert.AlertConfiguration-">TemplateManager</a></span>(<a href="../../../../com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert">AlertConfiguration</a>&nbsp;alertCfg)</code>
 <div class="block">Construct new template manager object</div>
 </td>
 </tr>
@@ -151,9 +151,15 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/alert/TemplateManager.html#createEmailBody-java.lang.String-java.util.HashMap-">createEmailBody</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateName,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/alert/TemplateManager.html#processTemplate-java.lang.String-java.util.HashMap-">processTemplate</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateName,
                <a href="https://docs.oracle.com/javase/8/docs/api/java/util/HashMap.html?is-external=true" title="class or interface in java.util">HashMap</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&gt;&nbsp;variables)</code>
-<div class="block">Create html email body using supplied template name and template variables</div>
+<div class="block">Create processed template using supplied template name and template variables</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/mozilla/secops/alert/TemplateManager.html#validate--">validate</a></span>()</code>
+<div class="block">Validate TemplateManager by checking that all registered templates can be found.</div>
 </td>
 </tr>
 </table>
@@ -178,13 +184,13 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="TemplateManager--">
+<a name="TemplateManager-com.mozilla.secops.alert.AlertConfiguration-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>TemplateManager</h4>
-<pre>public&nbsp;TemplateManager()</pre>
+<pre>public&nbsp;TemplateManager(<a href="../../../../com/mozilla/secops/alert/AlertConfiguration.html" title="class in com.mozilla.secops.alert">AlertConfiguration</a>&nbsp;alertCfg)</pre>
 <div class="block">Construct new template manager object</div>
 </li>
 </ul>
@@ -196,30 +202,49 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="createEmailBody-java.lang.String-java.util.HashMap-">
+<a name="processTemplate-java.lang.String-java.util.HashMap-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
-<h4>createEmailBody</h4>
-<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;createEmailBody(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateName,
+<h4>processTemplate</h4>
+<pre>public&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;processTemplate(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateName,
                               <a href="https://docs.oracle.com/javase/8/docs/api/java/util/HashMap.html?is-external=true" title="class or interface in java.util">HashMap</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&gt;&nbsp;variables)
                        throws <a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a>,
                               freemarker.template.MalformedTemplateNameException,
                               freemarker.template.TemplateException,
                               freemarker.template.TemplateNotFoundException</pre>
-<div class="block">Create html email body using supplied template name and template variables</div>
+<div class="block">Create processed template using supplied template name and template variables</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>templateName</code> - Name of template file</dd>
 <dd><code>variables</code> - Variables for template</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
-<dd>Assembled email body</dd>
+<dd>Assembled template</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a></code></dd>
 <dd><code>freemarker.template.MalformedTemplateNameException</code></dd>
 <dd><code>freemarker.template.TemplateException</code></dd>
 <dd><code>freemarker.template.TemplateNotFoundException</code></dd>
+</dl>
+</li>
+</ul>
+<a name="validate--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>validate</h4>
+<pre>public&nbsp;void&nbsp;validate()
+              throws freemarker.template.TemplateNotFoundException,
+                     freemarker.template.MalformedTemplateNameException,
+                     <a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a></pre>
+<div class="block">Validate TemplateManager by checking that all registered templates can be found.</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>freemarker.template.TemplateNotFoundException</code></dd>
+<dd><code>freemarker.template.MalformedTemplateNameException</code></dd>
+<dd><code><a href="https://docs.oracle.com/javase/8/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -251,7 +276,7 @@ extends <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../com/mozilla/secops/alert/AlertSlack.html" title="class in com.mozilla.secops.alert"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../com/mozilla/secops/alert/AlertSuppressorCount.html" title="class in com.mozilla.secops.alert"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">

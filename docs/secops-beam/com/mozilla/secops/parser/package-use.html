@@ -89,36 +89,40 @@
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="#com.mozilla.secops.amo">com.mozilla.secops.amo</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="#com.mozilla.secops.authprofile">com.mozilla.secops.authprofile</a></td>
 <td class="colLast">
 <div class="block">Pipeline for authentication source profiling and alerting</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="#com.mozilla.secops.awsbehavior">com.mozilla.secops.awsbehavior</a></td>
 <td class="colLast">
 <div class="block">Pipeline for monitoring AWS Cloudtrail events</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="#com.mozilla.secops.customs">com.mozilla.secops.customs</a></td>
 <td class="colLast">
 <div class="block">Customs server generic rate limiting heuristics pipeline</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="#com.mozilla.secops.httprequest">com.mozilla.secops.httprequest</a></td>
 <td class="colLast">
 <div class="block">HTTP request threshold and error rate monitoring</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="#com.mozilla.secops.parser">com.mozilla.secops.parser</a></td>
 <td class="colLast">
 <div class="block">Log parsing, processing, and enrichment</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="#com.mozilla.secops.parser.eventfiltercfg">com.mozilla.secops.parser.eventfiltercfg</a></td>
 <td class="colLast">
 <div class="block">Configuration file based event filters</div>
@@ -138,6 +142,23 @@
 <tbody>
 <tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/Event.html#com.mozilla.secops">Event</a>
+<div class="block">Represents a high level event after being processed by a <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser"><code>Parser</code></a>.</div>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList"><a name="com.mozilla.secops.amo">
+<!--   -->
+</a>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing classes, and an explanation">
+<caption><span>Classes in <a href="../../../../com/mozilla/secops/parser/package-summary.html">com.mozilla.secops.parser</a> used by <a href="../../../../com/mozilla/secops/amo/package-summary.html">com.mozilla.secops.amo</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colOne" scope="col">Class and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/Event.html#com.mozilla.secops.amo">Event</a>
 <div class="block">Represents a high level event after being processed by a <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser"><code>Parser</code></a>.</div>
 </td>
 </tr>
@@ -197,6 +218,16 @@
 <div class="block">Represents a high level event after being processed by a <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser"><code>Parser</code></a>.</div>
 </td>
 </tr>
+<tr class="rowColor">
+<td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/FxaAuth.html#com.mozilla.secops.customs">FxaAuth</a>
+<div class="block">Payload parser for FxA authentication server log data</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/FxaAuth.EventSummary.html#com.mozilla.secops.customs">FxaAuth.EventSummary</a>
+<div class="block">Event summary is determined based on source event fields</div>
+</td>
+</tr>
 </tbody>
 </table>
 </li>
@@ -227,84 +258,87 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/BmoAudit.AuditType.html#com.mozilla.secops.parser">BmoAudit.AuditType</a>&nbsp;</td>
+<td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/AmoDocker.EventType.html#com.mozilla.secops.parser">AmoDocker.EventType</a>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/BmoAudit.AuditType.html#com.mozilla.secops.parser">BmoAudit.AuditType</a>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/Event.html#com.mozilla.secops.parser">Event</a>
 <div class="block">Represents a high level event after being processed by a <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser"><code>Parser</code></a>.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/EventFilter.html#com.mozilla.secops.parser">EventFilter</a>
 <div class="block">Event filtering and matching</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/EventFilterPayload.html#com.mozilla.secops.parser">EventFilterPayload</a>
 <div class="block">Can be associated with <a href="../../../../com/mozilla/secops/parser/EventFilterRule.html" title="class in com.mozilla.secops.parser"><code>EventFilterRule</code></a> for payload matching</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/EventFilterPayload.IntegerProperty.html#com.mozilla.secops.parser">EventFilterPayload.IntegerProperty</a>
 <div class="block">Properties match integers from various payload event types</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/EventFilterPayload.StringProperty.html#com.mozilla.secops.parser">EventFilterPayload.StringProperty</a>
 <div class="block">Properties match strings from various payload event types</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/EventFilterPayloadInterface.html#com.mozilla.secops.parser">EventFilterPayloadInterface</a>
 <div class="block">Interface representing a payload filter</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/EventFilterPayloadOr.html#com.mozilla.secops.parser">EventFilterPayloadOr</a>
 <div class="block">A special class of payload filter that supports applying OR logic to matching.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/EventFilterRule.html#com.mozilla.secops.parser">EventFilterRule</a>
 <div class="block">Rule within an event filter</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/FxaAuth.EventSummary.html#com.mozilla.secops.parser">FxaAuth.EventSummary</a>
 <div class="block">Event summary is determined based on source event fields</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/Mozlog.html#com.mozilla.secops.parser">Mozlog</a>
 <div class="block">Mozlog event encapsulation</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/Normalized.html#com.mozilla.secops.parser">Normalized</a>
 <div class="block">Normalized event data</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/Normalized.Type.html#com.mozilla.secops.parser">Normalized.Type</a>
 <div class="block">Normalized event types</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/ParserCfg.html#com.mozilla.secops.parser">ParserCfg</a>
 <div class="block">Represents configuration data used to configure an instance of a <a href="../../../../com/mozilla/secops/parser/Parser.html" title="class in com.mozilla.secops.parser"><code>Parser</code></a></div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/ParserDoFn.html#com.mozilla.secops.parser">ParserDoFn</a>
 <div class="block"><code>DoFn</code> applying simple event parsing operations</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/Payload.PayloadType.html#com.mozilla.secops.parser">Payload.PayloadType</a>
 <div class="block">Type of payload data stored</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colOne"><a href="../../../../com/mozilla/secops/parser/class-use/PayloadBase.html#com.mozilla.secops.parser">PayloadBase</a>
 <div class="block">Base class for payloads</div>
 </td>

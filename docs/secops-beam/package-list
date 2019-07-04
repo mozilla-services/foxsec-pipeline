@@ -1,5 +1,6 @@
 com.mozilla.secops
 com.mozilla.secops.alert
+com.mozilla.secops.amo
 com.mozilla.secops.authprofile
 com.mozilla.secops.awsbehavior
 com.mozilla.secops.crypto
@@ -9,11 +10,15 @@ com.mozilla.secops.identity
 com.mozilla.secops.parser
 com.mozilla.secops.parser.eventfiltercfg
 com.mozilla.secops.parser.models.cloudtrail
+com.mozilla.secops.parser.models.cloudwatch
 com.mozilla.secops.parser.models.duopull
+com.mozilla.secops.parser.models.etd
 com.mozilla.secops.parser.models.fxaauth
 com.mozilla.secops.parser.models.nginxstackdriver
 com.mozilla.secops.parser.models.secevent
+com.mozilla.secops.parser.models.taskcluster
 com.mozilla.secops.slack
 com.mozilla.secops.state
 com.mozilla.secops.streamwriter
+com.mozilla.secops.window
 com.mozilla.secops.workshop
