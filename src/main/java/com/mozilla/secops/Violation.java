@@ -101,7 +101,8 @@ public class Violation {
   /**
    * Create new {@link Violation} with recovery suppression value
    *
-   * @param soureAddress Source address as string
+   * @param object Object name
+   * @param type Type
    * @param violation ViolationType as string
    * @param suppressRecovery Recovery suppression value in seconds
    */

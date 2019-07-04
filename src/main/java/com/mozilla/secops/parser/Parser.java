@@ -89,8 +89,8 @@ public class Parser {
 
   /**
    * Parse syslog timestamp date time string and return a {@link DateTime} object using {@link
-   * parseSyslogTs}, and then correct the year if the parsed timestamp is further than three days
-   * from the event timestamp.
+   * #parseSyslogTs(String)}, and then correct the year if the parsed timestamp is further than
+   * three days from the event timestamp.
    *
    * @param in Input string
    * @param e {@link Event}

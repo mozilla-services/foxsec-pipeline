@@ -28,7 +28,6 @@ public class RateLimitCriterion extends DoFn<KV<String, RateLimitCandidate>, KV<
    *
    * @param detectorName Detector name
    * @param cfg Customs configuration entry
-   * @param eventView Event view to use for side input
    * @param monitoredResource Monitored resource name
    */
   public RateLimitCriterion(String detectorName, CustomsCfgEntry cfg, String monitoredResource) {

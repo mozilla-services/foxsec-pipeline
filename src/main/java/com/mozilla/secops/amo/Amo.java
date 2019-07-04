@@ -66,7 +66,7 @@ public class Amo implements Serializable {
     return resultsList.apply("amo flatten output", Flatten.<Alert>pCollections());
   }
 
-  /** Runtime options for {@link Customs} pipeline. */
+  /** Runtime options for {@link Amo} pipeline. */
   public interface AmoOptions extends PipelineOptions, IOOptions {}
 
   private static void runAmo(AmoOptions options) throws IOException {

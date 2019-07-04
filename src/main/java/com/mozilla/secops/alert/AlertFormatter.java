@@ -10,7 +10,7 @@ import org.apache.beam.sdk.transforms.DoFn;
  * {@link DoFn} for conversion of {@link Alert} objects into JSON strings
  *
  * <p>This DoFn also supplements the alert with a metadata entry with the monitored resource
- * indicator value, which is a required value in {@link OutputOptions}.
+ * indicator value, which is a required value in {@link com.mozilla.secops.OutputOptions}.
  */
 public class AlertFormatter extends DoFn<Alert, String> {
   private static final long serialVersionUID = 1L;
