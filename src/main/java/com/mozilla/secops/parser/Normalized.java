@@ -23,6 +23,8 @@ public class Normalized implements Serializable {
   private String sourceAddress;
   private String sourceAddressCity;
   private String sourceAddressCountry;
+  private Double sourceAddressLatitude;
+  private Double sourceAddressLongitude;
   private String object;
   private String requestMethod;
   private String requestUrl;
@@ -211,6 +213,42 @@ public class Normalized implements Serializable {
    */
   public void setSourceAddressCountry(String sourceAddressCountry) {
     this.sourceAddressCountry = sourceAddressCountry;
+  }
+
+  /**
+   * Get source address latitude
+   *
+   * @return Source address latitude
+   */
+  public Double getSourceAddressLatitude() {
+    return sourceAddressLatitude;
+  }
+
+  /**
+   * Set source address latitude
+   *
+   * @param sourceAddressLatitude Latitude value
+   */
+  void setSourceAddressLatitude(Double sourceAddressLatitude) {
+    this.sourceAddressLatitude = sourceAddressLatitude;
+  }
+
+  /**
+   * Get source address longitude
+   *
+   * @return Source address longitude
+   */
+  public Double getSourceAddressLongitude() {
+    return sourceAddressLongitude;
+  }
+
+  /**
+   * Set source address longitude
+   *
+   * @param sourceAddressLongitude Longitude value
+   */
+  void setSourceAddressLongitude(Double sourceAddressLongitude) {
+    this.sourceAddressLongitude = sourceAddressLongitude;
   }
 
   /**

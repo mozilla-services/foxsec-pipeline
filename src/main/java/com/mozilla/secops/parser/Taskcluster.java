@@ -2,20 +2,16 @@ package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.maxmind.geoip2.model.CityResponse;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.regex.Pattern;
 
 /** Payload parser for Taskcluster log data */
-public class Taskcluster extends PayloadBase implements Serializable {
+public class Taskcluster extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private com.mozilla.secops.parser.models.taskcluster.Taskcluster data;
   private String subject;
-  private String sourceAddress;
-  private String sourceAddressCity;
-  private String sourceAddressCountry;
 
   private final Pattern emailPattern;
 
@@ -160,26 +156,19 @@ public class Taskcluster extends PayloadBase implements Serializable {
       return;
     }
 
-    sourceAddress = data.getSourceIp();
-    if (sourceAddress != null) {
-      CityResponse cr = state.getParser().geoIp(sourceAddress);
-      if (cr != null) {
-        sourceAddressCity = cr.getCity().getName();
-        sourceAddressCountry = cr.getCountry().getIsoCode();
-      }
+    String sourceAddr = data.getSourceIp();
+    if (sourceAddr != null) {
+      setSourceAddress(sourceAddr, state, e.getNormalized());
     }
 
     processClientId();
 
     // If we were able to get a resolved subject ID, and we have a source IP address then add
     // normalized session information to the event
-    if ((subject != null) && (data.getSourceIp() != null)) {
+    if ((subject != null) && (getSourceAddress() != null)) {
       Normalized n = e.getNormalized();
       n.addType(Normalized.Type.AUTH_SESSION);
       n.setSubjectUser(subject);
-      n.setSourceAddress(data.getSourceIp());
-      n.setSourceAddressCity(sourceAddressCity);
-      n.setSourceAddressCountry(sourceAddressCountry);
       if (data.getResource() != null) {
         n.setObject("taskcluster-" + data.getResource());
       } else {

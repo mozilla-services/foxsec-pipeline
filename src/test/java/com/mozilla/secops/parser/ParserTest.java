@@ -232,6 +232,8 @@ public class ParserTest {
     assertEquals("216.160.83.56", o.getSourceAddress());
     assertEquals("Milton", o.getSourceAddressCity());
     assertEquals("US", o.getSourceAddressCountry());
+    assertEquals(47.25, o.getSourceAddressLatitude(), 0.5);
+    assertEquals(-122.31, o.getSourceAddressLongitude(), 0.5);
     Normalized n = e.getNormalized();
     assertNotNull(n);
     assertTrue(n.isOfType(Normalized.Type.AUTH));
@@ -239,6 +241,8 @@ public class ParserTest {
     assertEquals("216.160.83.56", n.getSourceAddress());
     assertEquals("Milton", n.getSourceAddressCity());
     assertEquals("US", n.getSourceAddressCountry());
+    assertEquals(47.25, n.getSourceAddressLatitude(), 0.5);
+    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.5);
   }
 
   @Test
@@ -376,6 +380,10 @@ public class ParserTest {
     assertEquals(BmoAudit.AuditType.LOGIN, b.getAuditType());
     assertEquals("spock@mozilla.com", b.getUser());
     assertEquals("Mozilla/5.0", b.getUserAgent());
+    assertEquals("Milton", b.getSourceAddressCity());
+    assertEquals("US", b.getSourceAddressCountry());
+    assertEquals(47.25, b.getSourceAddressLatitude(), 0.5);
+    assertEquals(-122.31, b.getSourceAddressLongitude(), 0.5);
     Normalized n = e.getNormalized();
     assertNotNull(n);
     assertTrue(n.isOfType(Normalized.Type.AUTH));
@@ -383,6 +391,8 @@ public class ParserTest {
     assertEquals("216.160.83.56", n.getSourceAddress());
     assertEquals("Milton", n.getSourceAddressCity());
     assertEquals("US", n.getSourceAddressCountry());
+    assertEquals(47.25, n.getSourceAddressLatitude(), 0.5);
+    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.5);
   }
 
   @Test
@@ -814,6 +824,8 @@ public class ParserTest {
     assertEquals("216.160.83.56", n.getSourceAddress());
     assertEquals("Milton", n.getSourceAddressCity());
     assertEquals("US", n.getSourceAddressCountry());
+    assertEquals(47.25, n.getSourceAddressLatitude(), 0.5);
+    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.5);
     assertEquals("taskcluster-/v1/claim-work/test-provisioner/macos-workers", n.getObject());
   }
 
@@ -1291,6 +1303,8 @@ public class ParserTest {
     assertEquals("216.160.83.56", n.getSourceAddress());
     assertEquals("Milton", n.getSourceAddressCity());
     assertEquals("US", n.getSourceAddressCountry());
+    assertEquals(47.25, n.getSourceAddressLatitude(), 0.5);
+    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.5);
   }
 
   @Test

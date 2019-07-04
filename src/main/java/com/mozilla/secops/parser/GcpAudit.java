@@ -10,7 +10,6 @@ import com.google.api.services.servicecontrol.v1.model.AuditLog;
 import com.google.api.services.servicecontrol.v1.model.AuthenticationInfo;
 import com.google.api.services.servicecontrol.v1.model.AuthorizationInfo;
 import com.google.api.services.servicecontrol.v1.model.RequestMetadata;
-import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.identity.IdentityManager;
 import java.io.IOException;
 import java.io.Serializable;
@@ -18,16 +17,13 @@ import java.util.List;
 import java.util.Map;
 
 /** Payload parser for GCP audit log data. */
-public class GcpAudit extends PayloadBase implements Serializable {
+public class GcpAudit extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private final JacksonFactory jfmatcher;
 
   private String principalEmail;
   private String resource;
-  private String callerIp;
-  private String callerIpCity;
-  private String callerIpCountry;
 
   /**
    * Get principal email
@@ -56,7 +52,7 @@ public class GcpAudit extends PayloadBase implements Serializable {
    */
   @JsonProperty("caller_ip")
   public String getCallerIp() {
-    return callerIp;
+    return getSourceAddress();
   }
 
   /**
@@ -66,7 +62,7 @@ public class GcpAudit extends PayloadBase implements Serializable {
    */
   @JsonProperty("caller_ip_city")
   public String getCallerIpCity() {
-    return callerIpCity;
+    return getSourceAddressCity();
   }
 
   /**
@@ -76,7 +72,7 @@ public class GcpAudit extends PayloadBase implements Serializable {
    */
   @JsonProperty("caller_ip_country")
   public String getCallerIpCountry() {
-    return callerIpCountry;
+    return getSourceAddressCountry();
   }
 
   @Override
@@ -164,14 +160,10 @@ public class GcpAudit extends PayloadBase implements Serializable {
 
     RequestMetadata rm = auditLog.getRequestMetadata();
     if (rm != null) {
-      callerIp = rm.getCallerIp();
+      String callerIp = rm.getCallerIp();
 
       if (callerIp != null) {
-        CityResponse cr = state.getParser().geoIp(callerIp);
-        if (cr != null) {
-          callerIpCity = cr.getCity().getName();
-          callerIpCountry = cr.getCountry().getIsoCode();
-        }
+        setSourceAddress(callerIp, state, e.getNormalized());
       }
     }
 
@@ -180,13 +172,10 @@ public class GcpAudit extends PayloadBase implements Serializable {
       resource = author.get(0).getResource();
     }
 
-    if (principalEmail != null && callerIp != null && resource != null) {
+    if (principalEmail != null && getSourceAddress() != null && resource != null) {
       n.addType(Normalized.Type.AUTH_SESSION);
       n.setSubjectUser(principalEmail);
-      n.setSourceAddress(callerIp);
       n.setObject(resource);
-      n.setSourceAddressCity(callerIpCity);
-      n.setSourceAddressCountry(callerIpCountry);
 
       // If we have an instance of IdentityManager in the parser, see if we can
       // also set the resolved subject identity

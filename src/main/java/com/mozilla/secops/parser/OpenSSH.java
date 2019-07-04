@@ -1,6 +1,5 @@
 package com.mozilla.secops.parser;
 
-import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.identity.IdentityManager;
 import java.io.Serializable;
 import java.util.regex.Matcher;
@@ -8,7 +7,7 @@ import java.util.regex.Pattern;
 import org.joda.time.DateTime;
 
 /** Payload parser for OpenSSH log data */
-public class OpenSSH extends PayloadBase implements Serializable {
+public class OpenSSH extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private final String matchRe = "^" + Parser.SYSLOG_TS_RE + " \\S+ \\S*sshd\\[\\d+\\]: .+";
@@ -23,9 +22,6 @@ public class OpenSSH extends PayloadBase implements Serializable {
 
   private String user;
   private String authMethod;
-  private String sourceAddress;
-  private String sourceAddressCity;
-  private String sourceAddressCountry;
   private String hostname;
 
   @Override
@@ -62,11 +58,10 @@ public class OpenSSH extends PayloadBase implements Serializable {
       hostname = mat.group(2);
       authMethod = mat.group(3);
       user = mat.group(4);
-      sourceAddress = mat.group(5);
+      setSourceAddress(mat.group(5), state, e.getNormalized());
       Normalized n = e.getNormalized();
       n.addType(Normalized.Type.AUTH);
       n.setSubjectUser(user);
-      n.setSourceAddress(sourceAddress);
       n.setObject(hostname);
 
       DateTime et = Parser.parseAndCorrectSyslogTs(authTimestamp, e);
@@ -81,16 +76,6 @@ public class OpenSSH extends PayloadBase implements Serializable {
         String resId = mgr.lookupAlias(user);
         if (resId != null) {
           n.setSubjectUserIdentity(resId);
-        }
-      }
-
-      if (sourceAddress != null) {
-        CityResponse cr = state.getParser().geoIp(sourceAddress);
-        if (cr != null) {
-          sourceAddressCity = cr.getCity().getName();
-          sourceAddressCountry = cr.getCountry().getIsoCode();
-          n.setSourceAddressCity(sourceAddressCity);
-          n.setSourceAddressCountry(sourceAddressCountry);
         }
       }
     }
@@ -112,33 +97,6 @@ public class OpenSSH extends PayloadBase implements Serializable {
    */
   public String getAuthMethod() {
     return authMethod;
-  }
-
-  /**
-   * Get source address
-   *
-   * @return Source address
-   */
-  public String getSourceAddress() {
-    return sourceAddress;
-  }
-
-  /**
-   * Get source address city
-   *
-   * @return Source address city
-   */
-  public String getSourceAddressCity() {
-    return sourceAddressCity;
-  }
-
-  /**
-   * Get source address country
-   *
-   * @return Source address country
-   */
-  public String getSourceAddressCountry() {
-    return sourceAddressCountry;
   }
 
   @Override

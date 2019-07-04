@@ -1,14 +1,13 @@
 package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.maxmind.geoip2.model.CityResponse;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Payload parser for BMO Mozlog audit data */
-public class BmoAudit extends PayloadBase implements Serializable {
+public class BmoAudit extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private final String reLogin = "^successful login of (\\S+) from (\\S+) using \"([^\"]+)\",.*";
@@ -22,9 +21,6 @@ public class BmoAudit extends PayloadBase implements Serializable {
   }
 
   private String msg;
-  private String remoteIp;
-  private String remoteIpCity;
-  private String remoteIpCountry;
   private String requestId;
   private String user;
   private String userAgent;
@@ -54,7 +50,7 @@ public class BmoAudit extends PayloadBase implements Serializable {
    * @return String
    */
   public String getRemoteIp() {
-    return remoteIp;
+    return getSourceAddress();
   }
 
   /**
@@ -134,20 +130,13 @@ public class BmoAudit extends PayloadBase implements Serializable {
       return;
     }
     msg = fields.get("msg");
-    remoteIp = fields.get("remote_ip");
+    String remoteIp = fields.get("remote_ip");
     requestId = fields.get("request_id");
 
     if ((msg == null) || (remoteIp == null) || (requestId == null)) {
       return;
     }
-
-    if (remoteIp != null) {
-      CityResponse cr = state.getParser().geoIp(remoteIp);
-      if (cr != null) {
-        remoteIpCity = cr.getCity().getName();
-        remoteIpCountry = cr.getCountry().getIsoCode();
-      }
-    }
+    setSourceAddress(remoteIp, state, e.getNormalized());
 
     Normalized n = e.getNormalized();
 
@@ -161,9 +150,6 @@ public class BmoAudit extends PayloadBase implements Serializable {
 
       n.addType(Normalized.Type.AUTH);
       n.setSubjectUser(user);
-      n.setSourceAddress(remoteIp);
-      n.setSourceAddressCity(remoteIpCity);
-      n.setSourceAddressCountry(remoteIpCountry);
       n.setObject("bugzilla"); // Just hardcode to application here
       return;
     }
@@ -176,9 +162,6 @@ public class BmoAudit extends PayloadBase implements Serializable {
       // here for now.
       n.addType(Normalized.Type.AUTH_SESSION); // Existing authenticated session
       n.setSubjectUser(user);
-      n.setSourceAddress(remoteIp);
-      n.setSourceAddressCity(remoteIpCity);
-      n.setSourceAddressCountry(remoteIpCountry);
       n.setObject("bugzilla"); // Just hardcode to application here
     }
   }
