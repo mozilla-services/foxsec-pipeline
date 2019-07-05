@@ -2,11 +2,8 @@ package com.mozilla.secops.gatekeeper;
 
 import static org.junit.Assert.*;
 
-import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
-import com.mozilla.secops.alert.AlertFormatter;
-import com.mozilla.secops.parser.ParserTest;
 import java.io.IOException;
 import java.util.Arrays;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
@@ -15,7 +12,6 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.testing.TestStream;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Instant;
 import org.junit.Rule;
@@ -39,9 +35,6 @@ public class TestGatekeeper {
     GatekeeperOptions opts = PipelineOptionsFactory.as(GatekeeperOptions.class);
     opts.setUseEventTimestamp(true);
     opts.setMonitoredResourceIndicator("gatekeeper-test");
-    opts.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
-    opts.setOutputIprepd("http://127.0.0.1:8080");
-    opts.setOutputIprepdApikey("test");
     return opts;
   }
 
@@ -54,8 +47,6 @@ public class TestGatekeeper {
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
-    alerts.apply(ParDo.of(new AlertFormatter(opts))).apply(OutputOptions.compositeOutput(opts));
-
     PCollection<Long> count = alerts.apply(Count.globally());
     PAssert.that(count).containsInAnyOrder(22L);
 
@@ -64,17 +55,18 @@ public class TestGatekeeper {
             x -> {
               for (Alert a : x) {
                 assertNotNull(a.getCategory());
+                assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                 if (a.getCategory().equals("gatekeeper:aws")) {
                   assertTrue(
-                      a.getSummary().startsWith("Suspicious activity detected in AWS account"));
-                  assertEquals("967921969016", a.getMetadataValue("aws account"));
-                  assertEquals("us-west-2", a.getMetadataValue("aws region"));
+                      a.getSummary().startsWith("suspicious activity detected in aws account"));
+                  assertEquals("123456789012", a.getMetadataValue("aws_account"));
+                  assertEquals("us-west-2", a.getMetadataValue("aws_region"));
                 } else if (a.getCategory().equals("gatekeeper:gcp")) {
-                  assertTrue(a.getSummary().startsWith("Suspicious activity detected in GCP org"));
-                  assertEquals("883576422677", a.getMetadataValue("project number"));
+                  assertTrue(a.getSummary().startsWith("suspicious activity detected in gcp org"));
+                  assertEquals("123456789012", a.getMetadataValue("project_number"));
                   assertEquals("audit_log", a.getMetadataValue("indicator"));
                   assertEquals("persistence", a.getMetadataValue("technique"));
-                  assertEquals("iam_anomalous_grant", a.getMetadataValue("ruleName"));
+                  assertEquals("iam_anomalous_grant", a.getMetadataValue("rule_name"));
                 } else {
                   fail(String.format("unexpected alert category type: %s", a.getCategory()));
                 }
@@ -93,8 +85,6 @@ public class TestGatekeeper {
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
-    alerts.apply(ParDo.of(new AlertFormatter(opts))).apply(OutputOptions.compositeOutput(opts));
-
     PCollection<Long> count = alerts.apply(Count.globally());
     PAssert.that(count).containsInAnyOrder(19L);
 
@@ -105,9 +95,10 @@ public class TestGatekeeper {
                 assertNotNull(a.getCategory());
                 assertEquals("gatekeeper:aws", a.getCategory());
                 assertTrue(
-                    a.getSummary().startsWith("Suspicious activity detected in AWS account"));
-                assertEquals("967921969016", a.getMetadataValue("aws account"));
-                assertEquals("us-west-2", a.getMetadataValue("aws region"));
+                    a.getSummary().startsWith("suspicious activity detected in aws account"));
+                assertEquals("123456789012", a.getMetadataValue("aws_account"));
+                assertEquals("us-west-2", a.getMetadataValue("aws_region"));
+                assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
               }
               return null;
             });
@@ -123,8 +114,6 @@ public class TestGatekeeper {
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
-    alerts.apply(ParDo.of(new AlertFormatter(opts))).apply(OutputOptions.compositeOutput(opts));
-
     PCollection<Long> count = alerts.apply(Count.globally());
     PAssert.that(count).containsInAnyOrder(3L);
 
@@ -133,12 +122,13 @@ public class TestGatekeeper {
             x -> {
               for (Alert a : x) {
                 assertNotNull(a.getCategory());
+                assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                 assertEquals("gatekeeper:gcp", a.getCategory());
-                assertTrue(a.getSummary().startsWith("Suspicious activity detected in GCP org"));
-                assertEquals("883576422677", a.getMetadataValue("project number"));
+                assertTrue(a.getSummary().startsWith("suspicious activity detected in gcp org"));
+                assertEquals("123456789012", a.getMetadataValue("project_number"));
                 assertEquals("audit_log", a.getMetadataValue("indicator"));
                 assertEquals("persistence", a.getMetadataValue("technique"));
-                assertEquals("iam_anomalous_grant", a.getMetadataValue("ruleName"));
+                assertEquals("iam_anomalous_grant", a.getMetadataValue("rule_name"));
               }
               return null;
             });
@@ -154,8 +144,6 @@ public class TestGatekeeper {
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
-    alerts.apply(ParDo.of(new AlertFormatter(opts))).apply(OutputOptions.compositeOutput(opts));
-
     PCollection<Long> count = alerts.apply(Count.globally());
     PAssert.that(count).containsInAnyOrder(21L);
 
@@ -164,8 +152,9 @@ public class TestGatekeeper {
             x -> {
               for (Alert a : x) {
                 assertNotNull(a.getCategory());
+                assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                 if (a.getCategory().equals("gatekeeper:aws")) {
-                  assertFalse(a.getMetadataValue("finding type").contains("Recon:EC2"));
+                  assertFalse(a.getMetadataValue("finding_type").contains("Recon:EC2"));
                 }
               }
               return null;

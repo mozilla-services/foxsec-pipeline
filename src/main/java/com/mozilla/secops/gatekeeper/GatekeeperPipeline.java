@@ -4,7 +4,7 @@ import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
-import com.mozilla.secops.parser.*;
+import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.Serializable;
 import org.apache.beam.sdk.Pipeline;
@@ -31,8 +31,8 @@ public class GatekeeperPipeline implements Serializable {
    */
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, GatekeeperOptions options) {
-    String[] EXCLUDE_GD = options.getIgnoreGDFindingTypeRegex();
-    String[] EXCLUDE_ETD = options.getIgnoreETDFindingRuleRegex();
+    String[] excludeGD = options.getIgnoreGDFindingTypeRegex();
+    String[] excludeETD = options.getIgnoreETDFindingRuleRegex();
 
     PCollection<Event> events =
         input
@@ -41,12 +41,12 @@ public class GatekeeperPipeline implements Serializable {
 
     PCollection<Alert> gdAlerts =
         events
-            .apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(EXCLUDE_GD))
+            .apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(excludeGD))
             .apply("generate gd alerts", new GuardDutyTransforms.GenerateAlerts());
 
     PCollection<Alert> etdAlerts =
         events
-            .apply("extract etd findings", new ETDTransforms.ExtractFindings(EXCLUDE_ETD))
+            .apply("extract etd findings", new ETDTransforms.ExtractFindings(excludeETD))
             .apply("generate etd alerts", new ETDTransforms.GenerateAlerts());
 
     PCollection<Alert> alerts =

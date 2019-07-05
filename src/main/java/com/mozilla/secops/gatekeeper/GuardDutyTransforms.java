@@ -11,6 +11,7 @@ import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
 import org.joda.time.DateTime;
 
+/** Implements various transforms on AWS GuardDuty {@link Finding} Events */
 public class GuardDutyTransforms implements Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -20,16 +21,17 @@ public class GuardDutyTransforms implements Serializable {
 
     private List<Pattern> exclude;
 
-    // static initializer for filter
+    /**
+     * static initializer for filter
+     *
+     * @param excludeTypePatterns String[] of regexes to exclude from alert generation
+     */
     public ExtractFindings(String[] excludeTypePatterns) {
-      if (excludeTypePatterns == null) {
-        return;
-      }
-      if (excludeTypePatterns.length > 0) {
-        exclude = new ArrayList<Pattern>();
-      }
-      for (String s : excludeTypePatterns) {
-        exclude.add(Pattern.compile(s));
+      exclude = new ArrayList<Pattern>();
+      if (excludeTypePatterns != null) {
+        for (String s : excludeTypePatterns) {
+          exclude.add(Pattern.compile(s));
+        }
       }
     }
 
@@ -43,25 +45,23 @@ public class GuardDutyTransforms implements Serializable {
                 @ProcessElement
                 public void processElement(ProcessContext c) {
                   Event e = c.element();
-                  GuardDuty gde;
-                  try {
-                    gde = e.getPayload();
-                  } catch (ClassCastException exc) {
+                  if (!e.getPayloadType().equals(Payload.PayloadType.GUARDDUTY)) {
                     return;
                   }
-                  if (gde != null) {
-                    Finding f = gde.getFinding();
-                    if ((f != null) && (f.getType() != null)) {
-                      if (exclude != null) {
-                        for (Pattern p : exclude) {
-                          if (p.matcher(f.getType()).matches()) {
-                            return;
-                          }
-                        }
-                      }
-                      c.output(e);
+                  GuardDuty gde = e.getPayload();
+                  if (gde == null) {
+                    return;
+                  }
+                  Finding f = gde.getFinding();
+                  if (f == null || f.getType() == null) {
+                    return;
+                  }
+                  for (Pattern p : exclude) {
+                    if (p.matcher(f.getType()).matches()) {
+                      return;
                     }
                   }
+                  c.output(e);
                 }
               }));
     }
@@ -82,7 +82,11 @@ public class GuardDutyTransforms implements Serializable {
 
                 @ProcessElement
                 public void processElement(ProcessContext c) {
-                  GuardDuty gd = c.element().getPayload();
+                  Event e = c.element();
+                  if (!e.getPayloadType().equals(Payload.PayloadType.GUARDDUTY)) {
+                    return;
+                  }
+                  GuardDuty gd = e.getPayload();
                   if (gd == null) {
                     return;
                   }
@@ -93,16 +97,17 @@ public class GuardDutyTransforms implements Serializable {
                   Alert a = new Alert();
                   a.setSummary(
                       String.format(
-                          "Suspicious activity detected in AWS account %s: %s",
+                          "suspicious activity detected in aws account %s: %s",
                           f.getAccountId(), f.getTitle()));
                   a.setTimestamp(DateTime.parse(f.getUpdatedAt()));
                   a.setCategory(alertCategory);
-                  a.addMetadata("aws account", f.getAccountId());
-                  a.addMetadata("aws region", f.getRegion());
+                  a.setSeverity(Alert.AlertSeverity.CRITICAL);
+                  a.addMetadata("aws_account", f.getAccountId());
+                  a.addMetadata("aws_region", f.getRegion());
                   a.addMetadata("description", f.getDescription());
-                  a.addMetadata("finding aws severity", Double.toString(f.getSeverity()));
-                  a.addMetadata("finding type", f.getType());
-                  a.addMetadata("finding id", f.getId());
+                  a.addMetadata("finding_aws_severity", Double.toString(f.getSeverity()));
+                  a.addMetadata("finding_type", f.getType());
+                  a.addMetadata("finding_id", f.getId());
                   c.output(a);
                 }
               }));

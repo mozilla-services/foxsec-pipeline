@@ -1,16 +1,21 @@
 package com.mozilla.secops.gatekeeper;
 
 import com.mozilla.secops.alert.Alert;
-import com.mozilla.secops.parser.*;
+import com.mozilla.secops.parser.ETDBeta;
+import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.PTransform;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.DateTime;
 
+/** Implements various transforms on GCP's {@link EventThreatDetectionFinding} Events */
 public class ETDTransforms implements Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -20,16 +25,17 @@ public class ETDTransforms implements Serializable {
 
     private List<Pattern> exclude;
 
-    // static initializer for filter
+    /**
+     * static initializer for filter
+     *
+     * @param excludeRulePatterns String[] of regexes to exclude from alert generation
+     */
     public ExtractFindings(String[] excludeRulePatterns) {
-      if (excludeRulePatterns == null) {
-        return;
-      }
-      if (excludeRulePatterns.length > 0) {
-        exclude = new ArrayList<Pattern>();
-      }
-      for (String s : excludeRulePatterns) {
-        exclude.add(Pattern.compile(s));
+      exclude = new ArrayList<Pattern>();
+      if (excludeRulePatterns != null) {
+        for (String s : excludeRulePatterns) {
+          exclude.add(Pattern.compile(s));
+        }
       }
     }
 
@@ -43,27 +49,25 @@ public class ETDTransforms implements Serializable {
                 @ProcessElement
                 public void processElement(ProcessContext c) {
                   Event e = c.element();
-                  ETDBeta etdb;
-                  try {
-                    etdb = e.getPayload();
-                  } catch (ClassCastException exc) {
+                  if (!e.getPayloadType().equals(Payload.PayloadType.ETD)) {
                     return;
                   }
-                  if (etdb != null) {
-                    EventThreatDetectionFinding f = etdb.getFinding();
-                    if ((f != null)
-                        && (f.getDetectionCategory() != null)
-                        && (f.getDetectionCategory().getRuleName() != null)) {
-                      if (exclude != null) {
-                        for (Pattern p : exclude) {
-                          if (p.matcher(f.getDetectionCategory().getRuleName()).matches()) {
-                            return;
-                          }
-                        }
-                      }
-                      c.output(e);
+                  ETDBeta etdb = e.getPayload();
+                  if (etdb == null) {
+                    return;
+                  }
+                  EventThreatDetectionFinding f = etdb.getFinding();
+                  if (f == null
+                      || f.getDetectionCategory() == null
+                      || f.getDetectionCategory().getRuleName() == null) {
+                    return;
+                  }
+                  for (Pattern p : exclude) {
+                    if (p.matcher(f.getDetectionCategory().getRuleName()).matches()) {
+                      return;
                     }
                   }
+                  c.output(e);
                 }
               }));
     }
@@ -79,12 +83,16 @@ public class ETDTransforms implements Serializable {
     public PCollection<Alert> expand(PCollection<Event> input) {
       return input.apply(
           ParDo.of(
-              new DoFn<Event, com.mozilla.secops.alert.Alert>() {
+              new DoFn<Event, Alert>() {
                 private static final long serialVersionUID = 1L;
 
                 @ProcessElement
                 public void processElement(ProcessContext c) {
-                  ETDBeta etdb = c.element().getPayload();
+                  Event e = c.element();
+                  if (!e.getPayloadType().equals(Payload.PayloadType.ETD)) {
+                    return;
+                  }
+                  ETDBeta etdb = e.getPayload();
                   if (etdb == null) {
                     return;
                   }
@@ -95,18 +103,19 @@ public class ETDTransforms implements Serializable {
                   Alert a = new Alert();
                   a.setSummary(
                       String.format(
-                          "Suspicious activity detected in GCP org %s project %s",
+                          "suspicious activity detected in gcp org %s project %s",
                           f.getSourceId().getCustomerOrganizationNumber(),
                           f.getProperties().getProject_id()));
                   a.setTimestamp(DateTime.parse(f.getEventTime()));
                   a.setCategory(alertCategory);
+                  a.setSeverity(Alert.AlertSeverity.CRITICAL);
                   if (f.getProperties().getLocation() != null) {
                     a.addMetadata("location", f.getProperties().getLocation());
                   }
                   a.addMetadata("indicator", f.getDetectionCategory().getIndicator());
-                  a.addMetadata("ruleName", f.getDetectionCategory().getRuleName());
+                  a.addMetadata("rule_name", f.getDetectionCategory().getRuleName());
                   a.addMetadata("technique", f.getDetectionCategory().getTechnique());
-                  a.addMetadata("project number", f.getSourceId().getProjectNumber());
+                  a.addMetadata("project_number", f.getSourceId().getProjectNumber());
                   c.output(a);
                 }
               }));
