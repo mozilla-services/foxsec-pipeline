@@ -2,7 +2,6 @@ package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.identity.IdentityManager;
 import java.io.IOException;
 import java.io.Serializable;
@@ -13,7 +12,7 @@ import org.joda.time.DateTime;
  *
  * <p>See also https://github.com/mozilla-services/duopull-lambda
  */
-public class Duopull extends PayloadBase implements Serializable {
+public class Duopull extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private static final String DUO_OBJECT = "duo";
@@ -85,13 +84,15 @@ public class Duopull extends PayloadBase implements Serializable {
       if (duoPullData.getEventAction() != null
           && duoPullData.getEventAction().equals(ADMIN_LOGIN_EVENT)) {
         String user = duoPullData.getEventUsername();
-        String sourceAddress = duoPullData.getEventDescriptionIpAddress();
+        String sourceAddr = duoPullData.getEventDescriptionIpAddress();
+        if (sourceAddr != null) {
+          setSourceAddress(sourceAddr, state, e.getNormalized());
+        }
 
         Normalized n = e.getNormalized();
         n.addType(Normalized.Type.AUTH);
         n.setSubjectUser(user);
         n.setObject(String.format("duo_%s", duoPullData.getEventAction()));
-        n.setSourceAddress(sourceAddress);
 
         // If we have an instance of IdentityManager in the parser, see if we can
         // also set the resolved subject identity
@@ -100,16 +101,6 @@ public class Duopull extends PayloadBase implements Serializable {
           String resId = mgr.lookupAlias(user);
           if (resId != null) {
             n.setSubjectUserIdentity(resId);
-          }
-        }
-
-        if (sourceAddress != null) {
-          CityResponse cr = state.getParser().geoIp(sourceAddress);
-          if (cr != null) {
-            String sourceAddressCity = cr.getCity().getName();
-            String sourceAddressCountry = cr.getCountry().getIsoCode();
-            n.setSourceAddressCity(sourceAddressCity);
-            n.setSourceAddressCountry(sourceAddressCountry);
           }
         }
       }
