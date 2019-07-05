@@ -72,16 +72,24 @@ public class Violation {
    */
   static {
     Map<String, ViolationType> tMap = new HashMap<>();
+    // Violations from HTTPRequest
     tMap.put("error_rate", ViolationType.CLIENT_ERROR_RATE_VIOLATION);
     tMap.put("threshold_analysis", ViolationType.REQUEST_THRESHOLD_VIOLATION);
     tMap.put("endpoint_abuse", ViolationType.ENDPOINT_ABUSE_VIOLATION);
     tMap.put("hard_limit", ViolationType.HARD_LIMIT_VIOLATION);
     tMap.put("useragent_blacklist", ViolationType.USERAGENT_BLACKLIST_VIOLATION);
+    // Violations from Customs
     tMap.put("account_creation_abuse", ViolationType.ABUSIVE_ACCOUNT_VIOLATION);
+    // Violations from AMO
+    //
     // XXX Just reuse ENDPOINT_ABUSE_VIOLATION here for specific Amo pipeline alerts.
     // These should eventually be moved to a dedicated violation type.
     tMap.put("fxa_account_abuse_new_version_login", ViolationType.ENDPOINT_ABUSE_VIOLATION);
     tMap.put("fxa_account_abuse_new_version_submission", ViolationType.ENDPOINT_ABUSE_VIOLATION);
+    tMap.put("amo_abuse_matched_addon", ViolationType.ENDPOINT_ABUSE_VIOLATION);
+    tMap.put(
+        "fxa_account_abuse_new_version_login_banpattern", ViolationType.ABUSIVE_ACCOUNT_VIOLATION);
+    tMap.put("fxa_account_abuse_alias", ViolationType.ABUSIVE_ACCOUNT_VIOLATION);
     violationMap = Collections.unmodifiableMap(tMap);
   }
 

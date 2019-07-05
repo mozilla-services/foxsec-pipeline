@@ -228,6 +228,33 @@ public class TestAlert {
   }
 
   @Test
+  public void alertToAmoNewVersionLoginBanPatternTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"64d03714-9d49-4269-a341-4be55145fb4d\",\"summ"
+            + "ary\":\"test login to amo from suspected fraudulent account, kurn@mozilla.com"
+            + " from 216.160.83.56\",\"category\":\"amo\",\"timestamp\":\"2019-06-24T19:04:41"
+            + ".507Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"fxa_account_abuse_"
+            + "new_version_login_banpattern\"},{\"key\":\"sourceaddress\",\"value\":\"216.160.83.56\"},{"
+            + "\"key\":\"email\",\"value\":\"kurn@mozilla.com\"},{\"key\":\"amo_category\",\""
+            + "value\":\"fxa_account_abuse_new_version_login_banpattern\"}]}";
+
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("amo", a.getCategory());
+    assertEquals(
+        "fxa_account_abuse_new_version_login_banpattern", a.getMetadataValue("amo_category"));
+    assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+    assertEquals(1, Violation.fromAlert(a).length);
+    Violation v = Violation.fromAlert(a)[0];
+    assertNotNull(v);
+    assertEquals("abusive_account_violation", v.getViolation());
+    assertEquals("email", v.getType());
+    assertEquals("kurn@mozilla.com", v.getObject());
+    assertNull(v.getSuppressRecovery());
+  }
+
+  @Test
   public void alertToAmoNewVersionSubmissionEndpointAbuseViolationTest() throws Exception {
     String buf =
         "{\"severity\":\"info\",\"id\":\"d18cfcaa-8f72-48db-9ec6-5cbcb0225fb6\",\"summ"

@@ -668,6 +668,27 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseAmoUploadMnt() {
+    String buf =
+        "{\"Timestamp\": 1562177982234531072, \"Type\": \"z.files\", \"Logger\": \"http_ap"
+            + "p_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2."
+            + "0\", \"Severity\": 6, \"Pid\": 3326, \"Fields\": {\"uid\": \"anonymous\", \"remot"
+            + "eAddressChain\": \"216.160.83.56\", \"msg\": \"UPLOAD: 'filename.zip' (10000 byte"
+            + "s) to '/mnt/efs/addons.mozilla.org/files/temp/00000000000000000000000000000000.xpi'\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.FILEUPLOADMNT, d.getEventType());
+    assertEquals("filename.zip", d.getFileName());
+    assertEquals(10000, (int) d.getBytes());
+  }
+
+  @Test
   public void testParseAmoDockerAmoFileUpload() {
     String buf =
         "{\"Timestamp\": 1561211871139126528, \"Type\": \"z\", \"Logger\": \"htt"

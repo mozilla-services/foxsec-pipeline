@@ -14,6 +14,8 @@ import com.mozilla.secops.parser.Payload;
 import java.io.IOException;
 import java.io.Serializable;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.options.Default;
+import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Flatten;
@@ -35,7 +37,8 @@ public class Amo implements Serializable {
    */
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, AmoOptions options) throws IOException {
-    // A valid iprepd configuration is required here, as values are pulled from iprepd
+    // A valid iprepd configuration is required here, as values are pulled from iprepd in some of
+    // the pipeline transforms
     if ((options.getOutputIprepd() == null) || (options.getOutputIprepdApikey() == null)) {
       throw new RuntimeException("iprepd pipeline configuration options are required");
     }
@@ -55,6 +58,8 @@ public class Amo implements Serializable {
                 "fxa account abuse new version",
                 new FxaAccountAbuseNewVersion(
                     options.getMonitoredResourceIndicator(),
+                    options.getAccountMatchBanOnLogin(),
+                    options.getBanPatternSuppressRecovery(),
                     options.getOutputIprepd(),
                     options.getOutputIprepdApikey(),
                     options.getProject())));
@@ -63,11 +68,66 @@ public class Amo implements Serializable {
             parsed.apply(
                 "amo report restriction",
                 new ReportRestriction(options.getMonitoredResourceIndicator())));
+
+    resultsList =
+        resultsList.and(
+            parsed.apply(
+                "fxa account abuse alias",
+                new FxaAccountAbuseAlias(
+                    options.getMonitoredResourceIndicator(),
+                    options.getAliasAbuseSuppressRecovery(),
+                    options.getAliasAbuseMaxAliases())));
+
+    resultsList =
+        resultsList.and(
+            parsed.apply(
+                "addon abuse match",
+                new AddonMatcher(
+                    options.getMonitoredResourceIndicator(),
+                    options.getAddonMatchSuppressRecovery(),
+                    options.getAddonMatchCriteria())));
+
     return resultsList.apply("amo flatten output", Flatten.<Alert>pCollections());
   }
 
   /** Runtime options for {@link Amo} pipeline. */
-  public interface AmoOptions extends PipelineOptions, IOOptions {}
+  public interface AmoOptions extends PipelineOptions, IOOptions {
+    @Description("On login if account matches regex, generate alert regardless of reputation")
+    String[] getAccountMatchBanOnLogin();
+
+    void setAccountMatchBanOnLogin(String[] value);
+
+    @Description(
+        "For account abuse ban patterns, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getBanPatternSuppressRecovery();
+
+    void setBanPatternSuppressRecovery(Integer value);
+
+    @Description(
+        "For account alias abuse, number of aliases seen used within one session to generate an alert")
+    @Default.Integer(5)
+    Integer getAliasAbuseMaxAliases();
+
+    void setAliasAbuseMaxAliases(Integer value);
+
+    @Description(
+        "For account alias abuse, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getAliasAbuseSuppressRecovery();
+
+    void setAliasAbuseSuppressRecovery(Integer value);
+
+    @Description(
+        "Match criteria for abusive addon matcher (multiple supported); <fileregex>:<minbytes>:<maxbytes>")
+    String[] getAddonMatchCriteria();
+
+    void setAddonMatchCriteria(String[] value);
+
+    @Description(
+        "For abusive addon match, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getAddonMatchSuppressRecovery();
+
+    void setAddonMatchSuppressRecovery(Integer value);
+  }
 
   private static void runAmo(AmoOptions options) throws IOException {
     Pipeline p = Pipeline.create(options);
