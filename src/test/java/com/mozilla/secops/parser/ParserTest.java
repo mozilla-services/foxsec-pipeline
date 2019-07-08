@@ -642,6 +642,35 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseAmoDockerAmoStackdriverLogin() {
+    String buf =
+        "{\"insertId\":\"11111111111111\",\"jsonPayload\":{\"Fields\":{\"remoteAddress"
+            + "Chain\":\"1.2.3.4\",\"uid\":\"<anon>\",\"msg\":\"User (00000000: User Name) l"
+            + "ogged in successfully\"},\"Hostname\":\"ip\",\"Pid\":11,\"Type\":\"z.users\","
+            + "\"EnvVersion\":\"2.0\",\"Timestamp\":1562336365437102300,\"Severity\":7,\"Log"
+            + "ger\":\"http_app_addons_stage\"},\"resource\":{\"type\":\"aws_ec2_instance\","
+            + "\"labels\":{\"project_id\":\"moz\",\"region\":\"aws:us-east-1c\",\"aws_accoun"
+            + "t\":\"000000000000\",\"instance_id\":\"i-00000000000000000\"}},\"timestamp\""
+            + ":\"2019-07-05T14:19:25.437873149Z\",\"labels\":{\"stack\":\"amostage1\",\"ap"
+            + "plication\":\"amo\",\"type\":\"olympia_internal\",\"env\":\"stage\",\"ec2.am"
+            + "azonaws.com/resource_name\":\"ip\"},\"logName\":\"projects/moz/logs/docker.a"
+            + "mo-olympia_internal.addons-internal\",\"receiveTimestamp\":\"2019-07-05T14:1"
+            + "9:28.125276392Z\"}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
+    AmoDocker d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(AmoDocker.EventType.LOGIN, d.getEventType());
+    assertEquals("User Name", d.getUid());
+    assertEquals("1.2.3.4", d.getRemoteIp());
+    assertEquals("User (00000000: User Name) logged in successfully", d.getMsg());
+  }
+
+  @Test
   public void testParseAmoDockerAmoNewVersion() {
     String buf =
         "{\"Timestamp\": 1559088455564122624, \"Type\": \"z.versions\", \"Logger\": \"http_"
