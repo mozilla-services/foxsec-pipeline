@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 public class AmoDocker extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private final String reLogin = "^User \\(\\d+: (\\S+)\\) logged in successfully";
+  private final String reLogin = "^User \\(\\d+: ([^)]+)\\) logged in successfully";
   private final String reNewVersion =
       "^New version: <Version: ([^>]+)> \\((\\d+)\\) from <FileUpload: [^>]+>";
   private final String reGotProfile = "^Got profile.*'email': ?'([^']+)'.*";
@@ -148,7 +148,7 @@ public class AmoDocker extends PayloadBase implements Serializable {
       return false;
     }
     String logger = hint.getLogger();
-    if ((logger != null) && (logger.equals("http_app_addons"))) {
+    if ((logger != null) && (logger.startsWith("http_app_addons"))) {
       return true;
     }
     return false;
