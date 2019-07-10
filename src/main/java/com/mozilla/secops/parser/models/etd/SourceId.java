@@ -9,7 +9,7 @@ public class SourceId implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String customerOrganizationNumber;
-  private String projectId;
+  private String projectNumber;
 
   /**
    * Get GCP org number
@@ -22,13 +22,13 @@ public class SourceId implements Serializable {
   }
 
   /**
-   * Get GCP project id for source of Finding
+   * Get GCP project number for source of Finding
    *
    * @return String
    */
-  @JsonProperty("projectId")
-  public String getProjectId() {
-    return projectId;
+  @JsonProperty("projectNumber")
+  public String getProjectNumber() {
+    return projectNumber;
   }
 
   public SourceId() {}

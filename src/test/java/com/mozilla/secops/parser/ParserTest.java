@@ -1520,7 +1520,7 @@ public class ParserTest {
             + "    },"
             + "    \"sourceId\": {"
             + "      \"customerOrganizationNumber\": \"556172058706\","
-            + "      \"projectId\": \"eap-testing-project\""
+            + "      \"projectNumber\": \"883576422677\""
             + "    }"
             + "  }"
             + "}";
@@ -1568,7 +1568,7 @@ public class ParserTest {
 
     assertNotNull(etdf.getSourceId());
     assertEquals("556172058706", etdf.getSourceId().getCustomerOrganizationNumber());
-    assertEquals("eap-testing-project", etdf.getSourceId().getProjectId());
+    assertEquals("883576422677", etdf.getSourceId().getProjectNumber());
   }
 
   @Test
@@ -1600,7 +1600,7 @@ public class ParserTest {
             + "    },"
             + "    \"sourceId\": {"
             + "      \"customerOrganizationNumber\": \"556172058706\","
-            + "      \"projectId\": \"eap-testing-project\""
+            + "      \"projectNumber\": \"883576422677\""
             + "    }"
             + "}";
 
@@ -1647,7 +1647,7 @@ public class ParserTest {
 
     assertNotNull(etdf.getSourceId());
     assertEquals("556172058706", etdf.getSourceId().getCustomerOrganizationNumber());
-    assertEquals("eap-testing-project", etdf.getSourceId().getProjectId());
+    assertEquals("883576422677", etdf.getSourceId().getProjectNumber());
   }
 
   @Test
