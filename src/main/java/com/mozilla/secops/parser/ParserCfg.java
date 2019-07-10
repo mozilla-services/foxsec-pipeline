@@ -17,6 +17,9 @@ public class ParserCfg implements Serializable {
   private String idmanagerPath;
   private Boolean useEventTimestamp;
 
+  private String stackdriverProjectFilter;
+  private String[] stackdriverLabelFilters;
+
   /**
    * Create a parser configuration from pipeline {@link InputOptions}
    *
@@ -36,6 +39,8 @@ public class ParserCfg implements Serializable {
         cfg.setXffAddressSelector(new ArrayList<String>(Arrays.asList(parts)));
       }
     }
+    cfg.setStackdriverProjectFilter(options.getStackdriverProjectFilter());
+    cfg.setStackdriverLabelFilters(options.getStackdriverLabelFilters());
     return cfg;
   }
 
@@ -181,6 +186,50 @@ public class ParserCfg implements Serializable {
    */
   public void setUseEventTimestamp(Boolean useEventTimestamp) {
     this.useEventTimestamp = useEventTimestamp;
+  }
+
+  /**
+   * Get Stackdriver label filters
+   *
+   * @return Array of key:value labels that must match
+   */
+  public String[] getStackdriverLabelFilters() {
+    return stackdriverLabelFilters;
+  }
+
+  /**
+   * Set Stackdriver label filters
+   *
+   * <p>This option is only applicable when the parser is being used within {@link ParserDoFn}.
+   *
+   * <p>If set, events that do not match the label specification will be dropped.
+   *
+   * @param stackdriverLabelFilters Array of key:value labels that must match
+   */
+  public void setStackdriverLabelFilters(String[] stackdriverLabelFilters) {
+    this.stackdriverLabelFilters = stackdriverLabelFilters;
+  }
+
+  /**
+   * Get Stackdriver project filter
+   *
+   * @return Project filter value
+   */
+  public String getStackdriverProjectFilter() {
+    return stackdriverProjectFilter;
+  }
+
+  /**
+   * Set Stackdriver project filter
+   *
+   * <p>This option is only applicable when the parser is being used within {@link ParserDoFn}
+   *
+   * <p>If set, events that do not have the specified Stackdriver project value will be dropped.
+   *
+   * @param stackdriverProjectFilter Project value
+   */
+  public void setStackdriverProjectFilter(String stackdriverProjectFilter) {
+    this.stackdriverProjectFilter = stackdriverProjectFilter;
   }
 
   /** Construct default parser configuration */

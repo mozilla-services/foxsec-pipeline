@@ -71,9 +71,7 @@ public class HTTPRequest implements Serializable {
   public static class Parse extends PTransform<PCollection<String>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
-    private final String stackdriverProjectFilter;
     private final String[] filterRequestPath;
-    private final String[] stackdriverLabelFilters;
     private final String cidrExclusionList;
     private final String[] includeUrlHostRegex;
     private final Boolean ignoreCp;
@@ -86,8 +84,6 @@ public class HTTPRequest implements Serializable {
      * @param options Pipeline options
      */
     public Parse(HTTPRequestOptions options) {
-      stackdriverProjectFilter = options.getStackdriverProjectFilter();
-      stackdriverLabelFilters = options.getStackdriverLabelFilters();
       filterRequestPath = options.getFilterRequestPath();
       cidrExclusionList = options.getCidrExclusionList();
       includeUrlHostRegex = options.getIncludeUrlHostRegex();
@@ -100,19 +96,6 @@ public class HTTPRequest implements Serializable {
     public PCollection<Event> expand(PCollection<String> col) {
       EventFilter filter = new EventFilter().setWantUTC(true);
       EventFilterRule rule = new EventFilterRule().wantNormalizedType(Normalized.Type.HTTP_REQUEST);
-      if (stackdriverProjectFilter != null) {
-        rule.wantStackdriverProject(stackdriverProjectFilter);
-      }
-      if (stackdriverLabelFilters != null) {
-        for (String labelFilter : stackdriverLabelFilters) {
-          String parts[] = labelFilter.split(":");
-          if (parts.length != 2) {
-            throw new IllegalArgumentException(
-                "invalid format for Stackdriver label filter, must be <key>:<value>");
-          }
-          rule.wantStackdriverLabel(parts[0], parts[1]);
-        }
-      }
       if (filterRequestPath != null) {
         for (String s : filterRequestPath) {
           String[] parts = s.split(":");
@@ -1080,16 +1063,6 @@ public class HTTPRequest implements Serializable {
     String getUserAgentBlacklistPath();
 
     void setUserAgentBlacklistPath(String value);
-
-    @Description("Only inspect Stackdriver events generated for specified project identifier")
-    String getStackdriverProjectFilter();
-
-    void setStackdriverProjectFilter(String value);
-
-    @Description("Only inspect Stackdriver events that have the provided labels; key:value")
-    String[] getStackdriverLabelFilters();
-
-    void setStackdriverLabelFilters(String[] value);
 
     @Description(
         "Endpoint abuse analysis paths for monitoring (multiple allowed); e.g., threshold:method:/path")

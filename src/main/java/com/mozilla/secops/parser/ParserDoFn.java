@@ -9,6 +9,7 @@ public class ParserDoFn extends DoFn<String, Event> {
   private Parser ep;
 
   private EventFilter inlineFilter;
+  private EventFilter commonInputFilter;
   private ParserCfg cfg;
 
   /**
@@ -43,12 +44,47 @@ public class ParserDoFn extends DoFn<String, Event> {
     } else {
       ep = new Parser(cfg);
     }
+
+    // See if we had any common input options included in the parser configuration
+    // that we would want to generate a common input filter for. If so, we will initialize
+    // the common input filter and apply it prior to passing the event through any
+    // inline event filter configured by the calling pipeline.
+    if ((cfg != null)
+        && ((cfg.getStackdriverLabelFilters() != null)
+            || (cfg.getStackdriverProjectFilter() != null))) {
+      commonInputFilter = new EventFilter();
+      EventFilterRule rule = new EventFilterRule();
+
+      if (cfg.getStackdriverLabelFilters() != null) {
+        for (String labelFilter : cfg.getStackdriverLabelFilters()) {
+          String parts[] = labelFilter.split(":");
+          if (parts.length != 2) {
+            throw new IllegalArgumentException(
+                "invalid format for Stackdriver label filter, must be <key>:<value>");
+          }
+          rule.wantStackdriverLabel(parts[0], parts[1]);
+        }
+      }
+
+      if (cfg.getStackdriverProjectFilter() != null) {
+        rule.wantStackdriverProject(cfg.getStackdriverProjectFilter());
+      }
+
+      commonInputFilter.addRule(rule);
+    }
   }
 
   @ProcessElement
   public void processElement(ProcessContext c) {
     Event e = ep.parse(c.element());
     if (e != null) {
+      // If a common input filter has been configured, apply that first
+      if (commonInputFilter != null) {
+        if (!(commonInputFilter.matches(e))) {
+          return;
+        }
+      }
+
       if (inlineFilter != null) {
         if (!(inlineFilter.matches(e))) {
           return;
