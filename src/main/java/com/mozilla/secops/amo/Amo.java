@@ -87,6 +87,36 @@ public class Amo implements Serializable {
                     options.getAddonMatchSuppressRecovery(),
                     options.getAddonMatchCriteria())));
 
+    resultsList =
+        resultsList.and(
+            parsed.apply(
+                "addon multi match",
+                new AddonMultiMatch(
+                    options.getMonitoredResourceIndicator(),
+                    options.getAddonMultiMatchSuppressRecovery(),
+                    options.getAddonMultiMatchAlertOn())));
+
+    resultsList =
+        resultsList.and(
+            parsed.apply(
+                "addon multi submit",
+                new AddonMultiSubmit(
+                    options.getMonitoredResourceIndicator(),
+                    options.getAddonMultiSubmitSuppressRecovery(),
+                    options.getAddonMultiSubmitAlertOn())));
+
+    resultsList =
+        resultsList.and(
+            parsed.apply(
+                "addon multi ip login",
+                new AddonMultiIpLogin(
+                    options.getMonitoredResourceIndicator(),
+                    options.getAddonMultiIpLoginSuppressRecovery(),
+                    options.getAddonMultiIpLoginAlertOn(),
+                    options.getAddonMultiIpLoginAlertOnIp(),
+                    options.getAddonMultiIpLoginAlertExceptions(),
+                    options.getAddonMultiIpLoginAggressiveMatcher())));
+
     return resultsList.apply("amo flatten output", Flatten.<Alert>pCollections());
   }
 
@@ -98,7 +128,7 @@ public class Amo implements Serializable {
     void setAccountMatchBanOnLogin(String[] value);
 
     @Description(
-        "For account abuse ban patterns, optionally use supplied suppress_recovery for violations; seconds")
+        "For login ban on regex match, optionally use supplied suppress_recovery for violations; seconds")
     Integer getBanPatternSuppressRecovery();
 
     void setBanPatternSuppressRecovery(Integer value);
@@ -117,7 +147,7 @@ public class Amo implements Serializable {
     void setAliasAbuseSuppressRecovery(Integer value);
 
     @Description(
-        "Match criteria for abusive addon matcher (multiple supported); <fileregex>:<minbytes>:<maxbytes>")
+        "Match criteria for abusive addon matcher (multiple allowed); <fileregex>:<minbytes>:<maxbytes>")
     String[] getAddonMatchCriteria();
 
     void setAddonMatchCriteria(String[] value);
@@ -127,6 +157,63 @@ public class Amo implements Serializable {
     Integer getAddonMatchSuppressRecovery();
 
     void setAddonMatchSuppressRecovery(Integer value);
+
+    @Description(
+        "Generate multi match alert if uploads exceed this number in given window with same file name")
+    @Default.Integer(5)
+    Integer getAddonMultiMatchAlertOn();
+
+    void setAddonMultiMatchAlertOn(Integer value);
+
+    @Description(
+        "For abusive addon multi match, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getAddonMultiMatchSuppressRecovery();
+
+    void setAddonMultiMatchSuppressRecovery(Integer value);
+
+    @Description("For abusive addon multi submit, alert if submission count exceeds value")
+    @Default.Integer(10)
+    Integer getAddonMultiSubmitAlertOn();
+
+    void setAddonMultiSubmitAlertOn(Integer value);
+
+    @Description(
+        "For abusive addon multi submit, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getAddonMultiSubmitSuppressRecovery();
+
+    void setAddonMultiSubmitSuppressRecovery(Integer value);
+
+    @Description("Number of countries seen within window to generate multi IP login alert")
+    @Default.Integer(2)
+    Integer getAddonMultiIpLoginAlertOn();
+
+    void setAddonMultiIpLoginAlertOn(Integer value);
+
+    @Description(
+        "For multi IP login, when country count exceeded, specify distinct IP count that must also be met")
+    @Default.Integer(4)
+    Integer getAddonMultiIpLoginAlertOnIp();
+
+    void setAddonMultiIpLoginAlertOnIp(Integer value);
+
+    @Description(
+        "Exempt accounts matching regex from IP country login analysis (multiple allowed); regex")
+    String[] getAddonMultiIpLoginAlertExceptions();
+
+    void setAddonMultiIpLoginAlertExceptions(String[] value);
+
+    @Description(
+        "If account matches regex, submit violation on any multi-country access regardless of IP "
+            + "count (multiple allowed); regex")
+    String[] getAddonMultiIpLoginAggressiveMatcher();
+
+    void setAddonMultiIpLoginAggressiveMatcher(String[] value);
+
+    @Description(
+        "For abusive addon multi IP login, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getAddonMultiIpLoginSuppressRecovery();
+
+    void setAddonMultiIpLoginSuppressRecovery(Integer value);
   }
 
   private static void runAmo(AmoOptions options) throws IOException {

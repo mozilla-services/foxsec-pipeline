@@ -228,6 +228,139 @@ public class TestAlert {
   }
 
   @Test
+  public void alertToAmoAddonMatchViolationTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"e056ef7b-5b02-40d7-a7da-b3b5c866144c\",\"summ"
+            + "ary\":\"test suspected malicious addon submission from 216.160.83.63, lwaxana"
+            + "@mozilla.com\",\"category\":\"amo\",\"timestamp\":\"2019-07-11T17:47:52.915Z"
+            + "\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"amo_abuse_matched_add"
+            + "on\"},{\"key\":\"amo_category\",\"value\":\"amo_abuse_matched_addon\"},{\"ke"
+            + "y\":\"sourceaddress\",\"value\":\"216.160.83.63\"},{\"key\":\"email\",\"valu"
+            + "e\":\"lwaxana@mozilla.com, lwaxana@mozilla.com, lwaxana@mozilla.com\"},{\"ke"
+            + "y\":\"addon_filename\",\"value\":\"00000000000000000000000000000000_test_submi"
+            + "ssion.zip\"},{\"key\":\"addon_size\",\"value\":\"7500\"}]}";
+
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("amo", a.getCategory());
+    assertEquals("amo_abuse_matched_addon", a.getMetadataValue("amo_category"));
+    assertEquals("216.160.83.63", a.getMetadataValue("sourceaddress"));
+    assertEquals(
+        "lwaxana@mozilla.com, lwaxana@mozilla.com, lwaxana@mozilla.com",
+        a.getMetadataValue("email"));
+    Violation[] v = Violation.fromAlert(a);
+    // We should have 4 here, 1 for the source address, 1 for the email address, and 2
+    // additional violations for the normalized email components (which in this case will
+    // be identical
+    assertEquals(4, v.length);
+    for (Violation i : v) {
+      if (i.getType().equals("email")) {
+        assertEquals("lwaxana@mozilla.com", i.getObject());
+        assertEquals("abusive_account_violation", i.getViolation());
+      } else {
+        assertEquals("ip", i.getType());
+        assertEquals("216.160.83.63", i.getObject());
+        assertEquals("endpoint_abuse_violation", i.getViolation());
+      }
+    }
+  }
+
+  @Test
+  public void alertToAmoAddonMultiMatchTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"5e6d23b2-59c9-4ffb-8194-7a714919afe7\",\"summ"
+            + "ary\":\"test addon abuse multi match, 5\",\"category\":\"amo\",\"timestamp\":"
+            + "\"2019-07-11T20:28:29.262Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value"
+            + "\":\"amo_abuse_multi_match\"},{\"key\":\"amo_category\",\"value\":\"amo_abus"
+            + "e_multi_match\"},{\"key\":\"email\",\"value\":\"ro5@mozilla.com, ro1@mozilla"
+            + ".com, ro2@mozilla.com, ro3@mozilla.com, ro4@mozilla.com\"},{\"key\":\"count"
+            + "\",\"value\":\"5\"},{\"key\":\"addon_filename\",\"value\":\"x.xpi\"}]}";
+
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("amo", a.getCategory());
+    assertEquals("amo_abuse_multi_match", a.getMetadataValue("amo_category"));
+    assertEquals("5", a.getMetadataValue("count"));
+    Violation[] v = Violation.fromAlert(a);
+    assertEquals(5, v.length);
+    assertEquals("abusive_account_violation", v[0].getViolation());
+    assertEquals("email", v[0].getType());
+  }
+
+  @Test
+  public void alertToAmoMultiSubmitTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"169f5030-22db-4849-8421-75462b986a98\",\"summar"
+            + "y\":\"test addon abuse multi submit, 10000 11\",\"category\":\"amo\",\"timestam"
+            + "p\":\"2019-07-18T20:04:58.299Z\",\"metadata\":[{\"key\":\"notify_merge\",\"valu"
+            + "e\":\"amo_abuse_multi_submit\"},{\"key\":\"amo_category\",\"value\":\"amo_abuse"
+            + "_multi_submit\"},{\"key\":\"email\",\"value\":\"ro10@mozilla.com, ro9@mozilla.c"
+            + "om, ro5@mozilla.com, ro6@mozilla.com, ro1@mozilla.com, ro2@mozilla.com, ro4@moz"
+            + "illa.com, lwaxana@mozilla.com, ro7@mozilla.com, ro8@mozilla.com, ro3@mozilla.com"
+            + "\"},{\"key\":\"count\",\"value\":\"11\"}]}";
+
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("amo", a.getCategory());
+    assertEquals("amo_abuse_multi_submit", a.getMetadataValue("amo_category"));
+    assertEquals("11", a.getMetadataValue("count"));
+    Violation[] v = Violation.fromAlert(a);
+    assertEquals(11, v.length);
+    assertEquals("abusive_account_violation", v[0].getViolation());
+    assertEquals("email", v[0].getType());
+  }
+
+  @Test
+  public void alertToAmoMultiIpLoginTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"e131a5c0-ae88-4676-9fa9-472fabb45d68\",\"summar"
+            + "y\":\"test addon abuse multi ip country login, sevenofnine@mozilla.net 2 countr"
+            + "ies, 2 source address\",\"category\":\"amo\",\"timestamp\":\"2019-07-18T20:09:0"
+            + "2.973Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"amo_abuse_multi_ip"
+            + "_login\"},{\"key\":\"amo_category\",\"value\":\"amo_abuse_multi_ip_login\"},{\""
+            + "key\":\"email\",\"value\":\"sevenofnine@mozilla.net\"},{\"key\":\"count\",\"val"
+            + "ue\":\"2\"}]}";
+
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("amo", a.getCategory());
+    assertEquals("amo_abuse_multi_ip_login", a.getMetadataValue("amo_category"));
+    assertEquals("2", a.getMetadataValue("count"));
+    Violation[] v = Violation.fromAlert(a);
+    assertEquals(1, v.length);
+    assertEquals("abusive_account_violation", v[0].getViolation());
+    assertEquals("email", v[0].getType());
+    assertEquals("sevenofnine@mozilla.net", v[0].getObject());
+  }
+
+  @Test
+  public void alertToAmoAliasAbuseTest() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"8e1f668b-4fd5-46f8-ad6f-255d5b9b9729\",\"summar"
+            + "y\":\"test possible alias abuse in amo, laforge@mozilla.com has 6 aliases\",\"c"
+            + "ategory\":\"amo\",\"timestamp\":\"2019-07-18T20:09:02.987Z\",\"metadata\":[{\"k"
+            + "ey\":\"notify_merge\",\"value\":\"fxa_account_abuse_alias\"},{\"key\":\"amo_cat"
+            + "egory\",\"value\":\"fxa_account_abuse_alias\"},{\"key\":\"email\",\"value\":\"l"
+            + "aforge@mozilla.com, laforge+test1@mozilla.com, laforge+test2@mozilla.com, lafor"
+            + "ge+test3@mozilla.com, laforge+test4@mozilla.com, laforge+test5@mozilla.com, laf"
+            + "orge+test6@mozilla.com\"},{\"key\":\"count\",\"value\":\"6\"}]}";
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    assertEquals("amo", a.getCategory());
+    assertEquals("fxa_account_abuse_alias", a.getMetadataValue("amo_category"));
+    assertEquals("6", a.getMetadataValue("count"));
+    Violation[] v = Violation.fromAlert(a);
+    assertEquals(7, v.length); // Should have one extra violation for the normalized version
+    assertEquals("abusive_account_violation", v[0].getViolation());
+    assertEquals("email", v[0].getType());
+  }
+
+  @Test
   public void alertToAmoNewVersionLoginBanPatternTest() throws Exception {
     String buf =
         "{\"severity\":\"info\",\"id\":\"64d03714-9d49-4269-a341-4be55145fb4d\",\"summ"

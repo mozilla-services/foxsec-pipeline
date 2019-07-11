@@ -23,7 +23,10 @@ import org.joda.time.Duration;
 /**
  * Analysis for aliased account usage
  *
- * <p>A session gap duration of 120 minutes is used with early firings every 60 seconds.
+ * <p>A session gap duration of 120 minutes is used with early firings every 60 seconds. Within the
+ * window accounts in used are normalized and grouped together using the normalized value as a key.
+ * If the number if in-use aliases for a given account exceeds the configured value, and alert is
+ * generated.
  */
 public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollection<Alert>> {
   private static final long serialVersionUID = 1L;

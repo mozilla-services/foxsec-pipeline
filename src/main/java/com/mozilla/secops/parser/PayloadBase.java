@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.io.Serializable;
 
 /** Base class for payloads */
 @JsonTypeInfo(
@@ -16,7 +17,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
   @Type(value = Raw.class, name = "raw"),
   @Type(value = Duopull.class, name = "duopull")
 })
-public abstract class PayloadBase {
+public abstract class PayloadBase implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   /** Construct matcher object. */
   public PayloadBase() {}
 

@@ -1,6 +1,7 @@
 package com.mozilla.secops.amo;
 
 import com.mozilla.secops.IprepdIO;
+import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
@@ -98,12 +99,31 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
                         alert.setNotifyMergeKey("amo_abuse_matched_addon");
                         alert.addMetadata("amo_category", "amo_abuse_matched_addon");
                         alert.addMetadata("sourceaddress", d.getRemoteIp());
+                        // If we got an email address with the event, add it to the alert; we also
+                        // add the normalized email equivalents
+                        if (d.getFxaEmail() != null) {
+                          String email = d.getFxaEmail();
+                          String buf = email;
+                          String nb = MiscUtil.normalizeEmailPlus(email);
+                          if (!email.equals(nb)) {
+                            buf += ", " + nb;
+                          }
+                          nb = MiscUtil.normalizeEmailPlusDotStrip(email);
+                          if (!email.equals(nb)) {
+                            buf += ", " + nb;
+                          }
+                          alert.addMetadata("email", buf);
+                        }
                         alert.addMetadata("addon_filename", d.getFileName());
                         alert.addMetadata("addon_size", d.getBytes().toString());
-                        alert.setSummary(
+                        String summary =
                             String.format(
                                 "%s suspected malicious addon submission from %s",
-                                monitoredResource, d.getRemoteIp()));
+                                monitoredResource, d.getRemoteIp());
+                        if (d.getFxaEmail() != null) {
+                          summary = summary + ", " + d.getFxaEmail();
+                        }
+                        alert.setSummary(summary);
                         if (suppressRecovery != null) {
                           IprepdIO.addMetadataSuppressRecovery(suppressRecovery, alert);
                         }

@@ -15,7 +15,11 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 
-/** Correlation of AMO addon submission with abusive FxA account creation alerts */
+/**
+ * Correlation of AMO addon submission with abusive FxA account creation alerts
+ *
+ * <p>This transform also applies login ban patterns.
+ */
 public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PCollection<Alert>> {
   private static final long serialVersionUID = 1L;
 

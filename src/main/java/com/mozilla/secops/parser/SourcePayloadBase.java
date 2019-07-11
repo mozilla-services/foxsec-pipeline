@@ -1,6 +1,7 @@
 package com.mozilla.secops.parser;
 
 import com.maxmind.geoip2.model.CityResponse;
+import java.io.Serializable;
 
 /**
  * Extension of {@link PayloadBase} that unifies source address field handling
@@ -8,7 +9,9 @@ import com.maxmind.geoip2.model.CityResponse;
  * <p>Payload types that manipulate some indication of a source address field should likely inherit
  * from this class.
  */
-public abstract class SourcePayloadBase extends PayloadBase {
+public abstract class SourcePayloadBase extends PayloadBase implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private String sourceAddress;
   private String sourceAddressCity;
   private String sourceAddressCountry;
