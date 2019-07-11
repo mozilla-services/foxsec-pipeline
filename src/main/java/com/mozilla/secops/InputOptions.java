@@ -14,6 +14,18 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
 
   void setUseEventTimestamp(Boolean value);
 
+  @Description(
+      "Only inspect Stackdriver events generated for specified project identifier in parser DoFn")
+  String getStackdriverProjectFilter();
+
+  void setStackdriverProjectFilter(String value);
+
+  @Description(
+      "Only inspect Stackdriver events that have the provided labels in parser DoFn; key:value")
+  String[] getStackdriverLabelFilters();
+
+  void setStackdriverLabelFilters(String[] value);
+
   @Description("Read from Pubsub (multiple allowed); Pubsub topic")
   String[] getInputPubsub();
 
