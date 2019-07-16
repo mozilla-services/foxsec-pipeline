@@ -111,10 +111,8 @@ public class HTTPRequest implements Serializable {
                           .withStringMatch(
                               EventFilterPayload.StringProperty.NORMALIZED_REQUESTMETHOD, parts[0])
                           .withStringMatch(
-                              EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTPATH, parts[1])
-                          // XXX This should likely be a range (e.g., >= 200 < 300)
-                          .withIntegerMatch(
-                              EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS, 200)));
+                              EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTPATH,
+                              parts[1])));
         }
       }
       if (includeUrlHostRegex != null) {
