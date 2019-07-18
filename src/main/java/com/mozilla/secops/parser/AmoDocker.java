@@ -1,14 +1,13 @@
 package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.maxmind.geoip2.model.CityResponse;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Payload parser for AMO docker logs */
-public class AmoDocker extends PayloadBase implements Serializable {
+public class AmoDocker extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private final String reLogin = "^User \\(\\d+: ([^)]+)\\) logged in successfully";
@@ -36,9 +35,6 @@ public class AmoDocker extends PayloadBase implements Serializable {
   }
 
   private String msg;
-  private String remoteIp;
-  private String remoteIpCity;
-  private String remoteIpCountry;
   private String uid;
   private String fxaEmail;
   private String restrictedValue;
@@ -101,7 +97,7 @@ public class AmoDocker extends PayloadBase implements Serializable {
    * @return String
    */
   public String getRemoteIp() {
-    return remoteIp;
+    return getSourceAddress();
   }
 
   /**
@@ -176,19 +172,20 @@ public class AmoDocker extends PayloadBase implements Serializable {
       return;
     }
     msg = fields.get("msg");
-    remoteIp = fields.get("remoteAddressChain");
+    String remoteIp = fields.get("remoteAddressChain");
     uid = fields.get("uid");
 
     if ((msg == null) || (remoteIp == null) || (uid == null)) {
       return;
     }
+    // Set source address; pass null for the normalized component since we don't want to
+    // set the fields in there for this event type
+    setSourceAddress(remoteIp, state, null);
 
-    if (remoteIp != null) {
-      CityResponse cr = state.getParser().geoIp(remoteIp);
-      if (cr != null) {
-        remoteIpCity = cr.getCity().getName();
-        remoteIpCountry = cr.getCountry().getIsoCode();
-      }
+    if ((fields.get("email") != null) && (!fields.get("email").isEmpty())) {
+      // Some log messages will have an email field to indicate the email address associated
+      // with the account. If we have one, set this in the fxaEmail field.
+      fxaEmail = fields.get("email");
     }
 
     Matcher mat = Pattern.compile(reLogin).matcher(msg);
@@ -212,7 +209,11 @@ public class AmoDocker extends PayloadBase implements Serializable {
     mat = Pattern.compile(reGotProfile).matcher(msg);
     if (mat.matches()) {
       type = EventType.GOTPROFILE;
-      fxaEmail = mat.group(1);
+      // Prefer the email field over the parsed value, but if it is unset then just grab
+      // it here
+      if (fxaEmail == null) {
+        fxaEmail = mat.group(1);
+      }
       return;
     }
 
@@ -230,7 +231,7 @@ public class AmoDocker extends PayloadBase implements Serializable {
         restrictedValue = mat.group(2);
         type = EventType.RESTRICTED;
       } else if (mat.group(1).equals("ip")) {
-        restrictedValue = remoteIp;
+        restrictedValue = getSourceAddress();
         type = EventType.RESTRICTED;
       }
       return;

@@ -25,7 +25,6 @@ public class Violation {
 
   /** Valid violation types */
   public enum ViolationType {
-    /** HTTP request threshold violation */
     REQUEST_THRESHOLD_VIOLATION {
       @Override
       public String toString() {
@@ -64,33 +63,132 @@ public class Violation {
     }
   }
 
-  private static final Map<String, ViolationType> violationMap;
+  private abstract static class ViolationGenerator {
+    public abstract Violation[] generate(Alert a);
 
-  /*
-   * Maps metadata category values as would be specified in HTTPRequest to actual
-   * violation types used in violations
-   */
+    protected Violation createViolation(Alert a, String object, String type, String vStr) {
+      String suppressValue = a.getMetadataValue(IprepdIO.IPREPD_SUPPRESS_RECOVERY);
+      if (suppressValue == null) {
+        return new Violation(object, type, vStr);
+      } else {
+        return new Violation(object, type, vStr, new Integer(suppressValue));
+      }
+    }
+  }
+
+  private static class GenericSourceViolationGenerator extends ViolationGenerator {
+    private ViolationType vType;
+
+    public Violation[] generate(Alert a) {
+      ArrayList<Violation> ret = new ArrayList<>();
+      if (a.getMetadataValue("sourceaddress") == null) {
+        return null;
+      }
+      ret.add(createViolation(a, a.getMetadataValue("sourceaddress"), "ip", vType.toString()));
+      return ret.toArray(new Violation[ret.size()]);
+    }
+
+    public GenericSourceViolationGenerator(ViolationType vType) {
+      this.vType = vType;
+    }
+  }
+
+  private static class EmailListViolationGenerator extends ViolationGenerator {
+    private ViolationType vType;
+
+    public Violation[] generate(Alert a) {
+      ArrayList<Violation> ret = new ArrayList<>();
+      String emails = a.getMetadataValue("email");
+      if (emails == null) {
+        return null;
+      }
+      String[] parts = emails.split(", ?");
+      for (String i : parts) {
+        ret.add(createViolation(a, i, "email", vType.toString()));
+      }
+      return ret.toArray(new Violation[ret.size()]);
+    }
+
+    public EmailListViolationGenerator(ViolationType vType) {
+      this.vType = vType;
+    }
+  }
+
+  private static class MatchedAddonCustomViolationGenerator extends ViolationGenerator {
+    public Violation[] generate(Alert a) {
+      // Custom generator implementation; we will create a violation both for the email
+      // address if present and the source address.
+      ArrayList<Violation> ret = new ArrayList<>();
+      if (a.getMetadataValue("sourceaddress") == null) {
+        return null;
+      }
+      ret.add(
+          createViolation(
+              a,
+              a.getMetadataValue("sourceaddress"),
+              "ip",
+              ViolationType.ENDPOINT_ABUSE_VIOLATION.toString()));
+      if (a.getMetadataValue("email") != null) {
+        String[] parts = a.getMetadataValue("email").split(", ?");
+        for (String i : parts) {
+          ret.add(
+              createViolation(a, i, "email", ViolationType.ABUSIVE_ACCOUNT_VIOLATION.toString()));
+        }
+      }
+      return ret.toArray(new Violation[ret.size()]);
+    }
+  }
+
+  private static final Map<String, ViolationGenerator> generatorMap;
+
   static {
-    Map<String, ViolationType> tMap = new HashMap<>();
-    // Violations from HTTPRequest
-    tMap.put("error_rate", ViolationType.CLIENT_ERROR_RATE_VIOLATION);
-    tMap.put("threshold_analysis", ViolationType.REQUEST_THRESHOLD_VIOLATION);
-    tMap.put("endpoint_abuse", ViolationType.ENDPOINT_ABUSE_VIOLATION);
-    tMap.put("hard_limit", ViolationType.HARD_LIMIT_VIOLATION);
-    tMap.put("useragent_blacklist", ViolationType.USERAGENT_BLACKLIST_VIOLATION);
-    // Violations from Customs
-    tMap.put("account_creation_abuse", ViolationType.ABUSIVE_ACCOUNT_VIOLATION);
-    // Violations from AMO
-    //
-    // XXX Just reuse ENDPOINT_ABUSE_VIOLATION here for specific Amo pipeline alerts.
-    // These should eventually be moved to a dedicated violation type.
-    tMap.put("fxa_account_abuse_new_version_login", ViolationType.ENDPOINT_ABUSE_VIOLATION);
-    tMap.put("fxa_account_abuse_new_version_submission", ViolationType.ENDPOINT_ABUSE_VIOLATION);
-    tMap.put("amo_abuse_matched_addon", ViolationType.ENDPOINT_ABUSE_VIOLATION);
-    tMap.put(
-        "fxa_account_abuse_new_version_login_banpattern", ViolationType.ABUSIVE_ACCOUNT_VIOLATION);
-    tMap.put("fxa_account_abuse_alias", ViolationType.ABUSIVE_ACCOUNT_VIOLATION);
-    violationMap = Collections.unmodifiableMap(tMap);
+    Map<String, ViolationGenerator> vMap = new HashMap<>();
+
+    // HTTPRequest
+    vMap.put(
+        "error_rate",
+        new GenericSourceViolationGenerator(ViolationType.CLIENT_ERROR_RATE_VIOLATION));
+    vMap.put(
+        "threshold_analysis",
+        new GenericSourceViolationGenerator(ViolationType.REQUEST_THRESHOLD_VIOLATION));
+    vMap.put(
+        "endpoint_abuse",
+        new GenericSourceViolationGenerator(ViolationType.ENDPOINT_ABUSE_VIOLATION));
+    vMap.put(
+        "useragent_blacklist",
+        new GenericSourceViolationGenerator(ViolationType.USERAGENT_BLACKLIST_VIOLATION));
+    vMap.put("hard_limit", new GenericSourceViolationGenerator(ViolationType.HARD_LIMIT_VIOLATION));
+
+    // Customs
+    vMap.put(
+        "account_creation_abuse",
+        new EmailListViolationGenerator(ViolationType.ABUSIVE_ACCOUNT_VIOLATION));
+
+    // AMO
+    vMap.put(
+        "fxa_account_abuse_new_version_login",
+        new GenericSourceViolationGenerator(ViolationType.ENDPOINT_ABUSE_VIOLATION));
+    vMap.put(
+        "fxa_account_abuse_new_version_submission",
+        new GenericSourceViolationGenerator(ViolationType.ENDPOINT_ABUSE_VIOLATION));
+    vMap.put(
+        "fxa_account_abuse_new_version_login_banpattern",
+        new EmailListViolationGenerator(ViolationType.ABUSIVE_ACCOUNT_VIOLATION));
+    vMap.put(
+        "fxa_account_abuse_alias",
+        new EmailListViolationGenerator(ViolationType.ABUSIVE_ACCOUNT_VIOLATION));
+    vMap.put("amo_abuse_matched_addon", new MatchedAddonCustomViolationGenerator());
+    vMap.put(
+        "amo_abuse_multi_match",
+        new EmailListViolationGenerator(ViolationType.ABUSIVE_ACCOUNT_VIOLATION));
+    vMap.put(
+        "amo_abuse_multi_submit",
+        new EmailListViolationGenerator(ViolationType.ABUSIVE_ACCOUNT_VIOLATION));
+    vMap.put(
+        "amo_abuse_multi_ip_login",
+        new EmailListViolationGenerator(ViolationType.ABUSIVE_ACCOUNT_VIOLATION));
+
+    generatorMap = Collections.unmodifiableMap(vMap);
   }
 
   /**
@@ -187,6 +285,18 @@ public class Violation {
     }
   }
 
+  private static String resolveAlertType(Alert a) {
+    switch (a.getCategory()) {
+      case "httprequest":
+        return a.getMetadataValue("category");
+      case "customs":
+        return a.getMetadataValue("customs_category");
+      case "amo":
+        return a.getMetadataValue("amo_category");
+    }
+    return null;
+  }
+
   /**
    * Convert an {@link Alert} into violations
    *
@@ -200,66 +310,14 @@ public class Violation {
    * @return Array of violations or null if conversion is not possible
    */
   public static Violation[] fromAlert(Alert a) {
-    String categoryField = null;
-    if (a.getCategory().equals("httprequest")) {
-      categoryField = "category";
-    } else if (a.getCategory().equals("customs")) {
-      categoryField = "customs_category";
-    } else if (a.getCategory().equals("amo")) {
-      categoryField = "amo_category";
-    } else {
-      return null;
-    }
-
-    String aType = a.getMetadataValue(categoryField);
+    String aType = resolveAlertType(a);
     if (aType == null) {
       return null;
     }
-    ViolationType vt = violationMap.get(aType);
-    if (vt == null) {
+    ViolationGenerator vg = generatorMap.get(aType);
+    if (vg == null) {
       return null;
     }
-    ArrayList<Violation> ret = new ArrayList<>();
-    ArrayList<String> vObj = new ArrayList<>();
-    ArrayList<String> vType = new ArrayList<>();
-    switch (vt) {
-      case CLIENT_ERROR_RATE_VIOLATION:
-      case REQUEST_THRESHOLD_VIOLATION:
-      case ENDPOINT_ABUSE_VIOLATION:
-      case HARD_LIMIT_VIOLATION:
-      case USERAGENT_BLACKLIST_VIOLATION:
-        if (a.getMetadataValue("sourceaddress") == null) {
-          return null;
-        }
-        vObj.add(a.getMetadataValue("sourceaddress"));
-        vType.add("ip");
-        break;
-      case ABUSIVE_ACCOUNT_VIOLATION:
-        if (a.getMetadataValue("email") == null) {
-          return null;
-        }
-        String[] parts = a.getMetadataValue("email").split(", ?");
-        for (String i : parts) {
-          vObj.add(i);
-          vType.add("email");
-        }
-        break;
-      default:
-        return null;
-    }
-
-    if (vObj.size() != vType.size()) {
-      throw new RuntimeException("violation object and type count mismatch");
-    }
-    String suppressValue = a.getMetadataValue(IprepdIO.IPREPD_SUPPRESS_RECOVERY);
-    for (int i = 0; i < vObj.size(); i++) {
-      if (suppressValue != null) {
-        ret.add(
-            new Violation(vObj.get(i), vType.get(i), vt.toString(), new Integer(suppressValue)));
-      } else {
-        ret.add(new Violation(vObj.get(i), vType.get(i), vt.toString()));
-      }
-    }
-    return ret.toArray(new Violation[vObj.size()]);
+    return vg.generate(a);
   }
 }

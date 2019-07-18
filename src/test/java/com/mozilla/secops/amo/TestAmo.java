@@ -34,6 +34,9 @@ public class TestAmo {
     ret.setOutputIprepdApikey("test");
     ret.setAccountMatchBanOnLogin(new String[] {"locutus.*"});
     ret.setAddonMatchCriteria(new String[] {".*test_submission.*:7500:7500"});
+    // Reduce the required country match count for the IP login tests here
+    ret.setAddonMultiIpLoginAlertOn(2);
+    ret.setAddonMultiIpLoginAlertOnIp(2);
     return ret;
   }
 
@@ -68,7 +71,7 @@ public class TestAmo {
         .apply(OutputOptions.compositeOutput(getTestOptions()));
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(7L);
+    PAssert.that(count).containsInAnyOrder(10L);
 
     PAssert.that(alerts)
         .satisfies(
@@ -107,10 +110,27 @@ public class TestAmo {
                   assertEquals(
                       "00000000000000000000000000000000_test_submission.zip",
                       a.getMetadataValue("addon_filename"));
+                  assertEquals("lwaxana@mozilla.com", a.getMetadataValue("email"));
                   assertEquals("7500", a.getMetadataValue("addon_size"));
                   assertEquals(
-                      "test suspected malicious addon submission from 216.160.83.63",
+                      "test suspected malicious addon submission from 216.160.83.63, lwaxana@mozilla.com",
                       a.getSummary());
+                } else if (a.getMetadataValue("amo_category").equals("amo_abuse_multi_match")) {
+                  assertEquals("amo_abuse_multi_match", a.getNotifyMergeKey());
+                  assertEquals("test addon abuse multi match, 10", a.getSummary());
+                  assertEquals("10", a.getMetadataValue("count"));
+                  assertEquals("x.xpi", a.getMetadataValue("addon_filename"));
+                } else if (a.getMetadataValue("amo_category").equals("amo_abuse_multi_submit")) {
+                  assertEquals("amo_abuse_multi_submit", a.getNotifyMergeKey());
+                  assertEquals("test addon abuse multi submit, 10000 11", a.getSummary());
+                  assertEquals("11", a.getMetadataValue("count"));
+                } else if (a.getMetadataValue("amo_category").equals("amo_abuse_multi_ip_login")) {
+                  assertEquals("amo_abuse_multi_ip_login", a.getNotifyMergeKey());
+                  assertEquals(
+                      "test addon abuse multi ip country login, sevenofnine@mozilla.net 2 countr"
+                          + "ies, 2 source address",
+                      a.getSummary());
+                  assertEquals("2", a.getMetadataValue("count"));
                 } else {
                   assertEquals("255.255.25.25", a.getMetadataValue("sourceaddress"));
                   if (a.getMetadataValue("addon_version") != null) {
