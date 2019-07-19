@@ -136,7 +136,13 @@ public class IprepdIO {
       HttpResponse resp;
 
       String reqPath = new StringJoiner("/").add(url).add("type").add(type).add(value).toString();
-      HttpGet get = new HttpGet(reqPath);
+      HttpGet get;
+      try {
+        get = new HttpGet(reqPath);
+      } catch (IllegalArgumentException exc) {
+        log.error(exc.getMessage());
+        return new Integer(100);
+      }
       if (apiKey != null) {
         get.addHeader("Authorization", "APIKey " + apiKey);
       }
@@ -413,6 +419,8 @@ public class IprepdIO {
               resp.getStatusLine().getStatusCode());
           put.reset();
         } catch (IOException exc) {
+          log.error(exc.getMessage());
+        } catch (IllegalArgumentException exc) {
           log.error(exc.getMessage());
         }
       }

@@ -169,6 +169,34 @@ public class TestIprepdIO implements Serializable {
   }
 
   @Test
+  public void iprepdIOTestWriteMalformed() throws Exception {
+    IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
+    options.setOutputIprepd("http://127.0.0.1:8080");
+    options.setOutputIprepdApikey("test");
+
+    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
+
+    TestUtil.getTestInput("/testdata/iprepdio2.txt", p)
+        .apply(
+            ParDo.of(
+                new DoFn<String, Alert>() {
+                  private static final long serialVersionUID = 1L;
+
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    c.output(Alert.fromJSON(c.element()));
+                  }
+                }))
+        .apply(ParDo.of(new AlertFormatter(options)))
+        .apply(OutputOptions.compositeOutput(options));
+
+    p.run().waitUntilFinish();
+
+    assertEquals(100, (int) r.getReputation("ip", "1.23.xx.1"));
+    assertEquals(100, (int) r.getReputation("ip", "testipr{epdio2@mozilla.com"));
+  }
+
+  @Test
   public void iprepdIOTestRead() throws Exception {
     IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
 
