@@ -443,24 +443,69 @@ public class IprepdIO {
     private DateTime expiresAt;
     private String createdBy;
 
+    /**
+     * Get IP string
+     *
+     * @return IP string
+     */
     @JsonProperty("ip")
     public String getIp() {
       return ip;
     }
 
+    /**
+     * Set IP
+     *
+     * @param ip IP string
+     */
+    public void setIp(String ip) {
+      this.ip = ip;
+    }
+
+    /**
+     * Get expires at
+     *
+     * @return DateTime
+     */
     @JsonProperty("expires_at")
     public DateTime getExpiresAt() {
       return expiresAt;
     }
 
+    /**
+     * Set expires at
+     *
+     * @param expiresAt DateTime
+     */
+    public void setExpiresAt(DateTime expiresAt) {
+      this.expiresAt = expiresAt;
+    }
+
+    /**
+     * Get created by value
+     *
+     * @return Created by
+     */
     @JsonProperty("created_by")
     public String getCreatedBy() {
       return createdBy;
     }
+
+    /**
+     * Set created by value
+     *
+     * @param createdBy Created by
+     */
+    public void setCreatedBy(String createdBy) {
+      this.createdBy = createdBy;
+    }
   }
 
-  private static final String whitelistedIpKind = "whitelisted_ip";
-  private static final String whitelistedIpNamespace = "whitelisted_ip";
+  /** Kind for whitelisted IP entry in Datastore */
+  public static final String whitelistedIpKind = "whitelisted_ip";
+
+  /** Namespace for whitelisted IP in Datastore */
+  public static final String whitelistedIpNamespace = "whitelisted_ip";
 
   /**
    * Add whitelisted IP metadata if the IP address is whitelisted.

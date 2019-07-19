@@ -22,6 +22,8 @@ violations:
     penalty: 50
   - name: abusive_account_violation
     penalty: 100
+  - name: hard_limit_violation
+    penalty: 10
 decay:
   points: 0
   interval: 1s
