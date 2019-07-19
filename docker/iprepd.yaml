@@ -18,6 +18,10 @@ violations:
   - name: test2
     penalty: 5
     decreaselimit: 25
+  - name: endpoint_abuse_violation
+    penalty: 50
+  - name: abusive_account_violation
+    penalty: 100
 decay:
   points: 0
   interval: 1s
