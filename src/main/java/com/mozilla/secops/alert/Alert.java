@@ -8,9 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -35,14 +35,14 @@ public class Alert implements Serializable {
   private String category;
   private String payload;
   private DateTime timestamp;
-  private ArrayList<AlertMeta> metadata;
+  private CopyOnWriteArrayList<AlertMeta> metadata;
   private AlertSeverity severity;
 
   /** Construct new alert object */
   public Alert() {
     alertId = UUID.randomUUID();
     timestamp = new DateTime(DateTimeZone.UTC);
-    metadata = new ArrayList<AlertMeta>();
+    metadata = new CopyOnWriteArrayList<AlertMeta>();
     severity = AlertSeverity.INFORMATIONAL;
   }
 
@@ -69,7 +69,7 @@ public class Alert implements Serializable {
    */
   public String assemblePayload() {
     String ret = getPayload();
-    ArrayList<AlertMeta> meta = getMetadata();
+    CopyOnWriteArrayList<AlertMeta> meta = getMetadata();
 
     if (meta != null) {
       ret = ret + "\n\nAlert metadata:\n";
@@ -207,7 +207,7 @@ public class Alert implements Serializable {
    * @return Alert metadata
    */
   @JsonProperty("metadata")
-  public ArrayList<AlertMeta> getMetadata() {
+  public CopyOnWriteArrayList<AlertMeta> getMetadata() {
     if (metadata.size() == 0) {
       return null;
     }
