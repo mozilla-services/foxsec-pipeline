@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -35,14 +35,14 @@ public class Alert implements Serializable {
   private String category;
   private String payload;
   private DateTime timestamp;
-  private ArrayList<AlertMeta> metadata;
+  private Map<String, String> metadata;
   private AlertSeverity severity;
 
   /** Construct new alert object */
   public Alert() {
     alertId = UUID.randomUUID();
     timestamp = new DateTime(DateTimeZone.UTC);
-    metadata = new ArrayList<AlertMeta>();
+    metadata = new HashMap<String, String>();
     severity = AlertSeverity.INFORMATIONAL;
   }
 
@@ -69,12 +69,12 @@ public class Alert implements Serializable {
    */
   public String assemblePayload() {
     String ret = getPayload();
-    ArrayList<AlertMeta> meta = getMetadata();
+    Map<String, String> meta = getMetadata();
 
     if (meta != null) {
       ret = ret + "\n\nAlert metadata:\n";
-      for (AlertMeta m : meta) {
-        ret = ret + String.format("%s = %s\n", m.getKey(), m.getValue());
+      for (Map.Entry<String, String> entry : metadata.entrySet()) {
+        ret = ret + String.format("%s = %s\n", entry.getKey(), entry.getValue());
       }
     }
 
@@ -193,12 +193,7 @@ public class Alert implements Serializable {
    * @return Value string, null if not found
    */
   public String getMetadataValue(String key) {
-    for (AlertMeta m : metadata) {
-      if (m.getKey().equals(key)) {
-        return m.getValue();
-      }
-    }
-    return null;
+    return metadata.get(key);
   }
 
   /**
@@ -207,7 +202,7 @@ public class Alert implements Serializable {
    * @return Alert metadata
    */
   @JsonProperty("metadata")
-  public ArrayList<AlertMeta> getMetadata() {
+  public Map<String, String> getMetadata() {
     if (metadata.size() == 0) {
       return null;
     }
@@ -221,7 +216,7 @@ public class Alert implements Serializable {
    * @param value Value
    */
   public void addMetadata(String key, String value) {
-    metadata.add(new AlertMeta(key, value));
+    metadata.put(key, value);
   }
 
   /**
@@ -374,9 +369,7 @@ public class Alert implements Serializable {
   public HashMap<String, Object> generateTemplateVariables() {
     HashMap<String, Object> v = new HashMap<String, Object>();
     v.put("alert", this);
-    for (AlertMeta m : metadata) {
-      v.put(m.getKey(), m.getValue());
-    }
+    metadata.forEach((key, val) -> v.put(key, val));
     return v;
   }
 }
