@@ -1,9 +1,6 @@
 package com.mozilla.secops.httprequest;
 
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
@@ -41,7 +38,7 @@ public class TestErrorRate1 {
 
   @Test
   public void countRequestsTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt", p);
 
     PCollection<Event> events =
         input
@@ -52,17 +49,14 @@ public class TestErrorRate1 {
 
     PAssert.thatSingleton(count)
         .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(720L);
-    PAssert.thatSingleton(count)
-        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .isEqualTo(720L);
+        .isEqualTo(55L);
 
     p.run().waitUntilFinish();
   }
 
   @Test
   public void errorRateTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt.gz", p);
+    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt", p);
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     PCollection<Alert> results =
@@ -74,25 +68,20 @@ public class TestErrorRate1 {
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .isEqualTo(2L);
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
+        .isEqualTo(1L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertThat(
-                    a.getMetadataValue("sourceaddress"),
-                    anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
-                String summary =
-                    String.format(
-                        "test httprequest error_rate %s 60", a.getMetadataValue("sourceaddress"));
-                assertEquals(summary, a.getSummary());
-                assertEquals(a.getMetadataValue("category"), "error_rate");
-                assertEquals(60L, Long.parseLong(a.getMetadataValue("error_count"), 10));
+                assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                assertEquals("test httprequest error_rate 10.0.0.1 35", a.getSummary());
+                assertEquals("error_rate", a.getMetadataValue("category"));
+                assertEquals(35L, Long.parseLong(a.getMetadataValue("error_count"), 10));
                 assertEquals(30L, Long.parseLong(a.getMetadataValue("error_threshold"), 10));
-                assertEquals("1970-01-01T00:05:59.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
               }
               return null;
             });
