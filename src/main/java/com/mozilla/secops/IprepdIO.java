@@ -437,9 +437,12 @@ public class IprepdIO {
     a.addMetadata(IPREPD_SUPPRESS_RECOVERY, value.toString());
   }
 
-  /** WhitelistedIp contains the metadata associated with a whitelisted ip. */
-  public static class WhitelistedIp {
+  /** WhitelistedObject contains the metadata associated with a whitelisted objects. */
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class WhitelistedObject {
     private String ip;
+    private String obj;
+    private String type;
     private DateTime expiresAt;
     private String createdBy;
 
@@ -460,6 +463,44 @@ public class IprepdIO {
      */
     public void setIp(String ip) {
       this.ip = ip;
+    }
+
+    /**
+     * Get object string
+     *
+     * @return object string
+     */
+    @JsonProperty("object")
+    public String getObject() {
+      return obj;
+    }
+
+    /**
+     * Set object string
+     *
+     * @param obj object string
+     */
+    public void setObject(String obj) {
+      this.obj = obj;
+    }
+
+    /**
+     * Get type string
+     *
+     * @return type string
+     */
+    @JsonProperty("type")
+    public String getType() {
+      return type;
+    }
+
+    /**
+     * Set type string
+     *
+     * @param type type string
+     */
+    public void setType(String type) {
+      this.type = type;
     }
 
     /**
@@ -501,11 +542,20 @@ public class IprepdIO {
     }
   }
 
-  /** Kind for whitelisted IP entry in Datastore */
-  public static final String whitelistedIpKind = "whitelisted_ip";
+  /** Legacy Kind for whitelisted IP entry in Datastore */
+  public static final String legacyWhitelistedIpKind = "whitelisted_ip";
 
-  /** Namespace for whitelisted IP in Datastore */
-  public static final String whitelistedIpNamespace = "whitelisted_ip";
+  /** Legacy Namespace for whitelisted IP in Datastore */
+  public static final String legacyWhitelistedIpNamespace = "whitelisted_ip";
+
+  /** Kind for whitelisted IP entry in Datastore */
+  public static final String whitelistedIpKind = "ip";
+
+  /** Kind for whitelisted email entry in Datastore */
+  public static final String whitelistedEmailKind = "email";
+
+  /** Namespace for whitelisted objects in Datastore */
+  public static final String whitelistedObjectNamespace = "whitelisted_object";
 
   /**
    * Add whitelisted IP metadata if the IP address is whitelisted.
@@ -514,7 +564,7 @@ public class IprepdIO {
    * @param a Alert to add metadata to
    */
   public static void addMetadataIfIpWhitelisted(String ip, Alert a) throws IOException {
-    addMetadataIfIpWhitelisted(ip, a, null);
+    addMetadataIfObjectWhitelisted(ip, whitelistedIpKind, a, null);
   }
 
   /**
@@ -529,40 +579,89 @@ public class IprepdIO {
    */
   public static void addMetadataIfIpWhitelisted(String ip, Alert a, String datastoreProject)
       throws IOException {
-    if (ip == null || a == null) {
+    addMetadataIfObjectWhitelisted(ip, whitelistedIpKind, a, datastoreProject);
+  }
+
+  /**
+   * Add whitelisted metadata if the object is whitelisted.
+   *
+   * @param obj Object to check (usually an IP or email)
+   * @param type Type of object (usually "ip" or "email")
+   * @param a Alert to add metadata to
+   */
+  public static void addMetadataIfObjectWhitelisted(String obj, String type, Alert a)
+      throws IOException {
+    addMetadataIfObjectWhitelisted(obj, type, a, null);
+  }
+
+  /**
+   * Add whitelisted metadata if the object is whitelisted.
+   *
+   * <p>This variant allows specification of a project ID, for cases where the datastore instance
+   * lives in another GCP project.
+   *
+   * @param obj Object to check (usually an IP or email)
+   * @param type Type of object (usually "ip" or "email")
+   * @param a Alert to add metadata to
+   * @param datastoreProject If Datastore is in another project, non-null project ID
+   */
+  public static void addMetadataIfObjectWhitelisted(
+      String obj, String type, Alert a, String datastoreProject) throws IOException {
+    if (obj == null || type == null || a == null) {
+      return;
+    }
+
+    if (!type.equals(whitelistedIpKind) && !type.equals(whitelistedEmailKind)) {
       return;
     }
 
     State state;
+    State legacyState;
     if (datastoreProject != null) {
       state =
           new State(
+              new DatastoreStateInterface(type, whitelistedObjectNamespace, datastoreProject));
+      legacyState =
+          new State(
               new DatastoreStateInterface(
-                  whitelistedIpKind, whitelistedIpNamespace, datastoreProject));
+                  legacyWhitelistedIpKind, legacyWhitelistedIpNamespace, datastoreProject));
     } else {
-      state = new State(new DatastoreStateInterface(whitelistedIpKind, whitelistedIpNamespace));
+      state = new State(new DatastoreStateInterface(type, whitelistedObjectNamespace));
+      legacyState =
+          new State(
+              new DatastoreStateInterface(legacyWhitelistedIpKind, legacyWhitelistedIpNamespace));
     }
 
     Logger log = LoggerFactory.getLogger(IprepdIO.class);
 
     try {
       state.initialize();
+      legacyState.initialize();
     } catch (StateException exc) {
       log.error("error initializing state: {}", exc.getMessage());
       throw new IOException(exc.getMessage());
     }
 
     try {
-      WhitelistedIp wip = state.get(ip, WhitelistedIp.class);
-      if (wip != null) {
+      WhitelistedObject wobj = state.get(obj, WhitelistedObject.class);
+      if (wobj != null) {
         a.addMetadata(IPREPD_EXEMPT, "true");
-        a.addMetadata(IPREPD_EXEMPT + "_created_by", wip.getCreatedBy());
+        a.addMetadata(IPREPD_EXEMPT + "_created_by", wobj.getCreatedBy());
+      } else {
+        if (type.equals(whitelistedIpKind)) {
+          WhitelistedObject legacyWobj = legacyState.get(obj, WhitelistedObject.class);
+          if (legacyWobj != null) {
+            a.addMetadata(IPREPD_EXEMPT, "true");
+            a.addMetadata(IPREPD_EXEMPT + "_created_by", legacyWobj.getCreatedBy());
+          }
+        }
       }
     } catch (StateException exc) {
-      log.error("error getting whitelisted ip: {}", exc.getMessage());
+      log.error("error getting whitelisted object: {}", exc.getMessage());
       throw new IOException(exc.getMessage());
     } finally {
       state.done();
+      legacyState.done();
     }
   }
 }
