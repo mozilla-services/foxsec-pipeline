@@ -1,9 +1,6 @@
 package com.mozilla.secops.httprequest;
 
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.TestUtil;
@@ -45,7 +42,7 @@ public class TestThresholdAnalysis1 {
   @Test
   public void countRequestsTest() throws Exception {
     PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt", p);
 
     PCollection<Event> events =
         input
@@ -56,10 +53,7 @@ public class TestThresholdAnalysis1 {
 
     PAssert.thatSingleton(count)
         .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .isEqualTo(2400L);
-    PAssert.thatSingleton(count)
-        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000)))
-        .isEqualTo(2520L);
+        .isEqualTo(120L);
 
     p.run().waitUntilFinish();
   }
@@ -67,7 +61,7 @@ public class TestThresholdAnalysis1 {
   @Test
   public void thresholdAnalysisTest() throws Exception {
     PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt.gz", p);
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt", p);
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     PCollection<Alert> results =
@@ -79,27 +73,21 @@ public class TestThresholdAnalysis1 {
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .isEqualTo(2L);
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
+        .isEqualTo(1L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertThat(
-                    a.getMetadataValue("sourceaddress"),
-                    anyOf(equalTo("10.0.0.1"), equalTo("10.0.0.2")));
-                String summary =
-                    String.format(
-                        "test httprequest threshold_analysis %s 900",
-                        a.getMetadataValue("sourceaddress"));
-                assertEquals(summary, a.getSummary());
-                assertEquals(900L, Long.parseLong(a.getMetadataValue("count"), 10));
-                assertEquals(180.0, Double.parseDouble(a.getMetadataValue("mean")), 0.1);
+                assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                assertEquals("test httprequest threshold_analysis 10.0.0.1 100", a.getSummary());
+                assertEquals(100L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals(10.90, Double.parseDouble(a.getMetadataValue("mean")), 0.1);
                 assertEquals(
                     1.0, Double.parseDouble(a.getMetadataValue("threshold_modifier")), 0.1);
-                assertEquals("1970-01-01T00:05:59.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
               }
               return null;
             });
@@ -110,7 +98,7 @@ public class TestThresholdAnalysis1 {
   @Test
   public void thresholdAnalysisTestWithNatDetect() throws Exception {
     PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt", p);
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
 
@@ -126,20 +114,20 @@ public class TestThresholdAnalysis1 {
     // 10.0.0.2 would normally trigger a result being emitted, but with NAT detection enabled
     // we should only see a single result for 10.0.0.1 in the selected interval window
     PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .isEqualTo(1L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
+        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
                 assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
-                assertEquals(900L, Long.parseLong(a.getMetadataValue("count"), 10));
-                assertEquals(180.0, Double.parseDouble(a.getMetadataValue("mean")), 0.1);
+                assertEquals(100L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals(18.33, Double.parseDouble(a.getMetadataValue("mean")), 0.1);
                 assertEquals(
                     1.0, Double.parseDouble(a.getMetadataValue("threshold_modifier")), 0.1);
-                assertEquals("1970-01-01T00:05:59.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
               }
               return null;
             });
@@ -150,7 +138,7 @@ public class TestThresholdAnalysis1 {
   @Test
   public void thresholdAnalysisTestRequiredMinimum() throws Exception {
     PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt", p);
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     // Set a minimum average well above what we will calculate with the test data set
@@ -174,7 +162,7 @@ public class TestThresholdAnalysis1 {
   @Test
   public void thresholdAnalysisTestRequiredMinimumClients() throws Exception {
     PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt", p);
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     // Set a required minimum above what we have in the test data set
@@ -198,7 +186,7 @@ public class TestThresholdAnalysis1 {
   @Test
   public void thresholdAnalysisTestClampMaximum() throws Exception {
     PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt.gz", p);
+        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt", p);
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setClampThresholdMaximum(1.0);
@@ -213,8 +201,8 @@ public class TestThresholdAnalysis1 {
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(300000L), new Instant(360000L)))
-        .isEqualTo(14L);
+        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
+        .isEqualTo(12L);
 
     p.run().waitUntilFinish();
   }
