@@ -80,6 +80,32 @@ public class ETDTransforms implements Serializable {
 
     private static final String alertCategory = "gatekeeper:gcp";
 
+    private static List<Pattern> escalate;
+    private static String critNotifyEmail;
+
+    /**
+     * static initializer for alert generation / escalation
+     *
+     * @param opts {@link GatekeeperOptions} pipeline options
+     */
+    public GenerateAlerts(GatekeeperOptions opts) {
+      critNotifyEmail = opts.getCriticalNotificationEmail();
+      String[] escalateRegexes = opts.getEscalateETDFindingRuleRegex();
+
+      escalate = new ArrayList<Pattern>();
+      if (escalateRegexes != null) {
+        for (String s : escalateRegexes) {
+          escalate.add(Pattern.compile(s));
+        }
+      }
+    }
+
+    private void addEscalationMetadata(Alert a) {
+      if (critNotifyEmail != null) {
+        a.addMetadata("notify_email_direct", critNotifyEmail);
+      }
+    }
+
     @Override
     public PCollection<Alert> expand(PCollection<Event> input) {
       return input.apply(
@@ -117,6 +143,12 @@ public class ETDTransforms implements Serializable {
                   a.addMetadata("rule_name", f.getDetectionCategory().getRuleName());
                   a.addMetadata("technique", f.getDetectionCategory().getTechnique());
                   a.addMetadata("project_number", f.getSourceId().getProjectNumber());
+                  for (Pattern p : escalate) {
+                    if (p.matcher(f.getDetectionCategory().getRuleName()).matches()) {
+                      addEscalationMetadata(a);
+                      break;
+                    }
+                  }
                   c.output(a);
                 }
               }));
