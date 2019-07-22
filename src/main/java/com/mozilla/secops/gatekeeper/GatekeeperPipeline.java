@@ -31,8 +31,6 @@ public class GatekeeperPipeline implements Serializable {
    */
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, GatekeeperOptions options) {
-    String[] excludeGD = options.getIgnoreGDFindingTypeRegex();
-    String[] excludeETD = options.getIgnoreETDFindingRuleRegex();
 
     PCollection<Event> events =
         input
@@ -41,12 +39,12 @@ public class GatekeeperPipeline implements Serializable {
 
     PCollection<Alert> gdAlerts =
         events
-            .apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(excludeGD))
+            .apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(options))
             .apply("generate gd alerts", new GuardDutyTransforms.GenerateAlerts());
 
     PCollection<Alert> etdAlerts =
         events
-            .apply("extract etd findings", new ETDTransforms.ExtractFindings(excludeETD))
+            .apply("extract etd findings", new ETDTransforms.ExtractFindings(options))
             .apply("generate etd alerts", new ETDTransforms.GenerateAlerts());
 
     PCollection<Alert> alerts =
