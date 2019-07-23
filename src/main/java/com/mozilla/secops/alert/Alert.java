@@ -193,9 +193,11 @@ public class Alert implements Serializable {
    * @return Value string, null if not found
    */
   public String getMetadataValue(String key) {
-    for (AlertMeta m : metadata) {
-      if (m.getKey().equals(key)) {
-        return m.getValue();
+    synchronized (metadata) {
+      for (AlertMeta m : metadata) {
+        if (m.getKey().equals(key)) {
+          return m.getValue();
+        }
       }
     }
     return null;
@@ -221,7 +223,9 @@ public class Alert implements Serializable {
    * @param value Value
    */
   public void addMetadata(String key, String value) {
-    metadata.add(new AlertMeta(key, value));
+    synchronized (metadata) {
+      metadata.add(new AlertMeta(key, value));
+    }
   }
 
   /**
