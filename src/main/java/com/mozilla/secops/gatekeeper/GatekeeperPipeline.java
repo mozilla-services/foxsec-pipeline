@@ -40,12 +40,12 @@ public class GatekeeperPipeline implements Serializable {
     PCollection<Alert> gdAlerts =
         events
             .apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(options))
-            .apply("generate gd alerts", new GuardDutyTransforms.GenerateAlerts());
+            .apply("generate gd alerts", new GuardDutyTransforms.GenerateAlerts(options));
 
     PCollection<Alert> etdAlerts =
         events
             .apply("extract etd findings", new ETDTransforms.ExtractFindings(options))
-            .apply("generate etd alerts", new ETDTransforms.GenerateAlerts());
+            .apply("generate etd alerts", new ETDTransforms.GenerateAlerts(options));
 
     PCollection<Alert> alerts =
         PCollectionList.of(gdAlerts)

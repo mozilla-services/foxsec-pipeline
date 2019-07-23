@@ -162,4 +162,105 @@ public class TestGatekeeper {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void gatekeeperEscalateAllTestWithEmail() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperOptions opts = getBaseTestOptions();
+
+    opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
+
+    opts.setEscalateETDFindingRuleRegex(new String[] {".+"});
+    opts.setEscalateGDFindingTypeRegex(new String[] {".+"});
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(22L);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                assertNotNull(a.getMetadataValue("notify_email_direct"));
+                assertEquals("unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void gatekeeperIgnoreSomeAndEscalateSomeTest() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperOptions opts = getBaseTestOptions();
+
+    opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
+
+    // AWS: ignore all recon findings for EC2 and escalate all Trojan or Backdoor findings
+    opts.setIgnoreGDFindingTypeRegex(new String[] {"Recon:EC2.+"});
+    opts.setEscalateGDFindingTypeRegex(new String[] {"Trojan.+", "Backdoor.+"});
+    // GCP: escalate all findings for ETD
+    opts.setEscalateETDFindingRuleRegex(new String[] {".+"});
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(21L);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                if (a.getCategory().equals("gatekeeper:aws")) {
+                  // check ignored regex was ignored
+                  assertFalse(a.getMetadataValue("finding_type").contains("Recon:EC2"));
+                  // check escalate regex matches were escalated
+                  if (a.getMetadataValue("finding_type").contains("Trojan")
+                      || a.getMetadataValue("finding_type").contains("Backdoor")) {
+                    assertNotNull(a.getMetadataValue("notify_email_direct"));
+                    assertEquals(
+                        "unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  } else {
+                    assertNull(a.getMetadataValue("notify_email_direct"));
+                  }
+                }
+                if (a.getCategory().equals("gatekeeper:gcp")) {
+                  // check escalate regex matches were escalated
+                  assertNotNull(a.getMetadataValue("notify_email_direct"));
+                  assertEquals(
+                      "unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                }
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void gatekeeperEscalateAllTestNoEmail() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperOptions opts = getBaseTestOptions();
+
+    opts.setEscalateETDFindingRuleRegex(new String[] {".+"});
+    opts.setEscalateGDFindingTypeRegex(new String[] {".+"});
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(22L);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                assertNull(a.getMetadataValue("notify_email_direct"));
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }

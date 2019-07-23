@@ -16,4 +16,20 @@ public interface GatekeeperOptions extends PipelineOptions, IOOptions {
   String[] getIgnoreGDFindingTypeRegex();
 
   void setIgnoreGDFindingTypeRegex(String[] value);
+
+  @Description("Escalate ETD Findings for any finding rules that match regex (multiple allowed)")
+  String[] getEscalateETDFindingRuleRegex();
+
+  void setEscalateETDFindingRuleRegex(String[] value);
+
+  @Description(
+      "Escalate GuardDuty Findings for any finding types that match regex (multiple allowed)")
+  String[] getEscalateGDFindingTypeRegex();
+
+  void setEscalateGDFindingTypeRegex(String[] value);
+
+  @Description("Email address to receive critical alert notifications")
+  String getCriticalNotificationEmail();
+
+  void setCriticalNotificationEmail(String value);
 }

@@ -138,6 +138,12 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
 
   void setAlertAddressFields(String[] value);
 
+  @Description(
+      "Email address to receive critical alert notifications if application generates them")
+  String getCriticalNotificationEmail();
+
+  void setCriticalNotificationEmail(String value);
+
   public static PTransform<PCollection<String>, PDone> compositeOutput(OutputOptions o) {
     return CompositeOutput.withOptions(o);
   }
