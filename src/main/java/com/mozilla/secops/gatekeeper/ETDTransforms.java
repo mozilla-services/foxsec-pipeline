@@ -28,12 +28,13 @@ public class ETDTransforms implements Serializable {
     /**
      * static initializer for filter
      *
-     * @param excludeRulePatterns String[] of regexes to exclude from alert generation
+     * @param opts {@link GatekeeperOptions} pipeline options
      */
-    public ExtractFindings(String[] excludeRulePatterns) {
+    public ExtractFindings(GatekeeperOptions opts) {
+      String[] ignoreRegexes = opts.getIgnoreETDFindingRuleRegex();
       exclude = new ArrayList<Pattern>();
-      if (excludeRulePatterns != null) {
-        for (String s : excludeRulePatterns) {
+      if (ignoreRegexes != null) {
+        for (String s : ignoreRegexes) {
           exclude.add(Pattern.compile(s));
         }
       }

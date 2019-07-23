@@ -24,12 +24,13 @@ public class GuardDutyTransforms implements Serializable {
     /**
      * static initializer for filter
      *
-     * @param excludeTypePatterns String[] of regexes to exclude from alert generation
+     * @param opts {@link GatekeeperOptions} pipeline options
      */
-    public ExtractFindings(String[] excludeTypePatterns) {
+    public ExtractFindings(GatekeeperOptions opts) {
+      String[] ignoreRegexes = opts.getIgnoreGDFindingTypeRegex();
       exclude = new ArrayList<Pattern>();
-      if (excludeTypePatterns != null) {
-        for (String s : excludeTypePatterns) {
+      if (ignoreRegexes != null) {
+        for (String s : ignoreRegexes) {
           exclude.add(Pattern.compile(s));
         }
       }
