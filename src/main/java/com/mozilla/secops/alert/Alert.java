@@ -7,10 +7,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -36,6 +38,7 @@ public class Alert implements Serializable {
   private String payload;
   private DateTime timestamp;
   private ArrayList<AlertMeta> metadata;
+  private ReentrantLock metaLock;
   private AlertSeverity severity;
 
   /** Construct new alert object */
@@ -43,7 +46,19 @@ public class Alert implements Serializable {
     alertId = UUID.randomUUID();
     timestamp = new DateTime(DateTimeZone.UTC);
     metadata = new ArrayList<AlertMeta>();
+    metaLock = new ReentrantLock();
     severity = AlertSeverity.INFORMATIONAL;
+  }
+
+  private void writeObject(ObjectOutputStream o) throws IOException {
+    // Override default writeObject to acquire metadata mutex to ensure we don't have
+    // other threads adjusting metadata during object serialization
+    metaLock.lock();
+    try {
+      o.defaultWriteObject();
+    } finally {
+      metaLock.unlock();
+    }
   }
 
   /**
@@ -221,7 +236,15 @@ public class Alert implements Serializable {
    * @param value Value
    */
   public void addMetadata(String key, String value) {
-    metadata.add(new AlertMeta(key, value));
+    // Pick up metadata mutex here to prevent ConcurrentModification exception if object is
+    // serialized while we are appending to the metadata, see local implementation of
+    // writeObject
+    metaLock.lock();
+    try {
+      metadata.add(new AlertMeta(key, value));
+    } finally {
+      metaLock.unlock();
+    }
   }
 
   /**
