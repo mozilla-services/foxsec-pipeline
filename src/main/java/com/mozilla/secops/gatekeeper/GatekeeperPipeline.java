@@ -21,6 +21,9 @@ import org.apache.beam.sdk.values.PCollectionList;
 public class GatekeeperPipeline implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  /** Runtime options for {@link GatekeeperPipeline} . */
+  public interface Options extends ETDTransforms.Options, GuardDutyTransforms.Options {}
+
   /**
    * Execute Gatekeeper pipeline
    *
@@ -30,7 +33,7 @@ public class GatekeeperPipeline implements Serializable {
    * @return Collection of Alert objects
    */
   public static PCollection<Alert> executePipeline(
-      Pipeline p, PCollection<String> input, GatekeeperOptions options) {
+      Pipeline p, PCollection<String> input, Options options) {
 
     PCollection<Event> events =
         input
@@ -55,7 +58,7 @@ public class GatekeeperPipeline implements Serializable {
     return alerts;
   }
 
-  private static void runGatekeeper(GatekeeperOptions options) {
+  private static void runGatekeeper(Options options) {
     Pipeline p = Pipeline.create(options);
 
     PCollection<String> input = p.apply("read input", new CompositeInput(options));
@@ -74,10 +77,9 @@ public class GatekeeperPipeline implements Serializable {
    * @param args Runtime arguments.
    */
   public static void main(String[] args) {
-    PipelineOptionsFactory.register(GatekeeperOptions.class);
+    PipelineOptionsFactory.register(Options.class);
 
-    GatekeeperOptions options =
-        PipelineOptionsFactory.fromArgs(args).withValidation().as(GatekeeperOptions.class);
+    Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
     runGatekeeper(options);
   }

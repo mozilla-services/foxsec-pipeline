@@ -39,7 +39,7 @@ public class GatekeeperParser implements Serializable {
      *
      * @param options Pipeline options
      */
-    public Parse(GatekeeperOptions options) {
+    public Parse(GatekeeperPipeline.Options options) {
       cfg = ParserCfg.fromInputOptions(options);
     }
 
