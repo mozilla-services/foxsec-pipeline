@@ -92,8 +92,8 @@ public class GuardDutyTransforms implements Serializable {
 
     private static final String alertCategory = "gatekeeper:aws";
 
-    private static List<Pattern> escalate;
-    private static String critNotifyEmail;
+    private List<Pattern> escalate;
+    private String critNotifyEmail;
 
     /**
      * static initializer for alert generation / escalation
@@ -109,6 +109,8 @@ public class GuardDutyTransforms implements Serializable {
         for (String s : escalateRegexes) {
           escalate.add(Pattern.compile(s));
         }
+      } else {
+        escalate.add(Pattern.compile(".+"));
       }
     }
 
