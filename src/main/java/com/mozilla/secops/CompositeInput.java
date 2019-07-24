@@ -3,6 +3,7 @@ package com.mozilla.secops;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.mozilla.secops.crypto.RuntimeSecrets;
+import com.mozilla.secops.metrics.CfgTickGenerator;
 import java.io.IOException;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
@@ -28,6 +29,28 @@ public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
   private final String[] pubsubInputs;
   private final String[] kinesisInputs;
   private final String project;
+  private final Integer cfgTicksInterval;
+  private final String cfgTickMessage;
+  private final long cfgTicksMax;
+
+  /**
+   * Initialize new {@link CompositeInput} transform
+   *
+   * <p>The cfgTickMessage parameter if non-null should be a string that has been generated using
+   * {@link com.mozilla.secops.metrics.CfgTickBuilder}.
+   *
+   * @param options Input options
+   * @param cfgTickMessage If configuration ticks are enabled, the message to emit
+   */
+  public CompositeInput(InputOptions options, String cfgTickMessage) {
+    fileInputs = options.getInputFile();
+    pubsubInputs = options.getInputPubsub();
+    kinesisInputs = options.getInputKinesis();
+    project = options.getProject();
+    cfgTicksInterval = options.getGenerateConfigurationTicksInterval();
+    cfgTicksMax = options.getGenerateConfigurationTicksMaximum();
+    this.cfgTickMessage = cfgTickMessage;
+  }
 
   /**
    * Initialize new {@link CompositeInput} transform
@@ -35,10 +58,7 @@ public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
    * @param options Input options
    */
   public CompositeInput(InputOptions options) {
-    fileInputs = options.getInputFile();
-    pubsubInputs = options.getInputPubsub();
-    kinesisInputs = options.getInputKinesis();
-    project = options.getProject();
+    this(options, null);
   }
 
   @Override
@@ -46,6 +66,15 @@ public class CompositeInput extends PTransform<PBegin, PCollection<String>> {
     Logger log = LoggerFactory.getLogger(CompositeInput.class);
 
     PCollectionList<String> inputList = PCollectionList.<String>empty(begin.getPipeline());
+
+    if (cfgTicksInterval > 0) {
+      if (cfgTickMessage == null) {
+        throw new RuntimeException("configuration ticks enabled but no message specified");
+      }
+      inputList =
+          inputList.and(
+              begin.apply(new CfgTickGenerator(cfgTickMessage, cfgTicksInterval, cfgTicksMax)));
+    }
 
     if (fileInputs != null) {
       for (String i : fileInputs) {

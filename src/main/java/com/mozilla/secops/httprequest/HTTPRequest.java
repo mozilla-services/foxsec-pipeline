@@ -11,6 +11,8 @@ import com.mozilla.secops.Stats;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertSuppressorCount;
+import com.mozilla.secops.metrics.CfgTickBuilder;
+import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterPayload;
@@ -94,7 +96,7 @@ public class HTTPRequest implements Serializable {
 
     @Override
     public PCollection<Event> expand(PCollection<String> col) {
-      EventFilter filter = new EventFilter().setWantUTC(true);
+      EventFilter filter = new EventFilter().passConfigurationTicks().setWantUTC(true);
       EventFilterRule rule = new EventFilterRule().wantNormalizedType(Normalized.Type.HTTP_REQUEST);
       if (filterRequestPath != null) {
         for (String s : filterRequestPath) {
@@ -1119,11 +1121,22 @@ public class HTTPRequest implements Serializable {
     void setIgnoreInternalRequests(Boolean value);
   }
 
+  public static String buildConfigurationTick(HTTPRequestOptions options) throws IOException {
+    CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
+    return b.build();
+  }
+
   private static void runHTTPRequest(HTTPRequestOptions options) {
     Pipeline p = Pipeline.create(options);
 
-    PCollection<Event> events =
-        p.apply("input", new CompositeInput(options)).apply("parse", new Parse(options));
+    PCollection<Event> events;
+    try {
+      events =
+          p.apply("input", new CompositeInput(options, buildConfigurationTick(options)))
+              .apply("parse", new Parse(options));
+    } catch (IOException exc) {
+      throw new RuntimeException(exc.getMessage());
+    }
 
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
 
@@ -1181,6 +1194,17 @@ public class HTTPRequest implements Serializable {
                   // No requirement for follow up application of GlobalTriggers here since
                   // EndpointAbuseAnalysis will do this for us
                   .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options)));
+    }
+
+    // If configuration ticks were enabled, enable the processor here too
+    if (options.getGenerateConfigurationTicksInterval() > 0) {
+      resultsList =
+          resultsList.and(
+              events
+                  .apply(
+                      "cfgtick processor",
+                      ParDo.of(new CfgTickProcessor("httprequest", "category")))
+                  .apply(new GlobalTriggers<Alert>(5)));
     }
 
     resultsList

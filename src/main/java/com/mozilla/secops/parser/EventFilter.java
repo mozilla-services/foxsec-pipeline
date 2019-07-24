@@ -23,6 +23,18 @@ public class EventFilter implements Serializable {
   private static final String splitChar = "\\ ";
 
   /**
+   * Configure filter to pass configuration ticks
+   *
+   * <p>Adds a rule to the filter that will pass configuration ticks.
+   *
+   * @return EventFilter
+   */
+  public EventFilter passConfigurationTicks() {
+    addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.CFGTICK));
+    return this;
+  }
+
+  /**
    * Get composite transform to apply filter to event stream
    *
    * @param filter Event filter

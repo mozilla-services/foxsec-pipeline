@@ -1,17 +1,25 @@
 package com.mozilla.secops.httprequest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import com.mozilla.secops.CompositeInput;
+import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.window.GlobalTriggers;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,32 +64,58 @@ public class TestErrorRate1 {
 
   @Test
   public void errorRateTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
-    PCollection<Alert> results =
-        input
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.ErrorRateAnalysis(options));
+
+    // Enable configuration tick generation in the pipeline for this test, and use CompositeInput
+    options.setGenerateConfigurationTicksInterval(1);
+    options.setGenerateConfigurationTicksMaximum(5L);
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_errorrate1.txt"});
+    PCollection<Event> events =
+        p.apply(
+                new CompositeInput(
+                    (InputOptions) options, HTTPRequest.buildConfigurationTick(options)))
+            .apply(new HTTPRequest.Parse(options));
+
+    PCollectionList<Alert> alertList = PCollectionList.empty(p);
+    alertList =
+        alertList.and(
+            events
+                .apply(new HTTPRequest.WindowForFixed())
+                .apply(new HTTPRequest.ErrorRateAnalysis(options))
+                .apply("error rate global triggers", new GlobalTriggers<Alert>(1)));
+    alertList =
+        alertList.and(
+            events
+                .apply(ParDo.of(new CfgTickProcessor("httprequest", "category")))
+                .apply("cfgtick global triggers", new GlobalTriggers<Alert>(1)));
+    PCollection<Alert> results = alertList.apply(Flatten.<Alert>pCollections());
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(1L);
+        .isEqualTo(6L); // Should have one alert and 5 configuration events
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
-                assertEquals("test httprequest error_rate 10.0.0.1 35", a.getSummary());
-                assertEquals("error_rate", a.getMetadataValue("category"));
-                assertEquals(35L, Long.parseLong(a.getMetadataValue("error_count"), 10));
-                assertEquals(30L, Long.parseLong(a.getMetadataValue("error_threshold"), 10));
-                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
+                if (a.getMetadataValue("category").equals("error_rate")) {
+                  assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                  assertEquals("test httprequest error_rate 10.0.0.1 35", a.getSummary());
+                  assertEquals("error_rate", a.getMetadataValue("category"));
+                  assertEquals(35L, Long.parseLong(a.getMetadataValue("error_count"), 10));
+                  assertEquals(30L, Long.parseLong(a.getMetadataValue("error_threshold"), 10));
+                  assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
+                } else if (a.getMetadataValue("category").equals("cfgtick")) {
+                  assertEquals("test", a.getMetadataValue("monitoredResourceIndicator"));
+                  assertEquals(
+                      "./target/test-classes/testdata/httpreq_errorrate1.txt",
+                      a.getMetadataValue("inputFile"));
+                  assertEquals("true", a.getMetadataValue("useEventTimestamp"));
+                  assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
+                } else {
+                  fail("unexpected category");
+                }
               }
               return null;
             });
