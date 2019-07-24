@@ -92,7 +92,7 @@ public class GuardDutyTransforms implements Serializable {
 
     private static final String alertCategory = "gatekeeper:aws";
 
-    private static List<Pattern> escalate;
+    private static List<Pattern> escalate = new ArrayList<Pattern>();
     private static String critNotifyEmail;
 
     /**
@@ -104,7 +104,6 @@ public class GuardDutyTransforms implements Serializable {
       critNotifyEmail = opts.getCriticalNotificationEmail();
       String[] escalateRegexes = opts.getEscalateGDFindingTypeRegex();
 
-      escalate = new ArrayList<Pattern>();
       if (escalateRegexes != null) {
         for (String s : escalateRegexes) {
           escalate.add(Pattern.compile(s));

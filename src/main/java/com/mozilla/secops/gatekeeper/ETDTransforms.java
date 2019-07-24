@@ -96,7 +96,7 @@ public class ETDTransforms implements Serializable {
 
     private static final String alertCategory = "gatekeeper:gcp";
 
-    private static List<Pattern> escalate;
+    private static List<Pattern> escalate = new ArrayList<Pattern>();
     private static String critNotifyEmail;
 
     /**
@@ -108,7 +108,6 @@ public class ETDTransforms implements Serializable {
       critNotifyEmail = opts.getCriticalNotificationEmail();
       String[] escalateRegexes = opts.getEscalateETDFindingRuleRegex();
 
-      escalate = new ArrayList<Pattern>();
       if (escalateRegexes != null) {
         for (String s : escalateRegexes) {
           escalate.add(Pattern.compile(s));
