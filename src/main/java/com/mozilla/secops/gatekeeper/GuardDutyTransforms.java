@@ -1,12 +1,15 @@
 package com.mozilla.secops.gatekeeper;
 
 import com.amazonaws.services.guardduty.model.Finding;
+import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
 import org.joda.time.DateTime;
@@ -14,6 +17,21 @@ import org.joda.time.DateTime;
 /** Implements various transforms on AWS GuardDuty {@link Finding} Events */
 public class GuardDutyTransforms implements Serializable {
   private static final long serialVersionUID = 1L;
+
+  /** Runtime options for GuardDuty Transforms */
+  public interface Options extends PipelineOptions, IOOptions {
+    @Description(
+        "Ignore GuardDuty Findings for any finding types that match regex (multiple allowed)")
+    String[] getIgnoreGDFindingTypeRegex();
+
+    void setIgnoreGDFindingTypeRegex(String[] value);
+
+    @Description(
+        "Escalate GuardDuty Findings for any finding types that match regex (multiple allowed)")
+    String[] getEscalateGDFindingTypeRegex();
+
+    void setEscalateGDFindingTypeRegex(String[] value);
+  }
 
   /** Extract GuardDuty Findings */
   public static class ExtractFindings extends PTransform<PCollection<Event>, PCollection<Event>> {
@@ -24,9 +42,9 @@ public class GuardDutyTransforms implements Serializable {
     /**
      * static initializer for filter
      *
-     * @param opts {@link GatekeeperOptions} pipeline options
+     * @param opts {@link Options} pipeline options
      */
-    public ExtractFindings(GatekeeperOptions opts) {
+    public ExtractFindings(Options opts) {
       String[] ignoreRegexes = opts.getIgnoreGDFindingTypeRegex();
       exclude = new ArrayList<Pattern>();
       if (ignoreRegexes != null) {
@@ -80,9 +98,9 @@ public class GuardDutyTransforms implements Serializable {
     /**
      * static initializer for alert generation / escalation
      *
-     * @param opts {@link GatekeeperOptions} pipeline options
+     * @param opts {@link Options} pipeline options
      */
-    public GenerateAlerts(GatekeeperOptions opts) {
+    public GenerateAlerts(Options opts) {
       critNotifyEmail = opts.getCriticalNotificationEmail();
       String[] escalateRegexes = opts.getEscalateGDFindingTypeRegex();
 

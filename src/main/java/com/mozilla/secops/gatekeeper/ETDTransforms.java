@@ -1,5 +1,6 @@
 package com.mozilla.secops.gatekeeper;
 
+import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.ETDBeta;
 import com.mozilla.secops.parser.Event;
@@ -9,6 +10,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -19,6 +22,19 @@ import org.joda.time.DateTime;
 public class ETDTransforms implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  /** Runtime options for ETD Transforms */
+  public interface Options extends PipelineOptions, IOOptions {
+    @Description("Ignore ETD Findings for any finding rules that match regex (multiple allowed)")
+    String[] getIgnoreETDFindingRuleRegex();
+
+    void setIgnoreETDFindingRuleRegex(String[] value);
+
+    @Description("Escalate ETD Findings for any finding rules that match regex (multiple allowed)")
+    String[] getEscalateETDFindingRuleRegex();
+
+    void setEscalateETDFindingRuleRegex(String[] value);
+  }
+
   /** Extract ETD Findings */
   public static class ExtractFindings extends PTransform<PCollection<Event>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
@@ -28,9 +44,9 @@ public class ETDTransforms implements Serializable {
     /**
      * static initializer for filter
      *
-     * @param opts {@link GatekeeperOptions} pipeline options
+     * @param opts {@link Options} pipeline options
      */
-    public ExtractFindings(GatekeeperOptions opts) {
+    public ExtractFindings(Options opts) {
       String[] ignoreRegexes = opts.getIgnoreETDFindingRuleRegex();
       exclude = new ArrayList<Pattern>();
       if (ignoreRegexes != null) {
@@ -86,9 +102,9 @@ public class ETDTransforms implements Serializable {
     /**
      * static initializer for alert generation / escalation
      *
-     * @param opts {@link GatekeeperOptions} pipeline options
+     * @param opts {@link Options} pipeline options
      */
-    public GenerateAlerts(GatekeeperOptions opts) {
+    public GenerateAlerts(Options opts) {
       critNotifyEmail = opts.getCriticalNotificationEmail();
       String[] escalateRegexes = opts.getEscalateETDFindingRuleRegex();
 

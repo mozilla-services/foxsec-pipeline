@@ -31,8 +31,8 @@ public class TestGatekeeper {
         .advanceWatermarkToInfinity();
   }
 
-  private GatekeeperOptions getBaseTestOptions() {
-    GatekeeperOptions opts = PipelineOptionsFactory.as(GatekeeperOptions.class);
+  private GatekeeperPipeline.Options getBaseTestOptions() {
+    GatekeeperPipeline.Options opts = PipelineOptionsFactory.as(GatekeeperPipeline.Options.class);
     opts.setUseEventTimestamp(true);
     opts.setMonitoredResourceIndicator("gatekeeper-test");
     return opts;
@@ -43,7 +43,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperNoFiltersTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperOptions opts = getBaseTestOptions();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
@@ -80,7 +80,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperIgnoreAllETDTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperOptions opts = getBaseTestOptions();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
     opts.setIgnoreETDFindingRuleRegex(new String[] {".+"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
@@ -109,7 +109,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperIgnoreAllGDTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperOptions opts = getBaseTestOptions();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
     opts.setIgnoreGDFindingTypeRegex(new String[] {".+"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
@@ -139,7 +139,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperIgnoreSomeGDTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperOptions opts = getBaseTestOptions();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
     opts.setIgnoreGDFindingTypeRegex(new String[] {"Recon:EC2.+"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
@@ -166,7 +166,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperEscalateAllTestWithEmail() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperOptions opts = getBaseTestOptions();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
 
     opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
 
@@ -194,7 +194,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperIgnoreSomeAndEscalateSomeTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperOptions opts = getBaseTestOptions();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
 
     opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
 
@@ -242,7 +242,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperEscalateAllTestNoEmail() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperOptions opts = getBaseTestOptions();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
 
     opts.setEscalateETDFindingRuleRegex(new String[] {".+"});
     opts.setEscalateGDFindingTypeRegex(new String[] {".+"});
