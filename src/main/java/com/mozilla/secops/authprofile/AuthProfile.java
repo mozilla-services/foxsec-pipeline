@@ -609,11 +609,6 @@ public class AuthProfile implements Serializable {
     String[] getCritObjects();
 
     void setCritObjects(String[] value);
-
-    @Description("Email address to receive critical alert notifications")
-    String getCriticalNotificationEmail();
-
-    void setCriticalNotificationEmail(String value);
   }
 
   /**
