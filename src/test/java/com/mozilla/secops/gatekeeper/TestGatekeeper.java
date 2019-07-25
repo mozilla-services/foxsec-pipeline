@@ -192,6 +192,53 @@ public class TestGatekeeper {
   }
 
   @Test
+  public void gatekeeperImplicitEscalateAllTestWithEmail() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+
+    opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(22L);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                assertNotNull(a.getMetadataValue("notify_email_direct"));
+                assertEquals("unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void gatekeeperImplicitEscalateAllTestNoEmail() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(22L);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                assertNull(a.getMetadataValue("notify_email_direct"));
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void gatekeeperIgnoreSomeAndEscalateSomeTest() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.Options opts = getBaseTestOptions();
