@@ -1,5 +1,8 @@
 package com.mozilla.secops.metrics;
 
+import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.Parser;
+import com.mozilla.secops.parser.Payload;
 import org.apache.beam.sdk.io.Read;
 import org.apache.beam.sdk.io.Read.Unbounded;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -29,6 +32,21 @@ public class CfgTickGenerator extends PTransform<PBegin, PCollection<String>> {
     this.message = message;
     this.interval = interval;
     this.maxNumRecords = maxNumRecords;
+
+    validateMessageFormat();
+  }
+
+  private void validateMessageFormat() {
+    // Make sure we can parse the message that has been generated
+    Parser p = new Parser();
+    Event e = p.parse(message);
+    if (e == null) {
+      throw new RuntimeException("generated configuration tick failed parse validation");
+    }
+    if (!e.getPayloadType().equals(Payload.PayloadType.CFGTICK)) {
+      throw new RuntimeException(
+          "generated configuration tick failed parser event type validation");
+    }
   }
 
   @Override
