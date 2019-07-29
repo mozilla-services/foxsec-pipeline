@@ -15,6 +15,7 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
   private static final long serialVersionUID = 1L;
 
   private CfgTickUnboundedSource source;
+  private Instant lastPoll;
   private Instant lastTick;
   private String current;
   private Logger log;
@@ -28,6 +29,7 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
     this.source = source;
     current = null;
     lastTick = null;
+    lastPoll = null;
     log = LoggerFactory.getLogger(CfgTickUnboundedReader.class);
   }
 
@@ -55,6 +57,7 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
 
   @Override
   public boolean start() {
+    lastPoll = new Instant();
     generateCurrent();
     return true;
   }
@@ -65,17 +68,21 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
   @Override
   public boolean advance() {
     try {
-      Thread.sleep(source.getInterval() * 1000);
+      Thread.sleep(1000);
     } catch (InterruptedException exc) {
-      throw new RuntimeException(exc);
+      return false;
     }
-    generateCurrent();
-    return true;
+    lastPoll = new Instant();
+    if ((lastPoll.getMillis() - lastTick.getMillis()) >= (source.getInterval() * 1000)) {
+      generateCurrent();
+      return true;
+    }
+    return false;
   }
 
   @Override
   public Instant getWatermark() {
-    return lastTick;
+    return lastPoll;
   }
 
   @Override
