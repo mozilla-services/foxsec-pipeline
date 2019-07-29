@@ -3,11 +3,13 @@ package com.mozilla.secops.gatekeeper;
 import com.amazonaws.services.guardduty.model.Finding;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertSuppressor;
 import com.mozilla.secops.parser.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.*;
@@ -31,6 +33,12 @@ public class GuardDutyTransforms implements Serializable {
     String[] getEscalateGDFindingTypeRegex();
 
     void setEscalateGDFindingTypeRegex(String[] value);
+
+    @Default.Long(60 * 15) // 15 minutes
+    @Description("Suppress alert generation for repeated GuardDuty Findings within this value")
+    Long getAlertSuppressionSeconds();
+
+    void setAlertSuppressionSeconds(Long value);
   }
 
   /** Extract GuardDuty Findings */
@@ -164,6 +172,57 @@ public class GuardDutyTransforms implements Serializable {
                   c.output(a);
                 }
               }));
+    }
+  }
+
+  /**
+   * Suppress Alerts for repeated GuardDuty Findings.
+   *
+   * <p>A "repeated finding" in GuardDuty means the same (potential) bad actor is performing the
+   * same action against the same resource in your AWS environment. Findings are uniquely identified
+   * by their "id".
+   *
+   * <p>GuardDuty has a built-in setting to avoid emitting a new CloudWatch event for repeated
+   * findings within a certain window of time. Valid values for that window are 15 minutes, 1 hour,
+   * or 6 hours (default).
+   * https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html#guardduty_findings_cloudwatch_notification_frequency
+   *
+   * <p>This transform adds a second layer of protection against generation of alerts for repeated
+   * findings
+   */
+  public static class SuppressAlerts extends PTransform<PCollection<Alert>, PCollection<Alert>> {
+    private static final long serialVersionUID = 1L;
+    private static final String suppressionStateMetadataKey = "finding_id";
+
+    private static Long alertSuppressionWindow;
+
+    /**
+     * static initializer for alert suppression
+     *
+     * @param opts {@link Options} pipeline options
+     */
+    public SuppressAlerts(Options opts) {
+      alertSuppressionWindow = opts.getAlertSuppressionSeconds();
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Alert> input) {
+      return input
+          .apply(
+              ParDo.of(
+                  new DoFn<Alert, KV<String, Alert>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Alert a = c.element();
+                      if (a == null || a.getMetadataValue(suppressionStateMetadataKey) == null) {
+                        return;
+                      }
+                      c.output(KV.of(a.getMetadataValue(suppressionStateMetadataKey), a));
+                    }
+                  }))
+          .apply(ParDo.of(new AlertSuppressor(alertSuppressionWindow)));
     }
   }
 }
