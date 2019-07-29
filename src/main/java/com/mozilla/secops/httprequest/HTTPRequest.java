@@ -1203,7 +1203,7 @@ public class HTTPRequest implements Serializable {
               events
                   .apply(
                       "cfgtick processor",
-                      ParDo.of(new CfgTickProcessor("httprequest", "category")))
+                      ParDo.of(new CfgTickProcessor("httprequest-cfgtick", "category")))
                   .apply(new GlobalTriggers<Alert>(5)));
     }
 

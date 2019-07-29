@@ -86,7 +86,7 @@ public class TestErrorRate1 {
     alertList =
         alertList.and(
             events
-                .apply(ParDo.of(new CfgTickProcessor("httprequest", "category")))
+                .apply(ParDo.of(new CfgTickProcessor("httprequest-cfgtick", "category")))
                 .apply("cfgtick global triggers", new GlobalTriggers<Alert>(1)));
     PCollection<Alert> results = alertList.apply(Flatten.<Alert>pCollections());
 
@@ -107,6 +107,7 @@ public class TestErrorRate1 {
                   assertEquals(30L, Long.parseLong(a.getMetadataValue("error_threshold"), 10));
                   assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
                 } else if (a.getMetadataValue("category").equals("cfgtick")) {
+                  assertEquals("httprequest-cfgtick", a.getCategory());
                   assertEquals("test", a.getMetadataValue("monitoredResourceIndicator"));
                   assertEquals(
                       "./target/test-classes/testdata/httpreq_errorrate1.txt",
