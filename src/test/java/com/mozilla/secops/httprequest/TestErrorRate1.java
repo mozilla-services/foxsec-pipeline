@@ -70,6 +70,7 @@ public class TestErrorRate1 {
     options.setGenerateConfigurationTicksInterval(1);
     options.setGenerateConfigurationTicksMaximum(5L);
     options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_errorrate1.txt"});
+    options.setEnableErrorRateAnalysis(true);
     // Also set a fast matcher configuration and other filters to verify the cfgtick events are
     // passed
     options.setParserFastMatcher("prod-send");
@@ -118,6 +119,10 @@ public class TestErrorRate1 {
                       a.getMetadataValue("inputFile"));
                   assertEquals("true", a.getMetadataValue("useEventTimestamp"));
                   assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
+                  assertEquals(
+                      "Alert if a single source address generates more than 30 4xx errors "
+                          + "in a 1 minute window.",
+                      a.getMetadataValue("heuristic_ErrorRateAnalysis"));
                 } else {
                   fail("unexpected category");
                 }

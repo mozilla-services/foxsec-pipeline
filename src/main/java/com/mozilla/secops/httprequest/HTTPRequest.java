@@ -3,6 +3,7 @@ package com.mozilla.secops.httprequest;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.DetectNat;
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.FileUtil;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.IprepdIO;
@@ -235,7 +236,8 @@ public class HTTPRequest implements Serializable {
   }
 
   /** Transform for analysis of error rates per client within a given window. */
-  public static class ErrorRateAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>> {
+  public static class ErrorRateAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>>
+      implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private final Long maxErrorRate;
@@ -253,6 +255,13 @@ public class HTTPRequest implements Serializable {
       monitoredResource = options.getMonitoredResourceIndicator();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
+    }
+
+    public String getTransformDoc() {
+      return String.format(
+          "Alert if a single source address generates more than %d 4xx errors in a "
+              + "1 minute window.",
+          maxErrorRate);
     }
 
     @Override
@@ -324,7 +333,8 @@ public class HTTPRequest implements Serializable {
   }
 
   /** Transform for analysis of hard per-source request count limit within fixed window */
-  public static class HardLimitAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>> {
+  public static class HardLimitAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>>
+      implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private final Long maxCount;
@@ -358,6 +368,12 @@ public class HTTPRequest implements Serializable {
         HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
       this(options);
       this.natView = natView;
+    }
+
+    public String getTransformDoc() {
+      return String.format(
+          "Alert if single source address makes more than %d requests in a 1 minute window.",
+          maxCount);
     }
 
     @Override
@@ -439,7 +455,7 @@ public class HTTPRequest implements Serializable {
 
   /** Analysis to identify known bad user agents */
   public static class UserAgentBlacklistAnalysis
-      extends PTransform<PCollection<Event>, PCollection<Alert>> {
+      extends PTransform<PCollection<Event>, PCollection<Alert>> implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private final String monitoredResource;
@@ -474,6 +490,11 @@ public class HTTPRequest implements Serializable {
         HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
       this(options);
       this.natView = natView;
+    }
+
+    public String getTransformDoc() {
+      return new String(
+          "Alert if client makes request with user agent that matches entry in blacklist.");
     }
 
     @Override
@@ -581,7 +602,8 @@ public class HTTPRequest implements Serializable {
    * endpointAbusePath pipeline option configuration.
    */
   public static class EndpointAbuseAnalysis
-      extends PTransform<PCollection<KV<String, ArrayList<String>>>, PCollection<Alert>> {
+      extends PTransform<PCollection<KV<String, ArrayList<String>>>, PCollection<Alert>>
+      implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private Logger log;
@@ -593,6 +615,7 @@ public class HTTPRequest implements Serializable {
     private final String[] customVarianceSubstrings;
     private final String iprepdDatastoreWhitelistProject;
     private final Integer suppressRecovery;
+    private final Long sessionGapDurationMinutes;
 
     /** Internal class for configured endpoints in EPA */
     public static class EndpointAbuseEndpointInfo implements Serializable {
@@ -632,6 +655,7 @@ public class HTTPRequest implements Serializable {
       varianceSupportingOnly = options.getEndpointAbuseExtendedVariance();
       suppressRecovery = options.getEndpointAbuseSuppressRecovery();
       customVarianceSubstrings = options.getEndpointAbuseCustomVarianceSubstrings();
+      sessionGapDurationMinutes = options.getSessionGapDurationMinutes();
 
       String[] cfgEndpoints = options.getEndpointAbusePath();
       endpoints = new EndpointAbuseEndpointInfo[cfgEndpoints.length];
@@ -647,6 +671,27 @@ public class HTTPRequest implements Serializable {
         ninfo.path = parts[2];
         endpoints[i] = ninfo;
       }
+    }
+
+    public String getTransformDoc() {
+      String buf = null;
+      for (int i = 0; i < endpoints.length; i++) {
+        String x =
+            String.format(
+                "%d %s requests for %s.",
+                endpoints[i].threshold, endpoints[i].method, endpoints[i].path);
+        if (buf == null) {
+          buf = x;
+        } else {
+          buf += " " + x;
+        }
+      }
+      return String.format(
+          "Clients are sessionized by address, where a session ends after "
+              + "%d minutes of inactivity. An alert is generated if a client is observed "
+              + "making repeated requests to configured endpoints without requesting other forms "
+              + "of content from the site. %s",
+          sessionGapDurationMinutes, buf);
     }
 
     @Override
@@ -820,7 +865,8 @@ public class HTTPRequest implements Serializable {
   /**
    * Composite transform that conducts threshold analysis using the configured threshold modifier
    */
-  public static class ThresholdAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>> {
+  public static class ThresholdAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>>
+      implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private final Double thresholdModifier;
@@ -860,6 +906,13 @@ public class HTTPRequest implements Serializable {
         HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
       this(options);
       this.natView = natView;
+    }
+
+    public String getTransformDoc() {
+      return String.format(
+          "Alert if a single source address makes more than %.2f times the calculated"
+              + " mean request rate for all clients within a 1 minute window.",
+          thresholdModifier);
     }
 
     @Override
@@ -1121,8 +1174,31 @@ public class HTTPRequest implements Serializable {
     void setIgnoreInternalRequests(Boolean value);
   }
 
+  /**
+   * Build a configuration tick for HTTPRequest given pipeline options
+   *
+   * @param options Pipeline options
+   * @return String
+   */
   public static String buildConfigurationTick(HTTPRequestOptions options) throws IOException {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
+
+    if (options.getEnableThresholdAnalysis()) {
+      b.withTransformDoc(new ThresholdAnalysis(options, null));
+    }
+    if (options.getEnableHardLimitAnalysis()) {
+      b.withTransformDoc(new HardLimitAnalysis(options, null));
+    }
+    if (options.getEnableErrorRateAnalysis()) {
+      b.withTransformDoc(new ErrorRateAnalysis(options));
+    }
+    if (options.getEnableUserAgentBlacklistAnalysis()) {
+      b.withTransformDoc(new UserAgentBlacklistAnalysis(options, null));
+    }
+    if (options.getEnableEndpointAbuseAnalysis()) {
+      b.withTransformDoc(new EndpointAbuseAnalysis(options));
+    }
+
     return b.build();
   }
 
