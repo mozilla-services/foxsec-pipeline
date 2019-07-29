@@ -38,6 +38,10 @@ public class CfgTickBuilder {
     cfgData = new HashMap<String, String>();
   }
 
+  private void removeUndesirable() {
+    cfgData.remove("filesToStage"); // Just remove the staged jar list if present
+  }
+
   /**
    * Generate configuration tick message from builder contents
    *
@@ -45,6 +49,7 @@ public class CfgTickBuilder {
    */
   public String build() throws IOException {
     cfgData.put("configuration_tick", "true");
+    removeUndesirable();
     try {
       return mapper.writeValueAsString(cfgData);
     } catch (JsonProcessingException exc) {
