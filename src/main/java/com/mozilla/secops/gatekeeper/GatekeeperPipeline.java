@@ -43,7 +43,8 @@ public class GatekeeperPipeline implements Serializable {
     PCollection<Alert> gdAlerts =
         events
             .apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(options))
-            .apply("generate gd alerts", new GuardDutyTransforms.GenerateAlerts(options));
+            .apply("generate gd alerts", new GuardDutyTransforms.GenerateAlerts(options))
+            .apply("suppress gd duplicate alerts", new GuardDutyTransforms.SuppressAlerts(options));
 
     PCollection<Alert> etdAlerts =
         events

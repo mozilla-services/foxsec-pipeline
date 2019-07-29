@@ -159,6 +159,10 @@ public class ParserCfg implements Serializable {
    * contains the supplied substring. If not, the event is dropped prior to performing the bulk of
    * the parsing/filtering operations.
    *
+   * <p>Note that this is intended to reduce pressure on the parser and should not be treated as a
+   * filter, as there are certain cases (such as with configuration tick events) that messages that
+   * do not match the fast matcher will still be returned.
+   *
    * @param fastMatcher Matcher substring
    */
   public void setParserFastMatcher(String fastMatcher) {

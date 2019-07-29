@@ -66,4 +66,16 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   String getParserFastMatcher();
 
   void setParserFastMatcher(String value);
+
+  @Description("Configuration tick interval, 0 to disable; seconds")
+  @Default.Integer(0)
+  Integer getGenerateConfigurationTicksInterval();
+
+  void setGenerateConfigurationTicksInterval(Integer value);
+
+  @Description("Maximum number of configuration ticks to generate, -1 for forever; long")
+  @Default.Long(-1)
+  Long getGenerateConfigurationTicksMaximum();
+
+  void setGenerateConfigurationTicksMaximum(Long value);
 }
