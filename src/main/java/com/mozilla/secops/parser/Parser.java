@@ -363,9 +363,10 @@ public class Parser {
   public Event parse(String input) {
     String fm = cfg.getParserFastMatcher();
     // If a fast matcher is set, test the input immediately against it and discard the
-    // event if it does not match
+    // event if it does not match. A special case exists here to always pass messages that
+    // appear to be configuration ticks from CompositeInput.
     if (fm != null && input != null) {
-      if (!input.contains(fm)) {
+      if (!input.contains(fm) && !input.contains("configuration_tick")) {
         return null;
       }
     }

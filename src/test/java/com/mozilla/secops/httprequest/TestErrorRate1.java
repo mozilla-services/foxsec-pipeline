@@ -70,6 +70,8 @@ public class TestErrorRate1 {
     options.setGenerateConfigurationTicksInterval(1);
     options.setGenerateConfigurationTicksMaximum(5L);
     options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_errorrate1.txt"});
+    // Also set a fast matcher configuration to verify the cfgtick events are passed
+    options.setParserFastMatcher("prod-send");
     PCollection<Event> events =
         p.apply(
                 new CompositeInput(
