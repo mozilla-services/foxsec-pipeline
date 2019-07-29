@@ -88,6 +88,8 @@ public class CfgTick extends PayloadBase implements Serializable {
         ret.put(entry.getKey(), ((Integer) o).toString());
       } else if (o instanceof String) {
         ret.put(entry.getKey(), (String) o);
+      } else if (o instanceof Double) {
+        ret.put(entry.getKey(), ((Double) o).toString());
       } else if (o instanceof ArrayList) {
         String abuf = convertArray(o);
         if (abuf == null) {
@@ -95,7 +97,9 @@ public class CfgTick extends PayloadBase implements Serializable {
         }
         ret.put(entry.getKey(), abuf);
       } else {
-        throw new IOException("map had value type that could not be converted");
+        throw new IOException(
+            String.format(
+                "map had value type that could not be converted, %s", o.getClass().toString()));
       }
     }
 
