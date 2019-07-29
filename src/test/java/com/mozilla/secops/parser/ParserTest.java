@@ -6,6 +6,7 @@ import com.amazonaws.services.guardduty.model.Finding;
 import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
 import java.util.ArrayList;
+import java.util.Map;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -1861,6 +1862,28 @@ public class ParserTest {
 
     assertEquals(m.getHostname(), m2.getHostname());
     assertEquals(m.getLogger(), m2.getLogger());
+  }
+
+  @Test
+  public void testParseCfgTick() {
+    String buf =
+        "{\"configuration_tick\": true, \"string\": \"test\", \"integer\": 100, \"boolean\": true,"
+            + "\"array_string\": [\"one\", \"two\"], \"array_int\": [1, 2]}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CFGTICK, e.getPayloadType());
+    CfgTick c = e.getPayload();
+    assertNotNull(c);
+    Map<String, String> configMap = c.getConfigurationMap();
+    assertNotNull(configMap);
+    assertEquals("true", configMap.get("boolean"));
+    assertEquals("100", configMap.get("integer"));
+    assertEquals("test", configMap.get("string"));
+    assertEquals("one, two", configMap.get("array_string"));
+    assertEquals("1, 2", configMap.get("array_int"));
   }
 
   @Test

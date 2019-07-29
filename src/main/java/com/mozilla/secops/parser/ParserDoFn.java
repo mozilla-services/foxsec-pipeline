@@ -52,7 +52,7 @@ public class ParserDoFn extends DoFn<String, Event> {
     if ((cfg != null)
         && ((cfg.getStackdriverLabelFilters() != null)
             || (cfg.getStackdriverProjectFilter() != null))) {
-      commonInputFilter = new EventFilter();
+      commonInputFilter = new EventFilter().passConfigurationTicks();
       EventFilterRule rule = new EventFilterRule();
 
       if (cfg.getStackdriverLabelFilters() != null) {

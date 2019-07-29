@@ -38,6 +38,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     AMODOCKER,
     /** Alert */
     ALERT,
+    /** Internal configuration tick */
+    CFGTICK,
     /** Raw */
     RAW
   }
