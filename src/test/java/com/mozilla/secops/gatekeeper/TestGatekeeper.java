@@ -310,4 +310,27 @@ public class TestGatekeeper {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void gatekeeperSuppressRepeatedFindingsOneInstant() throws Exception {
+    String[] gd =
+        TestUtil.getTestInputArray(
+            "/testdata/gatekeeper/guardduty-sample-findings-with-duplicates.txt");
+
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(gd[0], Arrays.copyOfRange(gd, 1, gd.length))
+            .advanceWatermarkToInfinity();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    // the sample data contains 5 findings in total, 2 share one id, 3 share another.
+    // if all of these findings are processed within the default suppression window (15 mins) we
+    // should get 2 alerts
+    PAssert.that(alerts.apply(Count.globally())).containsInAnyOrder(2L);
+
+    p.run().waitUntilFinish();
+  }
 }
