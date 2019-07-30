@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.parser.CfgTick;
 import java.io.IOException;
 import java.util.HashMap;
@@ -29,6 +30,15 @@ public class CfgTickBuilder {
 
   private void mergeData(HashMap<String, String> in) {
     in.forEach((k, v) -> cfgData.merge(k, v, (v1, v2) -> new String(v2)));
+  }
+
+  /**
+   * Add documentation about a transform to the configuration tick
+   *
+   * @param t {@link DocumentingTransform}
+   */
+  public void withTransformDoc(DocumentingTransform t) {
+    cfgData.put(String.format("heuristic_%s", t.getClass().getSimpleName()), t.getTransformDoc());
   }
 
   /** Initialize new {@link CfgTickBuilder} */
