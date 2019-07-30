@@ -1913,4 +1913,139 @@ public class ParserTest {
     }
     assertNull(Parser.parseAndCorrectSyslogTs("not-a-date", e));
   }
+
+  @Test
+  public void testAuth0RawAuth() throws Exception {
+    String buf =
+        "{\"_id\": \"5734829321d6731f1b94e07a\",\"log_id\": null,\"date\": "
+            + "\"2019-06-29T17:44:08.135Z\",\"type\": \"s\",\"client_id\": \"XXXXXXXXXXXX\","
+            + "\"client_name\": \"www.enterprise.com\",\"ip\": \"10.0.0.167\",\"location_info\":"
+            + "null,\"details\": {\"completedAt\": 1561830248134,\"elapsedTime\": 2914,"
+            + "\"initiatedAt\": 1561830245220,\"prompts\": [{\"completedAt\": 1561830247694,"
+            + "\"connection\": \"Enterprise-LDAP\",\"connection_id\": \"con_XXXXXXXXXX\","
+            + "\"elapsedTime\": 281,\"identity\": \"Enterprise-LDAP|wriker\",\"initiatedAt\":"
+            + "1561830247413,\"name\": \"lock-password-authenticate\",\"session_user\": "
+            + "\"XXXXXXXXXXXXXXx\",\"stats\": {\"loginsCount\": 1946740},\"strategy\": \"ad\"},"
+            + "{\"completedAt\": 1561830247696,\"elapsedTime\": 2475,\"flow\": \"login\","
+            + "\"initiatedAt\": 1561830245221,\"name\": \"login\",\"timers\": {\"rules\": 621},"
+            + "\"user_id\": \"ad|Enterprise-LDAP|wriker\",\"user_name\": \"wriker@mozilla.com\"}],"
+            + "\"session_id\": \"XXXXXXXXXXXXXXXXXX\",\"stats\": {\"loginsCount\": 740}},"
+            + "\"user_id\": \"ad|Enterprise-LDAP|wriker\"}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AUTH0, e.getPayloadType());
+    assertEquals("2019-06-29T17:44:08.135Z", e.getTimestamp().toString());
+    Auth0 a0 = e.getPayload();
+    assertNotNull(a0);
+    assertEquals("wriker@mozilla.com", a0.getUsername());
+    assertEquals("10.0.0.167", a0.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("wriker@mozilla.com", n.getSubjectUser());
+    assertEquals("10.0.0.167", n.getSourceAddress());
+    assertEquals("www.enterprise.com", n.getObject());
+  }
+
+  @Test
+  public void testAuth0StackdriverAuth() throws Exception {
+    String buf =
+        "{\"insertId\": \"n12d5meka87i\",\"jsonPayload\":{\"_id\":\"5734829321d6731f1b94e07a\","
+            + "\"log_id\": null,\"date\": \"2019-06-29T17:44:08.135Z\",\"type\":\"s\",\"client_id\":"
+            + "\"XXXXXXXXXXXX\",\"client_name\": \"www.enterprise.com\",\"ip\":\"10.0.0.167\","
+            + "\"location_info\": null,\"details\": {\"completedAt\":1561830248134,\"elapsedTime\": "
+            + "2914,\"initiatedAt\": 1561830245220,\"prompts\": [{\"completedAt\":1561830247694,"
+            + "\"connection\": \"Enterprise-LDAP\",\"connection_id\":\"con_XXXXXXXXXX\",\"elapsedTime\":"
+            + "281,\"identity\": \"Enterprise-LDAP|wriker\",\"initiatedAt\":1561830247413,\"name\":"
+            + "\"lock-password-authenticate\",\"session_user\": \"XXXXXXXXXXXXXXx\",\"stats\":"
+            + "{\"loginsCount\": 1946740},\"strategy\": \"ad\"},{\"completedAt\":1561830247696,\"elapsedTime\":"
+            + "2475,\"flow\": \"login\",\"initiatedAt\": 1561830245221,\"name\":\"login\",\"timers\": "
+            + "{\"rules\": 621},\"user_id\": \"ad|Enterprise-LDAP|wriker\",\"user_name\": "
+            + "\"wriker@mozilla.com\"}],\"session_id\": \"XXXXXXXXXXXXXXXXXX\",\"stats\": "
+            + "{\"loginsCount\": 740}},\"user_id\": \"ad|Enterprise-LDAP|wriker\"},"
+            + "\"resource\": {\"type\": \"project\",\"labels\": {\"project_id\": "
+            + "\"foxsec-pipeline-nonprod\"}},\"timestamp\":\"2019-07-26T17:51:08.907029090Z\","
+            + "\"logName\": \"projects/foxsec-pipeline-nonprod/logs/auth0pull\","
+            + "\"receiveTimestamp\": \"2019-07-26T17:51:08.949159684Z\"}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AUTH0, e.getPayloadType());
+    assertEquals("2019-06-29T17:44:08.135Z", e.getTimestamp().toString());
+    Auth0 a0 = e.getPayload();
+    assertNotNull(a0);
+    assertEquals("wriker@mozilla.com", a0.getUsername());
+    assertEquals("10.0.0.167", a0.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("wriker@mozilla.com", n.getSubjectUser());
+    assertEquals("10.0.0.167", n.getSourceAddress());
+    assertEquals("www.enterprise.com", n.getObject());
+  }
+
+  @Test
+  public void testAuth0Event() throws Exception {
+    String buf =
+        "{\"client_id\": \"TESTCLIENTID\",\"location_info\": null,"
+            + "\"user_id\": \"\",\"log_id\": null,\"client_name\": "
+            + "\"enterprise_publisher\",\"_id\": \"11111115d3b354d\","
+            + "\"details\": null,\"ip\": \"10.0.0.244\",\"type\": "
+            + "\"seccft\",\"date\": \"2019-07-26T17:15:57.235Z\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AUTH0, e.getPayloadType());
+    assertEquals("2019-07-26T17:15:57.235Z", e.getTimestamp().toString());
+    Auth0 a0 = e.getPayload();
+    assertNotNull(a0);
+    assertNull(a0.getUsername());
+    assertEquals("10.0.0.244", a0.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertFalse(n.isOfType(Normalized.Type.AUTH));
+  }
+
+  @Test
+  public void testAuth0GetUsername() throws Exception {
+    Event e;
+    Parser p = getTestParser();
+    assertNotNull(p);
+
+    String usernameExists =
+        "{\"_id\": \"5734829321d6731f1b94e07a\",\"log_id\": null,\"date\": "
+            + "\"2019-06-29T17:44:08.135Z\",\"type\": \"s\",\"client_id\": \"XXXXXXXXXXXX\","
+            + "\"details\": {\"prompts\": [{\"user_id\": \"ad|Enterprise-LDAP|wriker\",\"user_name\": \"wriker@mozilla.com\"}]}}";
+
+    e = p.parse(usernameExists);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AUTH0, e.getPayloadType());
+    Auth0 usernameExistsPayload = e.getPayload();
+    assertEquals("wriker@mozilla.com", usernameExistsPayload.getUsername());
+
+    String promptsIsNull =
+        "{\"_id\": \"5734829321d6731f1b94e07a\",\"log_id\": null,\"date\":\"2019-06-29T17:44:08.135Z\",\"type\": \"s\",\"client_id\": \"XXXXXXXXXXXX\",\"details\": {\"prompts\": null}}";
+
+    e = p.parse(promptsIsNull);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AUTH0, e.getPayloadType());
+    Auth0 promptsIsNullPayload = e.getPayload();
+    assertNull(promptsIsNullPayload.getUsername());
+
+    String promptsContainsEmptyArray =
+        "{\"_id\": \"5734829321d6731f1b94e07a\",\"log_id\": null,\"date\":\"2019-06-29T17:44:08.135Z\",\"type\": \"s\",\"client_id\": \"XXXXXXXXXXXX\",\"details\": {\"prompts\": []}}";
+
+    e = p.parse(promptsContainsEmptyArray);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.AUTH0, e.getPayloadType());
+    Auth0 promptsContainsEmptyArrayPayload = e.getPayload();
+    assertNull(promptsContainsEmptyArrayPayload.getUsername());
+  }
 }
