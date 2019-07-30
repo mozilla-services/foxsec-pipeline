@@ -248,6 +248,24 @@ public class Alert implements Serializable {
   }
 
   /**
+   * A best effort addMetadata(k,v)
+   *
+   * <p>If a null or empty key or value is provided, this function will not add anything. Do NOT use
+   * this function for metadata entries that are not purely informational.
+   *
+   * @param k String key
+   * @param v String value
+   * @return true if metadata entry was set, false otherwise
+   */
+  public boolean tryAddMetadata(String k, String v) {
+    if (k == null || v == null || k.equals("") || v.equals("")) {
+      return false;
+    }
+    addMetadata(k, v);
+    return true;
+  }
+
+  /**
    * Override alert timestamp
    *
    * @param timestamp Alert timestamp
