@@ -63,7 +63,11 @@ public class TestGatekeeper {
                   assertEquals("us-west-2", a.getMetadataValue("aws_region"));
                 } else if (a.getCategory().equals("gatekeeper:gcp")) {
                   assertTrue(a.getSummary().startsWith("suspicious activity detected in gcp org"));
-                  assertEquals("123456789012", a.getMetadataValue("project_number"));
+                  // the three project numbers in the sample data
+                  assertTrue(
+                      a.getMetadataValue("project_number").equals("123456789012")
+                          || a.getMetadataValue("project_number").equals("123456785822")
+                          || a.getMetadataValue("project_number").equals("123456789210"));
                   assertEquals("audit_log", a.getMetadataValue("indicator"));
                   assertEquals("persistence", a.getMetadataValue("technique"));
                   assertEquals("iam_anomalous_grant", a.getMetadataValue("rule_name"));
@@ -125,7 +129,11 @@ public class TestGatekeeper {
                 assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                 assertEquals("gatekeeper:gcp", a.getCategory());
                 assertTrue(a.getSummary().startsWith("suspicious activity detected in gcp org"));
-                assertEquals("123456789012", a.getMetadataValue("project_number"));
+                // the three project numbers in the sample data
+                assertTrue(
+                    a.getMetadataValue("project_number").equals("123456789012")
+                        || a.getMetadataValue("project_number").equals("123456785822")
+                        || a.getMetadataValue("project_number").equals("123456789210"));
                 assertEquals("audit_log", a.getMetadataValue("indicator"));
                 assertEquals("persistence", a.getMetadataValue("technique"));
                 assertEquals("iam_anomalous_grant", a.getMetadataValue("rule_name"));
@@ -312,7 +320,7 @@ public class TestGatekeeper {
   }
 
   @Test
-  public void gatekeeperSuppressRepeatedFindingsOneInstant() throws Exception {
+  public void gatekeeperSuppressRepeatedGDFindingsOneInstant() throws Exception {
     String[] gd =
         TestUtil.getTestInputArray(
             "/testdata/gatekeeper/guardduty-sample-findings-with-duplicates.txt");
@@ -327,6 +335,28 @@ public class TestGatekeeper {
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
     // the sample data contains 5 findings in total, 2 share one id, 3 share another.
+    // if all of these findings are processed within the default suppression window (15 mins) we
+    // should get 2 alerts
+    PAssert.that(alerts.apply(Count.globally())).containsInAnyOrder(2L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void gatekeeperSuppressRepeatedETDFindingsOneInstant() throws Exception {
+    String[] gd =
+        TestUtil.getTestInputArray("/testdata/gatekeeper/etd-sample-findings-with-duplicates.txt");
+
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(gd[0], Arrays.copyOfRange(gd, 1, gd.length))
+            .advanceWatermarkToInfinity();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    // the sample data contains 5 findings in total, 2 share one project id, 3 share another.
     // if all of these findings are processed within the default suppression window (15 mins) we
     // should get 2 alerts
     PAssert.that(alerts.apply(Count.globally())).containsInAnyOrder(2L);

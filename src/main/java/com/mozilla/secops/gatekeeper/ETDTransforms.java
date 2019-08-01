@@ -2,6 +2,7 @@ package com.mozilla.secops.gatekeeper;
 
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertSuppressor;
 import com.mozilla.secops.parser.ETDBeta;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -10,11 +11,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.DateTime;
 
@@ -33,6 +36,12 @@ public class ETDTransforms implements Serializable {
     String[] getEscalateETDFindingRuleRegex();
 
     void setEscalateETDFindingRuleRegex(String[] value);
+
+    @Default.Long(60 * 15) // 15 minutes
+    @Description("Suppress alert generation for repeated ETD Findings within this value")
+    Long getAlertSuppressionSeconds();
+
+    void setAlertSuppressionSeconds(Long value);
   }
 
   /** Extract ETD Findings */
@@ -170,6 +179,67 @@ public class ETDTransforms implements Serializable {
                   c.output(a);
                 }
               }));
+    }
+  }
+
+  /**
+   * Suppress Alerts for repeated Event Threat Detection Findings.
+   *
+   * <p>We will define a "repeated finding" in ETD to mean that the source project number, the rule
+   * which triggered the finding, the technique, and indicator must be the same, as well as some
+   * fields which are not present for every rule e.g. location
+   */
+  public static class SuppressAlerts extends PTransform<PCollection<Alert>, PCollection<Alert>> {
+    private static final long serialVersionUID = 1L;
+
+    private static Long alertSuppressionWindow;
+
+    /**
+     * static initializer for alert suppression
+     *
+     * @param opts {@link Options} pipeline options
+     */
+    public SuppressAlerts(Options opts) {
+      alertSuppressionWindow = opts.getAlertSuppressionSeconds();
+    }
+
+    // the suppression state key for ETD findings will be a concatenation of
+    // some mandatory and some optional fields
+    private String buildSuppressionStateKey(Alert a) {
+      String key =
+          a.getMetadataValue("project_number")
+              + "-"
+              + a.getMetadataValue("rule_name")
+              + "-"
+              + a.getMetadataValue("technique")
+              + "-"
+              + a.getMetadataValue("indicator");
+
+      if (a.getMetadataValue("location") != null) {
+        key = key + "-" + a.getMetadataValue("location");
+      }
+      // add more optional fields here
+      return key;
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Alert> input) {
+      return input
+          .apply(
+              ParDo.of(
+                  new DoFn<Alert, KV<String, Alert>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Alert a = c.element();
+                      if (a == null) {
+                        return;
+                      }
+                      c.output(KV.of(buildSuppressionStateKey(a), a));
+                    }
+                  }))
+          .apply(ParDo.of(new AlertSuppressor(alertSuppressionWindow)));
     }
   }
 }
