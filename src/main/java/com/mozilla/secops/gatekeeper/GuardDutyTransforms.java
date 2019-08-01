@@ -4,17 +4,27 @@ import com.amazonaws.services.guardduty.model.Finding;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertSuppressor;
-import com.mozilla.secops.parser.*;
+import com.mozilla.secops.identity.IdentityManager;
+import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.GuardDuty;
+import com.mozilla.secops.parser.Payload;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.transforms.*;
-import org.apache.beam.sdk.values.*;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.PTransform;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Implements various transforms on AWS GuardDuty {@link Finding} Events */
 public class GuardDutyTransforms implements Serializable {
@@ -101,7 +111,8 @@ public class GuardDutyTransforms implements Serializable {
     private static final String alertCategory = "gatekeeper:aws";
 
     private List<Pattern> escalate;
-    private String critNotifyEmail;
+    private final String critNotifyEmail;
+    private final String identityMgrPath;
 
     /**
      * static initializer for alert generation / escalation
@@ -110,8 +121,9 @@ public class GuardDutyTransforms implements Serializable {
      */
     public GenerateAlerts(Options opts) {
       critNotifyEmail = opts.getCriticalNotificationEmail();
-      String[] escalateRegexes = opts.getEscalateGDFindingTypeRegex();
+      identityMgrPath = opts.getIdentityManagerPath();
 
+      String[] escalateRegexes = opts.getEscalateGDFindingTypeRegex();
       escalate = new ArrayList<Pattern>();
       if (escalateRegexes != null) {
         for (String s : escalateRegexes) {
@@ -122,9 +134,29 @@ public class GuardDutyTransforms implements Serializable {
       }
     }
 
-    private void addEscalationMetadata(Alert a) {
+    private void addBaseFindingData(Alert a, Finding f) {
+      a.setSummary(
+          String.format(
+              "suspicious activity detected in aws account %s: %s",
+              f.getAccountId(), f.getTitle()));
+      a.setTimestamp(DateTime.parse(f.getUpdatedAt()));
+      a.setCategory(alertCategory);
+      a.setSeverity(Alert.AlertSeverity.CRITICAL);
+      a.addMetadata("aws_account", f.getAccountId());
+      a.addMetadata("aws_region", f.getRegion());
+      a.addMetadata("description", f.getDescription());
+      a.addMetadata("finding_aws_severity", Double.toString(f.getSeverity()));
+      a.addMetadata("finding_type", f.getType());
+      a.addMetadata("finding_id", f.getId());
+    }
+
+    private void tryAddEscalationEmail(Alert a, String findingType) {
       if (critNotifyEmail != null) {
-        a.addMetadata("notify_email_direct", critNotifyEmail);
+        for (Pattern p : escalate) {
+          if (p.matcher(findingType).matches()) {
+            a.addMetadata("notify_email_direct", critNotifyEmail);
+          }
+        }
       }
     }
 
@@ -134,6 +166,46 @@ public class GuardDutyTransforms implements Serializable {
           ParDo.of(
               new DoFn<Event, Alert>() {
                 private static final long serialVersionUID = 1L;
+
+                private Map<String, String> awsAcctMap;
+
+                private void tryAddAccountName(Alert a) {
+                  if (awsAcctMap != null) {
+                    String acctId = a.getMetadataValue("aws_account");
+                    if (acctId != null) {
+                      String acctName = awsAcctMap.get(acctId);
+                      if (acctName != null) {
+                        a.addMetadata("aws_account_name", acctName);
+                        return;
+                      }
+                    }
+                  }
+                  a.addMetadata("aws_account_name", "UNKNOWN");
+                }
+
+                @Setup
+                public void setup() {
+                  Logger log = LoggerFactory.getLogger(GenerateAlerts.class);
+
+                  if (identityMgrPath != null) {
+                    try {
+                      awsAcctMap = IdentityManager.load(identityMgrPath).getAwsAccountMap();
+                      if (awsAcctMap != null) {
+                        log.info("aws account map successfully loaded from identity manager file");
+                      } else {
+                        log.warn(
+                            "no aws account map contained in identity manager file, alerts will have \"UNKNOWN\" as aws_account_name");
+                      }
+                    } catch (IOException x) {
+                      log.error(
+                          "failed to load identity manager, alerts will have \"UNKNOWN\" as aws_account_name. error: {}",
+                          x.getMessage());
+                    }
+                  } else {
+                    log.warn(
+                        "no identity manager provided, alerts will have \"UNKNOWN\" as aws_account_name");
+                  }
+                }
 
                 @ProcessElement
                 public void processElement(ProcessContext c) {
@@ -150,25 +222,10 @@ public class GuardDutyTransforms implements Serializable {
                     return;
                   }
                   Alert a = new Alert();
-                  a.setSummary(
-                      String.format(
-                          "suspicious activity detected in aws account %s: %s",
-                          f.getAccountId(), f.getTitle()));
-                  a.setTimestamp(DateTime.parse(f.getUpdatedAt()));
-                  a.setCategory(alertCategory);
-                  a.setSeverity(Alert.AlertSeverity.CRITICAL);
-                  a.addMetadata("aws_account", f.getAccountId());
-                  a.addMetadata("aws_region", f.getRegion());
-                  a.addMetadata("description", f.getDescription());
-                  a.addMetadata("finding_aws_severity", Double.toString(f.getSeverity()));
-                  a.addMetadata("finding_type", f.getType());
-                  a.addMetadata("finding_id", f.getId());
-                  for (Pattern p : escalate) {
-                    if (p.matcher(f.getType()).matches()) {
-                      addEscalationMetadata(a);
-                      break;
-                    }
-                  }
+
+                  addBaseFindingData(a, f);
+                  tryAddEscalationEmail(a, f.getType());
+                  tryAddAccountName(a);
                   c.output(a);
                 }
               }));
