@@ -82,6 +82,53 @@ public class TestGatekeeper {
   }
 
   @Test
+  public void gatekeeperTestEnrichedGDAlertsWithoutIdentityMgr() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                assertNotNull(a.getCategory());
+                if (a.getCategory().equals("gatekeeper:aws")) {
+                  assertEquals("UNKNOWN", a.getMetadataValue("aws_account_name"));
+                }
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void gatekeeperTestEnrichedGDAlertsWithIdentityMgr() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+
+    // load identity manager containing mapping for all accounts in test data
+    opts.setIdentityManagerPath("/testdata/identitymanager.json");
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                assertNotNull(a.getCategory());
+                if (a.getCategory().equals("gatekeeper:aws")) {
+                  assertEquals("mock-aws-account-name", a.getMetadataValue("aws_account_name"));
+                }
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void gatekeeperIgnoreAllETDTest() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.Options opts = getBaseTestOptions();
