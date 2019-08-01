@@ -161,6 +161,7 @@ public class ETDTransforms implements Serializable {
                   a.addMetadata("rule_name", f.getDetectionCategory().getRuleName());
                   a.addMetadata("technique", f.getDetectionCategory().getTechnique());
                   a.addMetadata("project_number", f.getSourceId().getProjectNumber());
+                  a.addMetadata("project_id", f.getProperties().getProject_id());
                   for (Pattern p : escalate) {
                     if (p.matcher(f.getDetectionCategory().getRuleName()).matches()) {
                       addEscalationMetadata(a);
