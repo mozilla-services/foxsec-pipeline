@@ -2,6 +2,7 @@ package com.mozilla.secops.authprofile;
 
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.CompositeInput;
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
@@ -9,6 +10,8 @@ import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertIO;
 import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
+import com.mozilla.secops.metrics.CfgTickBuilder;
+import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -25,6 +28,7 @@ import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
@@ -96,7 +100,7 @@ public class AuthProfile implements Serializable {
 
     @Override
     public PCollection<Event> expand(PCollection<String> col) {
-      EventFilter filter = new EventFilter();
+      EventFilter filter = new EventFilter().passConfigurationTicks();
 
       // We are interested in both AUTH here (which indicates an authentication activity) and
       // in AUTH_SESSION (which indicates on-going use of an already authenticated session)
@@ -125,6 +129,12 @@ public class AuthProfile implements Serializable {
                     @ProcessElement
                     public void processElement(ProcessContext c) {
                       Event e = c.element();
+
+                      if (e.getPayloadType().equals(Payload.PayloadType.CFGTICK)) {
+                        c.output(e);
+                        return;
+                      }
+
                       Normalized n = e.getNormalized();
 
                       if (n.getSubjectUser() == null || n.getSourceAddress() == null) {
@@ -199,6 +209,10 @@ public class AuthProfile implements Serializable {
       Event e = c.element();
       Normalized n = e.getNormalized();
 
+      if (n.getSubjectUser() == null) {
+        return;
+      }
+
       String identityKey = idmanager.lookupAlias(n.getSubjectUser());
       if (identityKey != null) {
         log.info("{}: resolved identity to {}", n.getSubjectUser(), identityKey);
@@ -222,7 +236,7 @@ public class AuthProfile implements Serializable {
    * <p>Analyze events to determine if they are related to any objects configured as being critical
    * objects. Where identified, generate critical level alerts.
    */
-  public static class CritObjectAnalyze extends DoFn<Event, Alert> {
+  public static class CritObjectAnalyze extends DoFn<Event, Alert> implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private final String[] critObjects;
@@ -239,6 +253,12 @@ public class AuthProfile implements Serializable {
     public CritObjectAnalyze(AuthProfileOptions options) {
       critObjects = options.getCritObjects();
       critNotifyEmail = options.getCriticalNotificationEmail();
+    }
+
+    public String getTransformDoc() {
+      return String.format(
+          "Alert via %s immediately on auth events to specified objects: %s",
+          critNotifyEmail, Arrays.toString(critObjects));
     }
 
     @Setup
@@ -301,7 +321,11 @@ public class AuthProfile implements Serializable {
 
       Event e = c.element();
       Normalized n = e.getNormalized();
+
       String o = n.getObject();
+      if (o == null) {
+        return;
+      }
 
       String matchobj = null;
       for (Pattern p : critObjectPat) {
@@ -331,7 +355,8 @@ public class AuthProfile implements Serializable {
    * Analyze grouped events associated with a particular user or identity against persistent user
    * state
    */
-  public static class StateAnalyze extends DoFn<KV<String, Iterable<Event>>, Alert> {
+  public static class StateAnalyze extends DoFn<KV<String, Iterable<Event>>, Alert>
+      implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private final String memcachedHost;
@@ -355,6 +380,10 @@ public class AuthProfile implements Serializable {
       datastoreNamespace = options.getDatastoreNamespace();
       datastoreKind = options.getDatastoreKind();
       idmanagerPath = options.getIdentityManagerPath();
+    }
+
+    public String getTransformDoc() {
+      return "Alert if an identity (can be thought of as a user) authenticates from a new IP";
     }
 
     @Setup
@@ -656,6 +685,25 @@ public class AuthProfile implements Serializable {
     return a;
   }
 
+  /**
+   * Build a configuration tick for Authprofile given pipeline options
+   *
+   * @param options Pipeline options
+   * @return String
+   */
+  public static String buildConfigurationTick(AuthProfileOptions options) throws IOException {
+    CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
+
+    if (options.getEnableStateAnalysis()) {
+      b.withTransformDoc(new StateAnalyze(options));
+    }
+    if (options.getEnableCritObjectAnalysis()) {
+      b.withTransformDoc(new CritObjectAnalyze(options));
+    }
+
+    return b.build();
+  }
+
   public static PCollection<Alert> processInput(
       PCollection<String> input, AuthProfileOptions options) {
     PCollectionList<Alert> alertList = PCollectionList.empty(input.getPipeline());
@@ -682,6 +730,17 @@ public class AuthProfile implements Serializable {
                       "critical object analyze rewindow for output", new GlobalTriggers<Alert>(5)));
     }
 
+    // If configuration ticks were enabled, enable the processor here too
+    if (options.getGenerateConfigurationTicksInterval() > 0) {
+      alertList =
+          alertList.and(
+              events
+                  .apply(
+                      "cfgtick processor",
+                      ParDo.of(new CfgTickProcessor("authprofile-cfgtick", "category")))
+                  .apply(new GlobalTriggers<Alert>(5)));
+    }
+
     return alertList.apply("flatten output", Flatten.<Alert>pCollections());
   }
 
@@ -691,7 +750,12 @@ public class AuthProfile implements Serializable {
     // Register email and slack alert templates
     options.setOutputAlertTemplates(ALERT_TEMPLATES);
 
-    PCollection<String> input = p.apply("input", new CompositeInput(options));
+    PCollection<String> input;
+    try {
+      input = p.apply("input", new CompositeInput(options, buildConfigurationTick(options)));
+    } catch (IOException exc) {
+      throw new RuntimeException(exc.getMessage());
+    }
     processInput(input, options)
         .apply("output format", ParDo.of(new AlertFormatter(options)))
         .apply("output", OutputOptions.compositeOutput(options));
