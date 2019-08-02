@@ -129,12 +129,16 @@ public class GuardDutyTransforms implements Serializable {
     private final String critNotifyEmail;
     private final String identityMgrPath;
 
+    private Logger log;
+
     /**
      * static initializer for alert generation / escalation
      *
      * @param opts {@link Options} pipeline options
      */
     public GenerateAlerts(Options opts) {
+      log = LoggerFactory.getLogger(GenerateAlerts.class);
+
       critNotifyEmail = opts.getCriticalNotificationEmail();
       identityMgrPath = opts.getIdentityManagerPath();
 
@@ -334,13 +338,10 @@ public class GuardDutyTransforms implements Serializable {
                       }
                     }
                   }
-                  a.addMetadata("aws_account_name", "UNKNOWN");
                 }
 
                 @Setup
                 public void setup() {
-                  Logger log = LoggerFactory.getLogger(GenerateAlerts.class);
-
                   if (identityMgrPath != null) {
                     try {
                       awsAcctMap = IdentityManager.load(identityMgrPath).getAwsAccountMap();
@@ -348,16 +349,16 @@ public class GuardDutyTransforms implements Serializable {
                         log.info("aws account map successfully loaded from identity manager file");
                       } else {
                         log.warn(
-                            "no aws account map contained in identity manager file, alerts will have \"UNKNOWN\" as aws_account_name");
+                            "no aws account map contained in identity manager file, alerts will not contain aws_account_name");
                       }
                     } catch (IOException x) {
                       log.error(
-                          "failed to load identity manager, alerts will have \"UNKNOWN\" as aws_account_name. error: {}",
+                          "failed to load identity manager, alerts will not contain aws_account_name. error: {}",
                           x.getMessage());
                     }
                   } else {
                     log.warn(
-                        "no identity manager provided, alerts will have \"UNKNOWN\" as aws_account_name");
+                        "no identity manager provided, alerts will not contain aws_account_name");
                   }
                 }
 
