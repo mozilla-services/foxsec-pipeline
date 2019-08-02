@@ -1,6 +1,8 @@
 package com.mozilla.secops.authprofile;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.state.StateCursor;
 import com.mozilla.secops.state.StateException;
@@ -16,14 +18,56 @@ import org.joda.time.DateTimeUtils;
  * <p>Used by {@link AuthProfile}.
  */
 public class StateModel {
-  private final Long DEFAULTPRUNEAGE = 864000L; // 10 days
+  private static final Long DEFAULTPRUNEAGE = 864000L * 3; // 30 days
+  private static final Long DEFAULTEXPIREAGE = 864000L; // 10 days
 
   private String subject;
   private Map<String, ModelEntry> entries;
 
   /** Represents a single known source for authentication for a given user */
+  @JsonIgnoreProperties(ignoreUnknown = true)
   static class ModelEntry {
+    private Double longitude;
+    private Double latitude;
     private DateTime timestamp;
+
+    /**
+     * Set model latitude field
+     *
+     * @param latitude Latitude double value
+     */
+    public void setLatitude(Double latitude) {
+      this.latitude = latitude;
+    }
+
+    /**
+     * Get model latitude field
+     *
+     * @return model latitude double value
+     */
+    @JsonProperty("latitude")
+    public Double getLatitude() {
+      return latitude;
+    }
+
+    /**
+     * Set model longitude field
+     *
+     * @param longitude longitude double value
+     */
+    public void setLongitude(Double longitude) {
+      this.longitude = longitude;
+    }
+
+    /**
+     * Get model longitude field
+     *
+     * @return model longitude double value
+     */
+    @JsonProperty("longitude")
+    public Double getLongitude() {
+      return longitude;
+    }
 
     /**
      * Get timestamp of entry
@@ -42,6 +86,19 @@ public class StateModel {
      */
     public void setTimestamp(DateTime ts) {
       timestamp = ts;
+    }
+
+    /**
+     * Return true if ModelEntry's timestamp is older than DEFAULTEXPIREAGE.
+     *
+     * @return Boolean
+     */
+    public boolean isExpired() {
+      Long mts = timestamp.getMillis() / 1000;
+      if ((DateTimeUtils.currentTimeMillis() / 1000) - mts > DEFAULTEXPIREAGE) {
+        return true;
+      }
+      return false;
     }
 
     ModelEntry() {}
@@ -76,10 +133,12 @@ public class StateModel {
    * permanent.
    *
    * @param ipaddr IP address to update state with
+   * @param latitude IP address's latitude
+   * @param longitude IP address's longitude
    * @return True if the IP address was unknown, otherwise false
    */
-  public Boolean updateEntry(String ipaddr) {
-    return updateEntry(ipaddr, new DateTime());
+  public Boolean updateEntry(String ipaddr, Double latitude, Double longitude) {
+    return updateEntry(ipaddr, new DateTime(), latitude, longitude);
   }
 
   /**
@@ -91,20 +150,51 @@ public class StateModel {
    *
    * @param ipaddr IP address to update state with
    * @param timestamp Timestamp to associate with update
-   * @return True if the IP address was unknown, otherwise false
+   * @param latitude IP address's latitude
+   * @param longitude IP address's longitude
+   * @return True if the IP address was unknown or expired, otherwise false
    */
-  public Boolean updateEntry(String ipaddr, DateTime timestamp) {
+  public Boolean updateEntry(String ipaddr, DateTime timestamp, Double latitude, Double longitude) {
     ModelEntry ent = entries.get(ipaddr);
     if (ent == null) { // New entry for this user model
       ent = new ModelEntry();
       ent.setTimestamp(timestamp);
+      ent.setLatitude(latitude);
+      ent.setLongitude(longitude);
       entries.put(ipaddr, ent);
       return true;
     }
 
-    // Otherwise entry is known, update the timestamp field
+    // Otherwise entry is known, check if expired
+    Boolean expired = false;
+    if (ent.isExpired()) {
+      expired = true;
+    }
+    // Update the entry either way
     ent.setTimestamp(timestamp);
-    return false;
+    ent.setLatitude(latitude);
+    ent.setLongitude(longitude);
+    return expired;
+  }
+
+  /**
+   * Get the most recent entry, or return null if there are no entries
+   *
+   * @return {@link ModelEntry}
+   */
+  @JsonIgnore
+  public ModelEntry getLatestEntry() {
+    ModelEntry mostRecent = null;
+    for (ModelEntry me : entries.values()) {
+      if (mostRecent == null) {
+        mostRecent = me;
+      } else {
+        if (me.getTimestamp().isAfter(mostRecent.getTimestamp())) {
+          mostRecent = me;
+        }
+      }
+    }
+    return mostRecent;
   }
 
   /**

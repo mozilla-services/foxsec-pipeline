@@ -3,6 +3,7 @@ package com.mozilla.secops.authprofile;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.DocumentingTransform;
+import com.mozilla.secops.GeoUtil;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
@@ -44,6 +45,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -364,6 +366,7 @@ public class AuthProfile implements Serializable {
     private final String datastoreNamespace;
     private final String datastoreKind;
     private final String idmanagerPath;
+    private final Double maxKilometersPerSecond;
     private CidrUtil cidrGcp;
     private IdentityManager idmanager;
     private Logger log;
@@ -380,6 +383,7 @@ public class AuthProfile implements Serializable {
       datastoreNamespace = options.getDatastoreNamespace();
       datastoreKind = options.getDatastoreKind();
       idmanagerPath = options.getIdentityManagerPath();
+      maxKilometersPerSecond = options.getMaximumKilometersPerHour() / 3600.0;
     }
 
     public String getTransformDoc() {
@@ -442,6 +446,43 @@ public class AuthProfile implements Serializable {
           a.addMetadata("alert_notification_type", "slack_notification");
         }
       }
+    }
+
+    private void buildGeoVelocityAlertSummary(Event e, Alert a) {
+      String summary =
+          String.format(
+              "geovelocity anomaly detected on authentication event by %s [%s] to %s, ",
+              e.getNormalized().getSubjectUser(),
+              a.getMetadataValue("identity_key") != null
+                  ? a.getMetadataValue("identity_key")
+                  : "untracked",
+              e.getNormalized().getObject());
+      summary =
+          summary
+              + String.format(
+                  "%s [%s/%s]",
+                  a.getMetadataValue("sourceaddress"),
+                  a.getMetadataValue("sourceaddress_city"),
+                  a.getMetadataValue("sourceaddress_country"));
+      a.setSummary(summary);
+    }
+
+    private void buildGeoVelocityAlertPayload(Event e, Alert a) {
+      String msg =
+          "Geovelocity anomaly detected on an authentication event for user %s accessing %s from %s [%s/%s].";
+      if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
+        msg =
+            "Geovelocity anomaly detected on a sensitive event for user %s in association with %s from %s [%s/%s].";
+      }
+      String payload =
+          String.format(
+              msg,
+              a.getMetadataValue("username"),
+              a.getMetadataValue("object"),
+              a.getMetadataValue("sourceaddress"),
+              a.getMetadataValue("sourceaddress_city"),
+              a.getMetadataValue("sourceaddress_country"));
+      a.addToPayload(payload);
     }
 
     private void buildAlertSummary(Event e, Alert a) {
@@ -553,7 +594,14 @@ public class AuthProfile implements Serializable {
             a.addMetadata("entry_key", entryKey);
           }
 
-          if (sm.updateEntry(entryKey)) {
+          // used for geo velocity analysis
+          StateModel.ModelEntry lastLocation = sm.getLatestEntry();
+
+          if (sm.updateEntry(
+              entryKey,
+              e.getNormalized().getSourceAddressLatitude(),
+              e.getNormalized().getSourceAddressLongitude())) {
+
             // Address was new
             log.info(
                 "{}: escalating alert criteria for new source: {} {}",
@@ -562,6 +610,43 @@ public class AuthProfile implements Serializable {
                 e.getNormalized().getSourceAddress());
             a.setSeverity(Alert.AlertSeverity.WARNING);
             addEscalationMetadata(a, identity);
+
+            // if location velocity analysis
+            if (lastLocation != null
+                && lastLocation.getLatitude() != null
+                && lastLocation.getLongitude() != null
+                && e.getNormalized().getSourceAddressLatitude() != null
+                && e.getNormalized().getSourceAddressLongitude() != null) {
+              Double kmDistance =
+                  GeoUtil.kmBetweenTwoPoints(
+                      lastLocation.getLatitude(),
+                      lastLocation.getLongitude(),
+                      e.getNormalized().getSourceAddressLatitude(),
+                      e.getNormalized().getSourceAddressLongitude());
+
+              Long timeDifference =
+                  (DateTimeUtils.currentTimeMillis() / 1000)
+                      - (lastLocation.getTimestamp().getMillis() / 1000);
+
+              log.info(
+                  "{}: new location is {}km away from last location within {}s",
+                  userIdentity,
+                  kmDistance,
+                  timeDifference);
+              if ((kmDistance / timeDifference) > maxKilometersPerSecond) {
+                log.info("{}: creating geo velocity alert", userIdentity);
+                Alert ga = AuthProfile.createBaseAlert(e);
+                ga.addMetadata("identity_key", userIdentity);
+                ga.addMetadata("category", "geo_velocity");
+                // TODO: Once this has run for a while, should switch to CRITICAL and add escalation
+                // metadata
+                ga.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
+                buildGeoVelocityAlertSummary(e, ga);
+                buildGeoVelocityAlertPayload(e, ga);
+                c.output(ga);
+              }
+            }
+
           } else {
             seenKnownAddresses.add(e.getNormalized().getSourceAddress());
 
@@ -638,6 +723,12 @@ public class AuthProfile implements Serializable {
     String[] getCritObjects();
 
     void setCritObjects(String[] value);
+
+    @Description("Maxmimum km/hr for location velocity analysis")
+    @Default.Integer(800)
+    Integer getMaximumKilometersPerHour();
+
+    void setMaximumKilometersPerHour(Integer value);
   }
 
   /**

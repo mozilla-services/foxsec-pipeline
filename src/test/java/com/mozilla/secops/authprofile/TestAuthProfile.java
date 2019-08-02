@@ -20,16 +20,19 @@ import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserTest;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
+import com.mozilla.secops.state.StateCursor;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.util.Collection;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
+import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Rule;
@@ -432,6 +435,146 @@ public class TestAuthProfile {
                 assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
               }
               assertEquals(2L, newCnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void analyzeTestGeoVelocityAlert() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+    // Set a low `maxKilometersPerSecond`
+    options.setMaximumKilometersPerHour(1);
+
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/authprof_geovelocity_buffer1.txt", p);
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              int geoAlert = 0;
+              for (Alert a : results) {
+                assertEquals("authprofile", a.getCategory());
+                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                assertEquals("riker", a.getMetadataValue("username"));
+                assertEquals("emit-bastion", a.getMetadataValue("object"));
+                String actualSummary = a.getSummary();
+                if (actualSummary.contains("geovelocity anomaly detected on authentication event")
+                    && actualSummary.contains("81.2.69.192")) {
+                  geoAlert++;
+                  assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                  assertNull(a.getMetadataValue("notify_email_direct"));
+                  assertNull(a.getMetadataValue("escalate_to"));
+                  assertEquals("geo_velocity", a.getMetadataValue("category"));
+                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                }
+              }
+              assertEquals(1, geoAlert);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void analyzeTestGeoVelocityAlertDefaults() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+
+    // Preload mock data
+    State state =
+        new State(
+            new DatastoreStateInterface(
+                options.getDatastoreKind(), options.getDatastoreNamespace()));
+    state.initialize();
+    StateCursor c = state.newCursor();
+    StateModel sm = new StateModel("wriker@mozilla.com");
+    DateTime n = new DateTime();
+    // Set it to be a day ago so that we can test that moving a new entry far away
+    // geographically in a long period of time does not create an alert.
+    DateTime oneDayAgo = n.minusHours(24);
+    Double lat = 47.2513;
+    Double lon = -122.3149;
+    sm.updateEntry("216.160.83.56", oneDayAgo, lat, lon);
+    sm.set(c);
+    state.done();
+
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/authprof_geovelocity_buffer2.txt", p);
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
+
+    PCollection<Long> count = res.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(3L);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              int geoAlert = 0;
+              for (Alert a : results) {
+                assertEquals("authprofile", a.getCategory());
+                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                assertEquals("riker", a.getMetadataValue("username"));
+                assertEquals("emit-bastion", a.getMetadataValue("object"));
+                String actualSummary = a.getSummary();
+                if (actualSummary.contains(
+                    "geovelocity anomaly detected on authentication event")) {
+                  geoAlert++;
+                  assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                  assertNull(a.getMetadataValue("notify_email_direct"));
+                  assertNull(a.getMetadataValue("escalate_to"));
+                  assertEquals("geo_velocity", a.getMetadataValue("category"));
+                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                }
+              }
+              assertEquals(1, geoAlert);
+              return null;
+            });
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void analyzeTestGeoVelocityIgnoresOldStateEntries() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+
+    // Preload mock data with no lat/lon
+    State state =
+        new State(
+            new DatastoreStateInterface(
+                options.getDatastoreKind(), options.getDatastoreNamespace()));
+    state.initialize();
+    StateCursor c = state.newCursor();
+    StateModel sm = new StateModel("wriker@mozilla.com");
+    sm.updateEntry("216.160.83.56", null, null);
+    sm.set(c);
+    state.done();
+
+    PCollection<String> input =
+        TestUtil.getTestInput("/testdata/authprof_geovelocity_buffer3.txt", p);
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
+
+    PCollection<Long> count = res.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(1L);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              int geoAlert = 0;
+              for (Alert a : results) {
+                assertEquals("authprofile", a.getCategory());
+                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                assertEquals("riker", a.getMetadataValue("username"));
+                assertEquals("emit-bastion", a.getMetadataValue("object"));
+                String actualSummary = a.getSummary();
+                if (actualSummary.contains(
+                    "geovelocity anomaly detected on authentication event")) {
+                  geoAlert++;
+                }
+              }
+              assertEquals(0, geoAlert);
               return null;
             });
 
