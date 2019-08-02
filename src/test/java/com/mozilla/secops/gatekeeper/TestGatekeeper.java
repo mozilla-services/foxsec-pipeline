@@ -94,7 +94,7 @@ public class TestGatekeeper {
               for (Alert a : x) {
                 assertNotNull(a.getCategory());
                 if (a.getCategory().equals("gatekeeper:aws")) {
-                  assertEquals("UNKNOWN", a.getMetadataValue("aws_account_name"));
+                  assertNull(a.getMetadataValue("aws_account_name"));
                 }
               }
               return null;
