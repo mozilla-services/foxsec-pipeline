@@ -40,6 +40,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     ALERT,
     /** Internal configuration tick */
     CFGTICK,
+    /** Auth0 log event */
+    AUTH0,
     /** Raw */
     RAW
   }
