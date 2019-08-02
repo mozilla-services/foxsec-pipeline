@@ -1,6 +1,21 @@
 package com.mozilla.secops.gatekeeper;
 
+import com.amazonaws.services.guardduty.model.Action;
+import com.amazonaws.services.guardduty.model.AwsApiCallAction;
+import com.amazonaws.services.guardduty.model.City;
+import com.amazonaws.services.guardduty.model.Country;
+import com.amazonaws.services.guardduty.model.DnsRequestAction;
+import com.amazonaws.services.guardduty.model.DomainDetails;
 import com.amazonaws.services.guardduty.model.Finding;
+import com.amazonaws.services.guardduty.model.GeoLocation;
+import com.amazonaws.services.guardduty.model.LocalPortDetails;
+import com.amazonaws.services.guardduty.model.NetworkConnectionAction;
+import com.amazonaws.services.guardduty.model.Organization;
+import com.amazonaws.services.guardduty.model.PortProbeAction;
+import com.amazonaws.services.guardduty.model.PortProbeDetail;
+import com.amazonaws.services.guardduty.model.RemoteIpDetails;
+import com.amazonaws.services.guardduty.model.RemotePortDetails;
+import com.amazonaws.services.guardduty.model.Service;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertSuppressor;
@@ -150,11 +165,150 @@ public class GuardDutyTransforms implements Serializable {
       a.addMetadata("finding_id", f.getId());
     }
 
-    private void tryAddEscalationEmail(Alert a, String findingType) {
-      if (critNotifyEmail != null) {
+    private void tryAddEscalationEmail(Alert a, Finding f) {
+      if (critNotifyEmail != null && f.getType() != null) {
         for (Pattern p : escalate) {
-          if (p.matcher(findingType).matches()) {
+          if (p.matcher(f.getType()).matches()) {
             a.addMetadata("notify_email_direct", critNotifyEmail);
+            return;
+          }
+        }
+      }
+    }
+
+    // best effort addition of local port related metadata
+    private void tryAddLocalPortMetadata(Alert a, LocalPortDetails lpd) {
+      if (lpd.getPort() != null) {
+        a.tryAddMetadata("local_port", Integer.toString(lpd.getPort()));
+      }
+      a.tryAddMetadata("local_port_name", lpd.getPortName());
+    }
+
+    // best effort addition of remote ip related metadata
+    private void tryAddRemoteIpMetadata(Alert a, RemoteIpDetails rid) {
+      a.tryAddMetadata("remote_ip_address", rid.getIpAddressV4());
+      Country country = rid.getCountry();
+      if (country != null) {
+        a.tryAddMetadata("remote_ip_country", country.getCountryName());
+        a.tryAddMetadata("remote_ip_country_code", country.getCountryCode());
+      }
+      City city = rid.getCity();
+      if (city != null) {
+        a.tryAddMetadata("remote_ip_city", city.getCityName());
+      }
+      GeoLocation gl = rid.getGeoLocation();
+      if (gl != null) {
+        Double lat = gl.getLat();
+        if (lat != null) {
+          a.tryAddMetadata("remote_ip_latitude", Double.toString(lat));
+        }
+        Double lon = gl.getLon();
+        if (lon != null) {
+          a.tryAddMetadata("remote_ip_longitude", Double.toString(lon));
+        }
+      }
+      Organization org = rid.getOrganization();
+      if (org != null) {
+        a.tryAddMetadata("remote_ip_asn", org.getAsn());
+        a.tryAddMetadata("remote_ip_asn_org", org.getAsnOrg());
+        a.tryAddMetadata("remote_ip_isp", org.getIsp());
+        a.tryAddMetadata("remote_ip_org", org.getOrg());
+      }
+    }
+
+    // best effort addition of network-connection (action) related metadata
+    private void tryAddNetworkConnectionActionMetadata(Alert a, NetworkConnectionAction nca) {
+      a.tryAddMetadata("network_connection_direction", nca.getConnectionDirection());
+      a.tryAddMetadata("network_connection_proto", nca.getProtocol());
+      a.tryAddMetadata("network_connection_blocked", Boolean.toString(nca.getBlocked()));
+      LocalPortDetails lpd = nca.getLocalPortDetails();
+      if (lpd != null) {
+        tryAddLocalPortMetadata(a, lpd);
+      }
+      RemotePortDetails rpd = nca.getRemotePortDetails();
+      if (rpd != null) {
+        Integer rPort = rpd.getPort();
+        if (rPort != null) {
+          a.tryAddMetadata("remote_port", Integer.toString(rPort));
+        }
+        a.tryAddMetadata("remote_port_name", rpd.getPortName());
+      }
+      RemoteIpDetails rid = nca.getRemoteIpDetails();
+      if (rid != null) {
+        tryAddRemoteIpMetadata(a, rid);
+      }
+    }
+
+    // best effort addition of aws-api-call (action) related metadata
+    private void tryAddAwsApiCallActionMetadata(Alert a, AwsApiCallAction aca) {
+      a.tryAddMetadata("api_name", aca.getApi());
+      a.tryAddMetadata("api_service_name", aca.getServiceName());
+      a.tryAddMetadata("api_caller_type", aca.getCallerType());
+      DomainDetails dd = aca.getDomainDetails();
+      if (dd != null) {
+        a.tryAddMetadata("api_domain_name", dd.getDomain());
+      }
+      RemoteIpDetails rid = aca.getRemoteIpDetails();
+      if (rid != null) {
+        tryAddRemoteIpMetadata(a, rid);
+      }
+    }
+
+    // best effort addition of dns-request (action) related metadata
+    private void tryAddDnsRequestActionMetadata(Alert a, DnsRequestAction dra) {
+      a.tryAddMetadata("domain_name", dra.getDomain());
+    }
+
+    // best effort addition of port-probe (action) related metadata
+    private void tryAddPortProbeActionMetadata(Alert a, PortProbeAction ppa) {
+      a.tryAddMetadata("port_probe_blocked", Boolean.toString(ppa.getBlocked()));
+      List<PortProbeDetail> ppdlist = ppa.getPortProbeDetails();
+      if (ppdlist != null && ppdlist.size() > 0) {
+        // Note that schema allows repeated metadata keys
+        for (PortProbeDetail ppd : ppdlist) {
+          RemoteIpDetails rid = ppd.getRemoteIpDetails();
+          if (rid != null) {
+            tryAddRemoteIpMetadata(a, rid);
+          }
+          LocalPortDetails lpd = ppd.getLocalPortDetails();
+          if (rid != null) {
+            tryAddLocalPortMetadata(a, lpd);
+          }
+        }
+      }
+    }
+
+    // add informational metadata using values within finding.
+    // does not assume a particular finding type - adds everything available
+    private void addTypeSpecificFindingData(Alert a, Finding f) {
+      Service svc = f.getService();
+      if (svc != null) {
+        a.tryAddMetadata("aws_service", svc.getServiceName());
+        a.tryAddMetadata("aws_gd_detector_id", svc.getDetectorId());
+        Integer count = svc.getCount();
+        if (count != null) {
+          a.tryAddMetadata("finding_count", Integer.toString(count));
+        }
+        a.tryAddMetadata("finding_first_seen_at", svc.getEventFirstSeen());
+        a.tryAddMetadata("finding_last_seen_at", svc.getEventLastSeen());
+        Action ac = svc.getAction();
+        if (ac != null) {
+          a.tryAddMetadata("finding_action", ac.getActionType());
+          NetworkConnectionAction nca = ac.getNetworkConnectionAction();
+          if (nca != null) {
+            tryAddNetworkConnectionActionMetadata(a, nca);
+          }
+          AwsApiCallAction aca = ac.getAwsApiCallAction();
+          if (aca != null) {
+            tryAddAwsApiCallActionMetadata(a, aca);
+          }
+          DnsRequestAction dra = ac.getDnsRequestAction();
+          if (dra != null) {
+            tryAddDnsRequestActionMetadata(a, dra);
+          }
+          PortProbeAction ppa = ac.getPortProbeAction();
+          if (ppa != null) {
+            tryAddPortProbeActionMetadata(a, ppa);
           }
         }
       }
@@ -221,10 +375,12 @@ public class GuardDutyTransforms implements Serializable {
                   if (f == null) {
                     return;
                   }
+
                   Alert a = new Alert();
 
                   addBaseFindingData(a, f);
-                  tryAddEscalationEmail(a, f.getType());
+                  addTypeSpecificFindingData(a, f);
+                  tryAddEscalationEmail(a, f);
                   tryAddAccountName(a);
                   c.output(a);
                 }
