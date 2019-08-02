@@ -69,6 +69,7 @@ public class TestHardLimit1 {
     TestIprepdIO.deleteReputation("ip", "192.168.1.2");
     TestIprepdIO.deleteReputation("ip", "192.168.1.3");
     TestIprepdIO.deleteReputation("ip", "192.168.1.4");
+    TestIprepdIO.deleteReputation("ip", "192.168.1.5");
 
     IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
 
@@ -92,7 +93,7 @@ public class TestHardLimit1 {
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.thatSingleton(resultCount)
         .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(2L);
+        .isEqualTo(3L);
 
     PAssert.that(results)
         .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
@@ -101,7 +102,7 @@ public class TestHardLimit1 {
               for (Alert a : i) {
                 assertThat(
                     a.getMetadataValue("sourceaddress"),
-                    anyOf(equalTo("192.168.1.2"), equalTo("192.168.1.4")));
+                    anyOf(equalTo("192.168.1.2"), equalTo("192.168.1.4"), equalTo("192.168.1.5")));
                 String summary =
                     String.format(
                         "test httprequest hard_limit %s 11", a.getMetadataValue("sourceaddress"));
@@ -117,6 +118,7 @@ public class TestHardLimit1 {
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.2"));
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.3"));
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.4"));
+    assertEquals(100, (int) r.getReputation("ip", "192.168.1.5"));
 
     p.run().waitUntilFinish();
 
@@ -124,6 +126,7 @@ public class TestHardLimit1 {
     assertEquals(90, (int) r.getReputation("ip", "192.168.1.2"));
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.3"));
     assertEquals(90, (int) r.getReputation("ip", "192.168.1.4"));
+    assertEquals(90, (int) r.getReputation("ip", "192.168.1.5"));
   }
 
   @Test
@@ -136,24 +139,40 @@ public class TestHardLimit1 {
     TestIprepdIO.deleteReputation("ip", "192.168.1.2");
     TestIprepdIO.deleteReputation("ip", "192.168.1.3");
     TestIprepdIO.deleteReputation("ip", "192.168.1.4");
+    TestIprepdIO.deleteReputation("ip", "192.168.1.5");
 
     IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
 
+    // Create whitelisted ip in datastore
     State state =
         new State(
             new DatastoreStateInterface(
-                IprepdIO.whitelistedIpKind, IprepdIO.whitelistedIpNamespace));
+                IprepdIO.whitelistedIpKind, IprepdIO.whitelistedObjectNamespace));
     state.initialize();
-
-    IprepdIO.WhitelistedIp wip = new IprepdIO.WhitelistedIp();
-    wip.setIp("192.168.1.4");
-    wip.setExpiresAt(new DateTime().plusDays(1));
-    wip.setCreatedBy("test");
-
+    IprepdIO.WhitelistedObject wobj = new IprepdIO.WhitelistedObject();
+    wobj.setObject("192.168.1.4");
+    wobj.setType("ip");
+    wobj.setExpiresAt(new DateTime().plusDays(1));
+    wobj.setCreatedBy("test");
     StateCursor cur = state.newCursor();
-    cur.set("192.168.1.4", wip);
+    cur.set("192.168.1.4", wobj);
     cur.commit();
     state.done();
+
+    // Create legacy whitelisted ip in datastore
+    State legacyState =
+        new State(
+            new DatastoreStateInterface(
+                IprepdIO.legacyWhitelistedIpKind, IprepdIO.legacyWhitelistedIpNamespace));
+    legacyState.initialize();
+    IprepdIO.WhitelistedObject legacyWobj = new IprepdIO.WhitelistedObject();
+    wobj.setIp("192.168.1.5");
+    wobj.setExpiresAt(new DateTime().plusDays(1));
+    wobj.setCreatedBy("test");
+    StateCursor lcur = legacyState.newCursor();
+    lcur.set("192.168.1.5", legacyWobj);
+    lcur.commit();
+    legacyState.done();
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setOutputIprepdEnableDatastoreWhitelist(true);
@@ -176,7 +195,7 @@ public class TestHardLimit1 {
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.thatSingleton(resultCount)
         .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(2L);
+        .isEqualTo(3L);
 
     PAssert.that(results)
         .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
@@ -185,7 +204,7 @@ public class TestHardLimit1 {
               for (Alert a : i) {
                 assertThat(
                     a.getMetadataValue("sourceaddress"),
-                    anyOf(equalTo("192.168.1.2"), equalTo("192.168.1.4")));
+                    anyOf(equalTo("192.168.1.2"), equalTo("192.168.1.4"), equalTo("192.168.1.5")));
                 String summary =
                     String.format(
                         "test httprequest hard_limit %s 11", a.getMetadataValue("sourceaddress"));
@@ -201,6 +220,7 @@ public class TestHardLimit1 {
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.2"));
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.3"));
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.4"));
+    assertEquals(100, (int) r.getReputation("ip", "192.168.1.5"));
 
     p.run().waitUntilFinish();
 
@@ -208,6 +228,7 @@ public class TestHardLimit1 {
     assertEquals(90, (int) r.getReputation("ip", "192.168.1.2"));
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.3"));
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.4"));
+    assertEquals(100, (int) r.getReputation("ip", "192.168.1.5"));
   }
 
   @Test
