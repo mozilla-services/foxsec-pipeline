@@ -8,6 +8,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.mozilla.secops.CompositeInput;
+import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertConfiguration;
@@ -124,7 +126,17 @@ public class TestAuthProfile {
   public void analyzeTest() throws Exception {
     testEnv();
     AuthProfile.AuthProfileOptions options = getTestOptions();
-    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer1.txt", p);
+
+    // Enable configuration tick generation in the pipeline for this test, and use CompositeInput
+    options.setInputFile(new String[] {"./target/test-classes/testdata/authprof_buffer1.txt"});
+    options.setGenerateConfigurationTicksInterval(1);
+    options.setGenerateConfigurationTicksMaximum(5L);
+    options.setEnableCritObjectAnalysis(false);
+    PCollection<String> input =
+        p.apply(
+            "input",
+            new CompositeInput(
+                (InputOptions) options, AuthProfile.buildConfigurationTick(options)));
 
     PCollection<Alert> res = AuthProfile.processInput(input, options);
 
@@ -133,69 +145,90 @@ public class TestAuthProfile {
             results -> {
               long newCnt = 0;
               long infoCnt = 0;
+              long cfgTickCnt = 0;
               for (Alert a : results) {
-                assertEquals("authprofile", a.getCategory());
-                assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
-                assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
-                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
-                String actualSummary = a.getSummary();
-                if (actualSummary.equals(
-                    "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
-                        + "216.160.83.56 [Milton/US]")) {
-                  infoCnt++;
-                  assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                  assertNull(a.getMetadataValue("notify_email_direct"));
-                  assertNull(a.getMetadataValue("escalate_to"));
+                if (a.getMetadataValue("category").equals("state_analyze")) {
+                  assertEquals("authprofile", a.getCategory());
+                  assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
+                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
+                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                  String actualSummary = a.getSummary();
+                  if (actualSummary.equals(
+                      "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                          + "216.160.83.56 [Milton/US]")) {
+                    infoCnt++;
+                    assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                    assertNull(a.getMetadataValue("notify_email_direct"));
+                    assertNull(a.getMetadataValue("escalate_to"));
 
-                  // Verify sample rendered email template for known source
-                  try {
-                    AlertConfiguration alertCfg = new AlertConfiguration();
-                    alertCfg.registerTemplate("email/authprofile.ftlh");
-                    TemplateManager tmgr = new TemplateManager(alertCfg);
-                    tmgr.validate();
-                    String templateOutput =
-                        tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
+                    // Verify sample rendered email template for known source
+                    try {
+                      AlertConfiguration alertCfg = new AlertConfiguration();
+                      alertCfg.registerTemplate("email/authprofile.ftlh");
+                      TemplateManager tmgr = new TemplateManager(alertCfg);
+                      tmgr.validate();
+                      String templateOutput =
+                          tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
+                      assertEquals(
+                          renderTestTemplate(
+                              "/testdata/templateoutput/authprof_state_known.html", a),
+                          templateOutput);
+                    } catch (Exception exc) {
+                      fail(exc.getMessage());
+                    }
+                  } else if (actualSummary.equals(
+                      "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                          + "new source 216.160.83.56 [Milton/US]")) {
+                    newCnt++;
+                    assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     assertEquals(
-                        renderTestTemplate("/testdata/templateoutput/authprof_state_known.html", a),
-                        templateOutput);
-                  } catch (Exception exc) {
-                    fail(exc.getMessage());
+                        "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                    assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
+
+                    // Verify sample rendered email template for new source
+                    try {
+                      TemplateManager tmgr = new TemplateManager(new AlertConfiguration());
+                      tmgr.validate();
+                      String templateOutput =
+                          tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
+                      assertEquals(
+                          renderTestTemplate("/testdata/templateoutput/authprof_state_new.html", a),
+                          templateOutput);
+                    } catch (Exception exc) {
+                      fail(exc.getMessage());
+                    }
                   }
-                } else if (actualSummary.equals(
-                    "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
-                        + "new source 216.160.83.56 [Milton/US]")) {
-                  newCnt++;
-                  assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  assertEquals("state_analyze", a.getMetadataValue("category"));
+                  assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                  assertEquals("riker", a.getMetadataValue("username"));
+                  assertEquals("emit-bastion", a.getMetadataValue("object"));
+                  assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                  assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
+                  assertEquals("US", a.getMetadataValue("sourceaddress_country"));
+                  assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
+                } else if (a.getMetadataValue("category").equals("cfgtick")) {
+                  cfgTickCnt++;
+                  assertEquals("authprofile-cfgtick", a.getCategory());
+                  assertEquals("testauthprofileanalyze", a.getMetadataValue("datastoreNamespace"));
                   assertEquals(
-                      "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
-                  assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
-
-                  // Verify sample rendered email template for new source
-                  try {
-                    TemplateManager tmgr = new TemplateManager(new AlertConfiguration());
-                    tmgr.validate();
-                    String templateOutput =
-                        tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
-                    assertEquals(
-                        renderTestTemplate("/testdata/templateoutput/authprof_state_new.html", a),
-                        templateOutput);
-                  } catch (Exception exc) {
-                    fail(exc.getMessage());
-                  }
+                      "./target/test-classes/testdata/authprof_buffer1.txt",
+                      a.getMetadataValue("inputFile"));
+                  assertEquals("authprofile", a.getMetadataValue("datastoreKind"));
+                  assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
+                  assertEquals(
+                      "Alert if an identity (can be thought of as a user) authenticates from a new IP",
+                      a.getMetadataValue("heuristic_StateAnalyze"));
+                  assertNull(a.getMetadataValue("heuristic_CritObjectAnalyze"));
+                } else {
+                  fail("unexpected category");
                 }
-                assertEquals("state_analyze", a.getMetadataValue("category"));
-                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
-                assertEquals("riker", a.getMetadataValue("username"));
-                assertEquals("emit-bastion", a.getMetadataValue("object"));
-                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
-                assertEquals("US", a.getMetadataValue("sourceaddress_country"));
-                assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
               }
+              assertEquals(5L, cfgTickCnt);
               assertEquals(1L, newCnt);
               // Should have one informational since the rest of the duplicates will be
               // filtered in window since they were already seen
               assertEquals(1L, infoCnt);
+
               return null;
             });
 
