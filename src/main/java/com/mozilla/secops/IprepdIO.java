@@ -11,6 +11,8 @@ import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.StringJoiner;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -34,6 +36,12 @@ public class IprepdIO {
 
   /** Metadata tag in an alert to indicate recovery suppression */
   public static final String IPREPD_SUPPRESS_RECOVERY = "iprepd_suppress_recovery";
+
+  /** Custom metric name used to count iprepd violation submissions from write functions */
+  public static final String VIOLATION_WRITES_METRIC = "iprepd_violation_writes";
+
+  /** Namespace for custom metrics */
+  public static final String METRICS_NAMESPACE = "IprepdIO";
 
   /** A reputation response from iprepd */
   @JsonIgnoreProperties(ignoreUnknown = true)
@@ -332,6 +340,8 @@ public class IprepdIO {
     private String project;
     private Boolean useLegacySubmission;
 
+    private Counter violationWrites = Metrics.counter(METRICS_NAMESPACE, VIOLATION_WRITES_METRIC);
+
     public WriteFn(Write wTransform) {
       this.wTransform = wTransform;
     }
@@ -403,6 +413,7 @@ public class IprepdIO {
           }
           StringEntity body = new StringEntity(violationJSON);
 
+          violationWrites.inc();
           log.info("notify iprepd object {} type {} violation {}", object, type, v.getViolation());
           HttpPut put = new HttpPut(reqPath);
           put.addHeader("Content-Type", "application/json");
