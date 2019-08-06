@@ -179,8 +179,13 @@ public class ETDTransforms implements Serializable {
       }
     }
 
-    // add informational metadata using values within finding.
-    // does not assume a particular finding rule - adds everything available
+    /**
+     * adds informational metadata using values within finding without assuming a particular finding
+     * rule - adds all metadata that is available
+     *
+     * @param a {@link Alert} the target alert
+     * @param f {@link EventThreatDetectionFinding} the source finding
+     */
     private void addRuleSpecificFindingData(Alert a, EventThreatDetectionFinding f) {
       a.tryAddMetadata("detection_priority", f.getDetectionPriority());
       a.tryAddMetadata("detection_timestap", f.getEventTime());

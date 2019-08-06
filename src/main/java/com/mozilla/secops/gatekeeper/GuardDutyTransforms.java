@@ -289,8 +289,13 @@ public class GuardDutyTransforms implements Serializable {
       }
     }
 
-    // add informational metadata using values within finding.
-    // does not assume a particular finding type - adds everything available
+    /**
+     * adds informational metadata using values within finding without assuming a particular finding
+     * type - adds all metadata that is available
+     *
+     * @param a {@link Alert} the target alert
+     * @param f {@link Finding} the source finding
+     */
     private void addTypeSpecificFindingData(Alert a, Finding f) {
       Service svc = f.getService();
       if (svc != null) {
