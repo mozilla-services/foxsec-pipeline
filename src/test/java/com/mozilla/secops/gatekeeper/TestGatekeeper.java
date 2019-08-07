@@ -134,7 +134,33 @@ public class TestGatekeeper {
                           || a.getMetadataValue("project_number").equals("123456789210"));
                   assertEquals("audit_log", a.getMetadataValue("indicator"));
                   assertEquals("persistence", a.getMetadataValue("technique"));
-                  assertEquals("iam_anomalous_grant", a.getMetadataValue("rule_name"));
+                  assertNotNull(a.getMetadataValue("detection_priority"));
+                  assertNotNull(a.getMetadataValue("detection_timestap"));
+                  assertNotNull(a.getMetadataValue("org_number"));
+
+                  switch (a.getMetadataValue("rule_name")) {
+                    case "iam_anomalous_grant":
+                      assertNotNull(a.getMetadataValue("evidence_insert_id"));
+                      assertNotNull(a.getMetadataValue("evidence_timestamp"));
+                      break;
+                    case "malware_bad_domain":
+                    case "phishing_bad_domain":
+                    case "cryptomining_pool_domain":
+                      assertNotNull(a.getMetadataValue("evidence_insert_id"));
+                      assertNotNull(a.getMetadataValue("evidence_timestamp"));
+                      assertNotNull(a.getMetadataValue("domain"));
+                      break;
+                    case "malware_bad_ip":
+                    case "phishing_bad_ip":
+                    case "cryptomining_pool_ip":
+                      assertNotNull(a.getMetadataValue("evidence_insert_id"));
+                      assertNotNull(a.getMetadataValue("evidence_timestamp"));
+                      assertNotNull(a.getMetadataValue("ip"));
+                      break;
+                    case "outgoing_dos":
+                      assertNotNull(a.getMetadataValue("subnetwork_id"));
+                      assertNotNull(a.getMetadataValue("subnetwork_name"));
+                  }
                 } else {
                   fail(String.format("unexpected alert category type: %s", a.getCategory()));
                 }
