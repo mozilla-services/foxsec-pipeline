@@ -163,12 +163,11 @@ public class GuardDutyTransforms implements Serializable {
       }
       a.tryAddMetadata("finding_type", f.getType());
       a.tryAddMetadata("finding_id", f.getId());
-      if (f.getAccountId() != null && f.getTitle() != null) {
-        a.setSummary(
-            String.format(
-                "suspicious activity detected in aws account %s: %s",
-                f.getAccountId(), f.getTitle()));
-      }
+      a.setSummary(
+          String.format(
+              "suspicious activity detected in aws account %s: %s",
+              f.getAccountId() != null ? f.getAccountId() : "UNKNOWN",
+              f.getTitle() != null ? f.getTitle() : "UNKNOWN"));
       if (f.getUpdatedAt() != null) {
         a.setTimestamp(DateTime.parse(f.getUpdatedAt()));
       }

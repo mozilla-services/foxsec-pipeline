@@ -148,15 +148,13 @@ public class ETDTransforms implements Serializable {
         a.tryAddMetadata("project_id", prop.getProject_id());
         a.tryAddMetadata("location", prop.getLocation());
       }
-      if (sid != null
-          && prop != null
-          && sid.getCustomerOrganizationNumber() != null
-          && prop.getProject_id() != null) {
-        a.setSummary(
-            String.format(
-                "suspicious activity detected in gcp org %s project %s",
-                sid.getCustomerOrganizationNumber(), prop.getProject_id()));
-      }
+      a.setSummary(
+          String.format(
+              "suspicious activity detected in gcp org %s project %s",
+              (sid != null && sid.getCustomerOrganizationNumber() != null)
+                  ? sid.getCustomerOrganizationNumber()
+                  : "UNKNOWN",
+              (prop != null && prop.getProject_id() != null) ? prop.getProject_id() : "UNKNOWN"));
       if (f.getEventTime() != null) {
         a.setTimestamp(DateTime.parse(f.getEventTime()));
       }
