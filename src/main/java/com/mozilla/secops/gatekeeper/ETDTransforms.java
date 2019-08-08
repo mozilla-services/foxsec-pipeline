@@ -6,7 +6,12 @@ import com.mozilla.secops.alert.AlertSuppressor;
 import com.mozilla.secops.parser.ETDBeta;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
+import com.mozilla.secops.parser.models.etd.DetectionCategory;
 import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
+import com.mozilla.secops.parser.models.etd.Evidence;
+import com.mozilla.secops.parser.models.etd.Properties;
+import com.mozilla.secops.parser.models.etd.SourceId;
+import com.mozilla.secops.parser.models.etd.SourceLogId;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -127,9 +132,84 @@ public class ETDTransforms implements Serializable {
       }
     }
 
-    private void addEscalationMetadata(Alert a) {
+    private void addBaseFindingData(Alert a, EventThreatDetectionFinding f) {
+      DetectionCategory dc = f.getDetectionCategory();
+      if (dc != null) {
+        a.tryAddMetadata("indicator", dc.getIndicator());
+        a.tryAddMetadata("rule_name", dc.getRuleName());
+        a.tryAddMetadata("technique", dc.getTechnique());
+      }
+      SourceId sid = f.getSourceId();
+      if (sid != null) {
+        a.tryAddMetadata("project_number", sid.getProjectNumber());
+      }
+      Properties prop = f.getProperties();
+      if (prop != null) {
+        a.tryAddMetadata("project_id", prop.getProject_id());
+        a.tryAddMetadata("location", prop.getLocation());
+      }
+      a.setSummary(
+          String.format(
+              "suspicious activity detected in gcp org %s project %s",
+              (sid != null && sid.getCustomerOrganizationNumber() != null)
+                  ? sid.getCustomerOrganizationNumber()
+                  : "UNKNOWN",
+              (prop != null && prop.getProject_id() != null) ? prop.getProject_id() : "UNKNOWN"));
+      if (f.getEventTime() != null) {
+        a.setTimestamp(DateTime.parse(f.getEventTime()));
+      }
+      a.setCategory(alertCategory);
+      a.setSeverity(Alert.AlertSeverity.CRITICAL);
+    }
+
+    private void tryAddEscalationEmail(Alert a, EventThreatDetectionFinding f) {
+      DetectionCategory dc = f.getDetectionCategory();
+      if (dc == null || dc.getRuleName() == null) {
+        return;
+      }
       if (critNotifyEmail != null) {
-        a.addMetadata("notify_email_direct", critNotifyEmail);
+        for (Pattern p : escalate) {
+          if (p.matcher(dc.getRuleName()).matches()) {
+            a.addMetadata("notify_email_direct", critNotifyEmail);
+            return;
+          }
+        }
+      }
+    }
+
+    /**
+     * adds informational metadata using values within finding without assuming a particular finding
+     * rule - adds all metadata that is available
+     *
+     * @param a {@link Alert} the target alert
+     * @param f {@link EventThreatDetectionFinding} the source finding
+     */
+    private void addRuleSpecificFindingData(Alert a, EventThreatDetectionFinding f) {
+      a.tryAddMetadata("detection_priority", f.getDetectionPriority());
+      a.tryAddMetadata("detection_timestap", f.getEventTime());
+      Properties prop = f.getProperties();
+      if (prop != null) {
+        a.tryAddMetadata("subnetwork_id", prop.getSubnetwork_id());
+        a.tryAddMetadata("subnetwork_name", prop.getSubnetwork_name());
+        a.tryAddMetadata("ip", prop.getIp());
+        List<String> doms = prop.getDomain();
+        if (doms != null) {
+          for (String d : doms) {
+            a.tryAddMetadata("domain", d);
+          }
+        }
+      }
+      SourceId sid = f.getSourceId();
+      if (sid != null) {
+        a.tryAddMetadata("org_number", sid.getCustomerOrganizationNumber());
+      }
+      List<Evidence> evi = f.getEvidence();
+      for (Evidence e : evi) {
+        SourceLogId sli = e.getSourceLogId();
+        if (sli != null) {
+          a.tryAddMetadata("evidence_insert_id", sli.getInsertId());
+          a.tryAddMetadata("evidence_timestamp", sli.getTimestamp());
+        }
       }
     }
 
@@ -155,28 +235,11 @@ public class ETDTransforms implements Serializable {
                     return;
                   }
                   Alert a = new Alert();
-                  a.setSummary(
-                      String.format(
-                          "suspicious activity detected in gcp org %s project %s",
-                          f.getSourceId().getCustomerOrganizationNumber(),
-                          f.getProperties().getProject_id()));
-                  a.setTimestamp(DateTime.parse(f.getEventTime()));
-                  a.setCategory(alertCategory);
-                  a.setSeverity(Alert.AlertSeverity.CRITICAL);
-                  if (f.getProperties().getLocation() != null) {
-                    a.addMetadata("location", f.getProperties().getLocation());
-                  }
-                  a.addMetadata("indicator", f.getDetectionCategory().getIndicator());
-                  a.addMetadata("rule_name", f.getDetectionCategory().getRuleName());
-                  a.addMetadata("technique", f.getDetectionCategory().getTechnique());
-                  a.addMetadata("project_number", f.getSourceId().getProjectNumber());
-                  a.addMetadata("project_id", f.getProperties().getProject_id());
-                  for (Pattern p : escalate) {
-                    if (p.matcher(f.getDetectionCategory().getRuleName()).matches()) {
-                      addEscalationMetadata(a);
-                      break;
-                    }
-                  }
+
+                  addBaseFindingData(a, f);
+                  addRuleSpecificFindingData(a, f);
+                  tryAddEscalationEmail(a, f);
+
                   c.output(a);
                 }
               }));

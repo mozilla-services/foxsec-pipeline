@@ -154,19 +154,25 @@ public class GuardDutyTransforms implements Serializable {
     }
 
     private void addBaseFindingData(Alert a, Finding f) {
+      a.tryAddMetadata("aws_account", f.getAccountId());
+      a.tryAddMetadata("aws_region", f.getRegion());
+      a.tryAddMetadata("description", f.getDescription());
+      Double severity = f.getSeverity();
+      if (severity != null) {
+        a.tryAddMetadata("finding_aws_severity", Double.toString(severity));
+      }
+      a.tryAddMetadata("finding_type", f.getType());
+      a.tryAddMetadata("finding_id", f.getId());
       a.setSummary(
           String.format(
               "suspicious activity detected in aws account %s: %s",
-              f.getAccountId(), f.getTitle()));
-      a.setTimestamp(DateTime.parse(f.getUpdatedAt()));
+              f.getAccountId() != null ? f.getAccountId() : "UNKNOWN",
+              f.getTitle() != null ? f.getTitle() : "UNKNOWN"));
+      if (f.getUpdatedAt() != null) {
+        a.setTimestamp(DateTime.parse(f.getUpdatedAt()));
+      }
       a.setCategory(alertCategory);
       a.setSeverity(Alert.AlertSeverity.CRITICAL);
-      a.addMetadata("aws_account", f.getAccountId());
-      a.addMetadata("aws_region", f.getRegion());
-      a.addMetadata("description", f.getDescription());
-      a.addMetadata("finding_aws_severity", Double.toString(f.getSeverity()));
-      a.addMetadata("finding_type", f.getType());
-      a.addMetadata("finding_id", f.getId());
     }
 
     private void tryAddEscalationEmail(Alert a, Finding f) {
@@ -282,8 +288,13 @@ public class GuardDutyTransforms implements Serializable {
       }
     }
 
-    // add informational metadata using values within finding.
-    // does not assume a particular finding type - adds everything available
+    /**
+     * adds informational metadata using values within finding without assuming a particular finding
+     * type - adds all metadata that is available
+     *
+     * @param a {@link Alert} the target alert
+     * @param f {@link Finding} the source finding
+     */
     private void addTypeSpecificFindingData(Alert a, Finding f) {
       Service svc = f.getService();
       if (svc != null) {
