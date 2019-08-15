@@ -327,6 +327,54 @@ public class TestGatekeeper {
   }
 
   @Test
+  public void gatekeeperDoNotIgnoreEC2InstanceTest() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    opts.setIgnoreDNSRequestFindingInstances(new String[] {});
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                if (a.getCategory().equals("gatekeeper:aws")) {
+                  if (a.getMetadataValue("finding_type").equals("DNS_REQUEST")) {
+                    assertEquals(a.getMetadataValue("instance_id"), "i-99999999");
+                  }
+                }
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void gatekeeperIgnoreEC2InstanceTest() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    opts.setIgnoreDNSRequestFindingInstances(new String[] {"i-99999999"});
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                if (a.getCategory().equals("gatekeeper:aws")) {
+                  if (a.getMetadataValue("finding_type").equals("DNS_REQUEST")) {
+                    assertNotEquals(a.getMetadataValue("instance_id"), "i-99999999");
+                  }
+                }
+              }
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void gatekeeperEscalateAllTestWithEmail() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.Options opts = getBaseTestOptions();

@@ -57,6 +57,12 @@ public class GuardDutyTransforms implements Serializable {
     void setIgnoreGDFindingTypeRegex(String[] value);
 
     @Description(
+        "Ignore GuardDuty Findings for any finding of type DNS_REQUEST for instance IDs that match (multiple allowed)")
+    String[] getIgnoreDNSRequestFindingInstances();
+
+    void setIgnoreDNSRequestFindingInstances(String[] value);
+
+    @Description(
         "Escalate GuardDuty Findings for any finding types that match regex (multiple allowed)")
     String[] getEscalateGDFindingTypeRegex();
 
@@ -74,6 +80,7 @@ public class GuardDutyTransforms implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private List<Pattern> exclude;
+    private String[] ignoreDNSFindingInstances;
 
     /**
      * static initializer for filter
@@ -88,6 +95,7 @@ public class GuardDutyTransforms implements Serializable {
           exclude.add(Pattern.compile(s));
         }
       }
+      ignoreDNSFindingInstances = opts.getIgnoreDNSRequestFindingInstances();
     }
 
     @Override
@@ -114,6 +122,21 @@ public class GuardDutyTransforms implements Serializable {
                   for (Pattern p : exclude) {
                     if (p.matcher(f.getType()).matches()) {
                       return;
+                    }
+                  }
+                  if (ignoreDNSFindingInstances != null && f.getType().equals("DNS_REQUEST")) {
+                    Resource rsrc = f.getResource();
+                    if (rsrc == null) {
+                      return;
+                    }
+                    InstanceDetails idetails = rsrc.getInstanceDetails();
+                    if (idetails == null) {
+                      return;
+                    }
+                    for (String whitelisted : ignoreDNSFindingInstances) {
+                      if (whitelisted.equals(idetails.getInstanceId())) {
+                        return;
+                      }
                     }
                   }
                   c.output(e);
