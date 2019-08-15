@@ -19,6 +19,7 @@ import com.amazonaws.services.guardduty.model.RemoteIpDetails;
 import com.amazonaws.services.guardduty.model.RemotePortDetails;
 import com.amazonaws.services.guardduty.model.Resource;
 import com.amazonaws.services.guardduty.model.Service;
+import com.amazonaws.services.guardduty.model.Tag;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertSuppressor;
@@ -57,6 +58,12 @@ public class GuardDutyTransforms implements Serializable {
     void setIgnoreGDFindingTypeRegex(String[] value);
 
     @Description(
+        "Ignore all GuardDuty Findings of type DNS_REQUEST for instances with a matching \"app\" tag (multiple allowed)")
+    String[] getIgnoreDNSRequestFindingApps();
+
+    void setIgnoreDNSRequestFindingApps(String[] value);
+
+    @Description(
         "Escalate GuardDuty Findings for any finding types that match regex (multiple allowed)")
     String[] getEscalateGDFindingTypeRegex();
 
@@ -74,6 +81,7 @@ public class GuardDutyTransforms implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private List<Pattern> exclude;
+    private String[] ignoreDNSFindingAppNames;
 
     /**
      * static initializer for filter
@@ -88,6 +96,28 @@ public class GuardDutyTransforms implements Serializable {
           exclude.add(Pattern.compile(s));
         }
       }
+      ignoreDNSFindingAppNames = opts.getIgnoreDNSRequestFindingApps();
+    }
+
+    // extracts the Mozilla-required "app" tag from the underlying resource of a GuardDuty Finding
+    // if available.
+    // https://mana.mozilla.org/wiki/pages/viewpage.action?spaceKey=INEN&title=Cloud+Labels+and+Tags
+    private String extractAppTag(Finding f) {
+      if (f != null) {
+        Resource rsrc = f.getResource();
+        if (rsrc != null) {
+          InstanceDetails idets = rsrc.getInstanceDetails();
+          if (idets != null) {
+            List<Tag> tags = idets.getTags();
+            for (Tag t : tags) {
+              if (t.getKey() != null && t.getKey().equals("app")) {
+                return t.getValue();
+              }
+            }
+          }
+        }
+      }
+      return null;
     }
 
     @Override
@@ -114,6 +144,19 @@ public class GuardDutyTransforms implements Serializable {
                   for (Pattern p : exclude) {
                     if (p.matcher(f.getType()).matches()) {
                       return;
+                    }
+                  }
+                  if (f.getService() != null
+                      && f.getService().getAction() != null
+                      && f.getService().getAction().getActionType() != null
+                      && f.getService().getAction().getActionType().equals("DNS_REQUEST")) {
+                    String appTag = extractAppTag(f);
+                    if (ignoreDNSFindingAppNames != null && appTag != null) {
+                      for (String whitelisted : ignoreDNSFindingAppNames) {
+                        if (whitelisted.equals(appTag)) {
+                          return;
+                        }
+                      }
                     }
                   }
                   c.output(e);
