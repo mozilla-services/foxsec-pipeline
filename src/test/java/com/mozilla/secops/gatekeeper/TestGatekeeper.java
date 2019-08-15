@@ -125,6 +125,24 @@ public class TestGatekeeper {
                       assertNotNull(a.getMetadataValue("remote_ip_org"));
                       break;
                   }
+                  assertNotNull(a.getMetadataValue("resource_type"));
+                  switch (a.getMetadataValue("resource_type")) {
+                    case "AccessKey":
+                      assertNotNull(a.getMetadataValue("access_key_id"));
+                      assertNotNull(a.getMetadataValue("principal_id"));
+                      assertNotNull(a.getMetadataValue("user_name"));
+                      assertNotNull(a.getMetadataValue("user_type"));
+                      break;
+                    case "Instance":
+                      assertNotNull(a.getMetadataValue("instance_availability_zone"));
+                      assertNotNull(a.getMetadataValue("instance_image_description"));
+                      assertNotNull(a.getMetadataValue("instance_image_id"));
+                      assertNotNull(a.getMetadataValue("instance_id"));
+                      assertNotNull(a.getMetadataValue("instance_state"));
+                      assertNotNull(a.getMetadataValue("instance_type"));
+                      assertNotNull(a.getMetadataValue("instance_launch_time"));
+                      break;
+                  }
                 } else if (a.getCategory().equals("gatekeeper:gcp")) {
                   assertTrue(a.getSummary().startsWith("suspicious activity detected in gcp org"));
                   // the three project numbers in the sample data

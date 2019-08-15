@@ -1,5 +1,6 @@
 package com.mozilla.secops.gatekeeper;
 
+import com.amazonaws.services.guardduty.model.AccessKeyDetails;
 import com.amazonaws.services.guardduty.model.Action;
 import com.amazonaws.services.guardduty.model.AwsApiCallAction;
 import com.amazonaws.services.guardduty.model.City;
@@ -8,6 +9,7 @@ import com.amazonaws.services.guardduty.model.DnsRequestAction;
 import com.amazonaws.services.guardduty.model.DomainDetails;
 import com.amazonaws.services.guardduty.model.Finding;
 import com.amazonaws.services.guardduty.model.GeoLocation;
+import com.amazonaws.services.guardduty.model.InstanceDetails;
 import com.amazonaws.services.guardduty.model.LocalPortDetails;
 import com.amazonaws.services.guardduty.model.NetworkConnectionAction;
 import com.amazonaws.services.guardduty.model.Organization;
@@ -15,6 +17,7 @@ import com.amazonaws.services.guardduty.model.PortProbeAction;
 import com.amazonaws.services.guardduty.model.PortProbeDetail;
 import com.amazonaws.services.guardduty.model.RemoteIpDetails;
 import com.amazonaws.services.guardduty.model.RemotePortDetails;
+import com.amazonaws.services.guardduty.model.Resource;
 import com.amazonaws.services.guardduty.model.Service;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
@@ -226,6 +229,36 @@ public class GuardDutyTransforms implements Serializable {
       }
     }
 
+    // best effort addition of resource metadata
+    private void tryAddResourceMetadata(Alert a, Resource rsrc) {
+      a.tryAddMetadata("resource_type", rsrc.getResourceType());
+      // "AccessKey" type resources contain AccessKeyDetails
+      AccessKeyDetails akd = rsrc.getAccessKeyDetails();
+      if (akd != null) {
+        a.tryAddMetadata("access_key_id", akd.getAccessKeyId());
+        a.tryAddMetadata("principal_id", akd.getPrincipalId());
+        a.tryAddMetadata("user_name", akd.getUserName());
+        a.tryAddMetadata("user_type", akd.getUserType());
+      }
+      // "Instance" type resources contain InstanceDetails
+      InstanceDetails idetails = rsrc.getInstanceDetails();
+      if (idetails != null) {
+        a.tryAddMetadata("instance_availability_zone", idetails.getAvailabilityZone());
+        a.tryAddMetadata("instance_image_description", idetails.getImageDescription());
+        a.tryAddMetadata("instance_image_id", idetails.getImageId());
+        a.tryAddMetadata("instance_id", idetails.getInstanceId());
+        a.tryAddMetadata("instance_state", idetails.getInstanceState());
+        a.tryAddMetadata("instance_type", idetails.getInstanceType());
+        a.tryAddMetadata("instance_launch_time", idetails.getLaunchTime());
+        a.tryAddMetadata("instance_platform", idetails.getPlatform());
+        // instance details also contains:
+        // - IAM instance profile: IamInstanceProfile
+        // - Network interfaces: List<NetworkInterface>
+        // - Product Codes: List<ProductCode>
+        // we are not interested in these at the moment
+      }
+    }
+
     // best effort addition of network-connection (action) related metadata
     private void tryAddNetworkConnectionActionMetadata(Alert a, NetworkConnectionAction nca) {
       a.tryAddMetadata("network_connection_direction", nca.getConnectionDirection());
@@ -326,6 +359,14 @@ public class GuardDutyTransforms implements Serializable {
             tryAddPortProbeActionMetadata(a, ppa);
           }
         }
+      }
+      Double conf = f.getConfidence();
+      if (conf != null) {
+        a.tryAddMetadata("finding_confidence", Double.toString(conf));
+      }
+      Resource rsrc = f.getResource();
+      if (rsrc != null) {
+        tryAddResourceMetadata(a, rsrc);
       }
     }
 
