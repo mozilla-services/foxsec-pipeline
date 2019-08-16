@@ -327,6 +327,34 @@ public class TestGatekeeper {
   }
 
   @Test
+  public void gatekeeperDoNotIgnoreEC2InstanceTest() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    opts.setIgnoreDNSRequestFindingApps(new String[] {});
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(22L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void gatekeeperIgnoreEC2InstanceTest() throws Exception {
+    TestStream<String> s = getTestStream();
+    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    opts.setIgnoreDNSRequestFindingApps(new String[] {"iTalkToCryptoMiningServers"});
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(21L);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void gatekeeperEscalateAllTestWithEmail() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.Options opts = getBaseTestOptions();
