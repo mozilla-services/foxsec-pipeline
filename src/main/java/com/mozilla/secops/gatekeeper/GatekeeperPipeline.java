@@ -40,9 +40,15 @@ public class GatekeeperPipeline implements Serializable {
             .apply("parse input", new GatekeeperParser.Parse(options))
             .apply("window input", new GlobalTriggers<Event>(60));
 
+    PCollection<Event> gdEvents =
+        events.apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(options));
+
+    if (options.getFindingsPersistenceBigQuery() != null) {
+      gdEvents.apply("persist gd findings", new GuardDutyTransforms.PersistFindings(options));
+    }
+
     PCollection<Alert> gdAlerts =
-        events
-            .apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(options))
+        gdEvents
             .apply("generate gd alerts", new GuardDutyTransforms.GenerateAlerts(options))
             .apply("suppress gd alerts", new GuardDutyTransforms.SuppressAlerts(options));
 

@@ -20,6 +20,9 @@ import com.amazonaws.services.guardduty.model.RemotePortDetails;
 import com.amazonaws.services.guardduty.model.Resource;
 import com.amazonaws.services.guardduty.model.Service;
 import com.amazonaws.services.guardduty.model.Tag;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.services.bigquery.model.TableRow;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertSuppressor;
@@ -33,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -41,6 +45,7 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PDone;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +61,11 @@ public class GuardDutyTransforms implements Serializable {
     String[] getIgnoreGDFindingTypeRegex();
 
     void setIgnoreGDFindingTypeRegex(String[] value);
+
+    @Description("Store GuardDuty Findings in BigQuery; BigQuery table specification")
+    String getFindingsPersistenceBigQuery();
+
+    void setFindingsPersistenceBigQuery(String value);
 
     @Description(
         "Ignore all GuardDuty Findings of type DNS_REQUEST for instances with a matching \"app\" tag (multiple allowed)")
@@ -162,6 +172,78 @@ public class GuardDutyTransforms implements Serializable {
                   c.output(e);
                 }
               }));
+    }
+  }
+
+  /** Persist GuardDuty findings onto GCP's Big Query */
+  public static class PersistFindings extends PTransform<PCollection<Event>, PDone> {
+    private static final long serialVersionUID = 1L;
+
+    private static ObjectMapper mapper = new ObjectMapper();
+    private static String findingsPersistenceBigQuery;
+
+    private TableRow FindingsTableRow(Finding f) {
+      TableRow r = new TableRow();
+      r.set("awsAccountId", f.getAccountId());
+      r.set("guarddutyFindingId", f.getId());
+      r.set("guarddutyFindingType", f.getType());
+      r.set("timestamp", f.getUpdatedAt());
+
+      String raw;
+      try {
+        raw = mapper.writeValueAsString(f);
+      } catch (JsonProcessingException e) {
+        // best effort - should never happen
+        // all findings are valid JSON
+        raw = f.toString();
+      }
+      r.set("raw", raw);
+
+      return r;
+    }
+
+    /**
+     * static initializer for findings persistence class
+     *
+     * @param opts {@link Options} pipeline options
+     */
+    public PersistFindings(Options opts) {
+      findingsPersistenceBigQuery = opts.getFindingsPersistenceBigQuery();
+    }
+
+    @Override
+    public PDone expand(PCollection<Event> input) {
+      if (findingsPersistenceBigQuery != null) {
+        input
+            .apply(
+                ParDo.of(
+                    new DoFn<Event, TableRow>() {
+                      private static final long serialVersionUID = 1L;
+
+                      @ProcessElement
+                      public void processElement(ProcessContext c) {
+                        Event e = c.element();
+                        if (!e.getPayloadType().equals(Payload.PayloadType.GUARDDUTY)) {
+                          return;
+                        }
+                        GuardDuty gd = e.getPayload();
+                        if (gd == null) {
+                          return;
+                        }
+                        Finding f = gd.getFinding();
+                        if (f == null) {
+                          return;
+                        }
+                        c.output(FindingsTableRow(f));
+                      }
+                    }))
+            .apply(
+                BigQueryIO.writeTableRows()
+                    .to(findingsPersistenceBigQuery)
+                    .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER)
+                    .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
+      }
+      return PDone.in(input.getPipeline());
     }
   }
 
