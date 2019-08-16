@@ -580,4 +580,54 @@ public class TestAuthProfile {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void analyzeTestAuth0() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer6.txt", p);
+    options.setEnableCritObjectAnalysis(false);
+    options.setAuth0ClientIds(new String[] {"1234567890"});
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long newCnt = 0;
+              long infoCnt = 0;
+              for (Alert a : results) {
+                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                String actualSummary = a.getSummary();
+                if (actualSummary.equals(
+                    "authentication event observed wriker@mozilla.com [wriker@mozilla.com] to www.enterprise.com, "
+                        + "216.160.83.56 [Milton/US]")) {
+                  infoCnt++;
+                  assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                  assertNull(a.getMetadataValue("notify_email_direct"));
+                  assertNull(a.getMetadataValue("escalate_to"));
+                } else if (actualSummary.equals(
+                    "authentication event observed wriker@mozilla.com [wriker@mozilla.com] to www.enterprise.com, "
+                        + "new source 216.160.83.56 [Milton/US]")) {
+                  newCnt++;
+                  assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                }
+                assertEquals("state_analyze", a.getMetadataValue("category"));
+                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
+                assertEquals("wriker@mozilla.com", a.getMetadataValue("username"));
+                assertEquals("www.enterprise.com", a.getMetadataValue("object"));
+                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
+                assertEquals("US", a.getMetadataValue("sourceaddress_country"));
+              }
+              assertEquals(1L, newCnt);
+              // Should have one informational since the rest of the duplicates will be
+              // filtered in window since they were already seen
+              assertEquals(1L, infoCnt);
+
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }

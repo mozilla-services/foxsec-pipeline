@@ -13,6 +13,7 @@ import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.metrics.CfgTickBuilder;
 import com.mozilla.secops.metrics.CfgTickProcessor;
+import com.mozilla.secops.parser.Auth0;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -77,6 +78,7 @@ public class AuthProfile implements Serializable {
     private Logger log;
     private final String[] ignoreUserRegex;
     private final String[] autoignoreUsers;
+    private final String[] auth0ClientIds;
     private final ParserCfg cfg;
 
     /**
@@ -97,6 +99,7 @@ public class AuthProfile implements Serializable {
             "system:serviceaccount:kube-system:node-controller",
             "system:kube-proxy"
           };
+      auth0ClientIds = options.getAuth0ClientIds();
       cfg = ParserCfg.fromInputOptions(options);
     }
 
@@ -135,6 +138,14 @@ public class AuthProfile implements Serializable {
                       if (e.getPayloadType().equals(Payload.PayloadType.CFGTICK)) {
                         c.output(e);
                         return;
+                      }
+
+                      // Filter out all auth0 auth events we don't explicitly want to monitor.
+                      if (e.getPayloadType().equals(Payload.PayloadType.AUTH0)) {
+                        Auth0 a = e.getPayload();
+                        if (!a.hasClientIdIn(auth0ClientIds)) {
+                          return;
+                        }
                       }
 
                       Normalized n = e.getNormalized();
@@ -729,6 +740,11 @@ public class AuthProfile implements Serializable {
     Integer getMaximumKilometersPerHour();
 
     void setMaximumKilometersPerHour(Integer value);
+
+    @Description("Auth0 Client ids to consider for state analysis (multiple allowed)")
+    String[] getAuth0ClientIds();
+
+    void setAuth0ClientIds(String[] value);
   }
 
   /**
