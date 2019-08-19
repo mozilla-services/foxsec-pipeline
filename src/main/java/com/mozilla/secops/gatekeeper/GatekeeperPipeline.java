@@ -1,6 +1,7 @@
 package com.mozilla.secops.gatekeeper;
 
 import com.mozilla.secops.CompositeInput;
+import com.mozilla.secops.CompositePersistence;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
@@ -39,6 +40,8 @@ public class GatekeeperPipeline implements Serializable {
         input
             .apply("parse input", new GatekeeperParser.Parse(options))
             .apply("window input", new GlobalTriggers<Event>(60));
+
+    events.apply("persist events", new CompositePersistence(options));
 
     PCollection<Alert> gdAlerts =
         events
