@@ -115,7 +115,21 @@ public class HTTPRequest implements Serializable {
                               EventFilterPayload.StringProperty.NORMALIZED_REQUESTMETHOD, parts[0])
                           .withStringMatch(
                               EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTPATH,
-                              parts[1])));
+                              parts[1]))
+                  .addPayloadFilter(
+                      new EventFilterPayloadOr()
+                          .addPayloadFilter(
+                              new EventFilterPayload()
+                                  .withIntegerRangeMatch(
+                                      EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
+                                      0,
+                                      399))
+                          .addPayloadFilter(
+                              new EventFilterPayload()
+                                  .withIntegerRangeMatch(
+                                      EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
+                                      500,
+                                      Integer.MAX_VALUE))));
         }
       }
       if (includeUrlHostRegex != null) {
@@ -1140,7 +1154,8 @@ public class HTTPRequest implements Serializable {
 
     void setEndpointAbuseSuppressRecovery(Integer value);
 
-    @Description("Filter successful requests for path before analysis; e.g., method:/path")
+    @Description(
+        "Filter requests that result in a non-4xx status for path before analysis; e.g., method:/path")
     String[] getFilterRequestPath();
 
     void setFilterRequestPath(String[] value);
