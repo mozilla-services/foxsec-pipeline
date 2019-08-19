@@ -1,6 +1,5 @@
 package com.mozilla.secops.parser;
 
-import com.auth0.json.mgmt.logevents.LogEvent;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -8,6 +7,7 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.mozilla.secops.identity.IdentityManager;
+import com.mozilla.secops.parser.models.auth0.LogEvent;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -242,5 +242,23 @@ public class Auth0 extends SourcePayloadBase implements Serializable {
     // Allows for null values in the JsonPayload in a LogEntry when mapping to a Map<String, Object>
     _mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     return _mapper;
+  }
+
+  /**
+   * Return true if Auth0 event's client id is in the passed in list of client ids
+   *
+   * @param clientIds list of client ids to check for
+   * @return True if client id is in clientIds
+   */
+  public Boolean hasClientIdIn(String[] clientIds) {
+    if (clientIds == null || event.getClientId() == null) {
+      return false;
+    }
+    for (String clientId : clientIds) {
+      if (event.getClientId().equals(clientId)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
