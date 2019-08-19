@@ -294,11 +294,22 @@ public class GuardDutyTransforms implements Serializable {
         a.tryAddMetadata("instance_type", idetails.getInstanceType());
         a.tryAddMetadata("instance_launch_time", idetails.getLaunchTime());
         a.tryAddMetadata("instance_platform", idetails.getPlatform());
+        tryAddResourceTagsToMetadata(a, idetails.getTags());
         // instance details also contains:
         // - IAM instance profile: IamInstanceProfile
         // - Network interfaces: List<NetworkInterface>
         // - Product Codes: List<ProductCode>
         // we are not interested in these at the moment
+      }
+    }
+
+    // best effort addition of resource tags
+    private void tryAddResourceTagsToMetadata(Alert a, List<Tag> tags) {
+      if (tags == null || tags.size() == 0) {
+        return;
+      }
+      for (Tag t : tags) {
+        a.tryAddMetadata("tag_" + t.getKey(), t.getValue());
       }
     }
 
