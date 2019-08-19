@@ -278,11 +278,13 @@ public class TestEndpointAbuse1 {
         TestUtil.getTestInputArray("/testdata/httpreq_endpointabuse3/httpreq_endpointabuse3_1.txt");
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
-    String v[] = new String[1];
+    String v[] = new String[2];
     v[0] = "8:GET:/test";
+    v[1] = "8:GET:/test2";
     options.setEndpointAbusePath(v);
-    String w[] = new String[1];
+    String w[] = new String[2];
     w[0] = "GET:/test";
+    w[1] = "GET:/test2";
     options.setFilterRequestPath(w);
 
     TestStream<String> s =
@@ -297,7 +299,17 @@ public class TestEndpointAbuse1 {
             .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
             .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
 
-    PAssert.that(results).empty();
+    PCollection<Long> count = results.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(1L);
+
+    PAssert.that(results)
+        .satisfies(
+            i -> {
+              for (Alert a : i) {
+                assertEquals("192.168.1.6", a.getMetadataValue("sourceaddress"));
+              }
+              return null;
+            });
 
     p.run().waitUntilFinish();
   }

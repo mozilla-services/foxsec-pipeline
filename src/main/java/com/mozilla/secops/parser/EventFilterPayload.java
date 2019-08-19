@@ -65,6 +65,7 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
   private Map<StringProperty, String> stringMatchers;
   private Map<StringProperty, Pattern> stringRegexMatchers;
   private Map<IntegerProperty, Integer> integerMatchers;
+  private Map<IntegerProperty, EventFilterPayloadRange<Integer>> integerRangeMatchers;
 
   private ArrayList<StringProperty> stringSelectors;
 
@@ -127,6 +128,24 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
         return false;
       }
       if (!(value.equals(entry.getValue()))) {
+        return false;
+      }
+    }
+    for (Map.Entry<IntegerProperty, EventFilterPayloadRange<Integer>> entry :
+        integerRangeMatchers.entrySet()) {
+      Integer value = null;
+      if (entry.getKey().name().startsWith("NORMALIZED_")) {
+        Normalized n = e.getNormalized();
+        if (n != null) {
+          value = n.eventIntegerValue(entry.getKey());
+        }
+      } else {
+        value = e.getPayload().eventIntegerValue(entry.getKey());
+      }
+      if (value == null) {
+        return false;
+      }
+      if (!entry.getValue().inRange(value)) {
         return false;
       }
     }
@@ -199,6 +218,21 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
   }
 
   /**
+   * Add an integer range match to the payload filter
+   *
+   * <p>Will match if the property value falls between low and high inclusively.
+   *
+   * @param property {@link EventFilterPayload.IntegerProperty}
+   * @param low Low value for range match
+   * @param high High value for range match
+   * @return EventFilterPayload for chaining
+   */
+  public EventFilterPayload withIntegerRangeMatch(IntegerProperty property, int low, int high) {
+    integerRangeMatchers.put(property, new EventFilterPayloadRange<Integer>(low, high));
+    return this;
+  }
+
+  /**
    * Add a string selector for filter keying operations
    *
    * @param property Property to extract for key
@@ -224,6 +258,7 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
     stringMatchers = new HashMap<StringProperty, String>();
     stringRegexMatchers = new HashMap<StringProperty, Pattern>();
     integerMatchers = new HashMap<IntegerProperty, Integer>();
+    integerRangeMatchers = new HashMap<IntegerProperty, EventFilterPayloadRange<Integer>>();
     stringSelectors = new ArrayList<StringProperty>();
   }
 }
