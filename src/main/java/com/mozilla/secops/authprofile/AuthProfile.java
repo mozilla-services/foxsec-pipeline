@@ -97,6 +97,9 @@ public class AuthProfile implements Serializable {
             "system:serviceaccount:kube-system:daemon-set-controller",
             "system:serviceaccount:kube-system:horizontal-pod-autoscaler",
             "system:serviceaccount:kube-system:node-controller",
+            "system:serviceaccount:kube-system:certificate-controller",
+            "system:serviceaccount:kube-system:ttl-controller",
+            "system:serviceaccount:kube-system:cronjob-controller",
             "system:kube-proxy"
           };
       auth0ClientIds = options.getAuth0ClientIds();
