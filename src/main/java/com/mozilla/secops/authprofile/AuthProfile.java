@@ -97,6 +97,9 @@ public class AuthProfile implements Serializable {
             "system:serviceaccount:kube-system:daemon-set-controller",
             "system:serviceaccount:kube-system:horizontal-pod-autoscaler",
             "system:serviceaccount:kube-system:node-controller",
+            "system:serviceaccount:kube-system:certificate-controller",
+            "system:serviceaccount:kube-system:ttl-controller",
+            "system:serviceaccount:kube-system:cronjob-controller",
             "system:kube-proxy"
           };
       auth0ClientIds = options.getAuth0ClientIds();
@@ -590,6 +593,8 @@ public class AuthProfile implements Serializable {
           // We do not keep state for untracked identities, but just use the known address
           // list here to filter any duplicates that are part of this batch
           seenKnownAddresses.add(e.getNormalized().getSourceAddress());
+          // We also want to skip AlertIO for untracked identities here
+          a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
         } else {
           StateCursor cur = state.newCursor();
 

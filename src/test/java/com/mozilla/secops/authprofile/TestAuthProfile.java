@@ -256,7 +256,6 @@ public class TestAuthProfile {
                 assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                 assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                 assertEquals("state_analyze", a.getMetadataValue("category"));
-                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.contains("new source")) {
                   newCnt++;
@@ -274,6 +273,7 @@ public class TestAuthProfile {
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                   assertEquals("127.0.0.1", a.getMetadataValue("sourceaddress"));
                   assertEquals("laforge@mozilla.com", a.getMetadataValue("username"));
+                  assertEquals("true", a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                   assertThat(a.getSummary(), containsString("untracked"));
                   assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
                 } else if ((iKey != null) && (iKey.equals("wriker@mozilla.com"))) {
@@ -286,6 +286,7 @@ public class TestAuthProfile {
                     assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                     assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
                     assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
+                    assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                   }
                 }
               }
