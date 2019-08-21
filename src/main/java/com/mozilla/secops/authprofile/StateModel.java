@@ -180,7 +180,7 @@ public class StateModel {
   /**
    * Get the most recent entry, or return null if there are no entries
    *
-   * @return {@link ModelEntry}
+   * @return {@link StateModel.ModelEntry}
    */
   @JsonIgnore
   public ModelEntry getLatestEntry() {
