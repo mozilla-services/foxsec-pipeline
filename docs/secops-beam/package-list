@@ -5,10 +5,13 @@ com.mozilla.secops.authprofile
 com.mozilla.secops.awsbehavior
 com.mozilla.secops.crypto
 com.mozilla.secops.customs
+com.mozilla.secops.gatekeeper
 com.mozilla.secops.httprequest
 com.mozilla.secops.identity
+com.mozilla.secops.metrics
 com.mozilla.secops.parser
 com.mozilla.secops.parser.eventfiltercfg
+com.mozilla.secops.parser.models.auth0
 com.mozilla.secops.parser.models.cloudtrail
 com.mozilla.secops.parser.models.cloudwatch
 com.mozilla.secops.parser.models.duopull
