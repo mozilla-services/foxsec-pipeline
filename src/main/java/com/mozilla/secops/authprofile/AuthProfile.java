@@ -590,6 +590,8 @@ public class AuthProfile implements Serializable {
           // We do not keep state for untracked identities, but just use the known address
           // list here to filter any duplicates that are part of this batch
           seenKnownAddresses.add(e.getNormalized().getSourceAddress());
+          // We also want to skip AlertIO for untracked identities here
+          a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
         } else {
           StateCursor cur = state.newCursor();
 
