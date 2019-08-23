@@ -130,13 +130,13 @@ public class IPrepdLog extends SourcePayloadBase implements Serializable {
     if (fields == null) {
       return;
     }
-    msg = fields.get("msg").toString();
-    violation = fields.get("violation").toString();
-    decayAfter = fields.get("decay_after").toString();
-    originalReputation = Integer.parseInt(fields.get("original_reputation").toString());
-    reputation = Integer.parseInt(fields.get("reputation").toString());
-    objectType = fields.get("type").toString();
-    exception = Boolean.parseBoolean(fields.get("exception").toString());
-    object = fields.get("object").toString();
+    msg = (String) fields.get("msg");
+    violation = (String) fields.get("violation");
+    decayAfter = (String) fields.get("decay_after");
+    originalReputation = (Integer) fields.get("original_reputation");
+    reputation = (Integer) fields.get("reputation");
+    objectType = (String) fields.get("type");
+    exception = (Boolean) fields.get("exception");
+    object = (String) fields.get("object");
   }
 }
