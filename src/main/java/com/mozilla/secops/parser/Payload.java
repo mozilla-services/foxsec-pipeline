@@ -28,6 +28,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     NGINX,
     /** BmoAudit */
     BMOAUDIT,
+    /** IPrepdLog */
+    IPREPD_LOG,
     /** FxA auth */
     FXAAUTH,
     /** Apache Combined */

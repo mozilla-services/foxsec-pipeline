@@ -432,6 +432,58 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseIPrepdStackdriver() {
+    String buf =
+        "{\"insertId\":\"sample-insert-id\",\"jsonPayload\":{\"Fields\":{\"exception\": false,"
+            + "\"msg\":\"violation applied\",\"decay_after\":\"0001-01-01T00:00:00Z\",\"original_reputation\":"
+            + "100,\"violation\": \"client_error_rate_violation\",\"reputation\": 80,\"type\":\"ip\","
+            + "\"object\": \"10.0.0.1\"},\"Hostname\":\"sample-hostname\",\"Pid\": 9,\"EnvVersion\": \"1.0\","
+            + "\"Type\": \"app.log\",\"Timestamp\": 1566313160510405740,\"Severity\": 9,\"Logger\":\"iprepd\","
+            + "\"Time\": \"2019-08-20T15:05:10Z\"},\"timestamp\": \"2019-08-20T15:05:10.406089543Z\","
+            + "\"severity\": \"INFO\",\"logName\": \"projects/sample-project/logs/stdout\","
+            + "\"receiveTimestamp\": \"2019-08-20T15:05:12.671444870Z\"}";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.IPREPD_LOG, e.getPayloadType());
+    IPrepdLog log = e.getPayload();
+    assertEquals("violation applied", log.getMsg());
+    assertEquals(false, log.getException());
+    assertEquals("10.0.0.1", log.getObject());
+    assertEquals("ip", log.getObjectType());
+    assertEquals("0001-01-01T00:00:00Z", log.getDecayAfter());
+    assertEquals("100", log.getOriginalReputation().toString());
+    assertEquals("80", log.getReputation().toString());
+    assertEquals("client_error_rate_violation", log.getViolation());
+  }
+
+  @Test
+  public void testParseIPrepdMozLog() {
+    String buf =
+        "{\"Fields\":{\"exception\":false,\"msg\":\"violation applied\","
+            + "\"decay_after\":\"0001-01-01T00:00:00Z\",\"original_reputation\": 100,"
+            + "\"violation\": \"client_error_rate_violation\",\"reputation\": 80,\"type\":\"ip\","
+            + "\"object\": \"10.0.0.1\"},\"Hostname\":\"sample-hostname\",\"Pid\": 9,\"EnvVersion\":\"1.0\","
+            + "\"Type\":\"app.log\",\"Timestamp\": 1566313160510405740, \"Severity\": 9,\"Logger\":\"iprepd\","
+            + "\"Time\": \"2019-08-20T15:05:10Z\"}";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.IPREPD_LOG, e.getPayloadType());
+    IPrepdLog log = e.getPayload();
+    assertEquals("violation applied", log.getMsg());
+    assertEquals(false, log.getException());
+    assertEquals("10.0.0.1", log.getObject());
+    assertEquals("ip", log.getObjectType());
+    assertEquals("0001-01-01T00:00:00Z", log.getDecayAfter());
+    assertEquals("100", log.getOriginalReputation().toString());
+    assertEquals("80", log.getReputation().toString());
+    assertEquals("client_error_rate_violation", log.getViolation());
+  }
+
+  @Test
   public void testParseMozlogDuopullBypass() {
     String buf =
         "{\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Fields\": "
