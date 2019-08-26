@@ -174,9 +174,20 @@ public class AuthProfile implements Serializable {
                         }
                       }
 
-                      // Ignore events with an ip6 loopback as is seen with some GCP audit calls
-                      if (n.getSourceAddress().equals("0:0:0:0:0:0:0:1")) {
-                        return;
+                      if (e.getPayloadType().equals(Payload.PayloadType.GCPAUDIT)) {
+                        // Some GCP audit events can be generated with an internal IP in the
+                        // source address field, even though the actual event may have been
+                        // initiated from a valid routable IPv4 address.
+                        //
+                        // Identify these here and filter them out.
+                        if (n.getSourceAddress().equals("0:0:0:0:0:0:0:1")
+                            || n.getSourceAddress().equals("0.1.0.1")) {
+                          log.info(
+                              "{}: ignoring gcp audit event from internal source {}",
+                              n.getSubjectUser(),
+                              n.getSourceAddress());
+                          return;
+                        }
                       }
 
                       c.output(e);
