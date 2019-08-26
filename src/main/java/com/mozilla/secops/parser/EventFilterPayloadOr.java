@@ -1,5 +1,10 @@
 package com.mozilla.secops.parser;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -8,6 +13,8 @@ import java.util.ArrayList;
  *
  * <p>If any payload filter added to an OR filter matches, the matches function will return true.
  */
+@JsonInclude(Include.NON_NULL)
+@JsonDeserialize(as = EventFilterPayloadOr.class)
 public class EventFilterPayloadOr implements EventFilterPayloadInterface, Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -29,16 +36,6 @@ public class EventFilterPayloadOr implements EventFilterPayloadInterface, Serial
   }
 
   /**
-   * Return extracted keys from event based on string selectors
-   *
-   * @param e Input event
-   * @return {@link ArrayList} of extracted keys
-   */
-  public ArrayList<String> getKeys(Event e) {
-    throw new IllegalArgumentException("or filter cannot be used in keying selector");
-  }
-
-  /**
    * Add payload filter
    *
    * @param p Payload filter criteria
@@ -47,6 +44,25 @@ public class EventFilterPayloadOr implements EventFilterPayloadInterface, Serial
   public EventFilterPayloadOr addPayloadFilter(EventFilterPayloadInterface p) {
     payloadFilters.add(p);
     return this;
+  }
+
+  /**
+   * Set configured payload filters
+   *
+   * @param payloadFilters Array of payload filters
+   */
+  @JsonProperty("payload_filters")
+  public void setPayloadFilters(ArrayList<EventFilterPayloadInterface> payloadFilters) {
+    this.payloadFilters = payloadFilters;
+  }
+
+  /**
+   * Get configured payload filters
+   *
+   * @return Array of payload filters
+   */
+  public ArrayList<EventFilterPayloadInterface> getPayloadFilters() {
+    return payloadFilters;
   }
 
   /** Create new empty payload OR filter */

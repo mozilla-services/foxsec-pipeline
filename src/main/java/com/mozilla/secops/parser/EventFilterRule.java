@@ -1,11 +1,17 @@
 package com.mozilla.secops.parser;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 /** Rule within an event filter */
+@JsonInclude(Include.NON_NULL)
 public class EventFilterRule implements Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -87,26 +93,22 @@ public class EventFilterRule implements Serializable {
   }
 
   /**
-   * Return extracted keys from event based on string selectors
+   * Set except rules
    *
-   * @param e Input event
-   * @return {@link ArrayList} of extracted keys
+   * @param erules List of {@link EventFilterRule} for exceptions
    */
-  public ArrayList<String> getKeys(Event e) {
-    ArrayList<String> ret = new ArrayList<String>();
-    if (wantSubtype != null) {
-      if (e.getPayloadType() != wantSubtype) {
-        return null;
-      }
-    }
-    for (EventFilterPayloadInterface p : payloadFilters) {
-      ArrayList<String> values = p.getKeys(e);
-      if (values == null) {
-        return null;
-      }
-      ret.addAll(values);
-    }
-    return ret;
+  @JsonProperty("except")
+  public void setExceptRules(ArrayList<EventFilterRule> erules) {
+    exceptRules = erules;
+  }
+
+  /**
+   * Get except rules
+   *
+   * @return Array of exception {@link EventFilterRule}
+   */
+  public ArrayList<EventFilterRule> getExceptRules() {
+    return exceptRules;
   }
 
   /**
@@ -121,14 +123,44 @@ public class EventFilterRule implements Serializable {
   }
 
   /**
+   * Set payload filters
+   *
+   * @param filters Array of {@link EventFilterPayloadInterface}
+   */
+  @JsonProperty("payload_filters")
+  public void setPayloadFilters(ArrayList<EventFilterPayloadInterface> filters) {
+    payloadFilters = filters;
+  }
+
+  /**
+   * Get payload filters
+   *
+   * @return Array of payload filters
+   */
+  public ArrayList<EventFilterPayloadInterface> getPayloadFilters() {
+    return payloadFilters;
+  }
+
+  /**
    * Add match criteria for a payload subtype
    *
    * @param p Payload type
    * @return EventFilterRule for chaining
    */
+  @JsonSetter("subtype")
   public EventFilterRule wantSubtype(Payload.PayloadType p) {
     wantSubtype = p;
     return this;
+  }
+
+  /**
+   * Get want subtype value
+   *
+   * @return Payload type, or null if unset
+   */
+  @JsonProperty("subtype")
+  public Payload.PayloadType getWantSubtype() {
+    return wantSubtype;
   }
 
   /**
@@ -140,9 +172,20 @@ public class EventFilterRule implements Serializable {
    * @param project Project name to match against
    * @return EventFilterRule for chaining
    */
+  @JsonSetter("stackdriver_project")
   public EventFilterRule wantStackdriverProject(String project) {
     wantStackdriverProject = project;
     return this;
+  }
+
+  /**
+   * Get want Stackdriver project value
+   *
+   * @return Stackdrive project string, or null if unset
+   */
+  @JsonProperty("stackdriver_project")
+  public String getWantStackdriverProject() {
+    return wantStackdriverProject;
   }
 
   /**
@@ -161,14 +204,44 @@ public class EventFilterRule implements Serializable {
   }
 
   /**
+   * Set Stackdriver label filters
+   *
+   * @param labels Map of key/value pairs
+   */
+  @JsonProperty("stackdriver_labels")
+  public void setWantStackdriverLabels(Map<String, String> labels) {
+    wantStackdriverLabel = labels;
+  }
+
+  /**
+   * Get Stackdriver label filters
+   *
+   * @return Map of key/value pairs
+   */
+  public Map<String, String> getWantStackdriverLabels() {
+    return wantStackdriverLabel;
+  }
+
+  /**
    * Add match criteria for a normalized event type
    *
    * @param n Normalized event type
    * @return EventFilterRule for chaining
    */
+  @JsonSetter("normalized_type")
   public EventFilterRule wantNormalizedType(Normalized.Type n) {
     wantNormalizedType = n;
     return this;
+  }
+
+  /**
+   * Get want normalized type value
+   *
+   * @return Normalized type, or null if unset
+   */
+  @JsonProperty("normalized_type")
+  public Normalized.Type getWantNormalizedType() {
+    return wantNormalizedType;
   }
 
   /** Create new empty {@link EventFilterRule} */

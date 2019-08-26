@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.util.ArrayList;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -92,11 +93,31 @@ public class EventFilter implements Serializable {
   }
 
   /**
+   * Set filter rules
+   *
+   * @param rules Array of rules
+   */
+  @JsonProperty("rules")
+  public void setRules(ArrayList<EventFilterRule> rules) {
+    this.rules = rules;
+  }
+
+  /**
+   * Get configured rules
+   *
+   * @return Array of rules
+   */
+  public ArrayList<EventFilterRule> getRules() {
+    return rules;
+  }
+
+  /**
    * Choose to ignore non-UTC timezone events
    *
    * @param flag If true, drop events with parsed timezones that are not UTC
    * @return EventFilter for chaining
    */
+  @JsonProperty("want_utc")
   public EventFilter setWantUTC(Boolean flag) {
     wantUTC = flag;
     return this;
@@ -114,6 +135,25 @@ public class EventFilter implements Serializable {
   public EventFilter matchAny() {
     matchAny = true;
     return this;
+  }
+
+  /**
+   * Set match any flag to specified value
+   *
+   * @param matchAny True to match everything
+   */
+  @JsonProperty("match_any")
+  public void setMatchAny(Boolean matchAny) {
+    this.matchAny = matchAny;
+  }
+
+  /**
+   * Get match any setting
+   *
+   * @return Boolean
+   */
+  public Boolean getMatchAny() {
+    return matchAny;
   }
 
   /** Create new {@link EventFilter} */

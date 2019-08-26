@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 public class EventFilterTest {
@@ -504,5 +505,24 @@ public class EventFilterTest {
     rule.addPayloadFilter(filterOr);
     filter.addRule(rule);
     assertFalse(filter.matches(e));
+  }
+
+  @Test
+  public void testEventFilterSerialize() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+
+    EventFilter filter = new EventFilter();
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.RAW)
+            .wantStackdriverLabel("labelname", "labelvalue")
+            .wantStackdriverProject("testing")
+            .addPayloadFilter(
+                new EventFilterPayload(Raw.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.RAW_RAW, "test")));
+
+    String buf = mapper.writeValueAsString(filter);
+    filter = mapper.readValue(buf, EventFilter.class);
+    assertEquals(buf, mapper.writeValueAsString(filter));
   }
 }
