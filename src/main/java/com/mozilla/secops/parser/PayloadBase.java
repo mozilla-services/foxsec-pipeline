@@ -13,7 +13,6 @@ import java.io.Serializable;
   property = "type_descriptor"
 )
 @JsonSubTypes({
-  @Type(value = SecEvent.class, name = "secevent"),
   @Type(value = Raw.class, name = "raw"),
   @Type(value = Duopull.class, name = "duopull")
 })
