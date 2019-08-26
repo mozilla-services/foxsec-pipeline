@@ -12,7 +12,6 @@ import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -34,8 +33,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Implements various rate limiting and analysis heuristics on {@link
@@ -43,37 +40,6 @@ import org.slf4j.LoggerFactory;
  */
 public class Customs implements Serializable {
   private static final long serialVersionUID = 1L;
-
-  /** Generic rate limiting detector driven by {@link CustomsCfgEntry} */
-  public static class Detector extends PTransform<PCollection<Event>, PCollection<Alert>> {
-    private static final long serialVersionUID = 1L;
-
-    private final String detectorName;
-    private final String monitoredResource;
-    private final CustomsCfgEntry cfg;
-
-    private Logger log;
-
-    /**
-     * Initialize detector
-     *
-     * @param detectorName Descriptive name for detector instance
-     * @param cfg Configuration for detector
-     * @param monitoredResource Monitored resource name
-     */
-    public Detector(String detectorName, CustomsCfgEntry cfg, String monitoredResource) {
-      log = LoggerFactory.getLogger(Detector.class);
-      log.info("initializing new detector, {}", detectorName);
-      this.cfg = cfg;
-      this.detectorName = detectorName;
-      this.monitoredResource = monitoredResource;
-    }
-
-    @Override
-    public PCollection<Alert> expand(PCollection<Event> col) {
-      return col.apply(detectorName, new RateLimitAnalyzer(detectorName, cfg, monitoredResource));
-    }
-  }
 
   /** Analyze input stream for account creation abuse */
   public static class AccountCreationAbuse
@@ -174,58 +140,8 @@ public class Customs implements Serializable {
     }
   }
 
-  /**
-   * High level transform for invoking all rate limit detector instances given the customs
-   * configuration
-   */
-  public static class Detectors extends PTransform<PCollection<Event>, PCollection<Alert>> {
-    private static final long serialVersionUID = 1L;
-
-    private final CustomsCfg cfg;
-    private final String monitoredResource;
-
-    /**
-     * Initialize new flattening rate limit detectors instance
-     *
-     * @param cfg Customs configuration
-     * @param options Pipeline options
-     */
-    public Detectors(CustomsCfg cfg, CustomsOptions options) {
-      this.cfg = cfg;
-      monitoredResource = options.getMonitoredResourceIndicator();
-    }
-
-    @Override
-    public PCollection<Alert> expand(PCollection<Event> col) {
-      PCollectionList<Alert> alerts = PCollectionList.empty(col.getPipeline());
-      for (Map.Entry<String, CustomsCfgEntry> entry : cfg.getDetectors().entrySet()) {
-        String detectorName = entry.getKey();
-        CustomsCfgEntry detectorCfg = entry.getValue();
-        alerts =
-            alerts.and(
-                col.apply(
-                    detectorName, new Detector(detectorName, detectorCfg, monitoredResource)));
-      }
-      PCollection<Alert> ret =
-          alerts.apply("flatten rate limit output", Flatten.<Alert>pCollections());
-      return ret;
-    }
-  }
-
   /** Runtime options for {@link Customs} pipeline. */
   public interface CustomsOptions extends PipelineOptions, IOOptions {
-    @Description("path to customs rate limit configuration; resource path")
-    @Default.String("/customs/customsdefault.json")
-    String getConfigurationResourcePath();
-
-    void setConfigurationResourcePath(String value);
-
-    @Description("Enable customs rate limit detectors")
-    @Default.Boolean(true)
-    Boolean getEnableRateLimitDetectors();
-
-    void setEnableRateLimitDetectors(Boolean value);
-
     @Description("Enable account creation abuse detector")
     @Default.Boolean(false)
     Boolean getEnableAccountCreationAbuseDetector();
@@ -267,8 +183,6 @@ public class Customs implements Serializable {
    */
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, CustomsOptions options) throws IOException {
-    CustomsCfg cfg = CustomsCfg.loadFromResource(options.getConfigurationResourcePath());
-
     PCollection<Event> events =
         input.apply(
             "parse",
@@ -276,10 +190,6 @@ public class Customs implements Serializable {
 
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
 
-    if (options.getEnableRateLimitDetectors()) {
-      resultsList =
-          resultsList.and(events.apply("rate limit detectors", new Detectors(cfg, options)));
-    }
     if (options.getEnableAccountCreationAbuseDetector()) {
       resultsList =
           resultsList.and(

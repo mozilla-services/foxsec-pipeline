@@ -63,143 +63,6 @@ public class TestCustoms {
   }
 
   @Test
-  public void rlLoginFailureSourceAddressTest() throws Exception {
-    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
-
-    TestStream<String> s =
-        TestStream.create(StringUtf8Coder.of())
-            .advanceWatermarkTo(new Instant(0L))
-            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
-            .advanceWatermarkToInfinity();
-
-    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-
-    // Should create two alerts given the sliding window configuration, however one will
-    // be suppressed
-    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), getTestOptions());
-
-    PCollection<Long> count =
-        alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(count).isEqualTo(1L);
-
-    PAssert.that(alerts)
-        .satisfies(
-            x -> {
-              int cnt = 0;
-              for (Alert a : x) {
-                assertEquals("customs", a.getCategory());
-                assertEquals("spock@mozilla.com", a.getMetadataValue("accountid"));
-                assertEquals("127.0.0.1", a.getMetadataValue("sourceaddress"));
-                assertEquals("10", a.getMetadataValue("count"));
-                assertEquals("10", a.getMetadataValue("threshold"));
-                assertEquals(
-                    "rl_login_failure_sourceaddress_accountid",
-                    a.getMetadataValue("customs_category"));
-                assertEquals("1970-01-01T00:00:00.000Z", a.getTimestamp().toString());
-                assertEquals(
-                    "test login failure rate violation, spock@mozilla.com from 127.0.0.1",
-                    a.getSummary());
-                assertEquals(
-                    "test login failure rate violation, <<masked>> from 127.0.0.1",
-                    a.getMetadataValue("masked_summary"));
-                cnt++;
-              }
-              assertEquals(1, cnt);
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void rlLoginFailureSourceAddressTestStream() throws Exception {
-    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-
-    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
-    String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple2.txt");
-    String[] eb3 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple3.txt");
-    TestStream<String> s =
-        TestStream.create(StringUtf8Coder.of())
-            .advanceWatermarkTo(new Instant(0L))
-            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
-            .advanceWatermarkTo(new Instant(0L).plus(Duration.standardSeconds(1500)))
-            .advanceProcessingTime(Duration.standardSeconds(1500))
-            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
-            .advanceWatermarkTo(new Instant(0L).plus(Duration.standardSeconds(2500)))
-            .advanceProcessingTime(Duration.standardSeconds(1000))
-            .addElements(eb3[0], Arrays.copyOfRange(eb3, 1, eb3.length))
-            .advanceWatermarkToInfinity();
-
-    PCollection<String> input = p.apply(s);
-    PCollection<Alert> alerts = Customs.executePipeline(p, input, getTestOptions());
-
-    PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(1L, 1L);
-
-    PAssert.that(alerts)
-        .satisfies(
-            x -> {
-              int cnt = 0;
-              for (Alert a : x) {
-                if (a.getTimestamp().toString().equals("1970-01-01T00:00:00.000Z")) {
-                  cnt++;
-                } else if (a.getTimestamp().toString().equals("1970-01-01T00:50:00.000Z")) {
-                  cnt += 2;
-                }
-              }
-              assertEquals(3, cnt);
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void rlLoginFailureSourceAddressSuppressTestStream() throws Exception {
-    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-
-    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
-    String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_suppress.txt");
-    TestStream<String> s =
-        TestStream.create(StringUtf8Coder.of())
-            .advanceWatermarkTo(new Instant(0L))
-            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
-            .advanceWatermarkTo(new Instant(0L).plus(Duration.standardSeconds(45)))
-            .advanceProcessingTime(Duration.standardSeconds(45))
-            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
-            .advanceProcessingTime(Duration.standardSeconds(10))
-            .advanceWatermarkToInfinity();
-
-    PCollection<String> input = p.apply(s);
-    PCollection<Alert> alerts = Customs.executePipeline(p, input, getTestOptions());
-
-    PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(1L, 0L);
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void rlMultiTest() throws Exception {
-    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_multi1.txt");
-    TestStream<String> s =
-        TestStream.create(StringUtf8Coder.of())
-            .advanceWatermarkTo(new Instant(0L))
-            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
-            .advanceWatermarkToInfinity();
-
-    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-
-    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), getTestOptions());
-
-    PCollection<Long> count =
-        alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(count).isEqualTo(6L);
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
   public void accountCreationAbuseTest() throws Exception {
     String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_createacctabuse.txt");
     String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
@@ -213,10 +76,7 @@ public class TestCustoms {
             .advanceProcessingTime(Duration.standardSeconds(60))
             .advanceWatermarkToInfinity();
 
-    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-
     Customs.CustomsOptions options = getTestOptions();
-    options.setEnableRateLimitDetectors(false);
     options.setEnableAccountCreationAbuseDetector(true);
     options.setAccountCreationSessionLimit(3);
     options.setXffAddressSelector("127.0.0.1/32");
@@ -255,10 +115,7 @@ public class TestCustoms {
             .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
             .advanceWatermarkToInfinity();
 
-    CustomsCfg cfg = CustomsCfg.loadFromResource("/customs/customsdefault.json");
-
     Customs.CustomsOptions options = getTestOptions();
-    options.setEnableRateLimitDetectors(false);
     options.setEnableAccountCreationAbuseDetector(true);
     options.setXffAddressSelector("127.0.0.1/32");
     // Increase session creation limit here so we don't trip an alert for that as part of
