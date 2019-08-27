@@ -17,7 +17,7 @@ public class EventFilterPayloadDeserializer extends JsonDeserializer<EventFilter
 
     // Custom interface deserialization; if we have a payload_filters node treat this an or
     // implementation, otherwise handle it was a payload filter
-    if (root.has("payload_filters")) {
+    if (root.has("payload_or_filters")) {
       return mapper.readValue(root.toString(), EventFilterPayloadOr.class);
     }
     return mapper.readValue(root.toString(), EventFilterPayload.class);

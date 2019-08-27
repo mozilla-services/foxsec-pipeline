@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** Rule within an event filter */
-@JsonInclude(Include.NON_NULL)
+@JsonInclude(Include.NON_EMPTY)
 public class EventFilterRule implements Serializable {
   private static final long serialVersionUID = 1L;
 

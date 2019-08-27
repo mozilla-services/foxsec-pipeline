@@ -511,7 +511,7 @@ public class EventFilterTest {
   public void testEventFilterSerialize() throws Exception {
     ObjectMapper mapper = new ObjectMapper();
 
-    EventFilter filter = new EventFilter();
+    EventFilter filter = new EventFilter().setWantUTC(true);
     filter.addRule(
         new EventFilterRule()
             .wantSubtype(Payload.PayloadType.RAW)
@@ -522,6 +522,56 @@ public class EventFilterTest {
                     .withStringMatch(EventFilterPayload.StringProperty.RAW_RAW, "test")));
 
     String buf = mapper.writeValueAsString(filter);
+    filter = mapper.readValue(buf, EventFilter.class);
+    assertEquals(buf, mapper.writeValueAsString(filter));
+
+    filter = new EventFilter().setWantUTC(true);
+    filter.addRule(
+        new EventFilterRule()
+            .wantNormalizedType(Normalized.Type.AUTH)
+            .wantStackdriverLabel("labelname", "labelvalue")
+            .wantStackdriverProject("testing")
+            .addPayloadFilter(
+                new EventFilterPayload()
+                    .withStringMatch(
+                        EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER, "test"))
+            .addPayloadFilter(
+                new EventFilterPayloadOr()
+                    .addPayloadFilter(new EventFilterPayload(OpenSSH.class))
+                    .addPayloadFilter(new EventFilterPayload(BmoAudit.class))));
+
+    buf = mapper.writeValueAsString(filter);
+    filter = mapper.readValue(buf, EventFilter.class);
+    assertEquals(buf, mapper.writeValueAsString(filter));
+
+    filter = new EventFilter().passConfigurationTicks().setWantUTC(true);
+    EventFilterRule rule = new EventFilterRule().wantNormalizedType(Normalized.Type.HTTP_REQUEST);
+    rule.except(
+        new EventFilterRule()
+            .wantNormalizedType(Normalized.Type.HTTP_REQUEST)
+            .addPayloadFilter(
+                new EventFilterPayload()
+                    .withStringMatch(
+                        EventFilterPayload.StringProperty.NORMALIZED_REQUESTMETHOD, "POST")
+                    .withStringMatch(
+                        EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTPATH, "/testing"))
+            .addPayloadFilter(
+                new EventFilterPayloadOr()
+                    .addPayloadFilter(
+                        new EventFilterPayload()
+                            .withIntegerRangeMatch(
+                                EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
+                                0,
+                                399))
+                    .addPayloadFilter(
+                        new EventFilterPayload()
+                            .withIntegerRangeMatch(
+                                EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
+                                500,
+                                Integer.MAX_VALUE))));
+    filter.addRule(rule);
+
+    buf = mapper.writeValueAsString(filter);
     filter = mapper.readValue(buf, EventFilter.class);
     assertEquals(buf, mapper.writeValueAsString(filter));
   }

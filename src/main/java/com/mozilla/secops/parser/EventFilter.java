@@ -1,5 +1,8 @@
 package com.mozilla.secops.parser;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -9,6 +12,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 
 /** Event filtering and matching */
+@JsonInclude(Include.NON_NULL)
 public class EventFilter implements Serializable {
   private static final long serialVersionUID = 1L;
 

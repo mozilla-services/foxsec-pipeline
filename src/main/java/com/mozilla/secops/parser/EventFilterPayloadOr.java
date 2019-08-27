@@ -51,7 +51,7 @@ public class EventFilterPayloadOr implements EventFilterPayloadInterface, Serial
    *
    * @param payloadFilters Array of payload filters
    */
-  @JsonProperty("payload_filters")
+  @JsonProperty("payload_or_filters")
   public void setPayloadFilters(ArrayList<EventFilterPayloadInterface> payloadFilters) {
     this.payloadFilters = payloadFilters;
   }

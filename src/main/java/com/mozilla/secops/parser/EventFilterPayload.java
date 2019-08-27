@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /** Can be associated with {@link EventFilterRule} for payload matching */
-@JsonInclude(Include.NON_NULL)
+@JsonInclude(Include.NON_EMPTY)
 @JsonDeserialize(as = EventFilterPayload.class)
 public class EventFilterPayload implements EventFilterPayloadInterface, Serializable {
   private static final long serialVersionUID = 1L;
