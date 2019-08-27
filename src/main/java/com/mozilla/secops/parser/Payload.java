@@ -20,7 +20,11 @@ public class Payload<T extends PayloadBase> implements Serializable {
     OPENSSH,
     /** Duopull */
     DUOPULL,
-    /** SecEvent */
+    /**
+     * SecEvent
+     *
+     * <p>Deprecated, no longer in use
+     */
     SECEVENT,
     /** GcpAudit */
     GCPAUDIT,

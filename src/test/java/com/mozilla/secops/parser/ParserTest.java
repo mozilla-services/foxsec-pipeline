@@ -1820,27 +1820,6 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseSecEvent() {
-    String buf =
-        "{\"secevent_version\":\"secevent.model.1\",\"action\":\"loginFailure\""
-            + ",\"account_id\":\"q@the-q-continuum\",\"timestamp\":\"1970-01-01T00:00:00+00:00\"}";
-    Parser p = getTestParser();
-    assertNotNull(p);
-    Event e = p.parse(buf);
-    assertNotNull(e);
-    assertEquals(Payload.PayloadType.SECEVENT, e.getPayloadType());
-    SecEvent d = e.getPayload();
-    com.mozilla.secops.parser.models.secevent.SecEvent data = d.getSecEventData();
-    assertNotNull(data);
-    assertEquals("loginFailure", data.getAction());
-    assertEquals("q@the-q-continuum", data.getActorAccountId());
-
-    DateTime ts = e.getTimestamp();
-    assertNotNull(ts);
-    assertEquals(0L, ts.getMillis());
-  }
-
-  @Test
   public void testGeoIp() throws Exception {
     Parser p = getTestParser();
     assertNotNull(p);

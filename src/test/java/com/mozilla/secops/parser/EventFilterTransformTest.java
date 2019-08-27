@@ -2,7 +2,6 @@ package com.mozilla.secops.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,7 +10,6 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,102 +79,6 @@ public class EventFilterTransformTest {
 
     PCollection<Long> ncount = nfiltered.apply("ncount", Count.globally());
     PAssert.thatSingleton(ncount).isEqualTo(0L);
-
-    pipeline.run().waitUntilFinish();
-  }
-
-  @Test
-  public void testTransformKeying() throws Exception {
-    String buf =
-        "{\"secevent_version\":\"secevent.model.1\",\"action\":\"loginFailure\""
-            + ",\"account_id\":\"q@the-q-continuum\",\"timestamp\":\"1970-01-01T00:00:00+00:00\"}";
-    Parser p = new Parser();
-    assertNotNull(p);
-    Event e = p.parse(buf);
-    assertNotNull(e);
-    PCollection<Event> input = pipeline.apply(Create.of(e));
-
-    EventFilter filter = new EventFilter().matchAny();
-    assertNotNull(filter);
-    filter.addKeyingSelector(
-        new EventFilterRule()
-            .wantSubtype(Payload.PayloadType.SECEVENT)
-            .addPayloadFilter(
-                new EventFilterPayload(SecEvent.class)
-                    .withStringSelector(EventFilterPayload.StringProperty.SECEVENT_ACTION)));
-
-    EventFilter multiFilter = new EventFilter().matchAny();
-    assertNotNull(multiFilter);
-    multiFilter.addKeyingSelector(
-        new EventFilterRule()
-            .wantSubtype(Payload.PayloadType.SECEVENT)
-            .addPayloadFilter(
-                new EventFilterPayload(SecEvent.class)
-                    .withStringSelector(EventFilterPayload.StringProperty.SECEVENT_ACTION)
-                    .withStringSelector(EventFilterPayload.StringProperty.SECEVENT_ACCOUNTID)));
-
-    PCollection<KV<String, Event>> keyed =
-        input.apply("filter", EventFilter.getKeyingTransform(filter));
-    PCollection<KV<String, Event>> multiKeyed =
-        input.apply("multiFilter", EventFilter.getKeyingTransform(multiFilter));
-
-    PAssert.thatMap(keyed)
-        .satisfies(
-            results -> {
-              Event ev = results.get("bG9naW5GYWlsdXJl");
-              assertNotNull(ev);
-              ev = results.get("c2VjZXZlbnQubW9kZWwuMQ==");
-              assertNull(ev);
-              return null;
-            });
-
-    PAssert.thatMap(multiKeyed)
-        .satisfies(
-            results -> {
-              Event ev = results.get("bG9naW5GYWlsdXJl cUB0aGUtcS1jb250aW51dW0=");
-              assertNotNull(ev);
-              ev = results.get("bG9naW5GYWlsdXJl");
-              assertNull(ev);
-              return null;
-            });
-
-    pipeline.run().waitUntilFinish();
-  }
-
-  @Test
-  public void testTransformKeyingNormalized() throws Exception {
-    String buf =
-        "Sep 18 22:15:38 emit-bastion sshd[2644]: Accepted publickey for riker from 12"
-            + "7.0.0.1 port 58530 ssh2: RSA SHA256:dd/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-    Parser p = new Parser();
-    assertNotNull(p);
-    Event e = p.parse(buf);
-    assertNotNull(e);
-    PCollection<Event> input = pipeline.apply(Create.of(e));
-
-    EventFilter filter = new EventFilter().matchAny();
-    assertNotNull(filter);
-    filter.addKeyingSelector(
-        new EventFilterRule()
-            .addPayloadFilter(
-                new EventFilterPayload()
-                    .withStringSelector(EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER)));
-    filter.addKeyingSelector(
-        new EventFilterRule()
-            .addPayloadFilter(
-                new EventFilterPayload(OpenSSH.class)
-                    .withStringSelector(EventFilterPayload.StringProperty.OPENSSH_AUTHMETHOD)));
-
-    PCollection<KV<String, Event>> keyed =
-        input.apply("filter", EventFilter.getKeyingTransform(filter));
-
-    PAssert.thatMap(keyed)
-        .satisfies(
-            results -> {
-              Event ev = results.get("cmlrZXI= cHVibGlja2V5");
-              assertNotNull(ev);
-              return null;
-            });
 
     pipeline.run().waitUntilFinish();
   }

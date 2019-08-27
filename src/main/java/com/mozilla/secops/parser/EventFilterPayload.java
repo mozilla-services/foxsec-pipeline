@@ -1,8 +1,11 @@
 package com.mozilla.secops.parser;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -10,6 +13,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /** Can be associated with {@link EventFilterRule} for payload matching */
+@JsonInclude(Include.NON_EMPTY)
+@JsonDeserialize(as = EventFilterPayload.class)
 public class EventFilterPayload implements EventFilterPayloadInterface, Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -66,8 +71,6 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
   private Map<StringProperty, Pattern> stringRegexMatchers;
   private Map<IntegerProperty, Integer> integerMatchers;
   private Map<IntegerProperty, EventFilterPayloadRange<Integer>> integerRangeMatchers;
-
-  private ArrayList<StringProperty> stringSelectors;
 
   /**
    * Return true if payload criteria matches
@@ -153,34 +156,6 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
   }
 
   /**
-   * Return extracted keys from event based on string selectors
-   *
-   * @param e Input event
-   * @return {@link ArrayList} of extracted keys
-   */
-  public ArrayList<String> getKeys(Event e) {
-    ArrayList<String> ret = new ArrayList<String>();
-    for (StringProperty s : stringSelectors) {
-      String value;
-      if (s.name().startsWith("NORMALIZED_")) {
-        Normalized n = e.getNormalized();
-        if (n == null) {
-          return null;
-        }
-        value = n.eventStringValue(s);
-      } else {
-        value = e.getPayload().eventStringValue(s);
-      }
-      if (value == null) {
-        return null;
-      }
-      value = new String(Base64.getEncoder().encode(value.getBytes()));
-      ret.add(value);
-    }
-    return ret;
-  }
-
-  /**
    * Add a new string regex match to the payload filter
    *
    * @param property {@link EventFilterPayload.StringProperty}
@@ -191,6 +166,35 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
       throws PatternSyntaxException {
     stringRegexMatchers.put(property, Pattern.compile(s));
     return this;
+  }
+
+  /**
+   * Set configured string regex matchers
+   *
+   * <p>Patterns are compiled immediately upon invocation of the method.
+   *
+   * @param stringRegexMatchers Map of key/value pairs
+   */
+  @JsonProperty("string_regex_match")
+  public void setStringRegexMatchers(Map<StringProperty, String> stringRegexMatchers) {
+    HashMap<StringProperty, Pattern> buf = new HashMap<>();
+    for (Map.Entry<StringProperty, String> entry : stringRegexMatchers.entrySet()) {
+      buf.put(entry.getKey(), Pattern.compile(entry.getValue()));
+    }
+    this.stringRegexMatchers = buf;
+  }
+
+  /**
+   * Get configured string regex matchers
+   *
+   * @return Map of key/value pairs
+   */
+  public Map<StringProperty, String> getStringRegexMatchers() {
+    HashMap<StringProperty, String> ret = new HashMap<>();
+    for (Map.Entry<StringProperty, Pattern> entry : stringRegexMatchers.entrySet()) {
+      ret.put(entry.getKey(), entry.getValue().pattern());
+    }
+    return ret;
   }
 
   /**
@@ -206,6 +210,25 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
   }
 
   /**
+   * Set configured string matchers
+   *
+   * @param stringMatchers Map of key/value pairs
+   */
+  @JsonProperty("string_match")
+  public void setStringMatchers(Map<StringProperty, String> stringMatchers) {
+    this.stringMatchers = stringMatchers;
+  }
+
+  /**
+   * Get configured string matchers
+   *
+   * @return Map of key/value pairs
+   */
+  public Map<StringProperty, String> getStringMatchers() {
+    return stringMatchers;
+  }
+
+  /**
    * Add a new simple integer match to the payload filter
    *
    * @param property {@link EventFilterPayload.IntegerProperty}
@@ -215,6 +238,25 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
   public EventFilterPayload withIntegerMatch(IntegerProperty property, Integer i) {
     integerMatchers.put(property, i);
     return this;
+  }
+
+  /**
+   * Set configured integer matchers
+   *
+   * @param integerMatchers Map of key/value pairs
+   */
+  @JsonProperty("integer_match")
+  public void setIntegerMatchers(Map<IntegerProperty, Integer> integerMatchers) {
+    this.integerMatchers = integerMatchers;
+  }
+
+  /**
+   * Get configured integer matchers
+   *
+   * @return Map of key/value pairs
+   */
+  public Map<IntegerProperty, Integer> getIntegerMatchers() {
+    return integerMatchers;
   }
 
   /**
@@ -233,14 +275,61 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
   }
 
   /**
-   * Add a string selector for filter keying operations
+   * Set configured integer range matchers
    *
-   * @param property Property to extract for key
-   * @return EventFilterPayload for chaining
+   * @param integerRangeMatchers Map of key/value pairs
    */
-  public EventFilterPayload withStringSelector(StringProperty property) {
-    stringSelectors.add(property);
-    return this;
+  @JsonProperty("integer_range_match")
+  public void setIntegerRangeMatchers(
+      Map<IntegerProperty, EventFilterPayloadRange<Integer>> integerRangeMatchers) {
+    this.integerRangeMatchers = integerRangeMatchers;
+  }
+
+  /**
+   * Get configured integer range matchers
+   *
+   * @return Map of key/value pairs
+   */
+  public Map<IntegerProperty, EventFilterPayloadRange<Integer>> getIntegerRangeMatchers() {
+    return integerRangeMatchers;
+  }
+
+  /**
+   * Set payload filter
+   *
+   * @param className Canonical name of class filter wants
+   */
+  @JsonProperty("payload_type")
+  @SuppressWarnings("unchecked")
+  public void setPayloadType(String className) {
+    // XXX I'm not sure what a good solution is here to eliminate the need for suppression of the
+    // unchecked cast.
+    //
+    // Right now this seems reasonable enough but this probably needs some more thought.
+    Class<?> c;
+    try {
+      c = Class.forName(className);
+    } catch (ClassNotFoundException exc) {
+      throw new IllegalArgumentException(exc.getMessage());
+    }
+    if (PayloadBase.class.isAssignableFrom(c)) {
+      ptype = (Class<? extends PayloadBase>) c;
+    } else {
+      throw new IllegalArgumentException(
+          "invalid class for payload type, does not extend PayloadBase");
+    }
+  }
+
+  /**
+   * Get payload filter
+   *
+   * @return Canonical name of class filter expects, null if unset
+   */
+  public String getPayloadType() {
+    if (ptype == null) {
+      return null;
+    }
+    return ptype.getCanonicalName();
   }
 
   /**
@@ -259,6 +348,5 @@ public class EventFilterPayload implements EventFilterPayloadInterface, Serializ
     stringRegexMatchers = new HashMap<StringProperty, Pattern>();
     integerMatchers = new HashMap<IntegerProperty, Integer>();
     integerRangeMatchers = new HashMap<IntegerProperty, EventFilterPayloadRange<Integer>>();
-    stringSelectors = new ArrayList<StringProperty>();
   }
 }

@@ -5,10 +5,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 public class EventFilterTest {
   public EventFilterTest() {}
+
+  private static ObjectMapper mapper = new ObjectMapper();
+
+  private EventFilter reload(EventFilter filter) throws Exception {
+    return mapper.readValue(mapper.writeValueAsString(filter), EventFilter.class);
+  }
 
   @Test
   public void testEventFilterRaw() throws Exception {
@@ -26,8 +33,8 @@ public class EventFilterTest {
     assertNotNull(e);
     assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
 
-    assertTrue(pFilter.matches(e));
-    assertFalse(nFilter.matches(e));
+    assertTrue(reload(pFilter).matches(e));
+    assertFalse(reload(nFilter).matches(e));
   }
 
   @Test
@@ -83,11 +90,11 @@ public class EventFilterTest {
     assertNotNull(e);
     assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
 
-    assertTrue(pFilter.matches(e));
-    assertTrue(prFilter.matches(e));
-    assertFalse(nFilter.matches(e));
-    assertFalse(icFilter.matches(e));
-    assertFalse(nrFilter.matches(e));
+    assertTrue(reload(pFilter).matches(e));
+    assertTrue(reload(prFilter).matches(e));
+    assertFalse(reload(nFilter).matches(e));
+    assertFalse(reload(icFilter).matches(e));
+    assertFalse(reload(nrFilter).matches(e));
   }
 
   @Test
@@ -107,7 +114,7 @@ public class EventFilterTest {
     EventFilter filter = new EventFilter();
     assertNotNull(filter);
     filter.addRule(new EventFilterRule().wantNormalizedType(Normalized.Type.AUTH));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -117,7 +124,7 @@ public class EventFilterTest {
                 new EventFilterPayload()
                     .withStringMatch(
                         EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER, "riker")));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -127,7 +134,7 @@ public class EventFilterTest {
                 new EventFilterPayload()
                     .withStringMatch(
                         EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER, "test")));
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
   }
 
   @Test
@@ -159,12 +166,12 @@ public class EventFilterTest {
     EventFilter filter = new EventFilter();
     assertNotNull(filter);
     filter.addRule(new EventFilterRule().wantStackdriverProject("test"));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
     filter.addRule(new EventFilterRule().wantStackdriverProject("nonexistent"));
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
   }
 
   @Test
@@ -189,17 +196,17 @@ public class EventFilterTest {
     EventFilter filter = new EventFilter();
     assertNotNull(filter);
     filter.addRule(new EventFilterRule().wantStackdriverLabel("application", "bugzilla"));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
     filter.addRule(new EventFilterRule().wantStackdriverLabel("application", "nonexistent"));
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
     filter.addRule(new EventFilterRule().wantStackdriverLabel("nonexistent", "bugzilla"));
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -207,7 +214,7 @@ public class EventFilterTest {
         new EventFilterRule()
             .wantStackdriverLabel("application", "bugzilla")
             .wantStackdriverLabel("env", "testing"));
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -215,7 +222,7 @@ public class EventFilterTest {
         new EventFilterRule()
             .wantStackdriverLabel("application", "bugzilla")
             .wantStackdriverLabel("env", "test"));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
   }
 
   @Test
@@ -252,7 +259,7 @@ public class EventFilterTest {
                 new EventFilterPayload(GLB.class)
                     .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")
                     .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200)));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -264,7 +271,7 @@ public class EventFilterTest {
                     .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")
                     .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 201)
                     .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200)));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -278,7 +285,7 @@ public class EventFilterTest {
         new EventFilterPayload(GLB.class)
             .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200));
     filter.addRule(rule);
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -292,7 +299,7 @@ public class EventFilterTest {
         new EventFilterPayload(GLB.class)
             .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 201));
     filter.addRule(rule);
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -303,7 +310,7 @@ public class EventFilterTest {
                 new EventFilterPayload(GLB.class)
                     .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")
                     .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 201)));
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -314,7 +321,7 @@ public class EventFilterTest {
                 new EventFilterPayload(GLB.class)
                     .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")
                     .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "POST")));
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -330,7 +337,7 @@ public class EventFilterTest {
             .addPayloadFilter(
                 new EventFilterPayload(GLB.class)
                     .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -346,7 +353,7 @@ public class EventFilterTest {
             .addPayloadFilter(
                 new EventFilterPayload(GLB.class)
                     .withStringMatch(EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET")));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -360,7 +367,7 @@ public class EventFilterTest {
                         new EventFilterPayload(GLB.class)
                             .withStringMatch(
                                 EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "POST"))));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -375,7 +382,7 @@ public class EventFilterTest {
                             .withStringMatch(
                                 EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "POST")))
             .except(new EventFilterRule().wantStackdriverProject("project")));
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -391,7 +398,7 @@ public class EventFilterTest {
                                 EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "POST")))
             .except(new EventFilterRule().wantStackdriverProject("project"))
             .except(new EventFilterRule().wantStackdriverProject("test")));
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
 
     filter = new EventFilter();
     assertNotNull(filter);
@@ -405,7 +412,7 @@ public class EventFilterTest {
                         new EventFilterPayload(GLB.class)
                             .withStringMatch(
                                 EventFilterPayload.StringProperty.GLB_REQUESTMETHOD, "GET"))));
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
   }
 
   @Test
@@ -467,7 +474,7 @@ public class EventFilterTest {
             .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200));
     rule.addPayloadFilter(filterOr);
     filter.addRule(rule);
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     // Multiple entry OR filter with additional payload filter
     filter = new EventFilter();
@@ -485,7 +492,7 @@ public class EventFilterTest {
             .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 200));
     rule.addPayloadFilter(filterOr);
     filter.addRule(rule);
-    assertTrue(filter.matches(e));
+    assertTrue(reload(filter).matches(e));
 
     // Multiple entry OR filter with additional payload filter, additional not matching
     filter = new EventFilter();
@@ -503,6 +510,73 @@ public class EventFilterTest {
             .withIntegerMatch(EventFilterPayload.IntegerProperty.GLB_STATUS, 403));
     rule.addPayloadFilter(filterOr);
     filter.addRule(rule);
-    assertFalse(filter.matches(e));
+    assertFalse(reload(filter).matches(e));
+  }
+
+  @Test
+  public void testEventFilterSerialize() throws Exception {
+    EventFilter filter = new EventFilter().setWantUTC(true);
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.RAW)
+            .wantStackdriverLabel("labelname", "labelvalue")
+            .wantStackdriverProject("testing")
+            .addPayloadFilter(
+                new EventFilterPayload(Raw.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.RAW_RAW, "test")));
+
+    String buf = mapper.writeValueAsString(filter);
+    filter = mapper.readValue(buf, EventFilter.class);
+    assertEquals(buf, mapper.writeValueAsString(filter));
+
+    filter = new EventFilter().setWantUTC(true);
+    filter.addRule(
+        new EventFilterRule()
+            .wantNormalizedType(Normalized.Type.AUTH)
+            .wantStackdriverLabel("labelname", "labelvalue")
+            .wantStackdriverProject("testing")
+            .addPayloadFilter(
+                new EventFilterPayload()
+                    .withStringMatch(
+                        EventFilterPayload.StringProperty.NORMALIZED_SUBJECTUSER, "test"))
+            .addPayloadFilter(
+                new EventFilterPayloadOr()
+                    .addPayloadFilter(new EventFilterPayload(OpenSSH.class))
+                    .addPayloadFilter(new EventFilterPayload(BmoAudit.class))));
+
+    buf = mapper.writeValueAsString(filter);
+    filter = mapper.readValue(buf, EventFilter.class);
+    assertEquals(buf, mapper.writeValueAsString(filter));
+
+    filter = new EventFilter().passConfigurationTicks().setWantUTC(true);
+    EventFilterRule rule = new EventFilterRule().wantNormalizedType(Normalized.Type.HTTP_REQUEST);
+    rule.except(
+        new EventFilterRule()
+            .wantNormalizedType(Normalized.Type.HTTP_REQUEST)
+            .addPayloadFilter(
+                new EventFilterPayload()
+                    .withStringMatch(
+                        EventFilterPayload.StringProperty.NORMALIZED_REQUESTMETHOD, "POST")
+                    .withStringMatch(
+                        EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTPATH, "/testing"))
+            .addPayloadFilter(
+                new EventFilterPayloadOr()
+                    .addPayloadFilter(
+                        new EventFilterPayload()
+                            .withIntegerRangeMatch(
+                                EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
+                                0,
+                                399))
+                    .addPayloadFilter(
+                        new EventFilterPayload()
+                            .withIntegerRangeMatch(
+                                EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
+                                500,
+                                Integer.MAX_VALUE))));
+    filter.addRule(rule);
+
+    buf = mapper.writeValueAsString(filter);
+    filter = mapper.readValue(buf, EventFilter.class);
+    assertEquals(buf, mapper.writeValueAsString(filter));
   }
 }
