@@ -1,7 +1,7 @@
 package com.mozilla.secops.workshop;
 
-import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.InputOptions;
+import com.mozilla.secops.input.Input;
 import java.io.IOException;
 import java.io.Serializable;
 import org.apache.beam.sdk.Pipeline;
@@ -67,7 +67,7 @@ public class Workshop implements Serializable {
     Pipeline p = Pipeline.create(options);
 
     // Read the input text into a PCollection of type String
-    PCollection<String> input = p.apply("input", new CompositeInput(options));
+    PCollection<String> input = p.apply("input", Input.compositeInputAdapter(options, null));
 
     // Next, parallelize extraction of individual words from each line in the input text using the
     // ExtractWords DoFn. ExtractWords is already templated out in this file, but the processElement

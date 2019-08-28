@@ -1,8 +1,8 @@
 package com.mozilla.secops.streamwriter;
 
-import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.OutputOptions;
+import com.mozilla.secops.input.Input;
 import java.io.IOException;
 import java.io.Serializable;
 import org.apache.beam.sdk.Pipeline;
@@ -23,7 +23,8 @@ public class StreamWriter implements Serializable {
   private static void runStreamWriter(StreamWriterOptions options) throws IOException {
     Pipeline p = Pipeline.create(options);
 
-    p.apply("input", new CompositeInput(options)).apply(OutputOptions.compositeOutput(options));
+    p.apply("input", Input.compositeInputAdapter(options, null))
+        .apply(OutputOptions.compositeOutput(options));
 
     p.run();
   }

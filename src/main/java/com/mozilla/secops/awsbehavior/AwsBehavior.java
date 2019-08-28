@@ -1,10 +1,10 @@
 package com.mozilla.secops.awsbehavior;
 
-import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
@@ -190,7 +190,7 @@ public class AwsBehavior implements Serializable {
     Pipeline p = Pipeline.create(options);
 
     PCollection<Alert> alerts =
-        p.apply("input", new CompositeInput(options))
+        p.apply("input", Input.compositeInputAdapter(options, null))
             .apply("parse and window", new ParseAndWindow(options))
             .apply(new Matchers(options));
 

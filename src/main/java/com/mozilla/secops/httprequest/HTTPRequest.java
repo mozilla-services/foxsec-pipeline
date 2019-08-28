@@ -1,7 +1,6 @@
 package com.mozilla.secops.httprequest;
 
 import com.mozilla.secops.CidrUtil;
-import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.FileUtil;
@@ -12,6 +11,7 @@ import com.mozilla.secops.Stats;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertSuppressorCount;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.metrics.CfgTickBuilder;
 import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
@@ -1223,7 +1223,7 @@ public class HTTPRequest implements Serializable {
     PCollection<Event> events;
     try {
       events =
-          p.apply("input", new CompositeInput(options, buildConfigurationTick(options)))
+          p.apply("input", Input.compositeInputAdapter(options, buildConfigurationTick(options)))
               .apply("parse", new Parse(options));
     } catch (IOException exc) {
       throw new RuntimeException(exc.getMessage());

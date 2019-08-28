@@ -1,11 +1,11 @@
 package com.mozilla.secops.customs;
 
-import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertSuppressorCount;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
@@ -201,7 +201,7 @@ public class Customs implements Serializable {
   private static void runCustoms(CustomsOptions options) throws IOException {
     Pipeline p = Pipeline.create(options);
 
-    PCollection<String> input = p.apply("input", new CompositeInput(options));
+    PCollection<String> input = p.apply("input", Input.compositeInputAdapter(options, null));
     PCollection<Alert> alerts = executePipeline(p, input, options);
 
     alerts

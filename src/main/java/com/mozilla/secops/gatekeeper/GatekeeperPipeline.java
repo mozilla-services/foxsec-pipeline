@@ -1,11 +1,12 @@
 package com.mozilla.secops.gatekeeper;
 
-import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.window.GlobalTriggers;
+import java.io.IOException;
 import java.io.Serializable;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -60,10 +61,10 @@ public class GatekeeperPipeline implements Serializable {
     return alerts;
   }
 
-  private static void runGatekeeper(Options options) {
+  private static void runGatekeeper(Options options) throws IOException {
     Pipeline p = Pipeline.create(options);
 
-    PCollection<String> input = p.apply("read input", new CompositeInput(options));
+    PCollection<String> input = p.apply("read input", Input.compositeInputAdapter(options, null));
     PCollection<Alert> alerts = executePipeline(p, input, options);
 
     alerts
@@ -78,7 +79,7 @@ public class GatekeeperPipeline implements Serializable {
    *
    * @param args Runtime arguments.
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     PipelineOptionsFactory.register(Options.class);
 
     Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
