@@ -1,7 +1,6 @@
 package com.mozilla.secops.authprofile;
 
 import com.mozilla.secops.CidrUtil;
-import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.GeoUtil;
 import com.mozilla.secops.IOOptions;
@@ -11,6 +10,7 @@ import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertIO;
 import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.metrics.CfgTickBuilder;
 import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Auth0;
@@ -875,7 +875,8 @@ public class AuthProfile implements Serializable {
 
     PCollection<String> input;
     try {
-      input = p.apply("input", new CompositeInput(options, buildConfigurationTick(options)));
+      input =
+          p.apply("input", Input.compositeInputAdapter(options, buildConfigurationTick(options)));
     } catch (IOException exc) {
       throw new RuntimeException(exc.getMessage());
     }

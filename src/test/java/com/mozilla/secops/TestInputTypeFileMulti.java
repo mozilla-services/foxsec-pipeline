@@ -1,5 +1,6 @@
 package com.mozilla.secops;
 
+import com.mozilla.secops.input.Input;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -32,7 +33,7 @@ public class TestInputTypeFileMulti {
   public void readTextTest() throws Exception {
     InputOptions o = (InputOptions) pipeline.getOptions();
 
-    PCollection<String> results = pipeline.apply(new CompositeInput(o));
+    PCollection<String> results = pipeline.apply(Input.compositeInputAdapter(o, null));
     PCollection<Long> count = results.apply(Count.globally());
 
     PAssert.thatSingleton(count).isEqualTo(30L);

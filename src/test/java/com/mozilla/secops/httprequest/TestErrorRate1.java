@@ -3,10 +3,9 @@ package com.mozilla.secops.httprequest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.mozilla.secops.CompositeInput;
-import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.window.GlobalTriggers;
@@ -66,7 +65,7 @@ public class TestErrorRate1 {
   public void errorRateTest() throws Exception {
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
 
-    // Enable configuration tick generation in the pipeline for this test, and use CompositeInput
+    // Enable configuration tick generation in the pipeline for this test, and use Input
     options.setGenerateConfigurationTicksInterval(1);
     options.setGenerateConfigurationTicksMaximum(5L);
     options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_errorrate1.txt"});
@@ -76,9 +75,7 @@ public class TestErrorRate1 {
     options.setParserFastMatcher("prod-send");
     options.setStackdriverProjectFilter("test");
     PCollection<Event> events =
-        p.apply(
-                new CompositeInput(
-                    (InputOptions) options, HTTPRequest.buildConfigurationTick(options)))
+        p.apply(Input.compositeInputAdapter(options, HTTPRequest.buildConfigurationTick(options)))
             .apply(new HTTPRequest.Parse(options));
 
     PCollectionList<Alert> alertList = PCollectionList.empty(p);

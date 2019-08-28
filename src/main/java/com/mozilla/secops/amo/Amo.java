@@ -1,10 +1,10 @@
 package com.mozilla.secops.amo;
 
-import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
@@ -219,7 +219,7 @@ public class Amo implements Serializable {
   private static void runAmo(AmoOptions options) throws IOException {
     Pipeline p = Pipeline.create(options);
 
-    PCollection<String> input = p.apply("input", new CompositeInput(options));
+    PCollection<String> input = p.apply("input", Input.compositeInputAdapter(options, null));
     PCollection<Alert> alerts = executePipeline(p, input, options);
 
     alerts
