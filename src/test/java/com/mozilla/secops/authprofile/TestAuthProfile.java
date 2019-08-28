@@ -8,13 +8,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.mozilla.secops.CompositeInput;
-import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertConfiguration;
 import com.mozilla.secops.alert.AlertIO;
 import com.mozilla.secops.alert.TemplateManager;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserTest;
@@ -130,7 +129,7 @@ public class TestAuthProfile {
     testEnv();
     AuthProfile.AuthProfileOptions options = getTestOptions();
 
-    // Enable configuration tick generation in the pipeline for this test, and use CompositeInput
+    // Enable configuration tick generation in the pipeline for this test, and use Input
     options.setInputFile(new String[] {"./target/test-classes/testdata/authprof_buffer1.txt"});
     options.setGenerateConfigurationTicksInterval(1);
     options.setGenerateConfigurationTicksMaximum(5L);
@@ -138,8 +137,7 @@ public class TestAuthProfile {
     PCollection<String> input =
         p.apply(
             "input",
-            new CompositeInput(
-                (InputOptions) options, AuthProfile.buildConfigurationTick(options)));
+            Input.compositeInputAdapter(options, AuthProfile.buildConfigurationTick(options)));
 
     PCollection<Alert> res = AuthProfile.processInput(input, options);
 

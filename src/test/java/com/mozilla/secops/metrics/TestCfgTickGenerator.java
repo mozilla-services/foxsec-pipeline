@@ -2,8 +2,8 @@ package com.mozilla.secops.metrics;
 
 import static org.junit.Assert.*;
 
-import com.mozilla.secops.CompositeInput;
 import com.mozilla.secops.InputOptions;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.CfgTick;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
@@ -43,7 +43,7 @@ public class TestCfgTickGenerator implements Serializable {
 
     PCollection<Event> results =
         pipeline
-            .apply(new CompositeInput((InputOptions) o, builder.build()))
+            .apply(Input.compositeInputAdapter(o, builder.build()))
             .apply(ParDo.of(new ParserDoFn()));
 
     PAssert.that(results)
