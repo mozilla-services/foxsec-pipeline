@@ -45,6 +45,19 @@ public class InputElement {
     }
     for (KinesisInput i : kinesisInputs) {
       list = list.and(i.toCollection(begin));
+      try {
+        // XXX Pause for a moment here for cases where we are configuring multiple Kinesis streams
+        // that might exist in the same account; since setup calls DescribeStream it is possible
+        // to end up hitting rate limits here.
+        //
+        // Note this seems like it can also happen after initial configuration once the stream
+        // starts being read, but KinesisIO does not handle the transient error.
+        //
+        // This needs more investigation.
+        Thread.sleep(1000);
+      } catch (InterruptedException exc) {
+        // pass
+      }
     }
 
     return list.apply(Flatten.<String>pCollections());
