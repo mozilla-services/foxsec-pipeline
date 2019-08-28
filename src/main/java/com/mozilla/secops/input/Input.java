@@ -35,7 +35,10 @@ public class Input {
    */
   public static PTransform<PBegin, PCollection<String>> compositeInputAdapter(
       InputOptions options, String cfgTick) throws IOException {
-    return new Input().simplex().fromPipelineOptions(options, cfgTick).simplexReadRaw();
+    return new Input(options.getProject())
+        .simplex()
+        .fromPipelineOptions(options, cfgTick)
+        .simplexReadRaw();
   }
 
   /**
