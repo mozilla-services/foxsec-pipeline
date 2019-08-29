@@ -1,6 +1,9 @@
 package com.mozilla.secops;
 
 import com.mozilla.secops.input.Input;
+import com.mozilla.secops.input.InputElement;
+import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.ParserCfg;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -30,6 +33,24 @@ public class TestInputTypeFile {
     InputOptions o = (InputOptions) pipeline.getOptions();
 
     PCollection<String> results = pipeline.apply(Input.compositeInputAdapter(o, null));
+    PCollection<Long> count = results.apply(Count.globally());
+
+    PAssert.thatSingleton(count).isEqualTo(10L);
+
+    pipeline.run().waitUntilFinish();
+  }
+
+  @Test
+  public void readTextTestParsingElement() throws Exception {
+    Input input =
+        new Input()
+            .simplex()
+            .withInputElement(
+                new InputElement(Input.SIMPLEX_DEFAULT_ELEMENT)
+                    .addFileInput("./target/test-classes/testdata/inputtype_buffer1.txt")
+                    .setParserConfiguration(new ParserCfg()));
+
+    PCollection<Event> results = pipeline.apply(input.simplexRead());
     PCollection<Long> count = results.apply(Count.globally());
 
     PAssert.thatSingleton(count).isEqualTo(10L);

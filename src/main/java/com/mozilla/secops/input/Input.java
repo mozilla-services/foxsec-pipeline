@@ -1,6 +1,7 @@
 package com.mozilla.secops.input;
 
 import com.mozilla.secops.InputOptions;
+import com.mozilla.secops.parser.Event;
 import java.io.IOException;
 import java.util.ArrayList;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -20,7 +21,8 @@ public class Input {
     UNSPECIFIED
   }
 
-  private static final String SIMPLEX_DEFAULT_ELEMENT = "default";
+  /** Default simplex element name */
+  public static final String SIMPLEX_DEFAULT_ELEMENT = "default";
 
   private OperatingMode mode = OperatingMode.UNSPECIFIED;
   private ArrayList<InputElement> elements;
@@ -115,6 +117,20 @@ public class Input {
     return this;
   }
 
+  /**
+   * Add input element
+   *
+   * @param el Input element
+   * @return this for chaining
+   */
+  public Input withInputElement(InputElement el) throws IOException {
+    if ((mode.equals(OperatingMode.SIMPLEX)) && (elements.size() == 1)) {
+      throw new IOException("attempt to add more than one element to simplex input");
+    }
+    elements.add(el);
+    return this;
+  }
+
   /** Create new input object */
   public Input() {
     elements = new ArrayList<InputElement>();
@@ -133,6 +149,7 @@ public class Input {
     this.project = project;
   }
 
+  /** Return a transform that will ingest data, and emit raw strings in simplex mode */
   public PTransform<PBegin, PCollection<String>> simplexReadRaw() {
     return new SimplexReaderRaw(this);
   }
@@ -161,6 +178,39 @@ public class Input {
      * @param input Prepared Input object
      */
     public SimplexReaderRaw(Input input) {
+      this.input = input;
+    }
+  }
+
+  /** Return a transform that will ingest data, and emit parsed events in simplex mode */
+  public PTransform<PBegin, PCollection<Event>> simplexRead() {
+    return new SimplexReader(this);
+  }
+
+  /**
+   * Read raw events from configured sources, combining all events into a single output collection
+   * as Event objects
+   */
+  public static class SimplexReader extends PTransform<PBegin, PCollection<Event>> {
+    private static final long serialVersionUID = 1L;
+
+    private final Input input;
+
+    @Override
+    public PCollection<Event> expand(PBegin begin) {
+      ArrayList<InputElement> elements = input.getInputElements();
+      if (elements.size() != 1) {
+        throw new RuntimeException("simplex read must have exactly one input element");
+      }
+      return elements.get(0).expandElement(begin);
+    }
+
+    /**
+     * Create new SimplexReader
+     *
+     * @param input Prepared Input object
+     */
+    public SimplexReader(Input input) {
       this.input = input;
     }
   }
