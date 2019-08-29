@@ -273,4 +273,54 @@ public class Input implements Serializable {
       this.input = input;
     }
   }
+
+  /** Return a transform that will ingest data, and emit parsed events in multiplex mode */
+  public PTransform<PBegin, PCollection<KV<String, Event>>> multiplexRead() {
+    return new MultiplexReader(this);
+  }
+
+  /**
+   * Read raw events from configured sources, returning a key value collection with the key being
+   * the element name and the value being a parsed event
+   */
+  public static class MultiplexReader extends PTransform<PBegin, PCollection<KV<String, Event>>> {
+    private static final long serialVersionUID = 1L;
+
+    private final Input input;
+
+    @Override
+    public PCollection<KV<String, Event>> expand(PBegin begin) {
+      PCollectionList<KV<String, Event>> list =
+          PCollectionList.<KV<String, Event>>empty(begin.getPipeline());
+      ArrayList<InputElement> elements = input.getInputElements();
+      if (elements.size() < 1) {
+        throw new RuntimeException("multiplex read with no elements");
+      }
+      for (InputElement i : elements) {
+        list =
+            list.and(
+                i.expandElement(begin)
+                    .apply(
+                        ParDo.of(
+                            new DoFn<Event, KV<String, Event>>() {
+                              private static final long serialVersionUID = 1L;
+
+                              @ProcessElement
+                              public void processElement(ProcessContext c) {
+                                c.output(KV.of(i.getName(), c.element()));
+                              }
+                            })));
+      }
+      return list.apply(Flatten.<KV<String, Event>>pCollections());
+    }
+
+    /**
+     * Create new MultiplexReader
+     *
+     * @param input Prepared Input object
+     */
+    public MultiplexReader(Input input) {
+      this.input = input;
+    }
+  }
 }

@@ -68,7 +68,7 @@ public class TestInputTypeFileMulti {
   }
 
   @Test
-  public void readTextTestParsingMultiElement() throws Exception {
+  public void readTextTestMultiElement() throws Exception {
     Input input =
         new Input()
             .multiplex()
@@ -90,6 +90,47 @@ public class TestInputTypeFileMulti {
               int a = 0;
               int b = 0;
               for (KV<String, String> v : i) {
+                if (v.getKey().equals("a")) {
+                  a++;
+                } else if (v.getKey().equals("b")) {
+                  b++;
+                } else {
+                  fail("unexpected key");
+                }
+              }
+              assertEquals(10, a);
+              assertEquals(20, b);
+              return null;
+            });
+
+    pipeline.run().waitUntilFinish();
+  }
+
+  @Test
+  public void readTextTestParsingMultiElement() throws Exception {
+    Input input =
+        new Input()
+            .multiplex()
+            .withInputElement(
+                new InputElement("a")
+                    .addFileInput("./target/test-classes/testdata/inputtype_buffer1.txt")
+                    .setParserConfiguration(new ParserCfg()))
+            .withInputElement(
+                new InputElement("b")
+                    .addFileInput("./target/test-classes/testdata/inputtype_buffer2.txt")
+                    .setParserConfiguration(new ParserCfg()));
+
+    PCollection<KV<String, Event>> results = pipeline.apply(input.multiplexRead());
+    PCollection<Long> count = results.apply(Count.globally());
+
+    PAssert.thatSingleton(count).isEqualTo(30L);
+
+    PAssert.that(results)
+        .satisfies(
+            i -> {
+              int a = 0;
+              int b = 0;
+              for (KV<String, Event> v : i) {
                 if (v.getKey().equals("a")) {
                   a++;
                 } else if (v.getKey().equals("b")) {
