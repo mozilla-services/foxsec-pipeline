@@ -4,6 +4,7 @@ import com.mozilla.secops.metrics.CfgTickGenerator;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
+import java.io.Serializable;
 import java.util.ArrayList;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
@@ -17,18 +18,29 @@ import org.apache.beam.sdk.values.PCollectionList;
  * InputElement represents a set of input sources that will always result in a single output
  * collection.
  */
-public class InputElement {
+public class InputElement implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private String name;
 
-  private ArrayList<String> fileInputs;
-  private ArrayList<String> pubsubInputs;
-  private ArrayList<KinesisInput> kinesisInputs;
+  private transient ArrayList<String> fileInputs;
+  private transient ArrayList<String> pubsubInputs;
+  private transient ArrayList<KinesisInput> kinesisInputs;
 
-  private ParserCfg parserCfg;
+  private transient ParserCfg parserCfg;
 
   private String cfgTickMessage;
   private Integer cfgTickInterval;
   private long cfgTickMax;
+
+  /**
+   * Get element name
+   *
+   * @return Element name
+   */
+  public String getName() {
+    return name;
+  }
 
   /**
    * Expand configured input types into a resulting collection of strings

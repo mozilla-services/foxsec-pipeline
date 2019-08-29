@@ -3,10 +3,16 @@ package com.mozilla.secops.input;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.parser.Event;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.PTransform;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 
 /**
  * Standard data ingestion
@@ -14,7 +20,9 @@ import org.apache.beam.sdk.values.PCollection;
  * <p>The {@link Input} class can be used to configured and execute various forms of pipeline raw
  * event ingestion from external sources.
  */
-public class Input {
+public class Input implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private enum OperatingMode {
     SIMPLEX,
     MULTIPLEX,
@@ -25,7 +33,7 @@ public class Input {
   public static final String SIMPLEX_DEFAULT_ELEMENT = "default";
 
   private OperatingMode mode = OperatingMode.UNSPECIFIED;
-  private ArrayList<InputElement> elements;
+  private transient ArrayList<InputElement> elements;
   private String project;
 
   /**
@@ -211,6 +219,57 @@ public class Input {
      * @param input Prepared Input object
      */
     public SimplexReader(Input input) {
+      this.input = input;
+    }
+  }
+
+  /** Return a transform that will ingest data, and emit raw events in multiplex mode */
+  public PTransform<PBegin, PCollection<KV<String, String>>> multiplexReadRaw() {
+    return new MultiplexReaderRaw(this);
+  }
+
+  /**
+   * Read raw events from configured sources, returning a key value collection with the key being
+   * the element name and the value being a raw string
+   */
+  public static class MultiplexReaderRaw
+      extends PTransform<PBegin, PCollection<KV<String, String>>> {
+    private static final long serialVersionUID = 1L;
+
+    private final Input input;
+
+    @Override
+    public PCollection<KV<String, String>> expand(PBegin begin) {
+      PCollectionList<KV<String, String>> list =
+          PCollectionList.<KV<String, String>>empty(begin.getPipeline());
+      ArrayList<InputElement> elements = input.getInputElements();
+      if (elements.size() < 1) {
+        throw new RuntimeException("multiplex read with no elements");
+      }
+      for (InputElement i : elements) {
+        list =
+            list.and(
+                i.expandElementRaw(begin)
+                    .apply(
+                        ParDo.of(
+                            new DoFn<String, KV<String, String>>() {
+                              private static final long serialVersionUID = 1L;
+
+                              @ProcessElement
+                              public void processElement(ProcessContext c) {
+                                c.output(KV.of(i.getName(), c.element()));
+                              }
+                            })));
+      }
+      return list.apply(Flatten.<KV<String, String>>pCollections());
+    }
+
+    /**
+     * Create new MultiplexReaderRaw
+     *
+     * @param input Prepared Input object
+     */
+    public MultiplexReaderRaw(Input input) {
       this.input = input;
     }
   }

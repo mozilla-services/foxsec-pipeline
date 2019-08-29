@@ -1,5 +1,8 @@
 package com.mozilla.secops;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.input.InputElement;
 import com.mozilla.secops.parser.Event;
@@ -8,6 +11,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,7 +62,46 @@ public class TestInputTypeFileMulti {
     PCollection<Event> results = pipeline.apply(input.simplexRead());
     PCollection<Long> count = results.apply(Count.globally());
 
-    PAssert.thatSingleton(count).isEqualTo(10L);
+    PAssert.thatSingleton(count).isEqualTo(30L);
+
+    pipeline.run().waitUntilFinish();
+  }
+
+  @Test
+  public void readTextTestParsingMultiElement() throws Exception {
+    Input input =
+        new Input()
+            .multiplex()
+            .withInputElement(
+                new InputElement("a")
+                    .addFileInput("./target/test-classes/testdata/inputtype_buffer1.txt"))
+            .withInputElement(
+                new InputElement("b")
+                    .addFileInput("./target/test-classes/testdata/inputtype_buffer2.txt"));
+
+    PCollection<KV<String, String>> results = pipeline.apply(input.multiplexReadRaw());
+    PCollection<Long> count = results.apply(Count.globally());
+
+    PAssert.thatSingleton(count).isEqualTo(30L);
+
+    PAssert.that(results)
+        .satisfies(
+            i -> {
+              int a = 0;
+              int b = 0;
+              for (KV<String, String> v : i) {
+                if (v.getKey().equals("a")) {
+                  a++;
+                } else if (v.getKey().equals("b")) {
+                  b++;
+                } else {
+                  fail("unexpected key");
+                }
+              }
+              assertEquals(10, a);
+              assertEquals(20, b);
+              return null;
+            });
 
     pipeline.run().waitUntilFinish();
   }
