@@ -2,6 +2,7 @@ package com.mozilla.secops.input;
 
 import com.mozilla.secops.metrics.CfgTickGenerator;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import java.io.Serializable;
@@ -28,6 +29,7 @@ public class InputElement implements Serializable {
   private transient ArrayList<KinesisInput> kinesisInputs;
 
   private transient ParserCfg parserCfg;
+  private transient EventFilter filter;
 
   private String cfgTickMessage;
   private Integer cfgTickInterval;
@@ -87,7 +89,11 @@ public class InputElement implements Serializable {
     }
 
     PCollection<String> col = expandElementRaw(begin);
-    return col.apply("parse", ParDo.of(new ParserDoFn().withConfiguration(parserCfg)));
+    ParserDoFn fn = new ParserDoFn().withConfiguration(parserCfg);
+    if (filter != null) {
+      fn = fn.withInlineEventFilter(filter);
+    }
+    return col.apply("parse", ParDo.of(fn));
   }
 
   /**
@@ -101,6 +107,22 @@ public class InputElement implements Serializable {
    */
   public InputElement setParserConfiguration(ParserCfg parserCfg) {
     this.parserCfg = parserCfg;
+    return this;
+  }
+
+  /**
+   * Set event filter to use with parsed reads
+   *
+   * <p>A valid parser configuration must be installed prior to calling this method.
+   *
+   * @param filter {@link EventFilter}
+   * @return this for chaining
+   */
+  public InputElement setEventFilter(EventFilter filter) {
+    if (parserCfg == null) {
+      throw new RuntimeException("parser must be configured to set an event filter");
+    }
+    this.filter = filter;
     return this;
   }
 

@@ -6,7 +6,12 @@ import static org.junit.Assert.fail;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.input.InputElement;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.EventFilterPayload;
+import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.ParserCfg;
+import com.mozilla.secops.parser.Payload;
+import com.mozilla.secops.parser.Raw;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -141,6 +146,57 @@ public class TestInputTypeFileMulti {
               }
               assertEquals(10, a);
               assertEquals(20, b);
+              return null;
+            });
+
+    pipeline.run().waitUntilFinish();
+  }
+
+  @Test
+  public void readTextTestParsingMultiElementFilter() throws Exception {
+    EventFilter filter = new EventFilter();
+    filter.addRule(
+        new EventFilterRule()
+            .wantSubtype(Payload.PayloadType.RAW)
+            .addPayloadFilter(
+                new EventFilterPayload(Raw.class)
+                    .withStringMatch(EventFilterPayload.StringProperty.RAW_RAW, "test")));
+
+    Input input =
+        new Input()
+            .multiplex()
+            .withInputElement(
+                new InputElement("a")
+                    .addFileInput("./target/test-classes/testdata/inputtype_buffer3.txt")
+                    .setParserConfiguration(new ParserCfg())
+                    .setEventFilter(filter))
+            .withInputElement(
+                new InputElement("b")
+                    .addFileInput("./target/test-classes/testdata/inputtype_buffer3.txt")
+                    .setParserConfiguration(new ParserCfg())
+                    .setEventFilter(filter));
+
+    PCollection<KV<String, Event>> results = pipeline.apply(input.multiplexRead());
+    PCollection<Long> count = results.apply(Count.globally());
+
+    PAssert.thatSingleton(count).isEqualTo(20L);
+
+    PAssert.that(results)
+        .satisfies(
+            i -> {
+              int a = 0;
+              int b = 0;
+              for (KV<String, Event> v : i) {
+                if (v.getKey().equals("a")) {
+                  a++;
+                } else if (v.getKey().equals("b")) {
+                  b++;
+                } else {
+                  fail("unexpected key");
+                }
+              }
+              assertEquals(10, a);
+              assertEquals(10, b);
               return null;
             });
 
