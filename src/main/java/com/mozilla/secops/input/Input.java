@@ -19,6 +19,27 @@ import org.apache.beam.sdk.values.PCollectionList;
  *
  * <p>The {@link Input} class can be used to configured and execute various forms of pipeline raw
  * event ingestion from external sources.
+ *
+ * <p>The class supports two different modes of operation; simplex mode and multiplex mode.
+ *
+ * <p>In simplex mode, raw events are read from one or more input sources, and the resulting data
+ * set is output in a single flat collection as is.
+ *
+ * <p>In multiplex mode, raw events are read from one or more elements, where each element can have
+ * one or more input sources. The resulting data set is output in key value pairs, with the key
+ * being the element name and the values being data read from the input streams belonging to that
+ * particular element.
+ *
+ * <p>In both simplex and multiplex mode, the reads can occur in either raw mode or a parsed mode.
+ * In raw mode, no attempted parsing of a raw entry will occur, and the resulting data set will
+ * simply consist of the raw string data.
+ *
+ * <p>To enable parsed mode a parser configuration must be supplied. In this mode, the raw data set
+ * will be passed through the parser with the resulting data set consistent of {@link Event} objects
+ * instead of raw strings.
+ *
+ * <p>A filter can be associated with parsed read operations to filter events based on what is
+ * desired for a particular element.
  */
 public class Input implements Serializable {
   private static final long serialVersionUID = 1L;
