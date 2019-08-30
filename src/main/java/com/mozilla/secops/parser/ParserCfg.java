@@ -237,5 +237,7 @@ public class ParserCfg implements Serializable {
   }
 
   /** Construct default parser configuration */
-  public ParserCfg() {}
+  public ParserCfg() {
+    useEventTimestamp = false;
+  }
 }
