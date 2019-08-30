@@ -1,7 +1,6 @@
-package com.mozilla.secops;
+package com.mozilla.secops.input;
 
-import com.mozilla.secops.input.Input;
-import com.mozilla.secops.input.InputElement;
+import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserCfg;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;

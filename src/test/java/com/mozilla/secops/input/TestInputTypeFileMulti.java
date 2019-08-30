@@ -1,10 +1,9 @@
-package com.mozilla.secops;
+package com.mozilla.secops.input;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.mozilla.secops.input.Input;
-import com.mozilla.secops.input.InputElement;
+import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterPayload;
