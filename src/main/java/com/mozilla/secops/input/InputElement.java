@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.metrics.CfgTickGenerator;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
@@ -31,6 +33,8 @@ public class InputElement implements Serializable {
 
   private String name;
 
+  private transient PTransform<PBegin, PCollection<String>> wiredStream;
+
   private transient ArrayList<String> fileInputs;
   private transient ArrayList<String> pubsubInputs;
   private transient ArrayList<String> kinesisInputs;
@@ -41,6 +45,47 @@ public class InputElement implements Serializable {
   private String cfgTickMessage;
   private Integer cfgTickInterval;
   private long cfgTickMax;
+
+  /**
+   * Return an {@link InputElement} given pipeline options
+   *
+   * <p>This can be used to configure an input element using settings present in InputOptions.
+   *
+   * @param name Name to associate with element
+   * @param options Input options
+   * @param cfgTickMessage Configuration tick message, null if not enabled
+   * @return New element
+   */
+  public static InputElement fromPipelineOptions(
+      String name, InputOptions options, String cfgTickMessage) {
+    InputElement element = new InputElement(name);
+
+    if (options.getGenerateConfigurationTicksInterval() > 0) {
+      element.setConfigurationTicks(
+          cfgTickMessage,
+          options.getGenerateConfigurationTicksInterval(),
+          options.getGenerateConfigurationTicksMaximum());
+    }
+
+    if (options.getInputFile() != null) {
+      for (String buf : options.getInputFile()) {
+        element.addFileInput(buf);
+      }
+    }
+
+    if (options.getInputPubsub() != null) {
+      for (String buf : options.getInputPubsub()) {
+        element.addPubsubInput(buf);
+      }
+    }
+
+    if (options.getInputKinesis() != null) {
+      for (String buf : options.getInputKinesis()) {
+        element.addKinesisInput(buf);
+      }
+    }
+    return element;
+  }
 
   /**
    * Get element name
@@ -63,6 +108,10 @@ public class InputElement implements Serializable {
     if (cfgTickMessage != null) {
       list =
           list.and(begin.apply(new CfgTickGenerator(cfgTickMessage, cfgTickInterval, cfgTickMax)));
+    }
+
+    if (wiredStream != null) {
+      list = list.and(begin.apply(wiredStream));
     }
 
     for (String i : fileInputs) {
@@ -89,7 +138,7 @@ public class InputElement implements Serializable {
       }
     }
 
-    return list.apply(Flatten.<String>pCollections());
+    return list.apply("flatten input components", Flatten.<String>pCollections());
   }
 
   /**
@@ -179,6 +228,17 @@ public class InputElement implements Serializable {
     this.cfgTickMessage = cfgTickMessage;
     this.cfgTickInterval = cfgTickInterval;
     this.cfgTickMax = cfgTickMax;
+    return this;
+  }
+
+  /**
+   * Add wired stream
+   *
+   * @param s Wired input transform
+   * @return this for chaining
+   */
+  public InputElement addWiredStream(PTransform<PBegin, PCollection<String>> s) {
+    wiredStream = s;
     return this;
   }
 

@@ -2,20 +2,13 @@ package com.mozilla.secops.httprequest;
 
 import static org.junit.Assert.assertEquals;
 
-import com.mozilla.secops.DetectNat;
-import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
-import com.mozilla.secops.parser.Event;
-import java.util.Map;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -29,55 +22,27 @@ public class TestThresholdAnalysis1 {
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setAnalysisThresholdModifier(1.0);
+    ret.setEnableThresholdAnalysis(true);
     ret.setMonitoredResourceIndicator("test");
     ret.setIgnoreInternalRequests(false); // Tests use internal subnets
+    ret.setInputFile(
+        new String[] {"./target/test-classes/testdata/httpreq_thresholdanalysis1.txt"});
     return ret;
   }
 
   @Test
-  public void noopPipelineTest() throws Exception {
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void countRequestsTest() throws Exception {
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt", p);
-
-    PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(getTestOptions()))
-            .apply(new HTTPRequest.WindowForFixed());
-    PCollection<Long> count =
-        events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
-
-    PAssert.thatSingleton(count)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000)))
-        .isEqualTo(120L);
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
   public void thresholdAnalysisTest() throws Exception {
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysis1.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
+
     PCollection<Alert> results =
-        input
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.ThresholdAnalysis(options));
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(1L);
+    PAssert.thatSingleton(resultCount).isEqualTo(1L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
@@ -97,28 +62,22 @@ public class TestThresholdAnalysis1 {
 
   @Test
   public void thresholdAnalysisTestWithNatDetect() throws Exception {
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setInputFile(
+        new String[] {"./target/test-classes/testdata/httpreq_thresholdanalysisnatdetect1.txt"});
+    options.setNatDetection(true);
 
-    PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
-
-    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
-
-    PCollection<Alert> results = events.apply(new HTTPRequest.ThresholdAnalysis(options, natView));
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     // 10.0.0.2 would normally trigger a result being emitted, but with NAT detection enabled
     // we should only see a single result for 10.0.0.1 in the selected interval window
-    PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(1L);
+    PAssert.thatSingleton(resultCount).isEqualTo(1L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
@@ -137,19 +96,15 @@ public class TestThresholdAnalysis1 {
 
   @Test
   public void thresholdAnalysisTestRequiredMinimum() throws Exception {
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     // Set a minimum average well above what we will calculate with the test data set
     options.setRequiredMinimumAverage(250.0);
+    options.setInputFile(
+        new String[] {"./target/test-classes/testdata/httpreq_thresholdanalysisnatdetect1.txt"});
 
-    PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
-
-    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
-
-    PCollection<Alert> results = events.apply(new HTTPRequest.ThresholdAnalysis(options, natView));
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
@@ -161,19 +116,15 @@ public class TestThresholdAnalysis1 {
 
   @Test
   public void thresholdAnalysisTestRequiredMinimumClients() throws Exception {
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     // Set a required minimum above what we have in the test data set
     options.setRequiredMinimumClients(500L);
+    options.setInputFile(
+        new String[] {"./target/test-classes/testdata/httpreq_thresholdanalysisnatdetect1.txt"});
 
-    PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
-
-    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
-
-    PCollection<Alert> results = events.apply(new HTTPRequest.ThresholdAnalysis(options, natView));
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
@@ -185,24 +136,18 @@ public class TestThresholdAnalysis1 {
 
   @Test
   public void thresholdAnalysisTestClampMaximum() throws Exception {
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/httpreq_thresholdanalysisnatdetect1.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setClampThresholdMaximum(1.0);
+    options.setInputFile(
+        new String[] {"./target/test-classes/testdata/httpreq_thresholdanalysisnatdetect1.txt"});
 
-    PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
-
-    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
-
-    PCollection<Alert> results = events.apply(new HTTPRequest.ThresholdAnalysis(options));
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(12L);
+    PAssert.thatSingleton(resultCount).isEqualTo(12L);
 
     p.run().waitUntilFinish();
   }

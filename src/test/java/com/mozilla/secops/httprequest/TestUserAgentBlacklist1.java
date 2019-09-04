@@ -2,20 +2,13 @@ package com.mozilla.secops.httprequest;
 
 import static org.junit.Assert.assertEquals;
 
-import com.mozilla.secops.DetectNat;
-import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
-import com.mozilla.secops.parser.Event;
-import java.util.Map;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -30,30 +23,26 @@ public class TestUserAgentBlacklist1 {
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setUserAgentBlacklistPath("/testdata/uablacklist1.txt");
     ret.setMonitoredResourceIndicator("test");
+    // Just reuse the hardlimit data set here
+    ret.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_hardlimit1.txt"});
     ret.setIgnoreInternalRequests(false); // Tests use internal subnets
+    ret.setEnableUserAgentBlacklistAnalysis(true);
     return ret;
   }
 
   @Test
   public void userAgentBlacklistTest() throws Exception {
-    // Just reuse the hardlimit data set here
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_hardlimit1.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
+
     PCollection<Alert> results =
-        input
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.UserAgentBlacklistAnalysis(options));
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(1L);
+    PAssert.thatSingleton(resultCount).isEqualTo(1L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
@@ -74,21 +63,14 @@ public class TestUserAgentBlacklist1 {
 
   @Test
   public void userAgentBlacklistTestWithNatDetect() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_hardlimit1.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
-
-    PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
-
-    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
+    options.setNatDetection(true);
 
     PCollection<Alert> results =
-        events.apply(new HTTPRequest.UserAgentBlacklistAnalysis(options, natView));
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
-    PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .empty();
+    PAssert.that(results).empty();
 
     p.run().waitUntilFinish();
   }

@@ -1,6 +1,5 @@
 package com.mozilla.secops.httprequest;
 
-import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.parser.Event;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
@@ -23,17 +22,20 @@ public class TestFilter {
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setIgnoreInternalRequests(false); // Tests use internal subnets
+    ret.setMonitoredResourceIndicator("test");
     return ret;
   }
 
   @Test
   public void noProjectFilterTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_filter.txt"});
 
     PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(getTestOptions()))
+        HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
+            .get("test")
             .apply(new HTTPRequest.WindowForFixed());
+
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -46,12 +48,15 @@ public class TestFilter {
 
   @Test
   public void withProjectFilterTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setStackdriverProjectFilter("test");
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_filter.txt"});
+
     PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+        HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
+            .get("test")
+            .apply(new HTTPRequest.WindowForFixed());
+
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -64,12 +69,15 @@ public class TestFilter {
 
   @Test
   public void withLabelFilterTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setStackdriverLabelFilters(new String[] {"env:holodeck"});
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_filter.txt"});
+
     PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+        HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
+            .get("test")
+            .apply(new HTTPRequest.WindowForFixed());
+
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -82,12 +90,15 @@ public class TestFilter {
 
   @Test
   public void withCidrFilterTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_filter.txt"});
     options.setCidrExclusionList("/testdata/cidrutil2.txt");
+
     PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+        HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
+            .get("test")
+            .apply(new HTTPRequest.WindowForFixed());
+
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -100,12 +111,15 @@ public class TestFilter {
 
   @Test
   public void withNoMatchLabelFilterTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_filter.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_filter.txt"});
     options.setStackdriverLabelFilters(new String[] {"env:hydroponicsbay"});
+
     PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+        HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
+            .get("test")
+            .apply(new HTTPRequest.WindowForFixed());
+
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -116,11 +130,14 @@ public class TestFilter {
 
   @Test
   public void hostNoFilterTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_urlhostfilter.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_urlhostfilter.txt"});
+
     PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+        HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
+            .get("test")
+            .apply(new HTTPRequest.WindowForFixed());
+
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -133,12 +150,15 @@ public class TestFilter {
 
   @Test
   public void hostFilterTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_urlhostfilter.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_urlhostfilter.txt"});
     options.setIncludeUrlHostRegex(new String[] {"wontmatch", "^send\\..*"});
+
     PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+        HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
+            .get("test")
+            .apply(new HTTPRequest.WindowForFixed());
+
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
@@ -151,12 +171,15 @@ public class TestFilter {
 
   @Test
   public void hostFilterNoMatchTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_urlhostfilter.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_urlhostfilter.txt"});
     options.setIncludeUrlHostRegex(new String[] {"wontmatch", "wontmatch2"});
+
     PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
+        HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
+            .get("test")
+            .apply(new HTTPRequest.WindowForFixed());
+
     PCollection<Long> count =
         events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 

@@ -163,35 +163,8 @@ public class Input implements Serializable {
     if (!mode.equals(OperatingMode.SIMPLEX)) {
       throw new IOException("method only valid in simplex mode");
     }
-
-    InputElement element = new InputElement(SIMPLEX_DEFAULT_ELEMENT);
-
-    if (options.getGenerateConfigurationTicksInterval() > 0) {
-      element.setConfigurationTicks(
-          cfgTickMessage,
-          options.getGenerateConfigurationTicksInterval(),
-          options.getGenerateConfigurationTicksMaximum());
-    }
-
-    if (options.getInputFile() != null) {
-      for (String buf : options.getInputFile()) {
-        element.addFileInput(buf);
-      }
-    }
-
-    if (options.getInputPubsub() != null) {
-      for (String buf : options.getInputPubsub()) {
-        element.addPubsubInput(buf);
-      }
-    }
-
-    if (options.getInputKinesis() != null) {
-      for (String buf : options.getInputKinesis()) {
-        element.addKinesisInput(buf);
-      }
-    }
-
-    elements.add(element);
+    elements.add(
+        InputElement.fromPipelineOptions(SIMPLEX_DEFAULT_ELEMENT, options, cfgTickMessage));
     return this;
   }
 

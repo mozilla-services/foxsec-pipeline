@@ -4,6 +4,11 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.EventFilterPayload;
+import com.mozilla.secops.parser.EventFilterPayloadOr;
+import com.mozilla.secops.parser.EventFilterRule;
+import com.mozilla.secops.parser.Normalized;
 
 /** Configuration toggles for HTTPRequest pipeline analysis */
 @JsonInclude(Include.NON_EMPTY)
@@ -44,6 +49,25 @@ public class HTTPRequestToggles {
   private String cidrExclusionList;
   private Boolean ignoreCloudProviderRequests;
   private Boolean ignoreInternalRequests;
+
+  /**
+   * Set enable NAT detection setting
+   *
+   * @param value Boolean
+   */
+  @JsonProperty("enable_nat_detection")
+  public void setEnableNatDetection(Boolean value) {
+    enableNatDetection = value;
+  }
+
+  /**
+   * Get enable NAT detection setting
+   *
+   * @return Boolean
+   */
+  public Boolean getEnableNatDetection() {
+    return enableNatDetection;
+  }
 
   /**
    * Set threshold analysis setting
@@ -461,6 +485,109 @@ public class HTTPRequestToggles {
    */
   public Boolean getIgnoreInternalRequests() {
     return ignoreInternalRequests;
+  }
+
+  /**
+   * Convert the toggles to a standard EventFilter for use in HTTPRequest
+   *
+   * <p>Note that this filter does not apply any form of address exclusion if indicated in the
+   * toggles. This must be handled outside of the event filter.
+   *
+   * @return EventFilter
+   */
+  public EventFilter toStandardFilter() {
+    EventFilter ret = new EventFilter().passConfigurationTicks().setWantUTC(true);
+    EventFilterRule rule = new EventFilterRule().wantNormalizedType(Normalized.Type.HTTP_REQUEST);
+    if (filterRequestPath != null) {
+      for (String s : filterRequestPath) {
+        String[] parts = s.split(":");
+        if (parts.length != 2) {
+          throw new IllegalArgumentException(
+              "invalid format for filter path, must be <method>:<path>");
+        }
+        rule.except(
+            new EventFilterRule()
+                .wantNormalizedType(Normalized.Type.HTTP_REQUEST)
+                .addPayloadFilter(
+                    new EventFilterPayload()
+                        .withStringMatch(
+                            EventFilterPayload.StringProperty.NORMALIZED_REQUESTMETHOD, parts[0])
+                        .withStringMatch(
+                            EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTPATH, parts[1]))
+                .addPayloadFilter(
+                    new EventFilterPayloadOr()
+                        .addPayloadFilter(
+                            new EventFilterPayload()
+                                .withIntegerRangeMatch(
+                                    EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
+                                    0,
+                                    399))
+                        .addPayloadFilter(
+                            new EventFilterPayload()
+                                .withIntegerRangeMatch(
+                                    EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
+                                    500,
+                                    Integer.MAX_VALUE))));
+      }
+    }
+    if (includeUrlHostRegex != null) {
+      EventFilterPayloadOr orFilter = new EventFilterPayloadOr();
+      for (String s : includeUrlHostRegex) {
+        orFilter.addPayloadFilter(
+            new EventFilterPayload()
+                .withStringRegexMatch(
+                    EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTHOST, s));
+      }
+      rule.addPayloadFilter(orFilter);
+    }
+    ret.addRule(rule);
+    return ret;
+  }
+
+  /**
+   * Initialize {@link HTTPRequestToggles} using {@link HTTPRequest} pipeline options
+   *
+   * <p>This function exists primarily for conversion of legacy pipeline options to operational
+   * pipeline toggles. It is intended to ease migration for invocations of the HTTPRequest pipeline
+   * that monitor a single service.
+   *
+   * @param o Pipeline options
+   * @return Initialized toggle configuration
+   */
+  public static HTTPRequestToggles fromPipelineOptions(HTTPRequest.HTTPRequestOptions o) {
+    HTTPRequestToggles ret = new HTTPRequestToggles();
+
+    ret.setEnableThresholdAnalysis(o.getEnableThresholdAnalysis());
+    ret.setEnableErrorRateAnalysis(o.getEnableErrorRateAnalysis());
+    ret.setEnableEndpointAbuseAnalysis(o.getEnableEndpointAbuseAnalysis());
+    ret.setEnableHardLimitAnalysis(o.getEnableHardLimitAnalysis());
+    ret.setEnableUserAgentBlacklistAnalysis(o.getEnableUserAgentBlacklistAnalysis());
+    ret.setEnableNatDetection(o.getNatDetection());
+
+    ret.setHardLimitRequestCount(o.getHardLimitRequestCount());
+
+    ret.setAnalysisThresholdModifier(o.getAnalysisThresholdModifier());
+    ret.setRequiredMinimumAverage(o.getRequiredMinimumAverage());
+    ret.setRequiredMinimumClients(o.getRequiredMinimumClients());
+    ret.setClampThresholdMaximum(o.getClampThresholdMaximum());
+
+    ret.setMaxClientErrorRate(o.getMaxClientErrorRate());
+
+    ret.setUserAgentBlacklistPath(o.getUserAgentBlacklistPath());
+
+    ret.setEndpointAbusePath(o.getEndpointAbusePath());
+    ret.setEndpointAbuseExtendedVariance(o.getEndpointAbuseExtendedVariance());
+    ret.setEndpointAbuseCustomVarianceSubstrings(o.getEndpointAbuseCustomVarianceSubstrings());
+    ret.setEndpointAbuseSuppressRecovery(o.getEndpointAbuseSuppressRecovery());
+    ret.setSessionGapDurationMinutes(o.getSessionGapDurationMinutes());
+
+    ret.setFilterRequestPath(o.getFilterRequestPath());
+    ret.setIncludeUrlHostRegex(o.getIncludeUrlHostRegex());
+    ret.setCidrExclusionList(o.getCidrExclusionList());
+    ret.setIgnoreCloudProviderRequests(o.getIgnoreCloudProviderRequests());
+    ret.setIgnoreInternalRequests(o.getIgnoreInternalRequests());
+
+    return ret;
   }
 
   /** Initialize new {@link HTTPRequestToggles} with defaults */

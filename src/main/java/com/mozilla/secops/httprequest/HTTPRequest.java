@@ -1,6 +1,5 @@
 package com.mozilla.secops.httprequest;
 
-import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.FileUtil;
@@ -12,23 +11,22 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertSuppressorCount;
 import com.mozilla.secops.input.Input;
+import com.mozilla.secops.input.InputElement;
 import com.mozilla.secops.metrics.CfgTickBuilder;
 import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
-import com.mozilla.secops.parser.EventFilter;
-import com.mozilla.secops.parser.EventFilterPayload;
-import com.mozilla.secops.parser.EventFilterPayloadOr;
-import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.ParserCfg;
-import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -64,105 +62,19 @@ import org.slf4j.LoggerFactory;
 public class HTTPRequest implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  private static transient ConcurrentHashMap<String, HTTPRequestToggles> toggleCache =
+      new ConcurrentHashMap<>();
+
   /**
-   * Composite transform to parse a {@link PCollection} containing events as strings and emit a
-   * {@link PCollection} of {@link Event} objects.
+   * Add an entry to the HTTPRequest toggle cache
    *
-   * <p>This transform currently discards events that do not contain the HTTP_REQUEST normalized
-   * field.
+   * <p>For use in tests, should not be called under normal use.
+   *
+   * @param name Cache key name
+   * @param entry Cache entry
    */
-  public static class Parse extends PTransform<PCollection<String>, PCollection<Event>> {
-    private static final long serialVersionUID = 1L;
-
-    private final String[] filterRequestPath;
-    private final String cidrExclusionList;
-    private final String[] includeUrlHostRegex;
-    private final Boolean ignoreCp;
-    private final Boolean ignoreInternal;
-    private ParserCfg cfg;
-
-    /**
-     * Static initializer for {@link Parse} transform
-     *
-     * @param options Pipeline options
-     */
-    public Parse(HTTPRequestOptions options) {
-      filterRequestPath = options.getFilterRequestPath();
-      cidrExclusionList = options.getCidrExclusionList();
-      includeUrlHostRegex = options.getIncludeUrlHostRegex();
-      ignoreCp = options.getIgnoreCloudProviderRequests();
-      ignoreInternal = options.getIgnoreInternalRequests();
-      cfg = ParserCfg.fromInputOptions(options);
-    }
-
-    @Override
-    public PCollection<Event> expand(PCollection<String> col) {
-      EventFilter filter = new EventFilter().passConfigurationTicks().setWantUTC(true);
-      EventFilterRule rule = new EventFilterRule().wantNormalizedType(Normalized.Type.HTTP_REQUEST);
-      if (filterRequestPath != null) {
-        for (String s : filterRequestPath) {
-          String[] parts = s.split(":");
-          if (parts.length != 2) {
-            throw new IllegalArgumentException(
-                "invalid format for filter path, must be <method>:<path>");
-          }
-          rule.except(
-              new EventFilterRule()
-                  .wantNormalizedType(Normalized.Type.HTTP_REQUEST)
-                  .addPayloadFilter(
-                      new EventFilterPayload()
-                          .withStringMatch(
-                              EventFilterPayload.StringProperty.NORMALIZED_REQUESTMETHOD, parts[0])
-                          .withStringMatch(
-                              EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTPATH,
-                              parts[1]))
-                  .addPayloadFilter(
-                      new EventFilterPayloadOr()
-                          .addPayloadFilter(
-                              new EventFilterPayload()
-                                  .withIntegerRangeMatch(
-                                      EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
-                                      0,
-                                      399))
-                          .addPayloadFilter(
-                              new EventFilterPayload()
-                                  .withIntegerRangeMatch(
-                                      EventFilterPayload.IntegerProperty.NORMALIZED_REQUESTSTATUS,
-                                      500,
-                                      Integer.MAX_VALUE))));
-        }
-      }
-      if (includeUrlHostRegex != null) {
-        EventFilterPayloadOr orFilter = new EventFilterPayloadOr();
-        for (String s : includeUrlHostRegex) {
-          orFilter.addPayloadFilter(
-              new EventFilterPayload()
-                  .withStringRegexMatch(
-                      EventFilterPayload.StringProperty.NORMALIZED_URLREQUESTHOST, s));
-        }
-        rule.addPayloadFilter(orFilter);
-      }
-      filter.addRule(rule);
-      PCollection<Event> parsed =
-          col.apply(
-              ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)));
-      int exclmask = 0;
-      if (cidrExclusionList != null) {
-        exclmask |= CidrUtil.CIDRUTIL_FILE;
-      }
-      if (ignoreCp) {
-        exclmask |= CidrUtil.CIDRUTIL_CLOUDPROVIDERS;
-      }
-      if (ignoreInternal) {
-        exclmask |= CidrUtil.CIDRUTIL_INTERNAL;
-      }
-      if (exclmask != 0) {
-        return parsed.apply(
-            "cidr exclusion",
-            ParDo.of(CidrUtil.excludeNormalizedSourceAddresses(exclmask, cidrExclusionList)));
-      }
-      return parsed;
-    }
+  public static void addToggleCacheEntry(String name, HTTPRequestToggles entry) {
+    toggleCache.put(name, entry);
   }
 
   /** Window events into fixed one minute windows */
@@ -187,8 +99,8 @@ public class HTTPRequest implements Serializable {
     private final Long gapDurationMinutes;
     private final Long paneFiringDelaySeconds = 10L;
 
-    public KeyAndWindowForSessionsFireEarly(HTTPRequestOptions options) {
-      gapDurationMinutes = options.getSessionGapDurationMinutes();
+    public KeyAndWindowForSessionsFireEarly(HTTPRequestToggles toggles) {
+      gapDurationMinutes = toggles.getSessionGapDurationMinutes();
     }
 
     @Override
@@ -263,9 +175,10 @@ public class HTTPRequest implements Serializable {
      * Static initializer for {@link ErrorRateAnalysis}
      *
      * @param options Pipeline options
+     * @param toggles Pipeline toggles
      */
-    public ErrorRateAnalysis(HTTPRequestOptions options) {
-      maxErrorRate = options.getMaxClientErrorRate();
+    public ErrorRateAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
+      maxErrorRate = toggles.getMaxClientErrorRate();
       monitoredResource = options.getMonitoredResourceIndicator();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
@@ -363,9 +276,10 @@ public class HTTPRequest implements Serializable {
      * Static initializer for {@link HardLimitAnalysis}
      *
      * @param options Pipeline options
+     * @param toggles Pipeline toggles
      */
-    public HardLimitAnalysis(HTTPRequestOptions options) {
-      maxCount = options.getHardLimitRequestCount();
+    public HardLimitAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
+      maxCount = toggles.getHardLimitRequestCount();
       monitoredResource = options.getMonitoredResourceIndicator();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
@@ -376,11 +290,14 @@ public class HTTPRequest implements Serializable {
      * Static initializer for {@link HardLimitAnalysis}
      *
      * @param options Pipeline options
+     * @param toggles Pipeline toggles
      * @param natView Use {@link DetectNat} view during hard limit analysis
      */
     public HardLimitAnalysis(
-        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
-      this(options);
+        HTTPRequestOptions options,
+        HTTPRequestToggles toggles,
+        PCollectionView<Map<String, Boolean>> natView) {
+      this(options, toggles);
       this.natView = natView;
     }
 
@@ -485,12 +402,13 @@ public class HTTPRequest implements Serializable {
      * Initialize new {@link UserAgentBlacklistAnalysis}
      *
      * @param options Pipeline options
+     * @param toggles Pipeline toggles
      */
-    public UserAgentBlacklistAnalysis(HTTPRequestOptions options) {
+    public UserAgentBlacklistAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
       monitoredResource = options.getMonitoredResourceIndicator();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
-      uaBlacklistPath = options.getUserAgentBlacklistPath();
+      uaBlacklistPath = toggles.getUserAgentBlacklistPath();
       log = LoggerFactory.getLogger(UserAgentBlacklistAnalysis.class);
     }
 
@@ -498,11 +416,14 @@ public class HTTPRequest implements Serializable {
      * Initialize new {@link UserAgentBlacklistAnalysis}
      *
      * @param options Pipeline options
+     * @param toggles Pipeline toggles
      * @param natView Use {@link DetectNat} view during analysis
      */
     public UserAgentBlacklistAnalysis(
-        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
-      this(options);
+        HTTPRequestOptions options,
+        HTTPRequestToggles toggles,
+        PCollectionView<Map<String, Boolean>> natView) {
+      this(options, toggles);
       this.natView = natView;
     }
 
@@ -660,16 +581,16 @@ public class HTTPRequest implements Serializable {
      *
      * @param options Pipeline options
      */
-    public EndpointAbuseAnalysis(HTTPRequestOptions options) {
+    public EndpointAbuseAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
       log = LoggerFactory.getLogger(EndpointAbuseAnalysis.class);
 
       monitoredResource = options.getMonitoredResourceIndicator();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
-      varianceSupportingOnly = options.getEndpointAbuseExtendedVariance();
-      suppressRecovery = options.getEndpointAbuseSuppressRecovery();
-      customVarianceSubstrings = options.getEndpointAbuseCustomVarianceSubstrings();
-      sessionGapDurationMinutes = options.getSessionGapDurationMinutes();
+      varianceSupportingOnly = toggles.getEndpointAbuseExtendedVariance();
+      suppressRecovery = toggles.getEndpointAbuseSuppressRecovery();
+      customVarianceSubstrings = toggles.getEndpointAbuseCustomVarianceSubstrings();
+      sessionGapDurationMinutes = toggles.getSessionGapDurationMinutes();
 
       String[] cfgEndpoints = options.getEndpointAbusePath();
       endpoints = new EndpointAbuseEndpointInfo[cfgEndpoints.length];
@@ -899,11 +820,11 @@ public class HTTPRequest implements Serializable {
      *
      * @param options {@link HTTPRequestOptions}
      */
-    public ThresholdAnalysis(HTTPRequestOptions options) {
-      this.thresholdModifier = options.getAnalysisThresholdModifier();
-      this.requiredMinimumAverage = options.getRequiredMinimumAverage();
-      this.requiredMinimumClients = options.getRequiredMinimumClients();
-      this.clampThresholdMaximum = options.getClampThresholdMaximum();
+    public ThresholdAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
+      this.thresholdModifier = toggles.getAnalysisThresholdModifier();
+      this.requiredMinimumAverage = toggles.getRequiredMinimumAverage();
+      this.requiredMinimumClients = toggles.getRequiredMinimumClients();
+      this.clampThresholdMaximum = toggles.getClampThresholdMaximum();
       this.monitoredResource = options.getMonitoredResourceIndicator();
       this.enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       this.iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
@@ -917,8 +838,10 @@ public class HTTPRequest implements Serializable {
      * @param natView Use {@link DetectNat} view during threshold analysis
      */
     public ThresholdAnalysis(
-        HTTPRequestOptions options, PCollectionView<Map<String, Boolean>> natView) {
-      this(options);
+        HTTPRequestOptions options,
+        HTTPRequestToggles toggles,
+        PCollectionView<Map<String, Boolean>> natView) {
+      this(options, toggles);
       this.natView = natView;
     }
 
@@ -1187,121 +1110,240 @@ public class HTTPRequest implements Serializable {
     Boolean getIgnoreInternalRequests();
 
     void setIgnoreInternalRequests(Boolean value);
+
+    @Description("Load multimode configuration file; resource path, gcs path")
+    String getPipelineMultimodeConfiguration();
+
+    void setPipelineMultimodeConfiguration(String value);
+
+    @Description("Wired input stream; used only in testing")
+    Boolean getWiredInputStream();
+
+    void setWiredInputStream(Boolean value);
   }
 
   /**
-   * Build a configuration tick for HTTPRequest given pipeline options
+   * Build a configuration tick for HTTPRequest given pipeline options and configuration toggles
    *
    * @param options Pipeline options
+   * @param toggles Analysis toggles
    * @return String
    */
-  public static String buildConfigurationTick(HTTPRequestOptions options) throws IOException {
+  public static String buildConfigurationTick(
+      HTTPRequestOptions options, HTTPRequestToggles toggles) throws IOException {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
 
     if (options.getEnableThresholdAnalysis()) {
-      b.withTransformDoc(new ThresholdAnalysis(options, null));
+      b.withTransformDoc(new ThresholdAnalysis(options, toggles, null));
     }
     if (options.getEnableHardLimitAnalysis()) {
-      b.withTransformDoc(new HardLimitAnalysis(options, null));
+      b.withTransformDoc(new HardLimitAnalysis(options, toggles, null));
     }
     if (options.getEnableErrorRateAnalysis()) {
-      b.withTransformDoc(new ErrorRateAnalysis(options));
+      b.withTransformDoc(new ErrorRateAnalysis(options, toggles));
     }
     if (options.getEnableUserAgentBlacklistAnalysis()) {
-      b.withTransformDoc(new UserAgentBlacklistAnalysis(options, null));
+      b.withTransformDoc(new UserAgentBlacklistAnalysis(options, toggles, null));
     }
     if (options.getEnableEndpointAbuseAnalysis()) {
-      b.withTransformDoc(new EndpointAbuseAnalysis(options));
+      b.withTransformDoc(new EndpointAbuseAnalysis(options, toggles));
     }
 
     return b.build();
   }
 
-  private static void runHTTPRequest(HTTPRequestOptions options) {
-    Pipeline p = Pipeline.create(options);
+  /**
+   * Perform analysis on a given collection of events
+   *
+   * @param events Event PCollection
+   * @param options Pipeline options
+   * @param toggles Per-collection analysis toggles
+   * @return Collection of alerts
+   */
+  public static PCollection<Alert> analysis(
+      PCollection<Event> events, HTTPRequestOptions options, HTTPRequestToggles toggles) {
+    PCollectionList<Alert> resultsList = PCollectionList.empty(events.getPipeline());
 
-    PCollection<Event> events;
-    try {
-      events =
-          p.apply("input", Input.compositeInputAdapter(options, buildConfigurationTick(options)))
-              .apply("parse", new Parse(options));
-    } catch (IOException exc) {
-      throw new RuntimeException(exc.getMessage());
-    }
-
-    PCollectionList<Alert> resultsList = PCollectionList.empty(p);
-
-    if (options.getEnableThresholdAnalysis()
-        || options.getEnableErrorRateAnalysis()
-        || options.getEnableHardLimitAnalysis()) {
+    if (toggles.getEnableThresholdAnalysis()
+        || toggles.getEnableErrorRateAnalysis()
+        || toggles.getEnableHardLimitAnalysis()
+        || toggles.getEnableUserAgentBlacklistAnalysis()) {
       PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
 
       PCollectionView<Map<String, Boolean>> natView = null;
-      if (options.getNatDetection()) {
+      if (toggles.getEnableNatDetection()) {
         natView = DetectNat.getView(fwEvents);
       }
 
-      if (options.getEnableThresholdAnalysis()) {
+      if (toggles.getEnableThresholdAnalysis()) {
         resultsList =
             resultsList.and(
                 fwEvents
-                    .apply("threshold analysis", new ThresholdAnalysis(options, natView))
+                    .apply("threshold analysis", new ThresholdAnalysis(options, toggles, natView))
                     .apply("threshold analysis global", new GlobalTriggers<Alert>(5)));
       }
 
-      if (options.getEnableHardLimitAnalysis()) {
+      if (toggles.getEnableHardLimitAnalysis()) {
         resultsList =
             resultsList.and(
                 fwEvents
-                    .apply("hard limit analysis", new HardLimitAnalysis(options, natView))
+                    .apply("hard limit analysis", new HardLimitAnalysis(options, toggles, natView))
                     .apply("hard limit analysis global", new GlobalTriggers<Alert>(5)));
       }
 
-      if (options.getEnableErrorRateAnalysis()) {
+      if (toggles.getEnableErrorRateAnalysis()) {
         resultsList =
             resultsList.and(
                 fwEvents
-                    .apply("error rate analysis", new ErrorRateAnalysis(options))
+                    .apply("error rate analysis", new ErrorRateAnalysis(options, toggles))
                     .apply("error rate analysis global", new GlobalTriggers<Alert>(5)));
       }
 
-      if (options.getEnableUserAgentBlacklistAnalysis()) {
+      if (toggles.getEnableUserAgentBlacklistAnalysis()) {
         resultsList =
             resultsList.and(
                 fwEvents
                     .apply(
-                        "ua blacklist analysis", new UserAgentBlacklistAnalysis(options, natView))
+                        "ua blacklist analysis",
+                        new UserAgentBlacklistAnalysis(options, toggles, natView))
                     .apply("ua blacklist analysis global", new GlobalTriggers<Alert>(5)));
       }
     }
 
-    if (options.getEnableEndpointAbuseAnalysis()) {
+    if (toggles.getEnableEndpointAbuseAnalysis()) {
       resultsList =
           resultsList.and(
               events
                   .apply(
                       "key and window for sessions fire early",
-                      new KeyAndWindowForSessionsFireEarly(options))
+                      new KeyAndWindowForSessionsFireEarly(toggles))
                   // No requirement for follow up application of GlobalTriggers here since
                   // EndpointAbuseAnalysis will do this for us
-                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options)));
+                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options, toggles)));
     }
 
-    // If configuration ticks were enabled, enable the processor here too
-    if (options.getGenerateConfigurationTicksInterval() > 0) {
+    return resultsList.apply("flatten analysis output", Flatten.<Alert>pCollections());
+  }
+
+  /**
+   * Given HTTPRequest pipeline options, return a configured {@link Input} class
+   *
+   * <p>The returned input object will be configured based on the HTTPRequest pipeline options, and
+   * will have all applicable filters assigned.
+   *
+   * @param p Pipeline
+   * @param options Pipeline options
+   * @return Configured Input object
+   */
+  public static Input getInput(Pipeline p, HTTPRequestOptions options) throws IOException {
+    // Always use a multiplexed read here, even if we will only have one element associated
+    // with our input.
+    Input input = new Input(options.getProject()).multiplex();
+
+    if (options.getPipelineMultimodeConfiguration() != null) {
+      // XXX For now just throw an exception here.
+      throw new RuntimeException("multimode configuration not yet supported");
+    } else {
+      // We are using pipeline options based input configuration. Start with a new input element
+      // based on that configuration, we will essentially simulate a multimode configuration with
+      // a single element specified.
+      //
+      // We will simply use the monitored resource set in the pipeline options as the element name,
+      // which in turn will be reflected in alerts created.
+      //
+      // Since we are using pipeline options for all configuration here, we can also use them
+      // to build the configuration tick.
+      InputElement e =
+          InputElement.fromPipelineOptions(
+              options.getMonitoredResourceIndicator(),
+              options,
+              buildConfigurationTick(options, HTTPRequestToggles.fromPipelineOptions(options)));
+      e.setParserConfiguration(ParserCfg.fromInputOptions(options))
+          .setEventFilter(HTTPRequestToggles.fromPipelineOptions(options).toStandardFilter());
+      input.withInputElement(e);
+      toggleCache.put(
+          options.getMonitoredResourceIndicator(), HTTPRequestToggles.fromPipelineOptions(options));
+    }
+
+    return input;
+  }
+
+  /**
+   * Read from a configured {@link Input} object, returning a map of events
+   *
+   * <p>The map that is returned will have a string key that reflects the element name (which should
+   * correspond to the monitored resource), and the value will be a collection of events for that
+   * element.
+   *
+   * @param p Pipeline
+   * @param input Configured {@link Input} object
+   * @param options Pipeline options
+   * @return Map of element name/event collection
+   */
+  public static HashMap<String, PCollection<Event>> readInput(
+      Pipeline p, Input input, HTTPRequestOptions options) {
+    // Perform the multiplexed read operations
+    PCollection<KV<String, Event>> col = p.apply("input", input.multiplexRead());
+
+    HashMap<String, PCollection<Event>> ret = new HashMap<>();
+    // For each configured element, extract the resulting collection and associate it with
+    // a key in our input map.
+    for (InputElement e : input.getInputElements()) {
+      if (!toggleCache.containsKey(e.getName())) {
+        throw new RuntimeException(String.format("no toggle cache entry for %s", e.getName()));
+      }
+      PCollection<Event> t =
+          col.apply(
+              "per-element filter",
+              new HTTPRequestElementFilter(e.getName(), toggleCache.get(e.getName())));
+      ret.put(e.getName(), t);
+    }
+
+    return ret;
+  }
+
+  /**
+   * Expand the input map, executing analysis transforms for each element
+   *
+   * @param p Pipeline
+   * @param inputMap Map of service name to input collection
+   * @param options Pipeline options
+   * @return Flattened alerts in the global window
+   */
+  public static PCollection<Alert> expandInputMap(
+      Pipeline p, HashMap<String, PCollection<Event>> inputMap, HTTPRequestOptions options) {
+    PCollectionList<Alert> resultsList = PCollectionList.empty(p);
+
+    for (Map.Entry<String, PCollection<Event>> entry : inputMap.entrySet()) {
       resultsList =
-          resultsList.and(
-              events
-                  .apply(
-                      "cfgtick processor",
-                      ParDo.of(new CfgTickProcessor("httprequest-cfgtick", "category")))
-                  .apply(new GlobalTriggers<Alert>(5)));
+          resultsList
+              .and(
+                  analysis(entry.getValue(), options, toggleCache.get(entry.getKey()))
+                      .setCoder(SerializableCoder.of(Alert.class)))
+              .and(
+                  entry
+                      .getValue()
+                      .apply(
+                          "cfgtick processor",
+                          ParDo.of(new CfgTickProcessor("httprequest-cfgtick", "category")))
+                      .apply(new GlobalTriggers<Alert>(5)));
     }
 
-    resultsList
-        .apply("flatten output", Flatten.<Alert>pCollections())
+    return resultsList.apply("flatten all output", Flatten.<Alert>pCollections());
+  }
+
+  private static void standardOutput(PCollection<Alert> alerts, HTTPRequestOptions options) {
+    alerts
         .apply("output format", ParDo.of(new AlertFormatter(options)))
         .apply("output", OutputOptions.compositeOutput(options));
+  }
+
+  private static void runHTTPRequest(HTTPRequestOptions options) throws IOException {
+    Pipeline p = Pipeline.create(options);
+
+    Input input = getInput(p, options);
+    HashMap<String, PCollection<Event>> inputMap = readInput(p, input, options);
+    standardOutput(expandInputMap(p, inputMap, options), options);
 
     p.run();
   }
@@ -1311,7 +1353,7 @@ public class HTTPRequest implements Serializable {
    *
    * @param args Runtime arguments.
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     PipelineOptionsFactory.register(HTTPRequestOptions.class);
     HTTPRequestOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(HTTPRequestOptions.class);
