@@ -145,9 +145,6 @@ public class InputElement implements Serializable {
    */
   @JsonProperty("filter")
   public InputElement setEventFilter(EventFilter filter) {
-    if (parserCfg == null) {
-      throw new RuntimeException("parser must be configured to set an event filter");
-    }
     this.filter = filter;
     return this;
   }
