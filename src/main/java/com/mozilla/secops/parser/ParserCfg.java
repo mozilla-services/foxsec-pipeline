@@ -1,5 +1,10 @@
 package com.mozilla.secops.parser;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.InputOptions;
 import java.io.Serializable;
@@ -7,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /** Represents configuration data used to configure an instance of a {@link Parser} */
+@JsonInclude(Include.NON_EMPTY)
 public class ParserCfg implements Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -60,6 +66,7 @@ public class ParserCfg implements Serializable {
    * <p>This option is intended to behave in a similar manner to the nginx realip module,
    * https://nginx.org/en/docs/http/ngx_http_realip_module.html.
    */
+  @JsonProperty("xff_address_selector")
   public void setXffAddressSelector(ArrayList<String> subnets) {
     xffAddressSelectorSubnets = subnets;
   }
@@ -78,6 +85,7 @@ public class ParserCfg implements Serializable {
    *
    * @return CidrUtil or null if not set
    */
+  @JsonIgnore
   public CidrUtil getXffAddressSelectorAsCidrUtil() {
     if (xffAddressSelectorSubnets == null) {
       return null;
@@ -103,6 +111,7 @@ public class ParserCfg implements Serializable {
    *
    * @param path Path
    */
+  @JsonProperty("maxmind_city_db_path")
   public void setMaxmindCityDbPath(String path) {
     maxmindCityDbPath = path;
   }
@@ -121,6 +130,7 @@ public class ParserCfg implements Serializable {
    *
    * @param path Path
    */
+  @JsonProperty("maxmind_isp_db_path")
   public void setMaxmindIspDbPath(String path) {
     maxmindIspDbPath = path;
   }
@@ -139,6 +149,7 @@ public class ParserCfg implements Serializable {
    *
    * @param path Path
    */
+  @JsonProperty("identity_manager_path")
   public void setIdentityManagerPath(String path) {
     idmanagerPath = path;
   }
@@ -165,6 +176,7 @@ public class ParserCfg implements Serializable {
    *
    * @param fastMatcher Matcher substring
    */
+  @JsonProperty("parser_fast_matcher")
   public void setParserFastMatcher(String fastMatcher) {
     this.fastMatcher = fastMatcher;
   }
@@ -188,6 +200,7 @@ public class ParserCfg implements Serializable {
    *
    * @param useEventTimestamp Boolean
    */
+  @JsonProperty("use_event_timestamp")
   public void setUseEventTimestamp(Boolean useEventTimestamp) {
     this.useEventTimestamp = useEventTimestamp;
   }
@@ -210,6 +223,7 @@ public class ParserCfg implements Serializable {
    *
    * @param stackdriverLabelFilters Array of key:value labels that must match
    */
+  @JsonProperty("stackdriver_label_filters")
   public void setStackdriverLabelFilters(String[] stackdriverLabelFilters) {
     this.stackdriverLabelFilters = stackdriverLabelFilters;
   }
@@ -232,6 +246,7 @@ public class ParserCfg implements Serializable {
    *
    * @param stackdriverProjectFilter Project value
    */
+  @JsonProperty("stackdriver_project_filter")
   public void setStackdriverProjectFilter(String stackdriverProjectFilter) {
     this.stackdriverProjectFilter = stackdriverProjectFilter;
   }
