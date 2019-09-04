@@ -124,4 +124,46 @@ public class TestInputJson {
 
     pipeline.run().waitUntilFinish();
   }
+
+  @Test
+  public void testJsonSerializeInputSimplexProjectFilterInclude() throws Exception {
+    ParserCfg cfg = new ParserCfg();
+    cfg.setStackdriverProjectFilter("test");
+    Input input =
+        new Input("project")
+            .simplex()
+            .withInputElement(
+                new InputElement(Input.SIMPLEX_DEFAULT_ELEMENT)
+                    .addFileInput("./target/test-classes/testdata/httpreq_errorrate1.txt")
+                    .setParserConfiguration(cfg));
+
+    input = mapper.readValue(mapper.writeValueAsString(input), Input.class);
+
+    PCollection<Event> results = pipeline.apply(input.simplexRead());
+    PCollection<Long> count = results.apply(Count.globally());
+
+    PAssert.thatSingleton(count).isEqualTo(55L);
+
+    pipeline.run().waitUntilFinish();
+  }
+
+  @Test
+  public void testJsonSerializeInputSimplexProjectFilterExclude() throws Exception {
+    ParserCfg cfg = new ParserCfg();
+    cfg.setStackdriverProjectFilter("notmatched");
+    Input input =
+        new Input("project")
+            .simplex()
+            .withInputElement(
+                new InputElement(Input.SIMPLEX_DEFAULT_ELEMENT)
+                    .addFileInput("./target/test-classes/testdata/httpreq_errorrate1.txt")
+                    .setParserConfiguration(cfg));
+
+    input = mapper.readValue(mapper.writeValueAsString(input), Input.class);
+
+    PCollection<Event> results = pipeline.apply(input.simplexRead());
+    PAssert.that(results).empty();
+
+    pipeline.run().waitUntilFinish();
+  }
 }
