@@ -1128,19 +1128,19 @@ public class HTTPRequest implements Serializable {
       HTTPRequestOptions options, HTTPRequestToggles toggles) throws IOException {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
 
-    if (options.getEnableThresholdAnalysis()) {
+    if (toggles.getEnableThresholdAnalysis()) {
       b.withTransformDoc(new ThresholdAnalysis(options, toggles, null));
     }
-    if (options.getEnableHardLimitAnalysis()) {
+    if (toggles.getEnableHardLimitAnalysis()) {
       b.withTransformDoc(new HardLimitAnalysis(options, toggles, null));
     }
-    if (options.getEnableErrorRateAnalysis()) {
+    if (toggles.getEnableErrorRateAnalysis()) {
       b.withTransformDoc(new ErrorRateAnalysis(options, toggles));
     }
-    if (options.getEnableUserAgentBlacklistAnalysis()) {
+    if (toggles.getEnableUserAgentBlacklistAnalysis()) {
       b.withTransformDoc(new UserAgentBlacklistAnalysis(options, toggles, null));
     }
-    if (options.getEnableEndpointAbuseAnalysis()) {
+    if (toggles.getEnableEndpointAbuseAnalysis()) {
       b.withTransformDoc(new EndpointAbuseAnalysis(options, toggles));
     }
 
@@ -1235,9 +1235,37 @@ public class HTTPRequest implements Serializable {
     // with our input.
     Input input = new Input(options.getProject()).multiplex();
 
+    // Ensure the cache is cleared
+    toggleCache.clear();
+
     if (options.getPipelineMultimodeConfiguration() != null) {
-      // XXX For now just throw an exception here.
-      throw new RuntimeException("multimode configuration not yet supported");
+      HTTPRequestMultiMode mm =
+          HTTPRequestMultiMode.load(options.getPipelineMultimodeConfiguration());
+      input = mm.getInput();
+      // For each input element, we should have a matching entry in the service toggles
+      // configuration. Iterate over and cache these entries so we can access them in the
+      // analysis steps later.
+      HashMap<String, HTTPRequestToggles> st = mm.getServiceToggles();
+      if (st == null) {
+        throw new RuntimeException("no service toggles found");
+      }
+      for (Map.Entry<String, HTTPRequestToggles> entry : st.entrySet()) {
+        HTTPRequestToggles t = entry.getValue();
+        t.setMonitoredResource(entry.getKey());
+        addToggleCacheEntry(entry.getKey(), t);
+
+        // Set the configuration tick string in the input element, since we can't initialize
+        // this from JSON
+        InputElement el = input.getInputElementByName(entry.getKey());
+        if (el == null) {
+          throw new RuntimeException(
+              String.format("input element for %s not found", entry.getKey()));
+        }
+        el.setConfigurationTicks(
+            buildConfigurationTick(options, entry.getValue()),
+            options.getGenerateConfigurationTicksInterval(),
+            options.getGenerateConfigurationTicksMaximum());
+      }
     } else {
       // We are using pipeline options based input configuration. Start with a new input element
       // based on that configuration, we will essentially simulate a multimode configuration with

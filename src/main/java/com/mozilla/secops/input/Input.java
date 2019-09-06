@@ -2,6 +2,7 @@ package com.mozilla.secops.input;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.InputOptions;
@@ -138,6 +139,22 @@ public class Input implements Serializable {
    */
   public ArrayList<InputElement> getInputElements() {
     return elements;
+  }
+
+  /**
+   * Get an input element by name
+   *
+   * @param name Input element name
+   * @return Element or null if not found
+   */
+  @JsonIgnore
+  public InputElement getInputElementByName(String name) {
+    for (InputElement i : elements) {
+      if (i.getName().equals(name)) {
+        return i;
+      }
+    }
+    return null;
   }
 
   /**

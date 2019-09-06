@@ -28,29 +28,12 @@ public class TestErrorRate1 {
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setMonitoredResourceIndicator("test");
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
-    ret.setMaxClientErrorRate(30L);
-    ret.setIgnoreInternalRequests(false); // Tests use internal subnets
+    ret.setGenerateConfigurationTicksInterval(1);
+    ret.setGenerateConfigurationTicksMaximum(5L);
     return ret;
   }
 
-  @Test
-  public void errorRateTest() throws Exception {
-    HTTPRequest.HTTPRequestOptions options = getTestOptions();
-
-    // Enable configuration tick generation in the pipeline for this test, and use Input
-    options.setGenerateConfigurationTicksInterval(1);
-    options.setGenerateConfigurationTicksMaximum(5L);
-    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_errorrate1.txt"});
-    options.setEnableErrorRateAnalysis(true);
-    // Also set a fast matcher configuration and other filters to verify the cfgtick events are
-    // passed
-    options.setParserFastMatcher("prod-send");
-    options.setStackdriverProjectFilter("test");
-
-    PCollection<Alert> results =
-        HTTPRequest.expandInputMap(
-            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
-
+  public void runAssertions(PCollection<Alert> results) {
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.thatSingleton(resultCount)
@@ -70,9 +53,13 @@ public class TestErrorRate1 {
                 } else if (a.getMetadataValue("category").equals("cfgtick")) {
                   assertEquals("httprequest-cfgtick", a.getCategory());
                   assertEquals("test", a.getMetadataValue("monitoredResourceIndicator"));
-                  assertEquals(
-                      "./target/test-classes/testdata/httpreq_errorrate1.txt",
-                      a.getMetadataValue("inputFile"));
+                  if (a.getMetadataValue("inputFile") != null) {
+                    // In the case where pipeline options are used to control input, we will have an
+                    // entry corresponding to the input in the cfgtick
+                    assertEquals(
+                        "./target/test-classes/testdata/httpreq_errorrate1.txt",
+                        a.getMetadataValue("inputFile"));
+                  }
                   assertEquals("true", a.getMetadataValue("useEventTimestamp"));
                   assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
                   assertEquals(
@@ -85,6 +72,41 @@ public class TestErrorRate1 {
               }
               return null;
             });
+  }
+
+  @Test
+  public void errorRateTest() throws Exception {
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+
+    // Enable configuration tick generation in the pipeline for this test, and use Input
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_errorrate1.txt"});
+    options.setEnableErrorRateAnalysis(true);
+    options.setMaxClientErrorRate(30L);
+    options.setIgnoreInternalRequests(false); // Tests use internal subnets
+    // Also set a fast matcher configuration and other filters to verify the cfgtick events are
+    // passed
+    options.setParserFastMatcher("prod-send");
+    options.setStackdriverProjectFilter("test");
+
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
+
+    runAssertions(results);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void errorRateTestCfg() throws Exception {
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setPipelineMultimodeConfiguration("/testdata/httpreq_errorrate1_single.json");
+
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
+
+    runAssertions(results);
 
     p.run().waitUntilFinish();
   }
