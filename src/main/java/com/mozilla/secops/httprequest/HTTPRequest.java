@@ -1115,11 +1115,6 @@ public class HTTPRequest implements Serializable {
     String getPipelineMultimodeConfiguration();
 
     void setPipelineMultimodeConfiguration(String value);
-
-    @Description("Wired input stream; used only in testing")
-    Boolean getWiredInputStream();
-
-    void setWiredInputStream(Boolean value);
   }
 
   /**
