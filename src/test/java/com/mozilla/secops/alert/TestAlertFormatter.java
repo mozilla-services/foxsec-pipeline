@@ -31,6 +31,7 @@ public class TestAlertFormatter {
   @Test
   public void runFormatter() {
     IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
+    options.setMonitoredResourceIndicator("test");
     PCollection<String> res = getTestInput(p).apply(ParDo.of(new AlertFormatter(options)));
 
     PAssert.that(res)

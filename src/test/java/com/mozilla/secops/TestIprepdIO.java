@@ -88,6 +88,7 @@ public class TestIprepdIO implements Serializable {
   @Test
   public void iprepdIOTestWrite() throws Exception {
     IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
+    options.setMonitoredResourceIndicator("test");
     options.setOutputIprepd("http://127.0.0.1:8080");
     options.setOutputIprepdApikey("test");
 
@@ -131,6 +132,7 @@ public class TestIprepdIO implements Serializable {
     options.setOutputIprepd("http://127.0.0.1:8080");
     options.setOutputIprepdApikey("test");
     options.setOutputIprepdLegacyMode(true);
+    options.setMonitoredResourceIndicator("test");
 
     deleteReputation("ip", "127.0.0.1");
     deleteReputation("ip", "99.99.99.1");
@@ -173,6 +175,7 @@ public class TestIprepdIO implements Serializable {
     IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
     options.setOutputIprepd("http://127.0.0.1:8080");
     options.setOutputIprepdApikey("test");
+    options.setMonitoredResourceIndicator("test");
 
     IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
 

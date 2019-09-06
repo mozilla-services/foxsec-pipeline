@@ -81,7 +81,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
-                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
@@ -138,7 +138,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
-                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
@@ -195,7 +195,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
-                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
@@ -254,7 +254,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
-                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
