@@ -69,6 +69,7 @@ public class TestMulti1 implements Serializable {
                   assertEquals(10L, Long.parseLong(a.getMetadataValue("request_threshold")));
                   assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
                   assertEquals("hard_limit", a.getMetadataValue("monitored_resource"));
+                  assertEquals("hard_limit hard_limit_count", a.getMetadataValue("notify_merge"));
                 } else if (a.getMetadataValue("category").equals("error_rate")) {
                   assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
                   assertEquals("error_rate httprequest error_rate 10.0.0.1 35", a.getSummary());
@@ -77,6 +78,7 @@ public class TestMulti1 implements Serializable {
                   assertEquals(30L, Long.parseLong(a.getMetadataValue("error_threshold"), 10));
                   assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
                   assertEquals("error_rate", a.getMetadataValue("monitored_resource"));
+                  assertEquals("error_rate error_count", a.getMetadataValue("notify_merge"));
                 }
               }
               return null;

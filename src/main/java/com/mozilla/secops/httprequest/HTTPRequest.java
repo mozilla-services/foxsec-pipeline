@@ -247,7 +247,7 @@ public class HTTPRequest implements Serializable {
 
                       a.addMetadata("error_count", c.element().getValue().toString());
                       a.addMetadata("error_threshold", maxErrorRate.toString());
-                      a.setNotifyMergeKey("error_count");
+                      a.setNotifyMergeKey(String.format("%s error_count", monitoredResource));
                       a.addMetadata(
                           "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
                       if (!a.hasCorrectFields()) {
@@ -370,7 +370,8 @@ public class HTTPRequest implements Serializable {
 
                           a.addMetadata("count", c.element().getValue().toString());
                           a.addMetadata("request_threshold", maxCount.toString());
-                          a.setNotifyMergeKey("hard_limit_count");
+                          a.setNotifyMergeKey(
+                              String.format("%s hard_limit_count", monitoredResource));
                           a.addMetadata(
                               "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
                           if (!a.hasCorrectFields()) {
@@ -514,7 +515,8 @@ public class HTTPRequest implements Serializable {
                             return;
                           }
 
-                          a.setNotifyMergeKey("useragent_blacklist");
+                          a.setNotifyMergeKey(
+                              String.format("%s useragent_blacklist", monitoredResource));
                           a.addMetadata(
                               "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
 
@@ -755,7 +757,7 @@ public class HTTPRequest implements Serializable {
                       a.addMetadata("method", compareMethod);
                       a.addMetadata("count", Integer.toString(count));
                       a.addMetadata("useragent", userAgent);
-                      a.setNotifyMergeKey("endpoint_abuse");
+                      a.setNotifyMergeKey(String.format("%s endpoint_abuse", monitoredResource));
                       a.addMetadata(
                           "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
                       if (!a.hasCorrectFields()) {
@@ -958,7 +960,8 @@ public class HTTPRequest implements Serializable {
                             a.addMetadata("mean", sOutput.getMean().toString());
                             a.addMetadata("count", c.element().getValue().toString());
                             a.addMetadata("threshold_modifier", thresholdModifier.toString());
-                            a.setNotifyMergeKey("threshold_analysis");
+                            a.setNotifyMergeKey(
+                                String.format("%s threshold_analysis", monitoredResource));
                             a.addMetadata(
                                 "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
                             if (!a.hasCorrectFields()) {
