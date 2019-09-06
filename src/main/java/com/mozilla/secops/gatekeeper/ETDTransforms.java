@@ -1,5 +1,6 @@
 package com.mozilla.secops.gatekeeper;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertSuppressor;
@@ -105,7 +106,8 @@ public class ETDTransforms implements Serializable {
   }
 
   /** Generate Alerts for relevant ETD Finding Events */
-  public static class GenerateAlerts extends PTransform<PCollection<Event>, PCollection<Alert>> {
+  public static class GenerateETDAlerts extends PTransform<PCollection<Event>, PCollection<Alert>>
+      implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private static final String alertCategory = "gatekeeper:gcp";
@@ -118,7 +120,7 @@ public class ETDTransforms implements Serializable {
      *
      * @param opts {@link Options} pipeline options
      */
-    public GenerateAlerts(Options opts) {
+    public GenerateETDAlerts(Options opts) {
       critNotifyEmail = opts.getCriticalNotificationEmail();
       String[] escalateRegexes = opts.getEscalateETDFindingRuleRegex();
 
@@ -130,6 +132,10 @@ public class ETDTransforms implements Serializable {
       } else {
         escalate.add(Pattern.compile(".+"));
       }
+    }
+
+    public String getTransformDoc() {
+      return "Alerts are generated based on events sent from GCP's Event Threat Detection.";
     }
 
     private void addBaseFindingData(Alert a, EventThreatDetectionFinding f) {

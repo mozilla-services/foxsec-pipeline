@@ -4,11 +4,15 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.input.Input;
+import com.mozilla.secops.metrics.CfgTickBuilder;
+import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.options.Default;
+import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -23,7 +27,19 @@ public class GatekeeperPipeline implements Serializable {
   private static final long serialVersionUID = 1L;
 
   /** Runtime options for {@link GatekeeperPipeline} . */
-  public interface Options extends ETDTransforms.Options, GuardDutyTransforms.Options {}
+  public interface GatekeeperOptions extends ETDTransforms.Options, GuardDutyTransforms.Options {
+    @Description("Enable ETD")
+    @Default.Boolean(true)
+    Boolean getEnableETD();
+
+    void setEnableETD(Boolean value);
+
+    @Description("Enable GD")
+    @Default.Boolean(true)
+    Boolean getEnableGD();
+
+    void setEnableGD(Boolean value);
+  }
 
   /**
    * Execute Gatekeeper pipeline
@@ -34,42 +50,80 @@ public class GatekeeperPipeline implements Serializable {
    * @return Collection of Alert objects
    */
   public static PCollection<Alert> executePipeline(
-      Pipeline p, PCollection<String> input, Options options) {
+      Pipeline p, PCollection<String> input, GatekeeperOptions options) {
 
     PCollection<Event> events =
         input
             .apply("parse input", new GatekeeperParser.Parse(options))
             .apply("window input", new GlobalTriggers<Event>(60));
 
-    PCollection<Alert> gdAlerts =
-        events
-            .apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(options))
-            .apply("generate gd alerts", new GuardDutyTransforms.GenerateAlerts(options))
-            .apply("suppress gd alerts", new GuardDutyTransforms.SuppressAlerts(options));
+    PCollectionList<Alert> alertList = PCollectionList.empty(input.getPipeline());
 
-    PCollection<Alert> etdAlerts =
-        events
-            .apply("extract etd findings", new ETDTransforms.ExtractFindings(options))
-            .apply("generate etd alerts", new ETDTransforms.GenerateAlerts(options))
-            .apply("suppress etd alerts", new ETDTransforms.SuppressAlerts(options));
+    if (options.getEnableGD()) {
+      alertList =
+          alertList.and(
+              events
+                  .apply("extract gd findings", new GuardDutyTransforms.ExtractFindings(options))
+                  .apply("generate gd alerts", new GuardDutyTransforms.GenerateGDAlerts(options))
+                  .apply("suppress gd alerts", new GuardDutyTransforms.SuppressAlerts(options)));
+    }
 
-    PCollection<Alert> alerts =
-        PCollectionList.of(gdAlerts)
-            .and(etdAlerts)
-            .apply("combine alerts", Flatten.<Alert>pCollections());
+    if (options.getEnableETD()) {
+      alertList =
+          alertList.and(
+              events
+                  .apply("extract etd findings", new ETDTransforms.ExtractFindings(options))
+                  .apply("generate etd alerts", new ETDTransforms.GenerateETDAlerts(options))
+                  .apply("suppress etd alerts", new ETDTransforms.SuppressAlerts(options)));
+    }
 
-    return alerts;
+    // If configuration ticks were enabled, enable the processor here too
+    if (options.getGenerateConfigurationTicksInterval() > 0) {
+      alertList =
+          alertList.and(
+              events
+                  .apply(
+                      "cfgtick processor",
+                      ParDo.of(new CfgTickProcessor("gatekeeper-cfgtick", "category")))
+                  .apply(new GlobalTriggers<Alert>(60)));
+    }
+
+    return alertList.apply("flatten output", Flatten.<Alert>pCollections());
   }
 
-  private static void runGatekeeper(Options options) throws IOException {
+  /**
+   * Build a configuration tick for Gatekeeper given pipeline options
+   *
+   * @param options Pipeline options
+   * @return String
+   */
+  public static String buildConfigurationTick(GatekeeperOptions options) throws IOException {
+    CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
+
+    if (options.getEnableGD()) {
+      b.withTransformDoc(new GuardDutyTransforms.GenerateGDAlerts(options));
+    }
+    if (options.getEnableETD()) {
+      b.withTransformDoc(new ETDTransforms.GenerateETDAlerts(options));
+    }
+
+    return b.build();
+  }
+
+  private static void runGatekeeper(GatekeeperOptions options) throws IOException {
     Pipeline p = Pipeline.create(options);
 
-    PCollection<String> input = p.apply("read input", Input.compositeInputAdapter(options, null));
-    PCollection<Alert> alerts = executePipeline(p, input, options);
+    PCollection<String> input;
+    try {
+      input =
+          p.apply("input", Input.compositeInputAdapter(options, buildConfigurationTick(options)));
+    } catch (IOException exc) {
+      throw new RuntimeException(exc.getMessage());
+    }
 
-    alerts
-        .apply("format output", ParDo.of(new AlertFormatter(options)))
-        .apply("produce output", OutputOptions.compositeOutput(options));
+    executePipeline(p, input, options)
+        .apply("output format", ParDo.of(new AlertFormatter(options)))
+        .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();
   }
@@ -80,9 +134,10 @@ public class GatekeeperPipeline implements Serializable {
    * @param args Runtime arguments.
    */
   public static void main(String[] args) throws Exception {
-    PipelineOptionsFactory.register(Options.class);
+    PipelineOptionsFactory.register(GatekeeperOptions.class);
 
-    Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+    GatekeeperOptions options =
+        PipelineOptionsFactory.fromArgs(args).withValidation().as(GatekeeperOptions.class);
 
     runGatekeeper(options);
   }

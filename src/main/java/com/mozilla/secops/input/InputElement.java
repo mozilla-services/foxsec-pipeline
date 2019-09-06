@@ -58,10 +58,10 @@ public class InputElement implements Serializable {
     }
 
     for (String i : fileInputs) {
-      list = list.and(begin.apply(TextIO.read().from(i)));
+      list = list.and(begin.apply(i, TextIO.read().from(i)));
     }
     for (String i : pubsubInputs) {
-      list = list.and(begin.apply(PubsubIO.readStrings().fromTopic(i)));
+      list = list.and(begin.apply(i, PubsubIO.readStrings().fromTopic(i)));
     }
     for (KinesisInput i : kinesisInputs) {
       list = list.and(i.toCollection(begin));
