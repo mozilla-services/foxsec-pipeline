@@ -179,7 +179,7 @@ public class HTTPRequest implements Serializable {
      */
     public ErrorRateAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
       maxErrorRate = toggles.getMaxClientErrorRate();
-      monitoredResource = options.getMonitoredResourceIndicator();
+      monitoredResource = toggles.getMonitoredResource();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
     }
@@ -280,7 +280,7 @@ public class HTTPRequest implements Serializable {
      */
     public HardLimitAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
       maxCount = toggles.getHardLimitRequestCount();
-      monitoredResource = options.getMonitoredResourceIndicator();
+      monitoredResource = toggles.getMonitoredResource();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       log = LoggerFactory.getLogger(HardLimitAnalysis.class);
@@ -405,7 +405,7 @@ public class HTTPRequest implements Serializable {
      * @param toggles Pipeline toggles
      */
     public UserAgentBlacklistAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
-      monitoredResource = options.getMonitoredResourceIndicator();
+      monitoredResource = toggles.getMonitoredResource();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       uaBlacklistPath = toggles.getUserAgentBlacklistPath();
@@ -584,7 +584,7 @@ public class HTTPRequest implements Serializable {
     public EndpointAbuseAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
       log = LoggerFactory.getLogger(EndpointAbuseAnalysis.class);
 
-      monitoredResource = options.getMonitoredResourceIndicator();
+      monitoredResource = toggles.getMonitoredResource();
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       varianceSupportingOnly = toggles.getEndpointAbuseExtendedVariance();
@@ -825,7 +825,7 @@ public class HTTPRequest implements Serializable {
       this.requiredMinimumAverage = toggles.getRequiredMinimumAverage();
       this.requiredMinimumClients = toggles.getRequiredMinimumClients();
       this.clampThresholdMaximum = toggles.getClampThresholdMaximum();
-      this.monitoredResource = options.getMonitoredResourceIndicator();
+      this.monitoredResource = toggles.getMonitoredResource();
       this.enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       this.iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);

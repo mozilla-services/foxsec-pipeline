@@ -19,11 +19,11 @@ public class HTTPRequestElementFilter
     extends PTransform<PCollection<KV<String, Event>>, PCollection<Event>> {
   private static final long serialVersionUID = 1L;
 
-  private String name;
+  private final String name;
 
-  private Boolean ignoreCp;
-  private Boolean ignoreInternal;
-  private String cidrExclusionList;
+  private final Boolean ignoreCp;
+  private final Boolean ignoreInternal;
+  private final String cidrExclusionList;
 
   /**
    * Initialize new element filter

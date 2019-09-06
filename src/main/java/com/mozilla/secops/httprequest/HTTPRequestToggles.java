@@ -2,6 +2,7 @@ package com.mozilla.secops.httprequest;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.parser.EventFilter;
@@ -49,6 +50,9 @@ public class HTTPRequestToggles {
   private String cidrExclusionList;
   private Boolean ignoreCloudProviderRequests;
   private Boolean ignoreInternalRequests;
+
+  // Misc settings
+  private String monitoredResource;
 
   /**
    * Set enable NAT detection setting
@@ -355,7 +359,7 @@ public class HTTPRequestToggles {
   }
 
   /**
-   * Get user agent blacklist analysis setting
+   * Set user agent blacklist analysis setting
    *
    * @param enableUserAgentBlacklistAnalysis Boolean
    */
@@ -488,10 +492,30 @@ public class HTTPRequestToggles {
   }
 
   /**
+   * Set monitored resource
+   *
+   * @param value String
+   */
+  @JsonIgnore
+  public void setMonitoredResource(String value) {
+    monitoredResource = value;
+  }
+
+  /**
+   * Get monitored resource
+   *
+   * @return String
+   */
+  public String getMonitoredResource() {
+    return monitoredResource;
+  }
+
+  /**
    * Convert the toggles to a standard EventFilter for use in HTTPRequest
    *
    * <p>Note that this filter does not apply any form of address exclusion if indicated in the
-   * toggles. This must be handled outside of the event filter.
+   * toggles. This must be handled outside of the event filter, typically within {@link
+   * HTTPRequestElementFilter}.
    *
    * @return EventFilter
    */
@@ -556,6 +580,13 @@ public class HTTPRequestToggles {
    */
   public static HTTPRequestToggles fromPipelineOptions(HTTPRequest.HTTPRequestOptions o) {
     HTTPRequestToggles ret = new HTTPRequestToggles();
+
+    // Use the monitored resource indicator from pipeline options as the resource name
+    // here, since we'd only use this function in cases where a single service is being
+    // monitored and we are configuring with global pipeline options.
+    //
+    // This will ensure the correct service name is used in alert messages.
+    ret.setMonitoredResource(o.getMonitoredResourceIndicator());
 
     ret.setEnableThresholdAnalysis(o.getEnableThresholdAnalysis());
     ret.setEnableErrorRateAnalysis(o.getEnableErrorRateAnalysis());
