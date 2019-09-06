@@ -75,7 +75,15 @@ public class AlertFormatter extends DoFn<Alert, String> {
   @ProcessElement
   public void processElement(ProcessContext c) {
     Alert a = c.element();
-    a.addMetadata("monitored_resource", monitoredResourceIndicator);
+
+    // Add the monitored_resource metadata if missing
+    if (a.getMetadataValue("monitored_resource") == null) {
+      if (monitoredResourceIndicator == null) {
+        throw new RuntimeException("monitored resource indicator was null in AlertFormatter");
+      }
+      a.addMetadata("monitored_resource", monitoredResourceIndicator);
+    }
+
     addGeoIPData(a);
     c.output(a.toJSON());
   }

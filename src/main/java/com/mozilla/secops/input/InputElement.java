@@ -107,7 +107,10 @@ public class InputElement implements Serializable {
 
     if (cfgTickMessage != null) {
       list =
-          list.and(begin.apply(new CfgTickGenerator(cfgTickMessage, cfgTickInterval, cfgTickMax)));
+          list.and(
+              begin.apply(
+                  String.format("%s generate cfgtick", name),
+                  new CfgTickGenerator(cfgTickMessage, cfgTickInterval, cfgTickMax)));
     }
 
     if (wiredStream != null) {
@@ -115,10 +118,10 @@ public class InputElement implements Serializable {
     }
 
     for (String i : fileInputs) {
-      list = list.and(begin.apply(TextIO.read().from(i)));
+      list = list.and(begin.apply(i, TextIO.read().from(i)));
     }
     for (String i : pubsubInputs) {
-      list = list.and(begin.apply(PubsubIO.readStrings().fromTopic(i)));
+      list = list.and(begin.apply(i, PubsubIO.readStrings().fromTopic(i)));
     }
     for (String i : kinesisInputs) {
       KinesisInput k = KinesisInput.fromInputSpecifier(i, project);
@@ -138,7 +141,8 @@ public class InputElement implements Serializable {
       }
     }
 
-    return list.apply("flatten input components", Flatten.<String>pCollections());
+    return list.apply(
+        String.format("%s flatten input components", name), Flatten.<String>pCollections());
   }
 
   /**
@@ -157,7 +161,7 @@ public class InputElement implements Serializable {
     if (filter != null) {
       fn = fn.withInlineEventFilter(filter);
     }
-    return col.apply("parse", ParDo.of(fn));
+    return col.apply(String.format("%s parse", name), ParDo.of(fn));
   }
 
   /**

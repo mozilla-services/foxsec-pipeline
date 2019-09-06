@@ -46,6 +46,7 @@ public class KinesisInput {
   public PCollection<String> toCollection(PBegin begin) {
     return begin
         .apply(
+            String.format("%s %s", streamName, region),
             KinesisIO.read()
                 .withStreamName(streamName)
                 .withInitialPositionInStream(InitialPositionInStream.LATEST)

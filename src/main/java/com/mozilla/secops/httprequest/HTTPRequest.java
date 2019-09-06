@@ -1159,39 +1159,56 @@ public class HTTPRequest implements Serializable {
       PCollection<Event> events, HTTPRequestOptions options, HTTPRequestToggles toggles) {
     PCollectionList<Alert> resultsList = PCollectionList.empty(events.getPipeline());
 
+    // We need to pull the stored service name out of the toggle configuration so we can
+    // assign unique names to our transform steps.
+    String prefix = toggles.getMonitoredResource();
+
     if (toggles.getEnableThresholdAnalysis()
         || toggles.getEnableErrorRateAnalysis()
         || toggles.getEnableHardLimitAnalysis()
         || toggles.getEnableUserAgentBlacklistAnalysis()) {
-      PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
+      PCollection<Event> fwEvents =
+          events.apply(String.format("%s window for fixed", prefix), new WindowForFixed());
 
       PCollectionView<Map<String, Boolean>> natView = null;
       if (toggles.getEnableNatDetection()) {
-        natView = DetectNat.getView(fwEvents);
+        natView = DetectNat.getView(fwEvents, prefix);
       }
 
       if (toggles.getEnableThresholdAnalysis()) {
         resultsList =
             resultsList.and(
                 fwEvents
-                    .apply("threshold analysis", new ThresholdAnalysis(options, toggles, natView))
-                    .apply("threshold analysis global", new GlobalTriggers<Alert>(5)));
+                    .apply(
+                        String.format("%s threshold analysis", prefix),
+                        new ThresholdAnalysis(options, toggles, natView))
+                    .apply(
+                        String.format("%s threshold analysis global", prefix),
+                        new GlobalTriggers<Alert>(5)));
       }
 
       if (toggles.getEnableHardLimitAnalysis()) {
         resultsList =
             resultsList.and(
                 fwEvents
-                    .apply("hard limit analysis", new HardLimitAnalysis(options, toggles, natView))
-                    .apply("hard limit analysis global", new GlobalTriggers<Alert>(5)));
+                    .apply(
+                        String.format("%s hard limit analysis", prefix),
+                        new HardLimitAnalysis(options, toggles, natView))
+                    .apply(
+                        String.format("%s hard limit analysis global", prefix),
+                        new GlobalTriggers<Alert>(5)));
       }
 
       if (toggles.getEnableErrorRateAnalysis()) {
         resultsList =
             resultsList.and(
                 fwEvents
-                    .apply("error rate analysis", new ErrorRateAnalysis(options, toggles))
-                    .apply("error rate analysis global", new GlobalTriggers<Alert>(5)));
+                    .apply(
+                        String.format("error rate analysis", prefix),
+                        new ErrorRateAnalysis(options, toggles))
+                    .apply(
+                        String.format("%s error rate analysis global", prefix),
+                        new GlobalTriggers<Alert>(5)));
       }
 
       if (toggles.getEnableUserAgentBlacklistAnalysis()) {
@@ -1199,9 +1216,11 @@ public class HTTPRequest implements Serializable {
             resultsList.and(
                 fwEvents
                     .apply(
-                        "ua blacklist analysis",
+                        String.format("%s ua blacklist analysis", prefix),
                         new UserAgentBlacklistAnalysis(options, toggles, natView))
-                    .apply("ua blacklist analysis global", new GlobalTriggers<Alert>(5)));
+                    .apply(
+                        String.format("%s ua blacklist analysis global", prefix),
+                        new GlobalTriggers<Alert>(5)));
       }
     }
 
@@ -1210,14 +1229,17 @@ public class HTTPRequest implements Serializable {
           resultsList.and(
               events
                   .apply(
-                      "key and window for sessions fire early",
+                      String.format("%s key and window for sessions fire early", prefix),
                       new KeyAndWindowForSessionsFireEarly(toggles))
                   // No requirement for follow up application of GlobalTriggers here since
                   // EndpointAbuseAnalysis will do this for us
-                  .apply("endpoint abuse analysis", new EndpointAbuseAnalysis(options, toggles)));
+                  .apply(
+                      String.format("%s endpoint abuse analysis", prefix),
+                      new EndpointAbuseAnalysis(options, toggles)));
     }
 
-    return resultsList.apply("flatten analysis output", Flatten.<Alert>pCollections());
+    return resultsList.apply(
+        String.format("%s flatten analysis output", prefix), Flatten.<Alert>pCollections());
   }
 
   /**
@@ -1276,16 +1298,15 @@ public class HTTPRequest implements Serializable {
       //
       // Since we are using pipeline options for all configuration here, we can also use them
       // to build the configuration tick.
+      HTTPRequestToggles t = HTTPRequestToggles.fromPipelineOptions(options);
+      t.setMonitoredResource(options.getMonitoredResourceIndicator());
       InputElement e =
           InputElement.fromPipelineOptions(
-              options.getMonitoredResourceIndicator(),
-              options,
-              buildConfigurationTick(options, HTTPRequestToggles.fromPipelineOptions(options)));
+              options.getMonitoredResourceIndicator(), options, buildConfigurationTick(options, t));
       e.setParserConfiguration(ParserCfg.fromInputOptions(options))
-          .setEventFilter(HTTPRequestToggles.fromPipelineOptions(options).toStandardFilter());
+          .setEventFilter(t.toStandardFilter());
       input.withInputElement(e);
-      toggleCache.put(
-          options.getMonitoredResourceIndicator(), HTTPRequestToggles.fromPipelineOptions(options));
+      toggleCache.put(options.getMonitoredResourceIndicator(), t);
     }
 
     return input;
@@ -1317,7 +1338,7 @@ public class HTTPRequest implements Serializable {
       }
       PCollection<Event> t =
           col.apply(
-              "per-element filter",
+              String.format("%s per-element filter", e.getName()),
               new HTTPRequestElementFilter(e.getName(), toggleCache.get(e.getName())));
       ret.put(e.getName(), t);
     }
@@ -1342,14 +1363,22 @@ public class HTTPRequest implements Serializable {
           resultsList
               .and(
                   analysis(entry.getValue(), options, toggleCache.get(entry.getKey()))
-                      .setCoder(SerializableCoder.of(Alert.class)))
+                      .setCoder(SerializableCoder.of(Alert.class))
+                      .apply(
+                          String.format("%s analysis tag", entry.getKey()),
+                          ParDo.of(new HTTPRequestResourceTag(entry.getKey()))))
               .and(
                   entry
                       .getValue()
                       .apply(
-                          "cfgtick processor",
+                          String.format("%s cfgtick processor", entry.getKey()),
                           ParDo.of(new CfgTickProcessor("httprequest-cfgtick", "category")))
-                      .apply(new GlobalTriggers<Alert>(5)));
+                      .apply(
+                          String.format("%s cfgtick tag", entry.getKey()),
+                          ParDo.of(new HTTPRequestResourceTag(entry.getKey())))
+                      .apply(
+                          String.format("%s cfgtick globaltriggers", entry.getKey()),
+                          new GlobalTriggers<Alert>(5)));
     }
 
     return resultsList.apply("flatten all output", Flatten.<Alert>pCollections());
