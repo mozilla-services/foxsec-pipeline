@@ -20,6 +20,7 @@ import com.amazonaws.services.guardduty.model.RemotePortDetails;
 import com.amazonaws.services.guardduty.model.Resource;
 import com.amazonaws.services.guardduty.model.Service;
 import com.amazonaws.services.guardduty.model.Tag;
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertSuppressor;
@@ -166,7 +167,8 @@ public class GuardDutyTransforms implements Serializable {
   }
 
   /** Generate Alerts for relevant Findings */
-  public static class GenerateAlerts extends PTransform<PCollection<Event>, PCollection<Alert>> {
+  public static class GenerateGDAlerts extends PTransform<PCollection<Event>, PCollection<Alert>>
+      implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private static final String alertCategory = "gatekeeper:aws";
@@ -182,8 +184,8 @@ public class GuardDutyTransforms implements Serializable {
      *
      * @param opts {@link Options} pipeline options
      */
-    public GenerateAlerts(Options opts) {
-      log = LoggerFactory.getLogger(GenerateAlerts.class);
+    public GenerateGDAlerts(Options opts) {
+      log = LoggerFactory.getLogger(GenerateGDAlerts.class);
 
       critNotifyEmail = opts.getCriticalNotificationEmail();
       identityMgrPath = opts.getIdentityManagerPath();
@@ -197,6 +199,10 @@ public class GuardDutyTransforms implements Serializable {
       } else {
         escalate.add(Pattern.compile(".+"));
       }
+    }
+
+    public String getTransformDoc() {
+      return "Alerts are generated based on events sent from AWS's Guardduty.";
     }
 
     private void addBaseFindingData(Alert a, Finding f) {
@@ -451,20 +457,11 @@ public class GuardDutyTransforms implements Serializable {
                   if (identityMgrPath != null) {
                     try {
                       awsAcctMap = IdentityManager.load(identityMgrPath).getAwsAccountMap();
-                      if (awsAcctMap != null) {
-                        log.info("aws account map successfully loaded from identity manager file");
-                      } else {
-                        log.warn(
-                            "no aws account map contained in identity manager file, alerts will not contain aws_account_name");
-                      }
                     } catch (IOException x) {
                       log.error(
                           "failed to load identity manager, alerts will not contain aws_account_name. error: {}",
                           x.getMessage());
                     }
-                  } else {
-                    log.warn(
-                        "no identity manager provided, alerts will not contain aws_account_name");
                   }
                 }
 

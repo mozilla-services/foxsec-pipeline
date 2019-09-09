@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.input.Input;
 import java.io.IOException;
 import java.util.Arrays;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
@@ -31,8 +32,9 @@ public class TestGatekeeper {
         .advanceWatermarkToInfinity();
   }
 
-  private GatekeeperPipeline.Options getBaseTestOptions() {
-    GatekeeperPipeline.Options opts = PipelineOptionsFactory.as(GatekeeperPipeline.Options.class);
+  private GatekeeperPipeline.GatekeeperOptions getBaseTestOptions() {
+    GatekeeperPipeline.GatekeeperOptions opts =
+        PipelineOptionsFactory.as(GatekeeperPipeline.GatekeeperOptions.class);
     opts.setUseEventTimestamp(true);
     opts.setMonitoredResourceIndicator("gatekeeper-test");
     return opts;
@@ -42,21 +44,32 @@ public class TestGatekeeper {
 
   @Test
   public void gatekeeperNoFiltersTest() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
+    opts.setInputFile(
+        new String[] {
+          "./target/test-classes/testdata/gatekeeper/guardduty-sample-findings.txt",
+          "./target/test-classes/testdata/gatekeeper/etd-sample-findings.txt"
+        });
+    opts.setGenerateConfigurationTicksInterval(1);
+    opts.setGenerateConfigurationTicksMaximum(5L);
 
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
+    PCollection<String> input =
+        p.apply(
+            "input",
+            Input.compositeInputAdapter(opts, GatekeeperPipeline.buildConfigurationTick(opts)));
+
+    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, input, opts);
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(22L);
+    PAssert.that(count).containsInAnyOrder(27L);
 
     PAssert.that(alerts)
         .satisfies(
             x -> {
               for (Alert a : x) {
                 assertNotNull(a.getCategory());
-                assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                 if (a.getCategory().equals("gatekeeper:aws")) {
+                  assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                   assertTrue(
                       a.getSummary().startsWith("suspicious activity detected in aws account"));
                   assertEquals("123456789012", a.getMetadataValue("aws_account"));
@@ -144,6 +157,7 @@ public class TestGatekeeper {
                       break;
                   }
                 } else if (a.getCategory().equals("gatekeeper:gcp")) {
+                  assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                   assertTrue(a.getSummary().startsWith("suspicious activity detected in gcp org"));
                   // the three project numbers in the sample data
                   assertTrue(
@@ -179,6 +193,17 @@ public class TestGatekeeper {
                       assertNotNull(a.getMetadataValue("subnetwork_id"));
                       assertNotNull(a.getMetadataValue("subnetwork_name"));
                   }
+                } else if (a.getMetadataValue("category").equals("cfgtick")) {
+                  assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                  assertEquals("gatekeeper-cfgtick", a.getCategory());
+                  assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
+                  assertEquals(
+                      "Alerts are generated based on events sent from AWS's Guardduty.",
+                      a.getMetadataValue("heuristic_GenerateGDAlerts"));
+                  assertEquals(
+                      "Alerts are generated based on events sent from GCP's Event Threat Detection.",
+                      a.getMetadataValue("heuristic_GenerateETDAlerts"));
+
                 } else {
                   fail(String.format("unexpected alert category type: %s", a.getCategory()));
                 }
@@ -192,7 +217,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperTestEnrichedGDAlertsWithoutIdentityMgr() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
@@ -214,7 +239,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperTestEnrichedGDAlertsWithIdentityMgr() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     // load identity manager containing mapping for all accounts in test data
     opts.setIdentityManagerPath("/testdata/identitymanager.json");
@@ -239,7 +264,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperIgnoreAllETDTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
     opts.setIgnoreETDFindingRuleRegex(new String[] {".+"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
@@ -268,7 +293,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperIgnoreAllGDTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
     opts.setIgnoreGDFindingTypeRegex(new String[] {".+"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
@@ -302,7 +327,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperIgnoreSomeGDTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
     opts.setIgnoreGDFindingTypeRegex(new String[] {"Recon:EC2.+"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
@@ -329,7 +354,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperDoNotIgnoreEC2InstanceTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
     opts.setIgnoreDNSRequestFindingApps(new String[] {});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
@@ -343,7 +368,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperIgnoreEC2InstanceTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
     opts.setIgnoreDNSRequestFindingApps(new String[] {"iTalkToCryptoMiningServers"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
@@ -357,7 +382,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperEscalateAllTestWithEmail() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
 
@@ -385,7 +410,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperImplicitEscalateAllTestWithEmail() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
 
@@ -410,7 +435,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperImplicitEscalateAllTestNoEmail() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
@@ -432,7 +457,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperIgnoreSomeAndEscalateSomeTest() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
 
@@ -480,7 +505,7 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperEscalateAllTestNoEmail() throws Exception {
     TestStream<String> s = getTestStream();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     opts.setEscalateETDFindingRuleRegex(new String[] {".+"});
     opts.setEscalateGDFindingTypeRegex(new String[] {".+"});
@@ -513,7 +538,7 @@ public class TestGatekeeper {
             .advanceWatermarkTo(new Instant(0L))
             .addElements(gd[0], Arrays.copyOfRange(gd, 1, gd.length))
             .advanceWatermarkToInfinity();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
@@ -535,7 +560,7 @@ public class TestGatekeeper {
             .advanceWatermarkTo(new Instant(0L))
             .addElements(gd[0], Arrays.copyOfRange(gd, 1, gd.length))
             .advanceWatermarkToInfinity();
-    GatekeeperPipeline.Options opts = getBaseTestOptions();
+    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 

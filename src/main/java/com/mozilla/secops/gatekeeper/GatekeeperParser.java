@@ -39,13 +39,13 @@ public class GatekeeperParser implements Serializable {
      *
      * @param options Pipeline options
      */
-    public Parse(GatekeeperPipeline.Options options) {
+    public Parse(GatekeeperPipeline.GatekeeperOptions options) {
       cfg = ParserCfg.fromInputOptions(options);
     }
 
     @Override
     public PCollection<Event> expand(PCollection<String> rawInputStrings) {
-      EventFilter filter = new EventFilter();
+      EventFilter filter = new EventFilter().passConfigurationTicks();
       filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.GUARDDUTY));
       filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.ETD));
 
