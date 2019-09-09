@@ -2045,6 +2045,29 @@ public class ParserTest {
   }
 
   @Test
+  public void testAuth0EventClientIdArrayAsRaw() throws Exception {
+    // This tests handling of a current bug where sometimes client ids are arrays.
+    // We want to discard these events for now.
+    String buf =
+        "{\"client_id\": [\"TESTCLIENTID\", \"ANOTHERID\"],\"location_info\": null,"
+            + "\"user_id\": \"\",\"log_id\": null,\"client_name\": "
+            + "\"enterprise_publisher\",\"_id\": \"11111115d3b354d\","
+            + "\"details\": null,\"ip\": \"10.0.0.244\",\"type\": "
+            + "\"seccft\",\"date\": \"2019-07-26T17:15:57.235Z\"}}";
+
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
+    Raw a0 = e.getPayload();
+    assertNotNull(a0);
+    Normalized n = e.getNormalized();
+    assertFalse(n.isOfType(Normalized.Type.AUTH));
+    assertFalse(n.isOfType(Normalized.Type.AUTH_SESSION));
+  }
+
+  @Test
   public void testAuth0GetUsername() throws Exception {
     Event e;
     Parser p = getTestParser();
