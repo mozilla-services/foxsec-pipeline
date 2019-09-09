@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -174,14 +173,18 @@ public class HTTPRequest implements Serializable {
     /**
      * Static initializer for {@link ErrorRateAnalysis}
      *
-     * @param options Pipeline options
-     * @param toggles Pipeline toggles
+     * @param toggles {@link HTTPRequestToggles}
+     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
+     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
      */
-    public ErrorRateAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
+    public ErrorRateAnalysis(
+        HTTPRequestToggles toggles,
+        Boolean enableIprepdDatastoreWhitelist,
+        String iprepdDatastoreWhitelistProject) {
       maxErrorRate = toggles.getMaxClientErrorRate();
       monitoredResource = toggles.getMonitoredResource();
-      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
-      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
+      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
+      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
     }
 
     public String getTransformDoc() {
@@ -275,30 +278,22 @@ public class HTTPRequest implements Serializable {
     /**
      * Static initializer for {@link HardLimitAnalysis}
      *
-     * @param options Pipeline options
-     * @param toggles Pipeline toggles
-     */
-    public HardLimitAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
-      maxCount = toggles.getHardLimitRequestCount();
-      monitoredResource = toggles.getMonitoredResource();
-      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
-      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
-      log = LoggerFactory.getLogger(HardLimitAnalysis.class);
-    }
-
-    /**
-     * Static initializer for {@link HardLimitAnalysis}
-     *
-     * @param options Pipeline options
-     * @param toggles Pipeline toggles
-     * @param natView Use {@link DetectNat} view during hard limit analysis
+     * @param toggles {@link HTTPRequestToggles}
+     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
+     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param natView Use {@link DetectNat} view, or null to disable
      */
     public HardLimitAnalysis(
-        HTTPRequestOptions options,
         HTTPRequestToggles toggles,
+        Boolean enableIprepdDatastoreWhitelist,
+        String iprepdDatastoreWhitelistProject,
         PCollectionView<Map<String, Boolean>> natView) {
-      this(options, toggles);
+      maxCount = toggles.getHardLimitRequestCount();
+      monitoredResource = toggles.getMonitoredResource();
+      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
+      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
       this.natView = natView;
+      log = LoggerFactory.getLogger(HardLimitAnalysis.class);
     }
 
     public String getTransformDoc() {
@@ -402,30 +397,22 @@ public class HTTPRequest implements Serializable {
     /**
      * Initialize new {@link UserAgentBlacklistAnalysis}
      *
-     * @param options Pipeline options
-     * @param toggles Pipeline toggles
-     */
-    public UserAgentBlacklistAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
-      monitoredResource = toggles.getMonitoredResource();
-      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
-      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
-      uaBlacklistPath = toggles.getUserAgentBlacklistPath();
-      log = LoggerFactory.getLogger(UserAgentBlacklistAnalysis.class);
-    }
-
-    /**
-     * Initialize new {@link UserAgentBlacklistAnalysis}
-     *
-     * @param options Pipeline options
-     * @param toggles Pipeline toggles
-     * @param natView Use {@link DetectNat} view during analysis
+     * @param toggles {@link HTTPRequestToggles}
+     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
+     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param natView Use {@link DetectNat} view, or null to disable
      */
     public UserAgentBlacklistAnalysis(
-        HTTPRequestOptions options,
         HTTPRequestToggles toggles,
+        Boolean enableIprepdDatastoreWhitelist,
+        String iprepdDatastoreWhitelistProject,
         PCollectionView<Map<String, Boolean>> natView) {
-      this(options, toggles);
+      monitoredResource = toggles.getMonitoredResource();
+      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
+      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
       this.natView = natView;
+      uaBlacklistPath = toggles.getUserAgentBlacklistPath();
+      log = LoggerFactory.getLogger(UserAgentBlacklistAnalysis.class);
     }
 
     public String getTransformDoc() {
@@ -583,12 +570,15 @@ public class HTTPRequest implements Serializable {
      *
      * @param options Pipeline options
      */
-    public EndpointAbuseAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
+    public EndpointAbuseAnalysis(
+        HTTPRequestToggles toggles,
+        Boolean enableIprepdDatastoreWhitelist,
+        String iprepdDatastoreWhitelistProject) {
       log = LoggerFactory.getLogger(EndpointAbuseAnalysis.class);
 
       monitoredResource = toggles.getMonitoredResource();
-      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
-      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
+      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
+      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
       varianceSupportingOnly = toggles.getEndpointAbuseExtendedVariance();
       suppressRecovery = toggles.getEndpointAbuseSuppressRecovery();
       customVarianceSubstrings = toggles.getEndpointAbuseCustomVarianceSubstrings();
@@ -820,31 +810,25 @@ public class HTTPRequest implements Serializable {
     /**
      * Static initializer for {@link ThresholdAnalysis}.
      *
-     * @param options {@link HTTPRequestOptions}
+     * @param toggles {@link HTTPRequestToggles}
+     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
+     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param natView Use {@link DetectNat} view, or null to disable
      */
-    public ThresholdAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
+    public ThresholdAnalysis(
+        HTTPRequestToggles toggles,
+        Boolean enableIprepdDatastoreWhitelist,
+        String iprepdDatastoreWhitelistProject,
+        PCollectionView<Map<String, Boolean>> natView) {
       this.thresholdModifier = toggles.getAnalysisThresholdModifier();
       this.requiredMinimumAverage = toggles.getRequiredMinimumAverage();
       this.requiredMinimumClients = toggles.getRequiredMinimumClients();
       this.clampThresholdMaximum = toggles.getClampThresholdMaximum();
       this.monitoredResource = toggles.getMonitoredResource();
-      this.enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
-      this.iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
-      log = LoggerFactory.getLogger(ThresholdAnalysis.class);
-    }
-
-    /**
-     * Static initializer for {@link ThresholdAnalysis}.
-     *
-     * @param options {@link HTTPRequestOptions}
-     * @param natView Use {@link DetectNat} view during threshold analysis
-     */
-    public ThresholdAnalysis(
-        HTTPRequestOptions options,
-        HTTPRequestToggles toggles,
-        PCollectionView<Map<String, Boolean>> natView) {
-      this(options, toggles);
+      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
+      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
       this.natView = natView;
+      log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
     public String getTransformDoc() {
@@ -973,6 +957,124 @@ public class HTTPRequest implements Serializable {
                         }
                       })
                   .withSideInputs(wStats, natView));
+    }
+  }
+
+  private static class HTTPRequestAnalysis
+      extends PTransform<PCollection<Event>, PCollection<Alert>> {
+    private static final long serialVersionUID = 1L;
+
+    private final HTTPRequestToggles toggles;
+    private final Boolean enableIprepdDatastoreWhitelist;
+    private final String iprepdDatastoreWhitelistProject;
+
+    /**
+     * Create new HTTPRequestAnalysis
+     *
+     * @param options Pipeline options
+     * @param toggles Element toggles
+     */
+    public HTTPRequestAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
+      this.toggles = toggles;
+
+      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
+      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> events) {
+      PCollectionList<Alert> resultsList = PCollectionList.empty(events.getPipeline());
+
+      // We need to pull the stored service name out of the toggle configuration so we can
+      // assign unique names to our transform steps.
+      String prefix = toggles.getMonitoredResource();
+
+      if (toggles.getEnableThresholdAnalysis()
+          || toggles.getEnableErrorRateAnalysis()
+          || toggles.getEnableHardLimitAnalysis()
+          || toggles.getEnableUserAgentBlacklistAnalysis()) {
+        PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
+
+        PCollectionView<Map<String, Boolean>> natView = null;
+        if (toggles.getEnableNatDetection()) {
+          natView = DetectNat.getView(fwEvents, prefix);
+        }
+
+        if (toggles.getEnableThresholdAnalysis()) {
+          resultsList =
+              resultsList.and(
+                  fwEvents
+                      .apply(
+                          "threshold analysis",
+                          new ThresholdAnalysis(
+                              toggles,
+                              enableIprepdDatastoreWhitelist,
+                              iprepdDatastoreWhitelistProject,
+                              natView))
+                      .apply("threshold analysis global triggers", new GlobalTriggers<Alert>(5)));
+        }
+
+        if (toggles.getEnableHardLimitAnalysis()) {
+          resultsList =
+              resultsList.and(
+                  fwEvents
+                      .apply(
+                          "hard limit analysis",
+                          new HardLimitAnalysis(
+                              toggles,
+                              enableIprepdDatastoreWhitelist,
+                              iprepdDatastoreWhitelistProject,
+                              natView))
+                      .apply("hard limit analysis global triggers", new GlobalTriggers<Alert>(5)));
+        }
+
+        if (toggles.getEnableErrorRateAnalysis()) {
+          resultsList =
+              resultsList.and(
+                  fwEvents
+                      .apply(
+                          "error rate analysis",
+                          new ErrorRateAnalysis(
+                              toggles,
+                              enableIprepdDatastoreWhitelist,
+                              iprepdDatastoreWhitelistProject))
+                      .apply("error rate analysis global triggers", new GlobalTriggers<Alert>(5)));
+        }
+
+        if (toggles.getEnableUserAgentBlacklistAnalysis()) {
+          resultsList =
+              resultsList.and(
+                  fwEvents
+                      .apply(
+                          "ua blacklist analysis",
+                          new UserAgentBlacklistAnalysis(
+                              toggles,
+                              enableIprepdDatastoreWhitelist,
+                              iprepdDatastoreWhitelistProject,
+                              natView))
+                      .apply(
+                          "ua blacklist analysis global triggers", new GlobalTriggers<Alert>(5)));
+        }
+      }
+
+      if (toggles.getEnableEndpointAbuseAnalysis()) {
+        resultsList =
+            resultsList.and(
+                events
+                    .apply(
+                        "key and window for sessions fire early",
+                        new KeyAndWindowForSessionsFireEarly(toggles))
+                    // No requirement for follow up application of GlobalTriggers here since
+                    // EndpointAbuseAnalysis will do this for us
+                    .apply(
+                        "endpoint abuse analysis",
+                        new EndpointAbuseAnalysis(
+                            toggles,
+                            enableIprepdDatastoreWhitelist,
+                            iprepdDatastoreWhitelistProject)));
+      }
+
+      return resultsList.apply("flatten analysis output", Flatten.<Alert>pCollections());
     }
   }
 
@@ -1132,117 +1234,45 @@ public class HTTPRequest implements Serializable {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
 
     if (toggles.getEnableThresholdAnalysis()) {
-      b.withTransformDoc(new ThresholdAnalysis(options, toggles, null));
+      b.withTransformDoc(
+          new ThresholdAnalysis(
+              toggles,
+              options.getOutputIprepdEnableDatastoreWhitelist(),
+              options.getOutputIprepdDatastoreWhitelistProject(),
+              null));
     }
     if (toggles.getEnableHardLimitAnalysis()) {
-      b.withTransformDoc(new HardLimitAnalysis(options, toggles, null));
+      b.withTransformDoc(
+          new HardLimitAnalysis(
+              toggles,
+              options.getOutputIprepdEnableDatastoreWhitelist(),
+              options.getOutputIprepdDatastoreWhitelistProject(),
+              null));
     }
     if (toggles.getEnableErrorRateAnalysis()) {
-      b.withTransformDoc(new ErrorRateAnalysis(options, toggles));
+      b.withTransformDoc(
+          new ErrorRateAnalysis(
+              toggles,
+              options.getOutputIprepdEnableDatastoreWhitelist(),
+              options.getOutputIprepdDatastoreWhitelistProject()));
     }
     if (toggles.getEnableUserAgentBlacklistAnalysis()) {
-      b.withTransformDoc(new UserAgentBlacklistAnalysis(options, toggles, null));
+      b.withTransformDoc(
+          new UserAgentBlacklistAnalysis(
+              toggles,
+              options.getOutputIprepdEnableDatastoreWhitelist(),
+              options.getOutputIprepdDatastoreWhitelistProject(),
+              null));
     }
     if (toggles.getEnableEndpointAbuseAnalysis()) {
-      b.withTransformDoc(new EndpointAbuseAnalysis(options, toggles));
+      b.withTransformDoc(
+          new EndpointAbuseAnalysis(
+              toggles,
+              options.getOutputIprepdEnableDatastoreWhitelist(),
+              options.getOutputIprepdDatastoreWhitelistProject()));
     }
 
     return b.build();
-  }
-
-  /**
-   * Perform analysis on a given collection of events
-   *
-   * @param events Event PCollection
-   * @param options Pipeline options
-   * @param toggles Per-collection analysis toggles
-   * @return Collection of alerts
-   */
-  public static PCollection<Alert> analysis(
-      PCollection<Event> events, HTTPRequestOptions options, HTTPRequestToggles toggles) {
-    PCollectionList<Alert> resultsList = PCollectionList.empty(events.getPipeline());
-
-    // We need to pull the stored service name out of the toggle configuration so we can
-    // assign unique names to our transform steps.
-    String prefix = toggles.getMonitoredResource();
-
-    if (toggles.getEnableThresholdAnalysis()
-        || toggles.getEnableErrorRateAnalysis()
-        || toggles.getEnableHardLimitAnalysis()
-        || toggles.getEnableUserAgentBlacklistAnalysis()) {
-      PCollection<Event> fwEvents =
-          events.apply(String.format("%s window for fixed", prefix), new WindowForFixed());
-
-      PCollectionView<Map<String, Boolean>> natView = null;
-      if (toggles.getEnableNatDetection()) {
-        natView = DetectNat.getView(fwEvents, prefix);
-      }
-
-      if (toggles.getEnableThresholdAnalysis()) {
-        resultsList =
-            resultsList.and(
-                fwEvents
-                    .apply(
-                        String.format("%s threshold analysis", prefix),
-                        new ThresholdAnalysis(options, toggles, natView))
-                    .apply(
-                        String.format("%s threshold analysis global", prefix),
-                        new GlobalTriggers<Alert>(5)));
-      }
-
-      if (toggles.getEnableHardLimitAnalysis()) {
-        resultsList =
-            resultsList.and(
-                fwEvents
-                    .apply(
-                        String.format("%s hard limit analysis", prefix),
-                        new HardLimitAnalysis(options, toggles, natView))
-                    .apply(
-                        String.format("%s hard limit analysis global", prefix),
-                        new GlobalTriggers<Alert>(5)));
-      }
-
-      if (toggles.getEnableErrorRateAnalysis()) {
-        resultsList =
-            resultsList.and(
-                fwEvents
-                    .apply(
-                        String.format("error rate analysis", prefix),
-                        new ErrorRateAnalysis(options, toggles))
-                    .apply(
-                        String.format("%s error rate analysis global", prefix),
-                        new GlobalTriggers<Alert>(5)));
-      }
-
-      if (toggles.getEnableUserAgentBlacklistAnalysis()) {
-        resultsList =
-            resultsList.and(
-                fwEvents
-                    .apply(
-                        String.format("%s ua blacklist analysis", prefix),
-                        new UserAgentBlacklistAnalysis(options, toggles, natView))
-                    .apply(
-                        String.format("%s ua blacklist analysis global", prefix),
-                        new GlobalTriggers<Alert>(5)));
-      }
-    }
-
-    if (toggles.getEnableEndpointAbuseAnalysis()) {
-      resultsList =
-          resultsList.and(
-              events
-                  .apply(
-                      String.format("%s key and window for sessions fire early", prefix),
-                      new KeyAndWindowForSessionsFireEarly(toggles))
-                  // No requirement for follow up application of GlobalTriggers here since
-                  // EndpointAbuseAnalysis will do this for us
-                  .apply(
-                      String.format("%s endpoint abuse analysis", prefix),
-                      new EndpointAbuseAnalysis(options, toggles)));
-    }
-
-    return resultsList.apply(
-        String.format("%s flatten analysis output", prefix), Flatten.<Alert>pCollections());
   }
 
   /**
@@ -1365,10 +1395,13 @@ public class HTTPRequest implements Serializable {
       resultsList =
           resultsList
               .and(
-                  analysis(entry.getValue(), options, toggleCache.get(entry.getKey()))
-                      .setCoder(SerializableCoder.of(Alert.class))
+                  entry
+                      .getValue()
                       .apply(
-                          String.format("%s analysis tag", entry.getKey()),
+                          String.format("analyze %s", entry.getKey()),
+                          new HTTPRequestAnalysis(options, toggleCache.get(entry.getKey())))
+                      .apply(
+                          String.format("tag %s", entry.getKey()),
                           ParDo.of(new HTTPRequestResourceTag(entry.getKey()))))
               .and(
                   entry
