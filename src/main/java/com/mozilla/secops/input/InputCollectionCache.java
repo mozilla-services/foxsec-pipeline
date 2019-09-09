@@ -42,7 +42,14 @@ public class InputCollectionCache {
     if (pubsubInputs.containsKey(name)) {
       return pubsubInputs.get(name);
     }
-    PCollection<String> ret = begin.apply(name, PubsubIO.readStrings().fromTopic(name));
+    // The Dataflow UI will treat a step name with slashes as though it is a composite step to be
+    // expanded. Normalize it here.
+    String[] parts = name.split("/");
+    String n = "unknown";
+    if (parts.length == 4) {
+      n = String.format("%s-%s", parts[1], parts[3]);
+    }
+    PCollection<String> ret = begin.apply(n, PubsubIO.readStrings().fromTopic(name));
     pubsubInputs.put(name, ret);
     return ret;
   }
