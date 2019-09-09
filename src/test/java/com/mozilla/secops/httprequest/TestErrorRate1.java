@@ -3,23 +3,13 @@ package com.mozilla.secops.httprequest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
-import com.mozilla.secops.input.Input;
-import com.mozilla.secops.metrics.CfgTickProcessor;
-import com.mozilla.secops.parser.Event;
-import com.mozilla.secops.window.GlobalTriggers;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.Flatten;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
-import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -38,60 +28,12 @@ public class TestErrorRate1 {
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setMonitoredResourceIndicator("test");
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
-    ret.setMaxClientErrorRate(30L);
-    ret.setIgnoreInternalRequests(false); // Tests use internal subnets
+    ret.setGenerateConfigurationTicksInterval(1);
+    ret.setGenerateConfigurationTicksMaximum(5L);
     return ret;
   }
 
-  @Test
-  public void countRequestsTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_errorrate1.txt", p);
-
-    PCollection<Event> events =
-        input
-            .apply(new HTTPRequest.Parse(getTestOptions()))
-            .apply(new HTTPRequest.WindowForFixed());
-    PCollection<Long> count =
-        events.apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
-
-    PAssert.thatSingleton(count)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(55L);
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void errorRateTest() throws Exception {
-    HTTPRequest.HTTPRequestOptions options = getTestOptions();
-
-    // Enable configuration tick generation in the pipeline for this test, and use Input
-    options.setGenerateConfigurationTicksInterval(1);
-    options.setGenerateConfigurationTicksMaximum(5L);
-    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_errorrate1.txt"});
-    options.setEnableErrorRateAnalysis(true);
-    // Also set a fast matcher configuration and other filters to verify the cfgtick events are
-    // passed
-    options.setParserFastMatcher("prod-send");
-    options.setStackdriverProjectFilter("test");
-    PCollection<Event> events =
-        p.apply(Input.compositeInputAdapter(options, HTTPRequest.buildConfigurationTick(options)))
-            .apply(new HTTPRequest.Parse(options));
-
-    PCollectionList<Alert> alertList = PCollectionList.empty(p);
-    alertList =
-        alertList.and(
-            events
-                .apply(new HTTPRequest.WindowForFixed())
-                .apply(new HTTPRequest.ErrorRateAnalysis(options))
-                .apply("error rate global triggers", new GlobalTriggers<Alert>(1)));
-    alertList =
-        alertList.and(
-            events
-                .apply(ParDo.of(new CfgTickProcessor("httprequest-cfgtick", "category")))
-                .apply("cfgtick global triggers", new GlobalTriggers<Alert>(1)));
-    PCollection<Alert> results = alertList.apply(Flatten.<Alert>pCollections());
-
+  public void runAssertions(PCollection<Alert> results) {
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
     PAssert.thatSingleton(resultCount)
@@ -111,9 +53,13 @@ public class TestErrorRate1 {
                 } else if (a.getMetadataValue("category").equals("cfgtick")) {
                   assertEquals("httprequest-cfgtick", a.getCategory());
                   assertEquals("test", a.getMetadataValue("monitoredResourceIndicator"));
-                  assertEquals(
-                      "./target/test-classes/testdata/httpreq_errorrate1.txt",
-                      a.getMetadataValue("inputFile"));
+                  if (a.getMetadataValue("inputFile") != null) {
+                    // In the case where pipeline options are used to control input, we will have an
+                    // entry corresponding to the input in the cfgtick
+                    assertEquals(
+                        "./target/test-classes/testdata/httpreq_errorrate1.txt",
+                        a.getMetadataValue("inputFile"));
+                  }
                   assertEquals("true", a.getMetadataValue("useEventTimestamp"));
                   assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
                   assertEquals(
@@ -126,6 +72,41 @@ public class TestErrorRate1 {
               }
               return null;
             });
+  }
+
+  @Test
+  public void errorRateTest() throws Exception {
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+
+    // Enable configuration tick generation in the pipeline for this test, and use Input
+    options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_errorrate1.txt"});
+    options.setEnableErrorRateAnalysis(true);
+    options.setMaxClientErrorRate(30L);
+    options.setIgnoreInternalRequests(false); // Tests use internal subnets
+    // Also set a fast matcher configuration and other filters to verify the cfgtick events are
+    // passed
+    options.setParserFastMatcher("prod-send");
+    options.setStackdriverProjectFilter("test");
+
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
+
+    runAssertions(results);
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void errorRateTestCfg() throws Exception {
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setPipelineMultimodeConfiguration("/testdata/httpreq_errorrate1_single.json");
+
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
+
+    runAssertions(results);
 
     p.run().waitUntilFinish();
   }

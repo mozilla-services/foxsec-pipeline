@@ -7,6 +7,7 @@ import static org.junit.Assert.assertThat;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.input.Input;
 import java.util.Arrays;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -30,6 +31,7 @@ public class TestEndpointAbuse1 {
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setMonitoredResourceIndicator("test");
+    ret.setEnableEndpointAbuseAnalysis(true);
     ret.setSessionGapDurationMinutes(20L);
     ret.setIgnoreInternalRequests(false); // Tests use internal subnets
     return ret;
@@ -62,11 +64,10 @@ public class TestEndpointAbuse1 {
             .addElements(eb3[0], Arrays.copyOfRange(eb3, 1, eb3.length))
             .advanceWatermarkToInfinity();
 
+    Input input = HTTPRequestUtil.wiredInputStream(options, s);
+
     PCollection<Alert> results =
-        p.apply(s)
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
-            .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
+        HTTPRequest.expandInputMap(p, HTTPRequest.readInput(p, input, options), options);
 
     PCollection<Long> count = results.apply(Count.globally());
 
@@ -80,7 +81,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
-                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
@@ -121,11 +122,10 @@ public class TestEndpointAbuse1 {
             .advanceProcessingTime(Duration.standardSeconds(60))
             .advanceWatermarkToInfinity();
 
+    Input input = HTTPRequestUtil.wiredInputStream(options, s);
+
     PCollection<Alert> results =
-        p.apply(s)
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
-            .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
+        HTTPRequest.expandInputMap(p, HTTPRequest.readInput(p, input, options), options);
 
     PCollection<Long> count = results.apply(Count.globally());
 
@@ -138,7 +138,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
-                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
@@ -179,11 +179,10 @@ public class TestEndpointAbuse1 {
             .advanceProcessingTime(Duration.standardSeconds(60))
             .advanceWatermarkToInfinity();
 
+    Input input = HTTPRequestUtil.wiredInputStream(options, s);
+
     PCollection<Alert> results =
-        p.apply(s)
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
-            .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
+        HTTPRequest.expandInputMap(p, HTTPRequest.readInput(p, input, options), options);
 
     PCollection<Long> count = results.apply(Count.globally());
 
@@ -196,7 +195,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
-                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
@@ -235,11 +234,10 @@ public class TestEndpointAbuse1 {
             .addElements(eb3[0], Arrays.copyOfRange(eb3, 1, eb3.length))
             .advanceWatermarkToInfinity();
 
+    Input input = HTTPRequestUtil.wiredInputStream(options, s);
+
     PCollection<Alert> results =
-        p.apply(s)
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
-            .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
+        HTTPRequest.expandInputMap(p, HTTPRequest.readInput(p, input, options), options);
 
     PCollection<Long> count = results.apply(Count.globally());
 
@@ -256,7 +254,7 @@ public class TestEndpointAbuse1 {
                 assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
-                assertEquals("endpoint_abuse", a.getNotifyMergeKey());
+                assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
                 assertEquals("endpoint_abuse", a.getMetadataValue("category"));
                 assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
                 assertEquals("Mozilla", a.getMetadataValue("useragent"));
@@ -293,11 +291,10 @@ public class TestEndpointAbuse1 {
             .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
             .advanceWatermarkToInfinity();
 
+    Input input = HTTPRequestUtil.wiredInputStream(options, s);
+
     PCollection<Alert> results =
-        p.apply(s)
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.KeyAndWindowForSessionsFireEarly(options))
-            .apply(new HTTPRequest.EndpointAbuseAnalysis(options));
+        HTTPRequest.expandInputMap(p, HTTPRequest.readInput(p, input, options), options);
 
     PCollection<Long> count = results.apply(Count.globally());
     PAssert.that(count).containsInAnyOrder(1L);

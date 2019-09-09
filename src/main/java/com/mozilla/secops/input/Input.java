@@ -1,5 +1,10 @@
 package com.mozilla.secops.input;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.parser.Event;
 import java.io.IOException;
@@ -41,6 +46,7 @@ import org.apache.beam.sdk.values.PCollectionList;
  * <p>A filter can be associated with parsed read operations to filter events based on what is
  * desired for a particular element.
  */
+@JsonInclude(Include.NON_NULL)
 public class Input implements Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -73,12 +79,82 @@ public class Input implements Serializable {
   }
 
   /**
+   * Set operating mode
+   *
+   * @param mode Operating mode
+   */
+  @JsonProperty("mode")
+  public void setOperatingMode(OperatingMode mode) {
+    if (mode.equals(OperatingMode.SIMPLEX)) {
+      simplex();
+    } else if (mode.equals(OperatingMode.MULTIPLEX)) {
+      multiplex();
+    } else {
+      throw new RuntimeException("invalid operating mode");
+    }
+  }
+
+  /**
+   * Get operating mode
+   *
+   * @return Operating mode
+   */
+  public OperatingMode getOperatingMode() {
+    return mode;
+  }
+
+  /**
+   * Set project
+   *
+   * @param project Project string
+   */
+  @JsonProperty("gcp_project")
+  public void setProject(String project) {
+    this.project = project;
+  }
+
+  /**
+   * Get project
+   *
+   * @return Project string
+   */
+  public String getProject() {
+    return project;
+  }
+
+  /**
+   * Set input elements
+   *
+   * @param elements Input element array
+   */
+  @JsonProperty("elements")
+  public void setInputElements(ArrayList<InputElement> elements) {
+    this.elements = elements;
+  }
+
+  /**
    * Get input elements
    *
    * @return Input elements
    */
   public ArrayList<InputElement> getInputElements() {
     return elements;
+  }
+
+  /**
+   * Get an input element by name
+   *
+   * @param name Input element name
+   * @return Element or null if not found
+   */
+  @JsonIgnore
+  public InputElement getInputElementByName(String name) {
+    for (InputElement i : elements) {
+      if (i.getName().equals(name)) {
+        return i;
+      }
+    }
+    return null;
   }
 
   /**
@@ -104,35 +180,8 @@ public class Input implements Serializable {
     if (!mode.equals(OperatingMode.SIMPLEX)) {
       throw new IOException("method only valid in simplex mode");
     }
-
-    InputElement element = new InputElement(SIMPLEX_DEFAULT_ELEMENT);
-
-    if (options.getGenerateConfigurationTicksInterval() > 0) {
-      element.setConfigurationTicks(
-          cfgTickMessage,
-          options.getGenerateConfigurationTicksInterval(),
-          options.getGenerateConfigurationTicksMaximum());
-    }
-
-    if (options.getInputFile() != null) {
-      for (String buf : options.getInputFile()) {
-        element.addFileInput(buf);
-      }
-    }
-
-    if (options.getInputPubsub() != null) {
-      for (String buf : options.getInputPubsub()) {
-        element.addPubsubInput(buf);
-      }
-    }
-
-    if (options.getInputKinesis() != null) {
-      for (String buf : options.getInputKinesis()) {
-        element.addKinesisInput(KinesisInput.fromInputSpecifier(buf, project));
-      }
-    }
-
-    elements.add(element);
+    elements.add(
+        InputElement.fromPipelineOptions(SIMPLEX_DEFAULT_ELEMENT, options, cfgTickMessage));
     return this;
   }
 
@@ -198,7 +247,7 @@ public class Input implements Serializable {
       if (elements.size() != 1) {
         throw new RuntimeException("simplex read must have exactly one input element");
       }
-      return elements.get(0).expandElementRaw(begin);
+      return elements.get(0).expandElementRaw(begin, input.getProject());
     }
 
     /**
@@ -231,7 +280,7 @@ public class Input implements Serializable {
       if (elements.size() != 1) {
         throw new RuntimeException("simplex read must have exactly one input element");
       }
-      return elements.get(0).expandElement(begin);
+      return elements.get(0).expandElement(begin, input.getProject());
     }
 
     /**
@@ -270,8 +319,9 @@ public class Input implements Serializable {
       for (InputElement i : elements) {
         list =
             list.and(
-                i.expandElementRaw(begin)
+                i.expandElementRaw(begin, input.getProject())
                     .apply(
+                        String.format("%s read multiplex raw", i.getName()),
                         ParDo.of(
                             new DoFn<String, KV<String, String>>() {
                               private static final long serialVersionUID = 1L;
@@ -320,8 +370,9 @@ public class Input implements Serializable {
       for (InputElement i : elements) {
         list =
             list.and(
-                i.expandElement(begin)
+                i.expandElement(begin, input.getProject())
                     .apply(
+                        String.format("%s read multiplex", i.getName()),
                         ParDo.of(
                             new DoFn<Event, KV<String, Event>>() {
                               private static final long serialVersionUID = 1L;

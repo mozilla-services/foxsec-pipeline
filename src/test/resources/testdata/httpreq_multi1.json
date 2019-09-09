@@ -1,0 +1,66 @@
+{
+  "input": {
+    "mode": "MULTIPLEX",
+    "elements": [
+      {
+        "name": "error_rate",
+        "file_inputs": [
+          "./target/test-classes/testdata/httpreq_errorrate1.txt"
+        ],
+        "parser_configuration": {
+          "parser_fast_matcher": "prod-send",
+          "stackdriver_project_filter": "test",
+          "use_event_timestamp": true
+        },
+        "filter": {
+          "rules": [
+            {
+              "subtype": "CFGTICK"
+            },
+            {
+              "normalized_type": "HTTP_REQUEST"
+            }
+          ],
+          "want_utc": true,
+          "match_any": false
+        }
+      },
+      {
+        "name": "hard_limit",
+        "file_inputs": [
+          "./target/test-classes/testdata/httpreq_hardlimit1.txt"
+        ],
+        "parser_configuration": {
+          "use_event_timestamp": true
+        },
+        "filter": {
+          "rules": [
+            {
+              "subtype": "CFGTICK"
+            },
+            {
+              "normalized_type": "HTTP_REQUEST"
+            }
+          ],
+          "want_utc": true,
+          "match_any": false
+        }
+      }
+    ]
+  },
+  "service_toggles": {
+    "error_rate": {
+      "enable_error_rate_analysis": true,
+      "enable_threshold_analysis": true,
+      "enable_nat_detection": true,
+      "ignore_internal_requests": false
+    },
+    "hard_limit": {
+      "enable_hard_limit_analysis": true,
+      "hard_limit_request_count": 10,
+      "enable_threshold_analysis": true,
+      "enable_nat_detection": true,
+      "ignore_internal_requests": false
+    }
+  }
+}

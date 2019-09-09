@@ -1,0 +1,36 @@
+{
+  "input": {
+    "mode": "MULTIPLEX",
+    "elements": [
+      {
+        "name": "test",
+        "file_inputs": [
+          "./target/test-classes/testdata/httpreq_errorrate1.txt"
+        ],
+        "parser_configuration": {
+          "parser_fast_matcher": "prod-send",
+          "stackdriver_project_filter": "test",
+          "use_event_timestamp": true
+        },
+        "filter": {
+          "rules": [
+            {
+              "subtype": "CFGTICK"
+            },
+            {
+              "normalized_type": "HTTP_REQUEST"
+            }
+          ],
+          "want_utc": true,
+          "match_any": false
+        }
+      }
+    ]
+  },
+  "service_toggles": {
+    "test": {
+      "enable_error_rate_analysis": true,
+      "ignore_internal_requests": false
+    }
+  }
+}

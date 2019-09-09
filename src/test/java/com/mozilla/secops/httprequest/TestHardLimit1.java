@@ -5,29 +5,22 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.mozilla.secops.DetectNat;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.TestIprepdIO;
-import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
-import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateCursor;
-import java.util.Map;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.joda.time.DateTime;
-import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -57,14 +50,14 @@ public class TestHardLimit1 {
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
     ret.setHardLimitRequestCount(10L);
     ret.setMonitoredResourceIndicator("test");
+    ret.setEnableHardLimitAnalysis(true);
     ret.setIgnoreInternalRequests(false); // Tests use internal subnets
+    ret.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_hardlimit1.txt"});
     return ret;
   }
 
   @Test
   public void hardLimitTest() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_hardlimit1.txt", p);
-
     TestIprepdIO.deleteReputation("ip", "192.168.1.1");
     TestIprepdIO.deleteReputation("ip", "192.168.1.2");
     TestIprepdIO.deleteReputation("ip", "192.168.1.3");
@@ -78,10 +71,8 @@ public class TestHardLimit1 {
     options.setOutputIprepdApikey("test");
 
     PCollection<Alert> results =
-        input
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.HardLimitAnalysis(options));
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
     // Hook the output up to the composite output transform so we get local iprepd submission
     // in the tests
@@ -91,12 +82,9 @@ public class TestHardLimit1 {
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(3L);
+    PAssert.thatSingleton(resultCount).isEqualTo(3L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
@@ -132,8 +120,6 @@ public class TestHardLimit1 {
   @Test
   public void hardLimitTestDatastoreIprepdWhitelist() throws Exception {
     testEnv();
-
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_hardlimit1.txt", p);
 
     TestIprepdIO.deleteReputation("ip", "192.168.1.1");
     TestIprepdIO.deleteReputation("ip", "192.168.1.2");
@@ -180,10 +166,8 @@ public class TestHardLimit1 {
     options.setOutputIprepdApikey("test");
 
     PCollection<Alert> results =
-        input
-            .apply(new HTTPRequest.Parse(options))
-            .apply(new HTTPRequest.WindowForFixed())
-            .apply(new HTTPRequest.HardLimitAnalysis(options));
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
     // Hook the output up to the composite output transform so we get local iprepd submission
     // in the tests
@@ -193,12 +177,9 @@ public class TestHardLimit1 {
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(3L);
+    PAssert.thatSingleton(resultCount).isEqualTo(3L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {
@@ -233,25 +214,18 @@ public class TestHardLimit1 {
 
   @Test
   public void hardLimitTestWithNatDetect() throws Exception {
-    PCollection<String> input = TestUtil.getTestInput("/testdata/httpreq_hardlimit1.txt", p);
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setNatDetection(true);
 
-    PCollection<Event> events =
-        input.apply(new HTTPRequest.Parse(options)).apply(new HTTPRequest.WindowForFixed());
-
-    PCollectionView<Map<String, Boolean>> natView = DetectNat.getView(events);
-
-    PCollection<Alert> results = events.apply(new HTTPRequest.HardLimitAnalysis(options, natView));
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+            p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(resultCount)
-        .inOnlyPane(new IntervalWindow(new Instant(0L), new Instant(60000L)))
-        .isEqualTo(1L);
+    PAssert.thatSingleton(resultCount).isEqualTo(1L);
 
     PAssert.that(results)
-        .inWindow(new IntervalWindow(new Instant(0L), new Instant(60000L)))
         .satisfies(
             i -> {
               for (Alert a : i) {

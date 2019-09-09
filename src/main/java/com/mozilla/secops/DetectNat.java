@@ -34,6 +34,22 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
 
   private static final Long UAMARKPROBABLE = 2L;
 
+  private final String stepPrefix;
+
+  /**
+   * Create new DetectNat
+   *
+   * @param stepPrefix Prefix for transform step or null for none
+   */
+  public DetectNat(String stepPrefix) {
+    this.stepPrefix = stepPrefix;
+  }
+
+  /** Create new DetectNat */
+  public DetectNat() {
+    this(null);
+  }
+
   /**
    * Return an empty NAT view, suitable as a placeholder if NAT detection is not desired
    *
@@ -52,18 +68,29 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
    * Execute the transform returning a {@link PCollectionView} suitable for use as a side input
    *
    * @param events Input events
+   * @param prefix Prefix for step name or null for none
    * @return {@link PCollectionView} representing output of analysis
    */
-  public static PCollectionView<Map<String, Boolean>> getView(PCollection<Event> events) {
-    return events.apply("nat view", new DetectNat()).apply(View.<String, Boolean>asMap());
+  public static PCollectionView<Map<String, Boolean>> getView(
+      PCollection<Event> events, String prefix) {
+    if (prefix == null) {
+      prefix = "";
+    }
+    return events
+        .apply(String.format("%s nat view", prefix), new DetectNat(prefix))
+        .apply(String.format("%s nat map view", prefix), View.<String, Boolean>asMap());
   }
 
   @Override
   public PCollection<KV<String, Boolean>> expand(PCollection<Event> events) {
+    String p = "";
+    if (stepPrefix != null) {
+      p = stepPrefix;
+    }
     PCollection<KV<String, Long>> perSourceUACounts =
         events
             .apply(
-                "detectnat extract user agents",
+                String.format("%s detectnat extract user agents", p),
                 ParDo.of(
                     new DoFn<Event, KV<String, String>>() {
                       private static final long serialVersionUID = 1L;
@@ -82,13 +109,16 @@ public class DetectNat extends PTransform<PCollection<Event>, PCollection<KV<Str
                         }
                       }
                     }))
-            .apply("detectnat distinct ua map", Distinct.<KV<String, String>>create())
-            .apply("detectnat ua count per key", Count.<String, String>perKey());
+            .apply(
+                String.format("%s detectnat distinct ua map", p),
+                Distinct.<KV<String, String>>create())
+            .apply(
+                String.format("%s detectnat ua count per key", p), Count.<String, String>perKey());
 
     // Operate solely on the UA output right now here, but this should be expanded with more
     // detailed analysis
     return perSourceUACounts.apply(
-        "detect nat",
+        String.format("%s detect nat", p),
         ParDo.of(
             new DoFn<KV<String, Long>, KV<String, Boolean>>() {
               private static final long serialVersionUID = 1L;
