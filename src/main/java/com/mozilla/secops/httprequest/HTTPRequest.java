@@ -997,7 +997,7 @@ public class HTTPRequest implements Serializable {
 
         PCollectionView<Map<String, Boolean>> natView = null;
         if (toggles.getEnableNatDetection()) {
-          natView = DetectNat.getView(fwEvents, prefix);
+          natView = DetectNat.getView(fwEvents);
         }
 
         if (toggles.getEnableThresholdAnalysis()) {
