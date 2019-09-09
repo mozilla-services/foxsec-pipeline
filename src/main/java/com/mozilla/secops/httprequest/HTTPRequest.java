@@ -594,7 +594,7 @@ public class HTTPRequest implements Serializable {
       customVarianceSubstrings = toggles.getEndpointAbuseCustomVarianceSubstrings();
       sessionGapDurationMinutes = toggles.getSessionGapDurationMinutes();
 
-      String[] cfgEndpoints = options.getEndpointAbusePath();
+      String[] cfgEndpoints = toggles.getEndpointAbusePath();
       endpoints = new EndpointAbuseEndpointInfo[cfgEndpoints.length];
       for (int i = 0; i < cfgEndpoints.length; i++) {
         String[] parts = cfgEndpoints[i].split(":");
