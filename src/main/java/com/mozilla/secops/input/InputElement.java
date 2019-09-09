@@ -109,7 +109,7 @@ public class InputElement implements Serializable {
       list =
           list.and(
               begin.apply(
-                  String.format("%s generate cfgtick", name),
+                  String.format("cfgtick %s", name),
                   new CfgTickGenerator(cfgTickMessage, cfgTickInterval, cfgTickMax)));
     }
 
@@ -140,8 +140,7 @@ public class InputElement implements Serializable {
       }
     }
 
-    return list.apply(
-        String.format("%s flatten input components", name), Flatten.<String>pCollections());
+    return list.apply(String.format("flatten input %s", name), Flatten.<String>pCollections());
   }
 
   /**

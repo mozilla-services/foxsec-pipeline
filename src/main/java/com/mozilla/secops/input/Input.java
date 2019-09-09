@@ -342,7 +342,7 @@ public class Input implements Serializable {
             list.and(
                 i.expandElementRaw(begin, input.getProject())
                     .apply(
-                        String.format("%s read multiplex raw", i.getName()),
+                        String.format("multiplex raw %s", i.getName()),
                         ParDo.of(
                             new DoFn<String, KV<String, String>>() {
                               private static final long serialVersionUID = 1L;
@@ -393,7 +393,7 @@ public class Input implements Serializable {
             list.and(
                 i.expandElement(begin, input.getProject())
                     .apply(
-                        String.format("%s read multiplex", i.getName()),
+                        String.format("multiplex %s", i.getName()),
                         ParDo.of(
                             new DoFn<Event, KV<String, Event>>() {
                               private static final long serialVersionUID = 1L;

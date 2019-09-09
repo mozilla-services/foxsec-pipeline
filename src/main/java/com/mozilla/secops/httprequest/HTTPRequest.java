@@ -1371,7 +1371,7 @@ public class HTTPRequest implements Serializable {
       }
       PCollection<Event> t =
           col.apply(
-              String.format("%s per-element filter", e.getName()),
+              String.format("filter %s", e.getName()),
               new HTTPRequestElementFilter(e.getName(), toggleCache.get(e.getName())));
       ret.put(e.getName(), t);
     }
@@ -1407,13 +1407,13 @@ public class HTTPRequest implements Serializable {
                   entry
                       .getValue()
                       .apply(
-                          String.format("%s cfgtick processor", entry.getKey()),
+                          String.format("cfgtick process %s", entry.getKey()),
                           ParDo.of(new CfgTickProcessor("httprequest-cfgtick", "category")))
                       .apply(
-                          String.format("%s cfgtick tag", entry.getKey()),
+                          String.format("cfgtick tag %s", entry.getKey()),
                           ParDo.of(new HTTPRequestResourceTag(entry.getKey())))
                       .apply(
-                          String.format("%s cfgtick globaltriggers", entry.getKey()),
+                          String.format("cfgtick globaltriggers %s", entry.getKey()),
                           new GlobalTriggers<Alert>(5)));
     }
 
