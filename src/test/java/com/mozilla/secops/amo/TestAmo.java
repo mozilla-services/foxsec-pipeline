@@ -35,8 +35,8 @@ public class TestAmo {
     ret.setUseEventTimestamp(true);
     ret.setMonitoredResourceIndicator("test");
     ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
-    ret.setOutputIprepd("http://127.0.0.1:8080");
-    ret.setOutputIprepdApikey("test");
+    ret.setInputIprepd("http://127.0.0.1:8080|test");
+    ret.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
     ret.setAccountMatchBanOnLogin(new String[] {"locutus.*"});
     ret.setAddonMatchCriteria(new String[] {".*test_submission.*:7500:7500"});
     // Reduce the required country match count for the IP login tests here

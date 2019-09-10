@@ -64,11 +64,10 @@ public class TestHardLimit1 {
     TestIprepdIO.deleteReputation("ip", "192.168.1.4");
     TestIprepdIO.deleteReputation("ip", "192.168.1.5");
 
-    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
+    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
-    options.setOutputIprepd("http://127.0.0.1:8080");
-    options.setOutputIprepdApikey("test");
+    options.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
 
     PCollection<Alert> results =
         HTTPRequest.expandInputMap(
@@ -127,7 +126,7 @@ public class TestHardLimit1 {
     TestIprepdIO.deleteReputation("ip", "192.168.1.4");
     TestIprepdIO.deleteReputation("ip", "192.168.1.5");
 
-    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
+    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
 
     // Create whitelisted ip in datastore
     State state =
@@ -162,8 +161,7 @@ public class TestHardLimit1 {
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setOutputIprepdEnableDatastoreWhitelist(true);
-    options.setOutputIprepd("http://127.0.0.1:8080");
-    options.setOutputIprepdApikey("test");
+    options.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
 
     PCollection<Alert> results =
         HTTPRequest.expandInputMap(

@@ -78,4 +78,9 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   Long getGenerateConfigurationTicksMaximum();
 
   void setGenerateConfigurationTicksMaximum(Long value);
+
+  @Description("Read reputation from iprepd; specify URL and API Key (supports RuntimeSecrets).")
+  String getInputIprepd();
+
+  void setInputIprepd(String value);
 }

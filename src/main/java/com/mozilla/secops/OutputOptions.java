@@ -36,21 +36,10 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
   void setOutputSqs(String value);
 
   @Description(
-      "Write violation notices to iprepd; specify URL, only applicable for HTTPRequest results")
-  String getOutputIprepd();
+      "Write violation notices to iprepd; specify URL and API Key (supports RuntimeSecrets). Only applicable for HTTPRequest results")
+  String[] getOutputIprepd();
 
-  void setOutputIprepd(String value);
-
-  @Description("With iprepd output; use API key for authentication (supports RuntimeSecrets)")
-  String getOutputIprepdApikey();
-
-  void setOutputIprepdApikey(String value);
-
-  @Description("Use legacy IP submission endpoints with iprepd")
-  @Default.Boolean(false)
-  Boolean getOutputIprepdLegacyMode();
-
-  void setOutputIprepdLegacyMode(Boolean value);
+  void setOutputIprepd(String[] value);
 
   @Description("Enable use of whitelisted ips saved in datastore; requires deployment in GCP")
   @Default.Boolean(false)

@@ -89,15 +89,14 @@ public class TestIprepdIO implements Serializable {
   public void iprepdIOTestWrite() throws Exception {
     IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
     options.setMonitoredResourceIndicator("test");
-    options.setOutputIprepd("http://127.0.0.1:8080");
-    options.setOutputIprepdApikey("test");
+    options.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
 
     deleteReputation("ip", "127.0.0.1");
     deleteReputation("ip", "99.99.99.1");
     deleteReputation("email", "nonexistent@mozilla.com");
     deleteReputation("email", "testiprepdio1@mozilla.com");
 
-    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
+    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
 
     TestUtil.getTestInput("/testdata/iprepdio1.txt", p)
         .apply(
@@ -127,57 +126,12 @@ public class TestIprepdIO implements Serializable {
   }
 
   @Test
-  public void iprepdIOTestWriteLegacy() throws Exception {
-    IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
-    options.setOutputIprepd("http://127.0.0.1:8080");
-    options.setOutputIprepdApikey("test");
-    options.setOutputIprepdLegacyMode(true);
-    options.setMonitoredResourceIndicator("test");
-
-    deleteReputation("ip", "127.0.0.1");
-    deleteReputation("ip", "99.99.99.1");
-    deleteReputation("email", "nonexistent@mozilla.com");
-    deleteReputation("email", "testiprepdio1@mozilla.com");
-
-    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
-
-    TestUtil.getTestInput("/testdata/iprepdio1.txt", p)
-        .apply(
-            ParDo.of(
-                new DoFn<String, Alert>() {
-                  private static final long serialVersionUID = 1L;
-
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    c.output(Alert.fromJSON(c.element()));
-                  }
-                }))
-        .apply(ParDo.of(new AlertFormatter(options)))
-        .apply(OutputOptions.compositeOutput(options));
-
-    assertEquals(100, (int) r.getReputation("ip", "127.0.0.1"));
-    assertEquals(100, (int) r.getReputation("ip", "99.99.99.1"));
-    assertEquals(100, (int) r.getReputation("email", "nonexistent@mozilla.com"));
-    assertEquals(100, (int) r.getReputation("email", "testiprepdio1@mozilla.com"));
-
-    p.run().waitUntilFinish();
-
-    assertEquals(100, (int) r.getReputation("ip", "127.0.0.1"));
-    assertEquals(50, (int) r.getReputation("ip", "99.99.99.1"));
-    assertEquals(100, (int) r.getReputation("email", "nonexistent@mozilla.com"));
-    // Should still be 100, the legacy mode PUT for an email address will have failed since
-    // only IP addresses are supported in legacy mode
-    assertEquals(100, (int) r.getReputation("email", "testiprepdio1@mozilla.com"));
-  }
-
-  @Test
   public void iprepdIOTestWriteMalformed() throws Exception {
     IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
-    options.setOutputIprepd("http://127.0.0.1:8080");
-    options.setOutputIprepdApikey("test");
+    options.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
     options.setMonitoredResourceIndicator("test");
 
-    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
+    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
 
     TestUtil.getTestInput("/testdata/iprepdio2.txt", p)
         .apply(
@@ -201,7 +155,7 @@ public class TestIprepdIO implements Serializable {
 
   @Test
   public void iprepdIOTestRead() throws Exception {
-    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080", "test", null);
+    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
 
     assertEquals(100, (int) r.getReputation("ip", "127.0.0.1"));
     assertEquals(100, (int) r.getReputation("ip", "255.255.200.1"));
@@ -213,11 +167,11 @@ public class TestIprepdIO implements Serializable {
     assertEquals(0, (int) r.getReputation("email", "sisko@mozilla.com"));
 
     // Failed request should return 100
-    r = IprepdIO.getReader("http://127.0.0.1:8081", "test", null);
+    r = IprepdIO.getReader("http://127.0.0.1:8081|test", null);
     assertEquals(100, (int) r.getReputation("ip", "127.0.0.1"));
 
     // Credential failure should return 100, use a previously submitted address
-    r = IprepdIO.getReader("http://127.0.0.1:8080", "invalid", null);
+    r = IprepdIO.getReader("http://127.0.0.1:8080|invalid", null);
     assertEquals(100, (int) r.getReputation("ip", "255.255.200.1"));
   }
 }
