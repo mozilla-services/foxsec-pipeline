@@ -63,6 +63,20 @@ public class Input implements Serializable {
   private transient ArrayList<InputElement> elements;
   private String project;
 
+  private transient InputCollectionCache collectionCache;
+
+  /**
+   * Request input collection cache
+   *
+   * <p>This is an internal method and should not generally be called directly.
+   *
+   * @return {@link InputCollectionCache}
+   */
+  @JsonIgnore
+  public InputCollectionCache getCache() {
+    return collectionCache;
+  }
+
   /**
    * Adapter to simplify {@link Input} usage for pipelines that used previous composite input
    * tranform
@@ -130,6 +144,9 @@ public class Input implements Serializable {
   @JsonProperty("elements")
   public void setInputElements(ArrayList<InputElement> elements) {
     this.elements = elements;
+    for (InputElement el : elements) {
+      el.setParentInput(this);
+    }
   }
 
   /**
@@ -180,8 +197,10 @@ public class Input implements Serializable {
     if (!mode.equals(OperatingMode.SIMPLEX)) {
       throw new IOException("method only valid in simplex mode");
     }
-    elements.add(
-        InputElement.fromPipelineOptions(SIMPLEX_DEFAULT_ELEMENT, options, cfgTickMessage));
+    InputElement el =
+        InputElement.fromPipelineOptions(SIMPLEX_DEFAULT_ELEMENT, options, cfgTickMessage);
+    el.setParentInput(this);
+    elements.add(el);
     return this;
   }
 
@@ -205,6 +224,7 @@ public class Input implements Serializable {
     if ((mode.equals(OperatingMode.SIMPLEX)) && (elements.size() == 1)) {
       throw new IOException("attempt to add more than one element to simplex input");
     }
+    el.setParentInput(this);
     elements.add(el);
     return this;
   }
@@ -212,6 +232,7 @@ public class Input implements Serializable {
   /** Create new input object */
   public Input() {
     elements = new ArrayList<InputElement>();
+    collectionCache = new InputCollectionCache();
   }
 
   /**
@@ -321,7 +342,7 @@ public class Input implements Serializable {
             list.and(
                 i.expandElementRaw(begin, input.getProject())
                     .apply(
-                        String.format("%s read multiplex raw", i.getName()),
+                        String.format("multiplex raw %s", i.getName()),
                         ParDo.of(
                             new DoFn<String, KV<String, String>>() {
                               private static final long serialVersionUID = 1L;
@@ -372,7 +393,7 @@ public class Input implements Serializable {
             list.and(
                 i.expandElement(begin, input.getProject())
                     .apply(
-                        String.format("%s read multiplex", i.getName()),
+                        String.format("multiplex %s", i.getName()),
                         ParDo.of(
                             new DoFn<Event, KV<String, Event>>() {
                               private static final long serialVersionUID = 1L;

@@ -14,8 +14,6 @@ import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import java.io.Serializable;
 import java.util.ArrayList;
-import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -32,6 +30,8 @@ public class InputElement implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String name;
+
+  private transient Input parent;
 
   private transient PTransform<PBegin, PCollection<String>> wiredStream;
 
@@ -109,7 +109,7 @@ public class InputElement implements Serializable {
       list =
           list.and(
               begin.apply(
-                  String.format("%s generate cfgtick", name),
+                  String.format("cfgtick %s", name),
                   new CfgTickGenerator(cfgTickMessage, cfgTickInterval, cfgTickMax)));
     }
 
@@ -118,14 +118,13 @@ public class InputElement implements Serializable {
     }
 
     for (String i : fileInputs) {
-      list = list.and(begin.apply(i, TextIO.read().from(i)));
+      list = list.and(parent.getCache().fileInput(begin, i));
     }
     for (String i : pubsubInputs) {
-      list = list.and(begin.apply(i, PubsubIO.readStrings().fromTopic(i)));
+      list = list.and(parent.getCache().pubsubInput(begin, i));
     }
     for (String i : kinesisInputs) {
-      KinesisInput k = KinesisInput.fromInputSpecifier(i, project);
-      list = list.and(k.toCollection(begin));
+      list = list.and(parent.getCache().kinesisInput(begin, i, project));
       try {
         // XXX Pause for a moment here for cases where we are configuring multiple Kinesis streams
         // that might exist in the same account; since setup calls DescribeStream it is possible
@@ -141,8 +140,7 @@ public class InputElement implements Serializable {
       }
     }
 
-    return list.apply(
-        String.format("%s flatten input components", name), Flatten.<String>pCollections());
+    return list.apply(String.format("flatten input %s", name), Flatten.<String>pCollections());
   }
 
   /**
@@ -334,6 +332,18 @@ public class InputElement implements Serializable {
    */
   public ArrayList<String> getKinesisInputs() {
     return kinesisInputs;
+  }
+
+  /**
+   * Set parent {@link Input} object
+   *
+   * <p>This is an internal method and should not generally be called directly.
+   *
+   * @param parent Parent input object
+   */
+  @JsonIgnore
+  public void setParentInput(Input parent) {
+    this.parent = parent;
   }
 
   /**
