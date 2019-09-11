@@ -111,19 +111,29 @@ public class IprepdIO {
   /**
    * Return a new reader for reading reputation from iprepd
    *
-   * @param url URL for iprepd service
-   * @param apiKey API key as specified in pipeline options
+   * <p>Specification format: <url>|<api key>
+   *
+   * <p>Example: "https://iprepd.example.com|secretapikey"
+   *
+   * <p>The specification processor supports RuntimeSecrets, and may therefore also be a cloudkms://
+   * URL or a GCS URL.
+   *
+   * @param iprepdSpec iprepd input specification
    * @param project GCP project name, only required if decrypting apiKey via cloudkms
    * @return Reader
    */
-  public static Reader getReader(String url, String apiKey, String project) {
-    String key;
+  public static Reader getReader(String iprepdSpec, String project) {
+    String buf;
     try {
-      key = RuntimeSecrets.interpretSecret(apiKey, project);
+      buf = RuntimeSecrets.interpretSecret(iprepdSpec, project);
     } catch (IOException exc) {
       throw new RuntimeException(exc.getMessage());
     }
-    return new Reader(url, key);
+    String[] parts = buf.split("\\|");
+    if (parts.length != 2) {
+      throw new RuntimeException("format of iprepd output specification was invalid");
+    }
+    return new Reader(parts[0], parts[1]);
   }
 
   public static class Reader {
@@ -226,21 +236,35 @@ public class IprepdIO {
   }
 
   /**
-   * Return {@link PTransform} to emit violations to iprepd
+   * Return {@link PTransform} to emit violations to one or more instances of iprepd
    *
-   * @param url URL for iprepd service
-   * @param apiKey API key as specified in pipeline options
+   * <p>Specification format: <url>|<api key>
+   *
+   * <p>Example: "https://iprepd.example.com|secretapikey"
+   *
+   * <p>The specification processor supports RuntimeSecrets, and may therefore also be a cloudkms://
+   * URL or a GCS URL.
+   *
+   * @param iprepdSpecs String[] of iprepd input specifications
    * @param project GCP project name, only required if decrypting apiKey via cloudkms
    * @return IO transform
    */
-  public static Write write(String url, String apiKey, String project) {
-    String key;
-    try {
-      key = RuntimeSecrets.interpretSecret(apiKey, project);
-    } catch (IOException exc) {
-      throw new RuntimeException(exc.getMessage());
+  public static Write writeSpecs(String[] iprepdSpecs, String project) {
+    String[] decrypted = new String[iprepdSpecs.length];
+    for (int i = 0; i < iprepdSpecs.length; i++) {
+      String buf;
+      try {
+        buf = RuntimeSecrets.interpretSecret(iprepdSpecs[i], project);
+      } catch (IOException exc) {
+        throw new RuntimeException(exc.getMessage());
+      }
+      String[] parts = buf.split("\\|");
+      if (parts.length != 2) {
+        throw new RuntimeException("format of iprepd output specification was invalid");
+      }
+      decrypted[i] = buf;
     }
-    return new Write(url, key, project);
+    return new Write(decrypted, project);
   }
 
   /**
@@ -253,65 +277,27 @@ public class IprepdIO {
    */
   public static class Write extends PTransform<PCollection<String>, PDone> {
     private static final long serialVersionUID = 1L;
-    private final String url;
-    private final String apiKey;
+    private final String[] iprepdSpecs;
     private final String project;
-    private Boolean useLegacySubmission;
 
     /**
      * Create new iprepd write transform
      *
-     * @param url URL for iprepd daemon (e.g., http://iprepd.example.host)
-     * @param apiKey Use API key for auth, should be formatted for {@link RuntimeSecrets}
+     * @param iprepdSpecs String[] of iprepd input specifications
      * @param project GCP project name, can be null if no cloudkms is required for secrets
      */
-    public Write(String url, String apiKey, String project) {
-      this.url = url;
-      this.apiKey = apiKey;
+    public Write(String[] iprepdSpecs, String project) {
+      this.iprepdSpecs = iprepdSpecs;
       this.project = project;
-      useLegacySubmission = false;
     }
 
     /**
-     * Set legacy submission flag
+     * Get iprepd specs
      *
-     * <p>If legacy submission mode is enabled, {@link IprepdIO} will post violation messages using
-     * the legacy IP submission endpoints. This is suitable for posting violation details associated
-     * with IP addresses, but will not work for submission for other types of objects.
-     *
-     * @param useLegacySubmission True to enable legacy submission
-     * @return this for chaining
+     * @return iprepd specs
      */
-    public Write setUseLegacySubmission(Boolean useLegacySubmission) {
-      this.useLegacySubmission = useLegacySubmission;
-      return this;
-    }
-
-    /**
-     * Return legacy submission flag
-     *
-     * @return Boolean
-     */
-    public Boolean getUseLegacySubmission() {
-      return useLegacySubmission;
-    }
-
-    /**
-     * Get configured URL
-     *
-     * @return URL string
-     */
-    public String getURL() {
-      return url;
-    }
-
-    /**
-     * Get configured API key
-     *
-     * @return API key as specified in pipeline options
-     */
-    public String getApiKey() {
-      return apiKey;
+    public String[] getIprepdSpecs() {
+      return iprepdSpecs;
     }
 
     /**
@@ -336,9 +322,8 @@ public class IprepdIO {
     private final Write wTransform;
     private Logger log;
     private HttpClient httpClient;
-    private String apiKey;
+    private String[] iprepdSpecs;
     private String project;
-    private Boolean useLegacySubmission;
 
     private Counter violationWrites = Metrics.counter(METRICS_NAMESPACE, VIOLATION_WRITES_METRIC);
 
@@ -353,11 +338,7 @@ public class IprepdIO {
       httpClient = HttpClientBuilder.create().build();
 
       project = wTransform.getProject();
-      apiKey = wTransform.getApiKey();
-      if (apiKey != null) {
-        log.info("using iprepd apikey authentication");
-      }
-      useLegacySubmission = wTransform.getUseLegacySubmission();
+      iprepdSpecs = wTransform.getIprepdSpecs();
     }
 
     @ProcessElement
@@ -392,47 +373,50 @@ public class IprepdIO {
           return;
         }
 
-        try {
-          String reqPath;
-          if (useLegacySubmission) {
+        violationWrites.inc();
+        for (String spec : iprepdSpecs) {
+          String[] parts = spec.split("\\|");
+          String url = parts[0];
+          String apiKey = parts[1];
+
+          try {
+            String reqPath;
             reqPath =
                 new StringJoiner("/")
-                    .add(wTransform.getURL())
-                    .add("violations")
-                    .add(object)
-                    .toString();
-          } else {
-            reqPath =
-                new StringJoiner("/")
-                    .add(wTransform.getURL())
+                    .add(url)
                     .add("violations")
                     .add("type")
                     .add(type)
                     .add(object)
                     .toString();
+            StringEntity body = new StringEntity(violationJSON);
+
+            log.info(
+                "notify iprepd url {} object {} type {} violation {}",
+                url,
+                object,
+                type,
+                v.getViolation());
+            HttpPut put = new HttpPut(reqPath);
+            put.addHeader("Content-Type", "application/json");
+            put.setEntity(body);
+
+            if (apiKey != null) {
+              put.addHeader("Authorization", "APIKey " + apiKey);
+            }
+
+            HttpResponse resp = httpClient.execute(put);
+            log.info(
+                "PUT to iprepd at {} for {} returned with status code {}",
+                url,
+                object,
+                resp.getStatusLine().getStatusCode());
+            put.reset();
+          } catch (IOException exc) {
+            log.error(exc.getMessage());
+          } catch (IllegalArgumentException exc) {
+            log.error(exc.getMessage());
           }
-          StringEntity body = new StringEntity(violationJSON);
-
-          violationWrites.inc();
-          log.info("notify iprepd object {} type {} violation {}", object, type, v.getViolation());
-          HttpPut put = new HttpPut(reqPath);
-          put.addHeader("Content-Type", "application/json");
-          put.setEntity(body);
-
-          if (apiKey != null) {
-            put.addHeader("Authorization", "APIKey " + apiKey);
-          }
-
-          HttpResponse resp = httpClient.execute(put);
-          log.info(
-              "PUT to iprepd for {} returned with status code {}",
-              object,
-              resp.getStatusLine().getStatusCode());
-          put.reset();
-        } catch (IOException exc) {
-          log.error(exc.getMessage());
-        } catch (IllegalArgumentException exc) {
-          log.error(exc.getMessage());
         }
       }
     }

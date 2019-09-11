@@ -24,8 +24,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
-  private final String iprepdUrl;
-  private final String iprepdKey;
+  private final String iprepdSpec;
   private final String project;
   private final String[] banAccounts;
   private final Integer banAccountsSuppress;
@@ -36,24 +35,21 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
    * @param monitoredResource Monitored resource indicator
    * @param banAccounts Blacklisted accounts regex
    * @param banAccountsSuppress Optional recovery suppression for ban pattern alerts
-   * @param iprepdUrl iprepd URL for reputation lookups
-   * @param iprepdKey iprepd API key (supports RuntimeSecrets)
+   * @param iprepdSpec iprepd spec for reputation lookups
    * @param project Project for KMS secrets decryption of API key if required
    */
   public FxaAccountAbuseNewVersion(
       String monitoredResource,
       String[] banAccounts,
       Integer banAccountsSuppress,
-      String iprepdUrl,
-      String iprepdKey,
+      String iprepdSpec,
       String project) {
     this.monitoredResource = monitoredResource;
 
     this.banAccounts = banAccounts;
     this.banAccountsSuppress = banAccountsSuppress;
 
-    this.iprepdUrl = iprepdUrl;
-    this.iprepdKey = iprepdKey;
+    this.iprepdSpec = iprepdSpec;
     this.project = project;
   }
 
@@ -160,7 +156,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
 
                       @Setup
                       public void setup() {
-                        iprepdReader = IprepdIO.getReader(iprepdUrl, iprepdKey, project);
+                        iprepdReader = IprepdIO.getReader(iprepdSpec, project);
                       }
 
                       @ProcessElement

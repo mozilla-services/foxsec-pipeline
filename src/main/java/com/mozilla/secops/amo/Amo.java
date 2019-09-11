@@ -39,7 +39,7 @@ public class Amo implements Serializable {
       Pipeline p, PCollection<String> input, AmoOptions options) throws IOException {
     // A valid iprepd configuration is required here, as values are pulled from iprepd in some of
     // the pipeline transforms
-    if ((options.getOutputIprepd() == null) || (options.getOutputIprepdApikey() == null)) {
+    if ((options.getInputIprepd() == null)) {
       throw new RuntimeException("iprepd pipeline configuration options are required");
     }
 
@@ -60,8 +60,7 @@ public class Amo implements Serializable {
                     options.getMonitoredResourceIndicator(),
                     options.getAccountMatchBanOnLogin(),
                     options.getBanPatternSuppressRecovery(),
-                    options.getOutputIprepd(),
-                    options.getOutputIprepdApikey(),
+                    options.getInputIprepd(),
                     options.getProject())));
     resultsList =
         resultsList.and(
