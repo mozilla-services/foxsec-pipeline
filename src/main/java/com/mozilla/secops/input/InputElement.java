@@ -31,7 +31,7 @@ public class InputElement implements Serializable {
 
   private String name;
 
-  private transient Input parent;
+  private Input parent;
 
   private transient PTransform<PBegin, PCollection<String>> wiredStream;
 
@@ -39,8 +39,8 @@ public class InputElement implements Serializable {
   private transient ArrayList<String> pubsubInputs;
   private transient ArrayList<String> kinesisInputs;
 
-  private transient ParserCfg parserCfg;
-  private transient EventFilter filter;
+  private ParserCfg parserCfg;
+  private EventFilter filter;
 
   private String cfgTickMessage;
   private Integer cfgTickInterval;

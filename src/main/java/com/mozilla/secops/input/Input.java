@@ -407,7 +407,21 @@ public class Input implements Serializable {
 
                               @ProcessElement
                               public void processElement(ProcessContext c) {
-                                c.output(KV.of(i.getName(), c.element()));
+                                String el = c.element();
+                                // As an optimization, if a parser fast match element is set we can
+                                // apply it right here, and avoid passing elements in the collection
+                                // which will be dropped later.
+                                String fm = null;
+                                if (i.getParserConfiguration() != null) {
+                                  fm = i.getParserConfiguration().getParserFastMatcher();
+                                }
+                                if (fm != null) {
+                                  if (!el.contains(fm) && !el.contains("configuration_tick")) {
+                                    return;
+                                  }
+                                }
+
+                                c.output(KV.of(i.getName(), el));
                               }
                             })));
       }
