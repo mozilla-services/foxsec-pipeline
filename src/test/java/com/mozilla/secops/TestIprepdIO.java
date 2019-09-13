@@ -126,6 +126,49 @@ public class TestIprepdIO implements Serializable {
   }
 
   @Test
+  public void iprepdIOTestWriteMulti() throws Exception {
+    IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
+    options.setMonitoredResourceIndicator("test");
+    // Configure the same endpoint twice intentionally, we should get a request for each one
+    options.setOutputIprepd(
+        new String[] {"http://127.0.0.1:8080|test", "http://127.0.0.1:8080|test"});
+
+    deleteReputation("ip", "127.0.0.1");
+    deleteReputation("ip", "99.99.99.1");
+    deleteReputation("email", "nonexistent@mozilla.com");
+    deleteReputation("email", "testiprepdio1@mozilla.com");
+
+    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
+
+    TestUtil.getTestInput("/testdata/iprepdio1.txt", p)
+        .apply(
+            ParDo.of(
+                new DoFn<String, Alert>() {
+                  private static final long serialVersionUID = 1L;
+
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    c.output(Alert.fromJSON(c.element()));
+                  }
+                }))
+        .apply(ParDo.of(new AlertFormatter(options)))
+        .apply(OutputOptions.compositeOutput(options));
+
+    assertEquals(100, (int) r.getReputation("ip", "127.0.0.1"));
+    assertEquals(100, (int) r.getReputation("ip", "99.99.99.1"));
+    assertEquals(100, (int) r.getReputation("email", "nonexistent@mozilla.com"));
+    assertEquals(100, (int) r.getReputation("email", "testiprepdio1@mozilla.com"));
+
+    p.run().waitUntilFinish();
+
+    assertEquals(100, (int) r.getReputation("ip", "127.0.0.1"));
+    // Should be zero since we would hve sent two
+    assertEquals(0, (int) r.getReputation("ip", "99.99.99.1"));
+    assertEquals(100, (int) r.getReputation("email", "nonexistent@mozilla.com"));
+    assertEquals(0, (int) r.getReputation("email", "testiprepdio1@mozilla.com"));
+  }
+
+  @Test
   public void iprepdIOTestWriteMalformed() throws Exception {
     IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
     options.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
