@@ -15,7 +15,7 @@ import org.joda.time.DateTime;
 public class GLB extends PayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private final JacksonFactory jfmatcher;
+  private static final JacksonFactory jfmatcher = new JacksonFactory();
 
   private String requestMethod;
   private String userAgent;
@@ -59,9 +59,7 @@ public class GLB extends PayloadBase implements Serializable {
   }
 
   /** Construct matcher object. */
-  public GLB() {
-    jfmatcher = new JacksonFactory();
-  }
+  public GLB() {}
 
   /**
    * Construct parser object.
@@ -71,7 +69,6 @@ public class GLB extends PayloadBase implements Serializable {
    * @param state State
    */
   public GLB(String input, Event e, ParserState state) {
-    jfmatcher = null;
     LogEntry entry = state.getLogEntryHint();
     if (entry == null) {
       // Reuse JacksonFactory from parser state
