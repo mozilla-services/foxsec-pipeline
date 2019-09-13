@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.InputOptions;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.ParserMultiDoFn;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -382,20 +383,26 @@ public class Input implements Serializable {
 
     @Override
     public PCollection<KV<String, Event>> expand(PBegin begin) {
-      PCollectionList<KV<String, Event>> list =
-          PCollectionList.<KV<String, Event>>empty(begin.getPipeline());
+      PCollectionList<KV<String, String>> list =
+          PCollectionList.<KV<String, String>>empty(begin.getPipeline());
       ArrayList<InputElement> elements = input.getInputElements();
       if (elements.size() < 1) {
         throw new RuntimeException("multiplex read with no elements");
       }
+
+      ParserMultiDoFn fn = new ParserMultiDoFn();
       for (InputElement i : elements) {
+        // As we iterate over the elements to read the raw collection, also configure our DoFn
+        // we will utilize later to parse them
+        fn.addParser(i.getName(), i.getParserConfiguration(), i.getEventFilter());
+
         list =
             list.and(
-                i.expandElement(begin, input.getProject())
+                i.expandElementRaw(begin, input.getProject())
                     .apply(
                         String.format("multiplex %s", i.getName()),
                         ParDo.of(
-                            new DoFn<Event, KV<String, Event>>() {
+                            new DoFn<String, KV<String, String>>() {
                               private static final long serialVersionUID = 1L;
 
                               @ProcessElement
@@ -404,7 +411,8 @@ public class Input implements Serializable {
                               }
                             })));
       }
-      return list.apply(Flatten.<KV<String, Event>>pCollections());
+
+      return list.apply(Flatten.<KV<String, String>>pCollections()).apply(ParDo.of(fn));
     }
 
     /**
