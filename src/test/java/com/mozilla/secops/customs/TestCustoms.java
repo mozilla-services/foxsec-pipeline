@@ -37,11 +37,6 @@ public class TestCustoms {
   public TestCustoms() {}
 
   @Test
-  public void noopPipelineTest() throws Exception {
-    p.run().waitUntilFinish();
-  }
-
-  @Test
   public void parseTest() throws Exception {
     String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
 
