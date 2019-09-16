@@ -1,5 +1,6 @@
 package com.mozilla.secops.amo;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
@@ -28,7 +29,8 @@ import org.joda.time.Duration;
  * If the number of in-use aliases for a given account exceeds the configured value, and alert is
  * generated.
  */
-public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollection<Alert>> {
+public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollection<Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
@@ -47,6 +49,12 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
     this.monitoredResource = monitoredResource;
     this.suppressRecovery = suppressRecovery;
     this.maxAliases = maxAliases;
+  }
+
+  public String getTransformDoc() {
+    return String.format(
+        "Alerts on aliased FxA accounts usage. A max of %s are allowed for one account in a given session.",
+        maxAliases);
   }
 
   @Override

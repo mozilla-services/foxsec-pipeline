@@ -1,5 +1,6 @@
 package com.mozilla.secops.amo;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
@@ -26,7 +27,8 @@ import org.joda.time.Duration;
  * uploading a file with the exact same file name exceeds the configured value within the fixed
  * window, an alert is generated.
  */
-public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<Alert>> {
+public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
@@ -44,6 +46,12 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
     this.monitoredResource = monitoredResource;
     this.suppressRecovery = suppressRecovery;
     this.matchAlertOn = matchAlertOn;
+  }
+
+  public String getTransformDoc() {
+    return String.format(
+        "Detect distributed AMO submissions with the same file name. Alert on %s submissions of the same file name.",
+        matchAlertOn);
   }
 
   @Override

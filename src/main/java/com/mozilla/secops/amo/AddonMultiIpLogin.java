@@ -1,5 +1,6 @@
 package com.mozilla.secops.amo;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
@@ -7,6 +8,7 @@ import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -30,7 +32,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>The analysis is based on sessions with a 15 minute gap duration.
  */
-public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollection<Alert>> {
+public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollection<Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
@@ -63,6 +66,12 @@ public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollectio
     this.alertOnIp = alertOnIp;
     this.acctExceptions = acctExceptions;
     this.aggMatchers = aggMatchers;
+  }
+
+  public String getTransformDoc() {
+    return String.format(
+        "Detect multiple account logins for the same account from different source addresses associated with different country codes. Alert on %s different countries and %s different IPs. Regex for account exceptions: %s",
+        alertOn, alertOnIp, Arrays.toString(acctExceptions));
   }
 
   @Override
