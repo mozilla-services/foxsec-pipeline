@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.ParserTest;
@@ -75,26 +76,32 @@ public class TestCustoms {
     options.setEnableAccountCreationAbuseDetector(true);
     options.setAccountCreationSessionLimit(3);
     options.setXffAddressSelector("127.0.0.1/32");
+    options.setGenerateConfigurationTicksInterval(1);
+    options.setGenerateConfigurationTicksMaximum(5L);
 
-    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+    Input input = TestCustomsUtil.wiredInputStream(options, s);
 
-    PCollection<Long> count =
-        alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(count).isEqualTo(1L);
+    PCollection<Alert> alerts =
+        Customs.executePipeline(p, p.apply(input.simplexReadRaw()), options);
 
     PAssert.that(alerts)
         .satisfies(
             x -> {
-              int cnt = 0;
+              int alertCnt = 0;
+              int totalCnt = 0;
               for (Alert a : x) {
-                assertEquals("customs", a.getCategory());
-                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                assertEquals("3", a.getMetadataValue("count"));
-                assertEquals("account_creation_abuse", a.getMetadataValue("customs_category"));
-                assertEquals("test suspicious account creation, 216.160.83.56 3", a.getSummary());
-                cnt++;
+                totalCnt++;
+                if (a.getCategory().equals("customs")) {
+                  assertEquals("customs", a.getCategory());
+                  assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                  assertEquals("3", a.getMetadataValue("count"));
+                  assertEquals("account_creation_abuse", a.getMetadataValue("customs_category"));
+                  assertEquals("test suspicious account creation, 216.160.83.56 3", a.getSummary());
+                  alertCnt++;
+                }
               }
-              assertEquals(1, cnt);
+              assertEquals(1, alertCnt);
+              assertEquals(6, totalCnt);
               return null;
             });
 

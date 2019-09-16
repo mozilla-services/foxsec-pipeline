@@ -6,6 +6,8 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertSuppressorCount;
 import com.mozilla.secops.input.Input;
+import com.mozilla.secops.metrics.CfgTickBuilder;
+import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
@@ -174,6 +176,32 @@ public class Customs implements Serializable {
   }
 
   /**
+   * Build a configuration tick for Customs given pipeline options
+   *
+   * @param options Pipeline options
+   * @return String
+   */
+  public static String buildConfigurationTick(CustomsOptions options) throws IOException {
+    CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
+
+    if (options.getEnableAccountCreationAbuseDetector()) {
+      b.withTransformDoc(
+          new CustomsAccountCreation(
+              options.getMonitoredResourceIndicator(),
+              options.getAccountCreationSessionLimit(),
+              options.getAccountAbuseSuppressRecovery()));
+
+      b.withTransformDoc(
+          new CustomsAccountCreationDist(
+              options.getMonitoredResourceIndicator(),
+              options.getAccountCreationDistanceThreshold(),
+              options.getAccountCreationDistanceRatio()));
+    }
+
+    return b.build();
+  }
+
+  /**
    * Analysis entry point for Customs pipeline
    *
    * @param p Pipeline
@@ -195,13 +223,26 @@ public class Customs implements Serializable {
           resultsList.and(
               events.apply("account creation abuse", new AccountCreationAbuse(options)));
     }
+
+    // If configuration ticks were enabled, enable the processor here too
+    if (options.getGenerateConfigurationTicksInterval() > 0) {
+      resultsList =
+          resultsList.and(
+              events
+                  .apply(
+                      "cfgtick processor",
+                      ParDo.of(new CfgTickProcessor("customs-cfgtick", "category")))
+                  .apply(new GlobalTriggers<Alert>(5)));
+    }
+
     return resultsList.apply("flatten all output", Flatten.<Alert>pCollections());
   }
 
   private static void runCustoms(CustomsOptions options) throws IOException {
     Pipeline p = Pipeline.create(options);
 
-    PCollection<String> input = p.apply("input", Input.compositeInputAdapter(options, null));
+    PCollection<String> input =
+        p.apply("input", Input.compositeInputAdapter(options, buildConfigurationTick(options)));
     PCollection<Alert> alerts = executePipeline(p, input, options);
 
     alerts

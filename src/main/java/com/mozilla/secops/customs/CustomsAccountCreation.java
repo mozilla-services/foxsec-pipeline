@@ -1,5 +1,6 @@
 package com.mozilla.secops.customs;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
@@ -12,7 +13,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
 /** {@link DoFn} for analysis of account creation abuse applied to sessions */
-public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV<String, Alert>> {
+public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV<String, Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final int sessionCreationLimit;
@@ -33,6 +35,13 @@ public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV
     this.monitoredResource = monitoredResource;
     this.sessionCreationLimit = sessionCreationLimit;
     this.accountAbuseSuppressRecovery = accountAbuseSuppressRecovery;
+  }
+
+  public String getTransformDoc() {
+    return String.format(
+        "Alert if single source address creates %d or more accounts in one session, where a session"
+            + " ends after 30 minutes of inactivity.",
+        sessionCreationLimit);
   }
 
   /**
