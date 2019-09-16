@@ -5,12 +5,15 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.input.Input;
+import com.mozilla.secops.metrics.CfgTickBuilder;
+import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.EventFilter;
 import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
+import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import org.apache.beam.sdk.Pipeline;
@@ -45,13 +48,15 @@ public class Amo implements Serializable {
 
     ParserCfg cfg = ParserCfg.fromInputOptions(options);
 
-    EventFilter filter = new EventFilter();
+    EventFilter filter = new EventFilter().passConfigurationTicks();
     filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.AMODOCKER));
+
     PCollection<Event> parsed =
         input.apply(
             ParDo.of(new ParserDoFn().withConfiguration(cfg).withInlineEventFilter(filter)));
 
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
+
     resultsList =
         resultsList.and(
             parsed.apply(
@@ -115,6 +120,17 @@ public class Amo implements Serializable {
                     options.getAddonMultiIpLoginAlertOnIp(),
                     options.getAddonMultiIpLoginAlertExceptions(),
                     options.getAddonMultiIpLoginAggressiveMatcher())));
+
+    // If configuration ticks were enabled, enable the processor here too
+    if (options.getGenerateConfigurationTicksInterval() > 0) {
+      resultsList =
+          resultsList.and(
+              parsed
+                  .apply(
+                      "cfgtick processor",
+                      ParDo.of(new CfgTickProcessor("amo-cfgtick", "category")))
+                  .apply(new GlobalTriggers<Alert>(5)));
+    }
 
     return resultsList.apply("amo flatten output", Flatten.<Alert>pCollections());
   }
@@ -215,10 +231,66 @@ public class Amo implements Serializable {
     void setAddonMultiIpLoginSuppressRecovery(Integer value);
   }
 
+  /**
+   * Build a configuration tick for Amo given pipeline options
+   *
+   * @param options Pipeline options
+   * @return String
+   */
+  public static String buildConfigurationTick(AmoOptions options) throws IOException {
+    CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
+
+    b.withTransformDoc(
+        new FxaAccountAbuseNewVersion(
+            options.getMonitoredResourceIndicator(),
+            options.getAccountMatchBanOnLogin(),
+            options.getBanPatternSuppressRecovery(),
+            options.getInputIprepd(),
+            options.getProject()));
+
+    b.withTransformDoc(new ReportRestriction(options.getMonitoredResourceIndicator()));
+
+    b.withTransformDoc(
+        new FxaAccountAbuseAlias(
+            options.getMonitoredResourceIndicator(),
+            options.getAliasAbuseSuppressRecovery(),
+            options.getAliasAbuseMaxAliases()));
+
+    b.withTransformDoc(
+        new AddonMatcher(
+            options.getMonitoredResourceIndicator(),
+            options.getAddonMatchSuppressRecovery(),
+            options.getAddonMatchCriteria()));
+
+    b.withTransformDoc(
+        new AddonMultiMatch(
+            options.getMonitoredResourceIndicator(),
+            options.getAddonMultiMatchSuppressRecovery(),
+            options.getAddonMultiMatchAlertOn()));
+
+    b.withTransformDoc(
+        new AddonMultiSubmit(
+            options.getMonitoredResourceIndicator(),
+            options.getAddonMultiSubmitSuppressRecovery(),
+            options.getAddonMultiSubmitAlertOn()));
+
+    b.withTransformDoc(
+        new AddonMultiIpLogin(
+            options.getMonitoredResourceIndicator(),
+            options.getAddonMultiIpLoginSuppressRecovery(),
+            options.getAddonMultiIpLoginAlertOn(),
+            options.getAddonMultiIpLoginAlertOnIp(),
+            options.getAddonMultiIpLoginAlertExceptions(),
+            options.getAddonMultiIpLoginAggressiveMatcher()));
+
+    return b.build();
+  }
+
   private static void runAmo(AmoOptions options) throws IOException {
     Pipeline p = Pipeline.create(options);
 
-    PCollection<String> input = p.apply("input", Input.compositeInputAdapter(options, null));
+    PCollection<String> input =
+        p.apply("input", Input.compositeInputAdapter(options, buildConfigurationTick(options)));
     PCollection<Alert> alerts = executePipeline(p, input, options);
 
     alerts

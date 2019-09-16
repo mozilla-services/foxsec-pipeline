@@ -1,12 +1,15 @@
 package com.mozilla.secops.amo;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -21,7 +24,8 @@ import org.apache.beam.sdk.values.PCollection;
  * size of the upload. This is compared against configuration and if the criteria matches, an alert
  * will be generated of category amo_abuse_matched_addon.
  */
-public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Alert>> {
+public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
@@ -39,6 +43,12 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
     this.monitoredResource = monitoredResource;
     this.suppressRecovery = suppressRecovery;
     this.matchCriteria = matchCriteria;
+  }
+
+  public String getTransformDoc() {
+    return String.format(
+        "Match abusive addon uploads using these patterns %s and generate alerts",
+        Arrays.toString(matchCriteria));
   }
 
   private static class MatchCriteria {
@@ -80,6 +90,9 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Event e = c.element();
+                    if (!e.getPayloadType().equals(Payload.PayloadType.AMODOCKER)) {
+                      return;
+                    }
                     AmoDocker d = e.getPayload();
                     if ((d == null) || (d.getEventType() == null)) {
                       return;

@@ -1,10 +1,12 @@
 package com.mozilla.secops.amo;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.window.GlobalTriggers;
 import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -18,13 +20,14 @@ import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Duration;
 
 /**
- * Distributed submission based on file size intervals
+ * Detect distributed submissions based on file size intervals
  *
  * <p>Operates on fixed windows of 5 minutes. Uploads seen during this window are grouped based on
  * file size rounded up to the nearest 10000 byte boundary. Where the number of uploads at a
  * particular interval exceeds the configured alerting value, an alert will be generated.
  */
-public class AddonMultiSubmit extends PTransform<PCollection<Event>, PCollection<Alert>> {
+public class AddonMultiSubmit extends PTransform<PCollection<Event>, PCollection<Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
@@ -43,6 +46,12 @@ public class AddonMultiSubmit extends PTransform<PCollection<Event>, PCollection
     this.monitoredResource = monitoredResource;
     this.suppressRecovery = suppressRecovery;
     this.matchAlertOn = matchAlertOn;
+  }
+
+  public String getTransformDoc() {
+    return String.format(
+        "Detect distributed submissions based on file size intervals. Alert on %s submissions of the same rounded interval.",
+        matchAlertOn);
   }
 
   private static Integer roundSize(Integer input) {
@@ -66,6 +75,9 @@ public class AddonMultiSubmit extends PTransform<PCollection<Event>, PCollection
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Event e = c.element();
+                    if (!e.getPayloadType().equals(Payload.PayloadType.AMODOCKER)) {
+                      return;
+                    }
                     AmoDocker d = e.getPayload();
                     if ((d == null) || (d.getEventType() == null)) {
                       return;

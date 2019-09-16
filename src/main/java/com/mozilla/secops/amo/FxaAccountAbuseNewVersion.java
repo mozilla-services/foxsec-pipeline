@@ -1,5 +1,6 @@
 package com.mozilla.secops.amo;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.AmoDocker;
@@ -7,6 +8,7 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
@@ -20,7 +22,8 @@ import org.apache.beam.sdk.values.PCollectionList;
  *
  * <p>This transform also applies login ban patterns.
  */
-public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PCollection<Alert>> {
+public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PCollection<Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
@@ -53,6 +56,12 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
     this.project = project;
   }
 
+  public String getTransformDoc() {
+    return String.format(
+        "Correlates AMO addon submissions with abusive FxA account creation alerts via iprepd. Also includes blacklisted accounts regex: %s",
+        Arrays.toString(banAccounts));
+  }
+
   @Override
   public PCollection<Alert> expand(PCollection<Event> col) {
     PCollection<Event> wEvents =
@@ -66,6 +75,9 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                       @ProcessElement
                       public void processElement(ProcessContext c) {
                         Event e = c.element();
+                        if (!e.getPayloadType().equals(Payload.PayloadType.AMODOCKER)) {
+                          return;
+                        }
                         AmoDocker d = e.getPayload();
                         if ((d == null) || (d.getEventType() == null)) {
                           return;
