@@ -3,7 +3,7 @@
     "mode": "MULTIPLEX",
     "elements": [
       {
-        "name": "error_rate",
+        "name": "resource1",
         "file_inputs": [
           "./target/test-classes/testdata/httpreq_errorrate1.txt"
         ],
@@ -26,7 +26,7 @@
         }
       },
       {
-        "name": "hard_limit",
+        "name": "resource2",
         "file_inputs": [
           "./target/test-classes/testdata/httpreq_hardlimit1.txt"
         ],
@@ -49,13 +49,13 @@
     ]
   },
   "service_toggles": {
-    "error_rate": {
+    "resource1": {
       "enable_error_rate_analysis": true,
       "enable_threshold_analysis": true,
       "enable_nat_detection": true,
       "ignore_internal_requests": false
     },
-    "hard_limit": {
+    "resource2": {
       "enable_hard_limit_analysis": true,
       "hard_limit_request_count": 10,
       "enable_threshold_analysis": true,
