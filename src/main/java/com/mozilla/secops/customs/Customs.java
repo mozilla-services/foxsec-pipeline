@@ -173,6 +173,11 @@ public class Customs implements Serializable {
     Integer getAccountAbuseSuppressRecovery();
 
     void setAccountAbuseSuppressRecovery(Integer value);
+
+    @Description("Pubsub topic for CustomsAlert notifications; Pubsub topic")
+    String getCustomsNotificationTopic();
+
+    void setCustomsNotificationTopic(String value);
   }
 
   /**
@@ -245,9 +250,15 @@ public class Customs implements Serializable {
         p.apply("input", Input.compositeInputAdapter(options, buildConfigurationTick(options)));
     PCollection<Alert> alerts = executePipeline(p, input, options);
 
-    alerts
-        .apply("alert formatter", ParDo.of(new AlertFormatter(options)))
-        .apply("output", OutputOptions.compositeOutput(options));
+    PCollection<String> fmt =
+        alerts.apply("alert formatter", ParDo.of(new AlertFormatter(options)));
+    fmt.apply("output", OutputOptions.compositeOutput(options));
+
+    // If the customs notification topic is set, wire the alerts up to this output transform
+    // as well.
+    if (options.getCustomsNotificationTopic() != null) {
+      fmt.apply("customs notification", new CustomsNotification(options));
+    }
 
     p.run();
   }
