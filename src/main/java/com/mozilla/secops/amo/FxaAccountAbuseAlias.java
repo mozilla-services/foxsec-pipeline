@@ -1,10 +1,12 @@
 package com.mozilla.secops.amo;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.ArrayList;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -28,7 +30,8 @@ import org.joda.time.Duration;
  * If the number of in-use aliases for a given account exceeds the configured value, and alert is
  * generated.
  */
-public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollection<Alert>> {
+public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollection<Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
@@ -49,6 +52,12 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
     this.maxAliases = maxAliases;
   }
 
+  public String getTransformDoc() {
+    return String.format(
+        "Alerts on aliased FxA accounts usage. A max of %s are allowed for one account in a given session.",
+        maxAliases);
+  }
+
   @Override
   public PCollection<Alert> expand(PCollection<Event> col) {
     return col.apply(
@@ -60,6 +69,9 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Event e = c.element();
+                    if (!e.getPayloadType().equals(Payload.PayloadType.AMODOCKER)) {
+                      return;
+                    }
                     AmoDocker d = e.getPayload();
                     if ((d == null) || (d.getEventType() == null)) {
                       return;

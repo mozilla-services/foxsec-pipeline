@@ -1,10 +1,12 @@
 package com.mozilla.secops.amo;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,7 +28,8 @@ import org.joda.time.Duration;
  * uploading a file with the exact same file name exceeds the configured value within the fixed
  * window, an alert is generated.
  */
-public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<Alert>> {
+public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
@@ -44,6 +47,12 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
     this.monitoredResource = monitoredResource;
     this.suppressRecovery = suppressRecovery;
     this.matchAlertOn = matchAlertOn;
+  }
+
+  public String getTransformDoc() {
+    return String.format(
+        "Detect distributed AMO submissions with the same file name. Alert on %s submissions of the same file name.",
+        matchAlertOn);
   }
 
   @Override
@@ -68,6 +77,9 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Event e = c.element();
+                    if (!e.getPayloadType().equals(Payload.PayloadType.AMODOCKER)) {
+                      return;
+                    }
                     AmoDocker d = e.getPayload();
                     if ((d == null) || (d.getEventType() == null)) {
                       return;

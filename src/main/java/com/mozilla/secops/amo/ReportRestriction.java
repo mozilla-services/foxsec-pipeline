@@ -1,5 +1,6 @@
 package com.mozilla.secops.amo;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
@@ -11,7 +12,8 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 
 /** Report on request restrictions in AMO */
-public class ReportRestriction extends PTransform<PCollection<Event>, PCollection<Alert>> {
+public class ReportRestriction extends PTransform<PCollection<Event>, PCollection<Alert>>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
@@ -23,6 +25,10 @@ public class ReportRestriction extends PTransform<PCollection<Event>, PCollectio
    */
   public ReportRestriction(String monitoredResource) {
     this.monitoredResource = monitoredResource;
+  }
+
+  public String getTransformDoc() {
+    return "Reports on request restrictions from AMO";
   }
 
   @Override
