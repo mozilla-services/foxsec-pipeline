@@ -23,6 +23,7 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
@@ -249,6 +250,89 @@ public class Customs implements Serializable {
     }
   }
 
+  /**
+   * Summarizes various events processed by Customs pipeline
+   *
+   * <p>Emits an alert message which is a summary of events processed by the Customs pipeline over a
+   * fixed 15 minute interval.
+   */
+  public static class CustomsSummary extends PTransform<PCollection<Event>, PCollection<Alert>>
+      implements DocumentingTransform {
+    private static final long serialVersionUID = 1L;
+
+    private final String monitoredResource;
+
+    /**
+     * Initialize new CustomsSummary
+     *
+     * @param options CustomsOptions
+     */
+    public CustomsSummary(CustomsOptions options) {
+      monitoredResource = options.getMonitoredResourceIndicator();
+    }
+
+    public String getTransformDoc() {
+      return "Summarizes various event counts over 15 minute period in an alert message.";
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> col) {
+      return col.apply(
+              "summary element identification",
+              ParDo.of(
+                  new DoFn<Event, String>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Event e = c.element();
+
+                      FxaAuth.EventSummary s = CustomsUtil.authGetEventSummary(e);
+                      if (s == null) {
+                        // If we couldn't extract a summary from the event, just ignore it.
+                        return;
+                      }
+                      switch (s) {
+                        case LOGIN_FAILURE:
+                          c.output("login_failure");
+                          break;
+                        case ACCOUNT_CREATE:
+                          c.output("account_create");
+                          break;
+                        default:
+                          return;
+                      }
+                    }
+                  }))
+          .apply(
+              "summary fixed windows",
+              Window.<String>into(FixedWindows.of(Duration.standardSeconds(900))))
+          .apply("summary element count", Count.perElement())
+          .apply(
+              "summary analysis",
+              ParDo.of(
+                  new DoFn<KV<String, Long>, Alert>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      KV<String, Long> v = c.element();
+
+                      Alert alert = new Alert();
+                      alert.setCategory("customs");
+                      alert.addMetadata("customs_category", "summary");
+                      alert.addMetadata(v.getKey(), v.getValue().toString());
+                      alert.setSummary(
+                          String.format(
+                              "%s summary for period, %s %d",
+                              monitoredResource, v.getKey(), v.getValue()));
+                      c.output(alert);
+                    }
+                  }))
+          .apply("summary global windows", new GlobalTriggers<Alert>(5));
+    }
+  }
+
   /** Runtime options for {@link Customs} pipeline. */
   public interface CustomsOptions extends PipelineOptions, IOOptions {
     @Description("Enable account creation abuse detector")
@@ -299,6 +383,12 @@ public class Customs implements Serializable {
 
     void setSourceLoginFailureWindowSize(Integer value);
 
+    @Description("Enable customs summary analysis")
+    @Default.Boolean(false)
+    Boolean getEnableSummaryAnalysis();
+
+    void setEnableSummaryAnalysis(Boolean value);
+
     @Description("Pubsub topic for CustomsAlert notifications; Pubsub topic")
     String getCustomsNotificationTopic();
 
@@ -326,6 +416,14 @@ public class Customs implements Serializable {
               options.getMonitoredResourceIndicator(),
               options.getAccountCreationDistanceThreshold(),
               options.getAccountCreationDistanceRatio()));
+    }
+
+    if (options.getEnableSourceLoginFailureDetector()) {
+      b.withTransformDoc(new SourceLoginFailure(options));
+    }
+
+    if (options.getEnableSummaryAnalysis()) {
+      b.withTransformDoc(new CustomsSummary(options));
     }
 
     return b.build();
@@ -356,6 +454,9 @@ public class Customs implements Serializable {
     if (options.getEnableSourceLoginFailureDetector()) {
       resultsList =
           resultsList.and(events.apply("source login failure", new SourceLoginFailure(options)));
+    }
+    if (options.getEnableSummaryAnalysis()) {
+      resultsList = resultsList.and(events.apply("summary", new CustomsSummary(options)));
     }
 
     // If configuration ticks were enabled, enable the processor here too

@@ -169,6 +169,8 @@ public class TestCustoms {
 
     Customs.CustomsOptions options = getTestOptions();
     options.setEnableSourceLoginFailureDetector(true);
+    // Also test summary generation here
+    options.setEnableSummaryAnalysis(true);
     options.setSourceLoginFailureThreshold(10);
     options.setXffAddressSelector("127.0.0.1/32");
 
@@ -177,22 +179,31 @@ public class TestCustoms {
     PAssert.that(alerts)
         .satisfies(
             x -> {
-              int cnt = 0;
+              int lfCnt = 0;
+              int sCnt = 0;
               for (Alert a : x) {
-                System.out.println(a.toJSON());
-                assertEquals("customs", a.getCategory());
-                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                // Should be 10, since two events have a blocked errno and shouldn't be factored in
-                assertEquals("10", a.getMetadataValue("count"));
-                assertEquals("spock@mozilla.com", a.getMetadataValue("email"));
-                assertEquals("source_login_failure", a.getMetadataValue("notify_merge"));
-                assertEquals("source_login_failure", a.getMetadataValue("customs_category"));
-                assertEquals(
-                    "test source login failure threshold exceeded, 216.160.83.56 10 in 300 seconds",
-                    a.getSummary());
-                cnt++;
+                if (a.getMetadataValue("customs_category").equals("source_login_failure")) {
+                  assertEquals("customs", a.getCategory());
+                  assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                  // Should be 10, since two events have a blocked errno and shouldn't be factored
+                  // in
+                  assertEquals("10", a.getMetadataValue("count"));
+                  assertEquals("spock@mozilla.com", a.getMetadataValue("email"));
+                  assertEquals("source_login_failure", a.getMetadataValue("notify_merge"));
+                  assertEquals("source_login_failure", a.getMetadataValue("customs_category"));
+                  assertEquals(
+                      "test source login failure threshold exceeded, 216.160.83.56 10 in 300 seconds",
+                      a.getSummary());
+                  lfCnt++;
+                } else if (a.getMetadataValue("customs_category").equals("summary")) {
+                  assertEquals("customs", a.getCategory());
+                  assertEquals("10", a.getMetadataValue("login_failure"));
+                  assertEquals("test summary for period, login_failure 10", a.getSummary());
+                  sCnt++;
+                }
               }
-              assertEquals(1, cnt);
+              assertEquals(1, lfCnt);
+              assertEquals(1, sCnt);
               return null;
             });
 
