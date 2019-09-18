@@ -37,12 +37,12 @@ public class GeoUtil {
     int r = 6378;
 
     // convert to radians
-    Double lat1Radian = lat1 * Math.PI / 180;
-    Double lon1Radian = lon1 * Math.PI / 180;
-    Double lat2Radian = lat2 * Math.PI / 180;
-    Double lon2Radian = lon2 * Math.PI / 180;
+    double lat1Radian = lat1 * Math.PI / 180;
+    double lon1Radian = lon1 * Math.PI / 180;
+    double lat2Radian = lat2 * Math.PI / 180;
+    double lon2Radian = lon2 * Math.PI / 180;
 
-    Double h =
+    double h =
         haversin(lat2Radian - lat1Radian)
             + Math.cos(lat1Radian) * Math.cos(lat2Radian) * haversin(lon2Radian - lon1Radian);
 

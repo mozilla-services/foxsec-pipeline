@@ -575,7 +575,7 @@ public class AuthProfile implements Serializable {
 
         // If the address is already in the known address list, we have already processed it
         // as known so just skip the state logic
-        Boolean isSeen = false;
+        boolean isSeen = false;
         for (String s : seenKnownAddresses) {
           if (s.equals(e.getNormalized().getSourceAddress())) {
             isSeen = true;
@@ -651,7 +651,7 @@ public class AuthProfile implements Serializable {
                       e.getNormalized().getSourceAddressLatitude(),
                       e.getNormalized().getSourceAddressLongitude());
 
-              Long timeDifference =
+              long timeDifference =
                   (DateTimeUtils.currentTimeMillis() / 1000)
                       - (lastLocation.getTimestamp().getMillis() / 1000);
 

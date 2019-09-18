@@ -99,7 +99,7 @@ public class InputElement implements Serializable {
   /**
    * Expand configured input types into a resulting collection of strings
    *
-   * @param PBegin Pipeline begin
+   * @param begin Pipeline begin using {@link PBegin}
    * @param project GCP project, set if using RuntimeSecrets
    */
   public PCollection<String> expandElementRaw(PBegin begin, String project) {
@@ -146,7 +146,7 @@ public class InputElement implements Serializable {
   /**
    * Expand configured input types into a resulting collection of parsed events
    *
-   * @param PBegin Pipeline begin
+   * @param begin Pipeline begin using {@link PBegin}
    * @param project GCP project, set if using RuntimeSecrets
    */
   public PCollection<Event> expandElement(PBegin begin, String project) {

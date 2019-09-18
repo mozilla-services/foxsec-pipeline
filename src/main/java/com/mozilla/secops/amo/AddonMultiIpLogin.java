@@ -212,7 +212,7 @@ public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollectio
                       return;
                     }
 
-                    Boolean aggMatch = false;
+                    boolean aggMatch = false;
                     for (Pattern i : aggRe) {
                       Matcher m = i.matcher(c.element().getKey());
                       if (m.matches()) {

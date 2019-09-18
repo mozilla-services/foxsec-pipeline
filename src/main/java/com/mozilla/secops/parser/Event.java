@@ -49,6 +49,9 @@ public class Event implements Serializable {
 
   @Override
   public boolean equals(Object o) {
+    if (!(o instanceof Event)) {
+      return false;
+    }
     Event t = (Event) o;
     return getEventId().equals(t.getEventId());
   }

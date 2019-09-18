@@ -127,7 +127,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                         }
 
                         // Compare profile against configured ban patterns
-                        Boolean configuredBan = false;
+                        boolean configuredBan = false;
                         for (Pattern p : banAccountsPat) {
                           if (p.matcher(d.getFxaEmail()).matches()) {
                             configuredBan = true;
