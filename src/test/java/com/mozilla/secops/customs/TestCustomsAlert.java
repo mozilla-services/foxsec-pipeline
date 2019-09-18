@@ -38,5 +38,16 @@ public class TestCustomsAlert {
     // expect those to be included in the returned alert list as well (those will be converted
     // as they come in, in the same way).
     assertEquals(2, c.size());
+
+    buf =
+        "{\"severity\":\"info\",\"id\":\"64c95dc0-fa41-4fa4-8275-eee23d1c5ca9\",\"summary\":"
+            + "\"test source login failure threshold exceeded, 216.160.83.56 10 in 300 seconds\","
+            + "\"category\":\"customs\",\"timestamp\":\"1970-01-01T00:00:00.000Z\",\"metadata\":["
+            + "{\"key\":\"notify_merge\",\"value\":\"source_login_failure\"},{\"key\":\"customs_c"
+            + "ategory\",\"value\":\"source_login_failure\"},{\"key\":\"sourceaddress\",\"value\""
+            + ":\"216.160.83.56\"},{\"key\":\"count\",\"value\":\"10\"},{\"key\":\"email\",\"valu"
+            + "e\":\"spock@mozilla.com\"}]}";
+    c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
+    assertEquals(1, c.size());
   }
 }

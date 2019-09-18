@@ -157,4 +157,45 @@ public class TestCustoms {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void sourceLoginFailureTest() throws Exception {
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableSourceLoginFailureDetector(true);
+    options.setSourceLoginFailureThreshold(10);
+    options.setXffAddressSelector("127.0.0.1/32");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                System.out.println(a.toJSON());
+                assertEquals("customs", a.getCategory());
+                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                // Should be 10, since two events have a blocked errno and shouldn't be factored in
+                assertEquals("10", a.getMetadataValue("count"));
+                assertEquals("spock@mozilla.com", a.getMetadataValue("email"));
+                assertEquals("source_login_failure", a.getMetadataValue("notify_merge"));
+                assertEquals("source_login_failure", a.getMetadataValue("customs_category"));
+                assertEquals(
+                    "test source login failure threshold exceeded, 216.160.83.56 10 in 300 seconds",
+                    a.getSummary());
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }

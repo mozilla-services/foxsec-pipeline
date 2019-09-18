@@ -70,6 +70,9 @@ public class CustomsAlert implements Serializable {
           put(
               "account_creation_abuse_distributed",
               "Large number of very similar accounts created in fixed time frame from different addresses");
+          put(
+              "source_login_failure",
+              "Large number of account login failures from single source address in fixed time frame");
         }
       };
 
@@ -106,6 +109,8 @@ public class CustomsAlert implements Serializable {
         return convertAccountCreationAbuse(a);
       case "account_creation_abuse_distributed":
         return convertAccountCreationAbuseDistributed(a);
+      case "source_login_failure":
+        return convertSourceLoginFailure(a);
     }
     return null;
   }
@@ -126,6 +131,26 @@ public class CustomsAlert implements Serializable {
     } else {
       ret.setHeuristicDescription(desc);
     }
+    return ret;
+  }
+
+  public static ArrayList<CustomsAlert> convertSourceLoginFailure(Alert a) {
+    ArrayList<CustomsAlert> ret = new ArrayList<>();
+
+    String reason =
+        String.format(
+            "%s failed login %s times in window",
+            a.getMetadataValue("sourceaddress"), a.getMetadataValue("count"));
+
+    // Create alert for address
+    CustomsAlert buf = baseAlert(a);
+    buf.setSeverity(AlertSeverity.WARNING);
+    buf.setConfidence(100);
+    buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
+    buf.setIndicator(a.getMetadataValue("sourceaddress"));
+    buf.setSuggestedAction(AlertAction.SUSPECT);
+    buf.setReason(reason);
+    ret.add(buf);
     return ret;
   }
 
