@@ -33,8 +33,8 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
 
   public String getTransformDoc() {
     return String.format(
-        "Alert if at least %s accounts are created from different source addresses in a small "
-            + " fixed time frame and the similarity index of the accounts is all below %.2f.",
+        "Alert if at least %s accounts are created from different source addresses in a 30 "
+            + "minute time frame and the similarity index of the accounts is all below %.2f.",
         ratioAlertCount, ratioConsiderationUpper);
   }
 
