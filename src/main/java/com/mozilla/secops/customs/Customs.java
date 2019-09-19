@@ -48,6 +48,11 @@ import org.joda.time.Duration;
 public class Customs implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  public static final String CATEGORY_SOURCE_LOGIN_FAILURE = "source_login_failure";
+  public static final String CATEGORY_ACCOUNT_CREATION_ABUSE = "account_creation_abuse";
+  public static final String CATEGORY_ACCOUNT_CREATION_ABUSE_DIST =
+      "account_creation_abuse_distributed";
+
   /** Analyze input stream for account creation abuse */
   public static class AccountCreationAbuse
       extends PTransform<PCollection<Event>, PCollection<Alert>> {
@@ -226,8 +231,8 @@ public class Customs implements Serializable {
                       Alert alert = new Alert();
                       alert.setCategory("customs");
                       alert.setTimestamp(Parser.getLatestTimestamp(events));
-                      alert.setNotifyMergeKey("source_login_failure");
-                      alert.addMetadata("customs_category", "source_login_failure");
+                      alert.setNotifyMergeKey(CATEGORY_SOURCE_LOGIN_FAILURE);
+                      alert.addMetadata("customs_category", CATEGORY_SOURCE_LOGIN_FAILURE);
                       alert.addMetadata("sourceaddress", addr);
                       alert.addMetadata("count", Integer.toString(cnt));
                       alert.setSummary(

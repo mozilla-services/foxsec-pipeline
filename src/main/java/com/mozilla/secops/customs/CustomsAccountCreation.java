@@ -125,8 +125,8 @@ public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV
     Alert alert = new Alert();
     alert.setTimestamp(Parser.getLatestTimestamp(events));
     alert.setCategory("customs");
-    alert.setNotifyMergeKey("account_creation_abuse");
-    alert.addMetadata("customs_category", "account_creation_abuse");
+    alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE);
+    alert.addMetadata("customs_category", Customs.CATEGORY_ACCOUNT_CREATION_ABUSE);
     alert.addMetadata("sourceaddress", remoteAddress);
     alert.addMetadata("count", Integer.toString(createCount));
     alert.setSummary(

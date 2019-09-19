@@ -71,8 +71,8 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
       if (cand.size() >= ratioAlertCount) {
         Alert alert = new Alert();
         alert.setCategory("customs");
-        alert.setNotifyMergeKey("account_creation_abuse_distributed");
-        alert.addMetadata("customs_category", "account_creation_abuse_distributed");
+        alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
+        alert.addMetadata("customs_category", Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
         alert.addMetadata("count", Integer.toString(cand.size() + 1));
         alert.addMetadata("sourceaddress", remoteAddress);
         alert.setSummary(

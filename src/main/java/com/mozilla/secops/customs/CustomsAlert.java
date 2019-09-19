@@ -65,13 +65,13 @@ public class CustomsAlert implements Serializable {
 
         {
           put(
-              "account_creation_abuse",
+              Customs.CATEGORY_ACCOUNT_CREATION_ABUSE,
               "Large number of accounts created in one session from a single IP address");
           put(
-              "account_creation_abuse_distributed",
+              Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST,
               "Large number of very similar accounts created in fixed time frame from different addresses");
           put(
-              "source_login_failure",
+              Customs.CATEGORY_SOURCE_LOGIN_FAILURE,
               "Large number of account login failures from single source address in fixed time frame");
         }
       };
