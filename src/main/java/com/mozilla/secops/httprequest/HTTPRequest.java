@@ -568,7 +568,9 @@ public class HTTPRequest implements Serializable {
     /**
      * Static initializer for {@link EndpointAbuseAnalysis}
      *
-     * @param options Pipeline options
+     * @param toggles {@link HTTPRequestToggles}
+     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
+     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
      */
     public EndpointAbuseAnalysis(
         HTTPRequestToggles toggles,
@@ -637,8 +639,8 @@ public class HTTPRequest implements Serializable {
                       Iterable<ArrayList<String>> paths = c.element().getValue();
                       int[] endCounter = new int[endpoints.length];
                       String userAgent = null;
-                      Boolean basicVariance = false;
-                      Boolean extendedVariance = false;
+                      boolean basicVariance = false;
+                      boolean extendedVariance = false;
 
                       // Used to track the latest applicable EPA request, so we can use it as the
                       // alert timestamp if we need to generate an alert.

@@ -362,6 +362,9 @@ public class Alert implements Serializable {
 
   @Override
   public boolean equals(Object o) {
+    if (!(o instanceof Alert)) {
+      return false;
+    }
     Alert t = (Alert) o;
     return getAlertId().equals(t.getAlertId());
   }

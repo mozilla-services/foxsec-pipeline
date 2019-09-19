@@ -18,8 +18,8 @@ import org.joda.time.DateTimeUtils;
  * <p>Used by {@link AuthProfile}.
  */
 public class StateModel {
-  private static final Long DEFAULTPRUNEAGE = 864000L * 3; // 30 days
-  private static final Long DEFAULTEXPIREAGE = 864000L; // 10 days
+  private static final long DEFAULTPRUNEAGE = 864000L * 3; // 30 days
+  private static final long DEFAULTEXPIREAGE = 864000L; // 10 days
 
   private String subject;
   private Map<String, ModelEntry> entries;
@@ -94,7 +94,7 @@ public class StateModel {
      * @return Boolean
      */
     public boolean isExpired() {
-      Long mts = timestamp.getMillis() / 1000;
+      long mts = timestamp.getMillis() / 1000;
       if ((DateTimeUtils.currentTimeMillis() / 1000) - mts > DEFAULTEXPIREAGE) {
         return true;
       }
@@ -119,7 +119,7 @@ public class StateModel {
     while (it.hasNext()) {
       Map.Entry<?, ?> p = (Map.Entry) it.next();
       ModelEntry me = (ModelEntry) p.getValue();
-      Long mts = me.getTimestamp().getMillis() / 1000;
+      long mts = me.getTimestamp().getMillis() / 1000;
       if ((DateTimeUtils.currentTimeMillis() / 1000) - mts > age) {
         it.remove();
       }
