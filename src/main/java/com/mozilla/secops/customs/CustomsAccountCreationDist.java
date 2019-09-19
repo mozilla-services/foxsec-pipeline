@@ -1,5 +1,6 @@
 package com.mozilla.secops.customs;
 
+import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.StringDistance;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
@@ -8,7 +9,8 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
 /** {@link DoFn} for analysis of distributed account creation abuse */
-public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>, Alert> {
+public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>, Alert>
+    implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final int ratioAlertCount;
@@ -27,6 +29,13 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
     this.monitoredResource = monitoredResource;
     this.ratioAlertCount = ratioAlertCount;
     this.ratioConsiderationUpper = ratioConsiderationUpper;
+  }
+
+  public String getTransformDoc() {
+    return String.format(
+        "Alert if at least %s accounts are created from different source addresses in a 30 "
+            + "minute time frame and the similarity index of the accounts is all below %.2f.",
+        ratioAlertCount, ratioConsiderationUpper);
   }
 
   @ProcessElement
@@ -62,8 +71,8 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
       if (cand.size() >= ratioAlertCount) {
         Alert alert = new Alert();
         alert.setCategory("customs");
-        alert.setNotifyMergeKey("account_creation_abuse_distributed");
-        alert.addMetadata("customs_category", "account_creation_abuse_distributed");
+        alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
+        alert.addMetadata("customs_category", Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
         alert.addMetadata("count", Integer.toString(cand.size() + 1));
         alert.addMetadata("sourceaddress", remoteAddress);
         alert.setSummary(

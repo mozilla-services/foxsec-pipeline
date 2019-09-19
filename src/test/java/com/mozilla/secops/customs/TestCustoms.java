@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.ParserTest;
@@ -35,11 +36,6 @@ public class TestCustoms {
   }
 
   public TestCustoms() {}
-
-  @Test
-  public void noopPipelineTest() throws Exception {
-    p.run().waitUntilFinish();
-  }
 
   @Test
   public void parseTest() throws Exception {
@@ -80,26 +76,32 @@ public class TestCustoms {
     options.setEnableAccountCreationAbuseDetector(true);
     options.setAccountCreationSessionLimit(3);
     options.setXffAddressSelector("127.0.0.1/32");
+    options.setGenerateConfigurationTicksInterval(1);
+    options.setGenerateConfigurationTicksMaximum(5L);
 
-    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+    Input input = TestCustomsUtil.wiredInputStream(options, s);
 
-    PCollection<Long> count =
-        alerts.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
-    PAssert.thatSingleton(count).isEqualTo(1L);
+    PCollection<Alert> alerts =
+        Customs.executePipeline(p, p.apply(input.simplexReadRaw()), options);
 
     PAssert.that(alerts)
         .satisfies(
             x -> {
-              int cnt = 0;
+              int alertCnt = 0;
+              int totalCnt = 0;
               for (Alert a : x) {
-                assertEquals("customs", a.getCategory());
-                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                assertEquals("3", a.getMetadataValue("count"));
-                assertEquals("account_creation_abuse", a.getMetadataValue("customs_category"));
-                assertEquals("test suspicious account creation, 216.160.83.56 3", a.getSummary());
-                cnt++;
+                totalCnt++;
+                if (a.getCategory().equals("customs")) {
+                  assertEquals("customs", a.getCategory());
+                  assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                  assertEquals("3", a.getMetadataValue("count"));
+                  assertEquals("account_creation_abuse", a.getMetadataValue("customs_category"));
+                  assertEquals("test suspicious account creation, 216.160.83.56 3", a.getSummary());
+                  alertCnt++;
+                }
               }
-              assertEquals(1, cnt);
+              assertEquals(1, alertCnt);
+              assertEquals(6, totalCnt);
               return null;
             });
 
@@ -150,6 +152,58 @@ public class TestCustoms {
                 cnt++;
               }
               assertEquals(1, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void sourceLoginFailureTest() throws Exception {
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_rl_badlogin_simple1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableSourceLoginFailureDetector(true);
+    // Also test summary generation here
+    options.setEnableSummaryAnalysis(true);
+    options.setSourceLoginFailureThreshold(10);
+    options.setXffAddressSelector("127.0.0.1/32");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int lfCnt = 0;
+              int sCnt = 0;
+              for (Alert a : x) {
+                if (a.getMetadataValue("customs_category").equals("source_login_failure")) {
+                  assertEquals("customs", a.getCategory());
+                  assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                  // Should be 10, since two events have a blocked errno and shouldn't be factored
+                  // in
+                  assertEquals("10", a.getMetadataValue("count"));
+                  assertEquals("spock@mozilla.com", a.getMetadataValue("email"));
+                  assertEquals("source_login_failure", a.getMetadataValue("notify_merge"));
+                  assertEquals("source_login_failure", a.getMetadataValue("customs_category"));
+                  assertEquals(
+                      "test source login failure threshold exceeded, 216.160.83.56 10 in 300 seconds",
+                      a.getSummary());
+                  lfCnt++;
+                } else if (a.getMetadataValue("customs_category").equals("summary")) {
+                  assertEquals("customs", a.getCategory());
+                  assertEquals("10", a.getMetadataValue("login_failure"));
+                  assertEquals("test summary for period, login_failure 10", a.getSummary());
+                  sCnt++;
+                }
+              }
+              assertEquals(1, lfCnt);
+              assertEquals(1, sCnt);
               return null;
             });
 
