@@ -8,9 +8,9 @@ com.mozilla.secops.customs
 com.mozilla.secops.gatekeeper
 com.mozilla.secops.httprequest
 com.mozilla.secops.identity
+com.mozilla.secops.input
 com.mozilla.secops.metrics
 com.mozilla.secops.parser
-com.mozilla.secops.parser.eventfiltercfg
 com.mozilla.secops.parser.models.auth0
 com.mozilla.secops.parser.models.cloudtrail
 com.mozilla.secops.parser.models.cloudwatch
@@ -18,7 +18,6 @@ com.mozilla.secops.parser.models.duopull
 com.mozilla.secops.parser.models.etd
 com.mozilla.secops.parser.models.fxaauth
 com.mozilla.secops.parser.models.nginxstackdriver
-com.mozilla.secops.parser.models.secevent
 com.mozilla.secops.parser.models.taskcluster
 com.mozilla.secops.slack
 com.mozilla.secops.state
