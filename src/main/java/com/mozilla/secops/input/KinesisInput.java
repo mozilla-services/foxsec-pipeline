@@ -4,6 +4,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.mozilla.secops.crypto.RuntimeSecrets;
 import java.io.IOException;
+import java.io.Serializable;
 import org.apache.beam.sdk.io.kinesis.KinesisIO;
 import org.apache.beam.sdk.io.kinesis.KinesisRecord;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -12,7 +13,9 @@ import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 
 /** Configuration for a single Kinesis input */
-public class KinesisInput {
+public class KinesisInput implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   private String streamName;
   private String region;
   private String id;
