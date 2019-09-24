@@ -10,7 +10,9 @@ import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.StringJoiner;
+import java.util.concurrent.locks.ReentrantLock;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -123,25 +125,18 @@ public class IprepdIO {
    * @return Reader
    */
   public static Reader getReader(String iprepdSpec, String project) {
-    String buf;
-    try {
-      buf = RuntimeSecrets.interpretSecret(iprepdSpec, project);
-    } catch (IOException exc) {
-      throw new RuntimeException(exc.getMessage());
-    }
-    String[] parts = buf.split("\\|");
-    if (parts.length != 2) {
-      throw new RuntimeException("format of iprepd output specification was invalid");
-    }
-    return new Reader(parts[0], parts[1]);
+    return new Reader(iprepdSpec, project);
   }
 
   public static class Reader {
     private static final long serialVersionUID = 1L;
-    private final String url;
-    private final String apiKey;
+    private final String iprepdSpec;
+    private final String project;
     private final Logger log;
     private final HttpClient httpClient;
+
+    private static HashMap<String, String> decrypted = new HashMap<String, String>();
+    private static ReentrantLock decryptedLock = new ReentrantLock();
 
     /**
      * Read a reputation
@@ -152,6 +147,30 @@ public class IprepdIO {
      */
     public Integer getReputation(String type, String value) {
       HttpResponse resp;
+
+      String buf = null;
+      decryptedLock.lock();
+      try {
+        // See if we already have the URL and key information cached; if not we will do so
+        // on first invocation and store it.
+        buf = decrypted.get(iprepdSpec);
+        if (buf == null) {
+          try {
+            buf = RuntimeSecrets.interpretSecret(iprepdSpec, project);
+            decrypted.put(iprepdSpec, buf);
+          } catch (IOException exc) {
+            throw new RuntimeException(exc.getMessage());
+          }
+        }
+      } finally {
+        decryptedLock.unlock();
+      }
+      String[] parts = buf.split("\\|");
+      if (parts.length != 2) {
+        throw new RuntimeException("format of iprepd input specification was invalid");
+      }
+      String url = parts[0];
+      String apiKey = parts[1];
 
       String reqPath = new StringJoiner("/").add(url).add("type").add(type).add(value).toString();
       HttpGet get;
@@ -224,13 +243,13 @@ public class IprepdIO {
     /**
      * Create new iprepd reader
      *
-     * @param url URL for iprepd daemon (e.g., http://iprepd.example.host)
-     * @param apiKey Use API key for auth, should be formatted for {@link RuntimeSecrets}
+     * @param iprepdSpec iprepd input specification
+     * @param project GCP project name, only required if decrypting spec via cloudkms
      */
-    public Reader(String url, String apiKey) {
+    public Reader(String iprepdSpec, String project) {
       log = LoggerFactory.getLogger(Reader.class);
-      this.url = url;
-      this.apiKey = apiKey;
+      this.iprepdSpec = iprepdSpec;
+      this.project = project;
       httpClient = HttpClientBuilder.create().build();
     }
   }
@@ -250,21 +269,7 @@ public class IprepdIO {
    * @return IO transform
    */
   public static Write writeSpecs(String[] iprepdSpecs, String project) {
-    String[] decrypted = new String[iprepdSpecs.length];
-    for (int i = 0; i < iprepdSpecs.length; i++) {
-      String buf;
-      try {
-        buf = RuntimeSecrets.interpretSecret(iprepdSpecs[i], project);
-      } catch (IOException exc) {
-        throw new RuntimeException(exc.getMessage());
-      }
-      String[] parts = buf.split("\\|");
-      if (parts.length != 2) {
-        throw new RuntimeException("format of iprepd output specification was invalid");
-      }
-      decrypted[i] = buf;
-    }
-    return new Write(decrypted, project);
+    return new Write(iprepdSpecs, project);
   }
 
   /**
@@ -327,6 +332,9 @@ public class IprepdIO {
 
     private Counter violationWrites = Metrics.counter(METRICS_NAMESPACE, VIOLATION_WRITES_METRIC);
 
+    private static HashMap<String, String> decrypted = new HashMap<String, String>();
+    private static ReentrantLock decryptedLock = new ReentrantLock();
+
     public WriteFn(Write wTransform) {
       this.wTransform = wTransform;
     }
@@ -339,6 +347,15 @@ public class IprepdIO {
 
       project = wTransform.getProject();
       iprepdSpecs = wTransform.getIprepdSpecs();
+
+      decryptedLock.lock();
+      try {
+        for (String i : iprepdSpecs) {
+          decrypted.put(i, RuntimeSecrets.interpretSecret(i, project));
+        }
+      } finally {
+        decryptedLock.unlock();
+      }
     }
 
     @ProcessElement
@@ -375,7 +392,17 @@ public class IprepdIO {
 
         violationWrites.inc();
         for (String spec : iprepdSpecs) {
-          String[] parts = spec.split("\\|");
+          decryptedLock.lock();
+          String decr = null;
+          try {
+            decr = decrypted.get(spec);
+          } finally {
+            decryptedLock.unlock();
+          }
+          if (decr == null) {
+            throw new RuntimeException("iprepd specification not found in translation map");
+          }
+          String[] parts = decr.split("\\|");
           String url = parts[0];
           String apiKey = parts[1];
 
