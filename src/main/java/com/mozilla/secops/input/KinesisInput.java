@@ -77,7 +77,7 @@ public class KinesisInput implements Serializable {
   /**
    * Parse Kinesis input specification into configuration
    *
-   * <p>Specification format: <streamname>:<region>:<access id>:<access secret>
+   * <p>Specification format: <streamname>:<access id>:<access secret>:<region>
    *
    * <p>The specification processor supports RuntimeSecrets, and may therefore also be a cloudkms://
    * URL or a GCS URL.
@@ -99,9 +99,9 @@ public class KinesisInput implements Serializable {
     }
     KinesisInput ret = new KinesisInput();
     ret.setStreamName(parts[0]);
-    ret.setRegion(parts[3]);
     ret.setId(parts[1]);
     ret.setSecret(parts[2]);
+    ret.setRegion(parts[3]);
     return ret;
   }
 }
