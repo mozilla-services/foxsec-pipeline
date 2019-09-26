@@ -293,6 +293,7 @@ public class ETDTransforms implements Serializable {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public PCollection<Alert> expand(PCollection<Alert> input) {
       return input
           .apply(
@@ -309,6 +310,10 @@ public class ETDTransforms implements Serializable {
                       c.output(KV.of(buildSuppressionStateKey(a), a));
                     }
                   }))
+          // XXX Reshuffle here to avoid step fusion with the stateful ParDo which is causing
+          // the optimizer to produce a non-updatable graph, see also
+          // https://issuetracker.google.com/issues/118375066
+          .apply(org.apache.beam.sdk.transforms.Reshuffle.of())
           .apply(ParDo.of(new AlertSuppressor(alertSuppressionWindow)));
     }
   }
