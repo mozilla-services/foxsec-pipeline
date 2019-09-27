@@ -72,12 +72,19 @@ public class TestGatekeeper {
                   assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                   assertTrue(
                       a.getSummary().startsWith("suspicious activity detected in aws account"));
-                  assertEquals("123456789012", a.getMetadataValue("aws_account"));
+                  assertEquals("123456789012", a.getMetadataValue("aws_account_id"));
                   assertEquals("us-west-2", a.getMetadataValue("aws_region"));
 
                   assertEquals("guardduty", a.getMetadataValue("aws_service"));
                   assertNotNull(a.getMetadataValue("finding_first_seen_at"));
                   assertNotNull(a.getMetadataValue("finding_last_seen_at"));
+                  assertNotNull(a.getMetadataValue("url_to_finding"));
+                  if (a.getMetadataValue("finding_id")
+                      .equals("19ab29f7-5f41-94dd-f757-19556835054f")) {
+                    assertEquals(
+                        a.getMetadataValue("url_to_finding"),
+                        "https://us-west-2.console.aws.amazon.com/guardduty/home?region=us-west-2#/findings?fId=19ab29f7-5f41-94dd-f757-19556835054f");
+                  }
                   // all findings in sample data have a count of 2
                   assertEquals("2", a.getMetadataValue("finding_count"));
                   assertEquals(
@@ -280,7 +287,7 @@ public class TestGatekeeper {
                 assertEquals("gatekeeper:aws", a.getCategory());
                 assertTrue(
                     a.getSummary().startsWith("suspicious activity detected in aws account"));
-                assertEquals("123456789012", a.getMetadataValue("aws_account"));
+                assertEquals("123456789012", a.getMetadataValue("aws_account_id"));
                 assertEquals("us-west-2", a.getMetadataValue("aws_region"));
                 assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
               }

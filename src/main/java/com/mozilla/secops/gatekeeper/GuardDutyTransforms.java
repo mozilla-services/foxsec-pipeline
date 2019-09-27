@@ -205,8 +205,29 @@ public class GuardDutyTransforms implements Serializable {
       return "Alerts are generated based on events sent from AWS's Guardduty.";
     }
 
-    private void addBaseFindingData(Alert a, Finding f) {
-      a.tryAddMetadata("aws_account", f.getAccountId());
+    private String createFindingUrl(Finding f) {
+      if (f.getRegion() == null || f.getId() == null) {
+        return null;
+      }
+      return String.format(
+          "https://{}.console.aws.amazon.com/guardduty/home?region={}#/findings?fId={}",
+          f.getRegion(),
+          f.getRegion(),
+          f.getId());
+    }
+
+    private void addBaseFindingData(Alert a, Finding f, Map<String, String> awsAcctMap) {
+      String acctId = f.getAccountId();
+      a.tryAddMetadata("aws_account_id", acctId);
+
+      String acctName = null;
+      if (awsAcctMap != null && acctId != null) {
+        acctName = awsAcctMap.get(acctId);
+        if (acctName != null) {
+          a.addMetadata("aws_account_name", acctName);
+        }
+      }
+
       a.tryAddMetadata("aws_region", f.getRegion());
       a.tryAddMetadata("description", f.getDescription());
       Double severity = f.getSeverity();
@@ -215,10 +236,13 @@ public class GuardDutyTransforms implements Serializable {
       }
       a.tryAddMetadata("finding_type", f.getType());
       a.tryAddMetadata("finding_id", f.getId());
+
+      a.tryAddMetadata("url_to_finding", createFindingUrl(f));
+
       a.setSummary(
           String.format(
               "suspicious activity detected in aws account %s: %s",
-              f.getAccountId() != null ? f.getAccountId() : "UNKNOWN",
+              acctName != null ? acctName : acctId,
               f.getTitle() != null ? f.getTitle() : "UNKNOWN"));
       if (f.getUpdatedAt() != null) {
         a.setTimestamp(DateTime.parse(f.getUpdatedAt()));
@@ -439,19 +463,6 @@ public class GuardDutyTransforms implements Serializable {
 
                 private Map<String, String> awsAcctMap;
 
-                private void tryAddAccountName(Alert a) {
-                  if (awsAcctMap != null) {
-                    String acctId = a.getMetadataValue("aws_account");
-                    if (acctId != null) {
-                      String acctName = awsAcctMap.get(acctId);
-                      if (acctName != null) {
-                        a.addMetadata("aws_account_name", acctName);
-                        return;
-                      }
-                    }
-                  }
-                }
-
                 @Setup
                 public void setup() {
                   if (identityMgrPath != null) {
@@ -482,10 +493,9 @@ public class GuardDutyTransforms implements Serializable {
 
                   Alert a = new Alert();
 
-                  addBaseFindingData(a, f);
+                  addBaseFindingData(a, f, awsAcctMap);
                   addTypeSpecificFindingData(a, f);
                   tryAddEscalationEmail(a, f);
-                  tryAddAccountName(a);
                   c.output(a);
                 }
               }));
