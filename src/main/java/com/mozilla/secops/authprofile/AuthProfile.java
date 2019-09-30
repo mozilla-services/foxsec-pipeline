@@ -646,16 +646,18 @@ public class AuthProfile implements Serializable {
                   userIdentity,
                   geoResp.getKmDistance(),
                   geoResp.getTimeDifference());
-              log.info("{}: creating geo velocity alert", userIdentity);
-              Alert ga = AuthProfile.createBaseAlert(e);
-              ga.addMetadata("identity_key", userIdentity);
-              ga.addMetadata("category", "geo_velocity");
-              // TODO: Once this has run for a while, should switch to CRITICAL and add escalation
-              // metadata
-              ga.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
-              buildGeoVelocityAlertSummary(e, ga);
-              buildGeoVelocityAlertPayload(e, ga);
-              c.output(ga);
+              if (geoResp.getMaxKmPerSecondExceeded()) {
+                log.info("{}: creating geo velocity alert", userIdentity);
+                Alert ga = AuthProfile.createBaseAlert(e);
+                ga.addMetadata("identity_key", userIdentity);
+                ga.addMetadata("category", "geo_velocity");
+                // TODO: Once this has run for a while, should switch to CRITICAL and add escalation
+                // metadata
+                ga.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
+                buildGeoVelocityAlertSummary(e, ga);
+                buildGeoVelocityAlertPayload(e, ga);
+                c.output(ga);
+              }
             }
 
           } else {

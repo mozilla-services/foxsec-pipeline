@@ -36,8 +36,9 @@ public class AuthStateModel {
 
   /** Response to {@link AuthStateModel} GeoVelocity analysis request */
   public static class GeoVelocityResponse {
-    private Long timeDifference;
-    private Double kmDistance;
+    private final Long timeDifference;
+    private final Double kmDistance;
+    private final Boolean maxKmPerSExceeded;
 
     /**
      * Get difference in time in seconds
@@ -46,6 +47,15 @@ public class AuthStateModel {
      */
     public Long getTimeDifference() {
       return timeDifference;
+    }
+
+    /**
+     * Return true if max KM/s was exceeded
+     *
+     * @return Boolean
+     */
+    public Boolean getMaxKmPerSecondExceeded() {
+      return maxKmPerSExceeded;
     }
 
     /**
@@ -63,9 +73,10 @@ public class AuthStateModel {
      * @param timeDifference Time difference in seconds
      * @param kmDistance Distance between points in KM
      */
-    public GeoVelocityResponse(Long timeDifference, Double kmDistance) {
+    public GeoVelocityResponse(Long timeDifference, Double kmDistance, Boolean maxKmPerSExceeded) {
       this.timeDifference = timeDifference;
       this.kmDistance = kmDistance;
+      this.maxKmPerSExceeded = maxKmPerSExceeded;
     }
   }
 
@@ -308,8 +319,7 @@ public class AuthStateModel {
    * calculate the distance between the events and the amount of time that passed between the
    * events.
    *
-   * <p>If the KM/s exceeds maxKmPerSecond, a response is returned. If analysis was not possible or
-   * maxKmPerSecond was not violated, null is returned.
+   * <p>If geo-velocity analysis was possible, a GeoVelocityResponse is returned, null if not.
    *
    * @param maxKmPerSecond The maximum KM per second to use for the analysis
    * @return GeoVelocityResponse or null
@@ -345,10 +355,9 @@ public class AuthStateModel {
             - (prev.getValue().getTimestamp().getMillis() / 1000);
 
     if ((kmdist / td) > maxKmPerSecond) {
-      return new GeoVelocityResponse(td, kmdist);
+      return new GeoVelocityResponse(td, kmdist, true);
     }
-
-    return null;
+    return new GeoVelocityResponse(td, kmdist, false);
   }
 
   /**
