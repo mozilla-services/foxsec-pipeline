@@ -1,4 +1,4 @@
-package com.mozilla.secops.authprofile;
+package com.mozilla.secops.authstate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -12,21 +12,26 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
 
-/**
- * Manages and stores state for a given user
- *
- * <p>Used by {@link AuthProfile}.
- */
-public class StateModel {
-  private static final long DEFAULTPRUNEAGE = 864000L * 3; // 30 days
-  private static final long DEFAULTEXPIREAGE = 864000L; // 10 days
+/** Manages and stores authentication state information for a given user identity. */
+public class AuthStateModel {
+  /**
+   * After a particular source IP address has not been seen for a user in DEFAULTPRUNEAGE seconds,
+   * it will be removed from the model.
+   */
+  public static final long DEFAULTPRUNEAGE = 864000L * 3; // 30 days
+
+  /**
+   * After a particular source IP address has not been seen for a user in DEFAULTEXPIREAGE seconds,
+   * it will be considered "expired". However it will still be present in the stored model.
+   */
+  public static final long DEFAULTEXPIREAGE = 864000L; // 10 days
 
   private String subject;
   private Map<String, ModelEntry> entries;
 
   /** Represents a single known source for authentication for a given user */
   @JsonIgnoreProperties(ignoreUnknown = true)
-  static class ModelEntry {
+  public static class ModelEntry {
     private Double longitude;
     private Double latitude;
     private DateTime timestamp;
@@ -100,8 +105,6 @@ public class StateModel {
       }
       return false;
     }
-
-    ModelEntry() {}
   }
 
   /** Prune entries with timestamp older than default model duration */
@@ -180,7 +183,7 @@ public class StateModel {
   /**
    * Get the most recent entry, or return null if there are no entries
    *
-   * @return {@link StateModel.ModelEntry}
+   * @return {@link AuthStateModel.ModelEntry}
    */
   @JsonIgnore
   public ModelEntry getLatestEntry() {
@@ -231,10 +234,10 @@ public class StateModel {
    *
    * @param user Subject name to retrieve state for
    * @param s Initialized state cursor for request
-   * @return User {@link StateModel} or null if it does not exist
+   * @return User {@link AuthStateModel} or null if it does not exist
    */
-  public static StateModel get(String user, StateCursor s) throws StateException {
-    StateModel ret = s.get(user, StateModel.class);
+  public static AuthStateModel get(String user, StateCursor s) throws StateException {
+    AuthStateModel ret = s.get(user, AuthStateModel.class);
     if (ret == null) {
       return null;
     }
@@ -260,7 +263,7 @@ public class StateModel {
    * @param subject Subject user name
    */
   @JsonCreator
-  public StateModel(@JsonProperty("subject") String subject) {
+  public AuthStateModel(@JsonProperty("subject") String subject) {
     this.subject = subject;
     entries = new HashMap<String, ModelEntry>();
   }

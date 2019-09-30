@@ -8,6 +8,7 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertIO;
+import com.mozilla.secops.authstate.AuthStateModel;
 import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.input.Input;
@@ -611,9 +612,9 @@ public class AuthProfile implements Serializable {
 
           a.addMetadata("identity_key", userIdentity);
           // The event was for a tracked identity, initialize the state model
-          StateModel sm = StateModel.get(userIdentity, cur);
+          AuthStateModel sm = AuthStateModel.get(userIdentity, cur);
           if (sm == null) {
-            sm = new StateModel(userIdentity);
+            sm = new AuthStateModel(userIdentity);
           }
 
           String entryKey = getEntryKey(e.getNormalized().getSourceAddress());
@@ -622,7 +623,7 @@ public class AuthProfile implements Serializable {
           }
 
           // used for geo velocity analysis
-          StateModel.ModelEntry lastLocation = sm.getLatestEntry();
+          AuthStateModel.ModelEntry lastLocation = sm.getLatestEntry();
 
           if (sm.updateEntry(
               entryKey,

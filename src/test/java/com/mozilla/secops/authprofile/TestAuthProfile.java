@@ -13,6 +13,7 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertConfiguration;
 import com.mozilla.secops.alert.AlertIO;
 import com.mozilla.secops.alert.TemplateManager;
+import com.mozilla.secops.authstate.AuthStateModel;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
@@ -490,7 +491,7 @@ public class TestAuthProfile {
                 options.getDatastoreKind(), options.getDatastoreNamespace()));
     state.initialize();
     StateCursor c = state.newCursor();
-    StateModel sm = new StateModel("wriker@mozilla.com");
+    AuthStateModel sm = new AuthStateModel("wriker@mozilla.com");
     DateTime n = new DateTime();
     // Set it to be a day ago so that we can test that moving a new entry far away
     // geographically in a long period of time does not create an alert.
@@ -546,7 +547,7 @@ public class TestAuthProfile {
                 options.getDatastoreKind(), options.getDatastoreNamespace()));
     state.initialize();
     StateCursor c = state.newCursor();
-    StateModel sm = new StateModel("wriker@mozilla.com");
+    AuthStateModel sm = new AuthStateModel("wriker@mozilla.com");
     sm.updateEntry("216.160.83.56", null, null);
     sm.set(c);
     state.done();
