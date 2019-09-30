@@ -620,9 +620,6 @@ public class AuthProfile implements Serializable {
             a.addMetadata("entry_key", entryKey);
           }
 
-          // used for geo velocity analysis
-          AuthStateModel.ModelEntry lastLocation = sm.getLatestEntry();
-
           if (sm.updateEntry(
               entryKey,
               e.getNormalized().getSourceAddressLatitude(),
