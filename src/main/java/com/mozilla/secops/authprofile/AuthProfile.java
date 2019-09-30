@@ -2,7 +2,6 @@ package com.mozilla.secops.authprofile;
 
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.DocumentingTransform;
-import com.mozilla.secops.GeoUtil;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
@@ -47,7 +46,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -639,40 +637,25 @@ public class AuthProfile implements Serializable {
             a.setSeverity(Alert.AlertSeverity.WARNING);
             addEscalationMetadata(a, identity);
 
-            // if location velocity analysis
-            if (lastLocation != null
-                && lastLocation.getLatitude() != null
-                && lastLocation.getLongitude() != null
-                && e.getNormalized().getSourceAddressLatitude() != null
-                && e.getNormalized().getSourceAddressLongitude() != null) {
-              Double kmDistance =
-                  GeoUtil.kmBetweenTwoPoints(
-                      lastLocation.getLatitude(),
-                      lastLocation.getLongitude(),
-                      e.getNormalized().getSourceAddressLatitude(),
-                      e.getNormalized().getSourceAddressLongitude());
+            AuthStateModel.GeoVelocityResponse geoResp =
+                sm.geoVelocityAnalyzeLatest(maxKilometersPerSecond);
 
-              long timeDifference =
-                  (DateTimeUtils.currentTimeMillis() / 1000)
-                      - (lastLocation.getTimestamp().getMillis() / 1000);
-
+            if (geoResp != null) {
               log.info(
                   "{}: new location is {}km away from last location within {}s",
                   userIdentity,
-                  kmDistance,
-                  timeDifference);
-              if ((kmDistance / timeDifference) > maxKilometersPerSecond) {
-                log.info("{}: creating geo velocity alert", userIdentity);
-                Alert ga = AuthProfile.createBaseAlert(e);
-                ga.addMetadata("identity_key", userIdentity);
-                ga.addMetadata("category", "geo_velocity");
-                // TODO: Once this has run for a while, should switch to CRITICAL and add escalation
-                // metadata
-                ga.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
-                buildGeoVelocityAlertSummary(e, ga);
-                buildGeoVelocityAlertPayload(e, ga);
-                c.output(ga);
-              }
+                  geoResp.getKmDistance(),
+                  geoResp.getTimeDifference());
+              log.info("{}: creating geo velocity alert", userIdentity);
+              Alert ga = AuthProfile.createBaseAlert(e);
+              ga.addMetadata("identity_key", userIdentity);
+              ga.addMetadata("category", "geo_velocity");
+              // TODO: Once this has run for a while, should switch to CRITICAL and add escalation
+              // metadata
+              ga.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
+              buildGeoVelocityAlertSummary(e, ga);
+              buildGeoVelocityAlertPayload(e, ga);
+              c.output(ga);
             }
 
           } else {

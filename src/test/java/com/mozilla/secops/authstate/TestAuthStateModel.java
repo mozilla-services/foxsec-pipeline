@@ -9,6 +9,8 @@ import static org.junit.Assert.assertTrue;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateCursor;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import org.joda.time.DateTime;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,7 +29,27 @@ public class TestAuthStateModel {
   public TestAuthStateModel() {}
 
   @Test
-  public void AuthStateModelTest() throws Exception {
+  public void authStateModelTimeSortedTest() throws Exception {
+    AuthStateModel sm = new AuthStateModel("riker");
+    sm.updateEntry("127.0.0.4", new DateTime(4L), 4.0, 4.0);
+    sm.updateEntry("127.0.0.3", new DateTime(3L), 3.0, 3.0);
+    sm.updateEntry("127.0.0.1", new DateTime(1L), 1.0, 1.0);
+    sm.updateEntry("127.0.0.2", new DateTime(2L), 2.0, 2.0);
+    ArrayList<AbstractMap.SimpleEntry<String, AuthStateModel.ModelEntry>> ret =
+        sm.timeSortedEntries();
+    assertEquals(4, ret.size());
+    assertEquals("127.0.0.1", ret.get(0).getKey());
+    assertEquals(1L, ret.get(0).getValue().getTimestamp().getMillis());
+    assertEquals("127.0.0.2", ret.get(1).getKey());
+    assertEquals(2L, ret.get(1).getValue().getTimestamp().getMillis());
+    assertEquals("127.0.0.3", ret.get(2).getKey());
+    assertEquals(3L, ret.get(2).getValue().getTimestamp().getMillis());
+    assertEquals("127.0.0.4", ret.get(3).getKey());
+    assertEquals(4L, ret.get(3).getValue().getTimestamp().getMillis());
+  }
+
+  @Test
+  public void authStateModelTest() throws Exception {
     testEnv();
     State s = new State(new DatastoreStateInterface("authprofile", "teststatemodel"));
     StateCursor c;
