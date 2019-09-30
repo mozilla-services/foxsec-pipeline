@@ -135,6 +135,9 @@ public class AuthStateModel {
    * <p>Note this function does not write the new state, set must be called to make changes
    * permanent.
    *
+   * <p>This variant of the method will use the current time as the timestamp for the authentication
+   * event, instead of accepting a parameter incidating the timestamp to associated with the event.
+   *
    * @param ipaddr IP address to update state with
    * @param latitude IP address's latitude
    * @param longitude IP address's longitude
