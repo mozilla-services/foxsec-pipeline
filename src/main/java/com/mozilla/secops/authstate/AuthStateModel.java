@@ -1,32 +1,88 @@
-package com.mozilla.secops.authprofile;
+package com.mozilla.secops.authstate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mozilla.secops.GeoUtil;
 import com.mozilla.secops.state.StateCursor;
 import com.mozilla.secops.state.StateException;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
 
-/**
- * Manages and stores state for a given user
- *
- * <p>Used by {@link AuthProfile}.
- */
-public class StateModel {
-  private static final long DEFAULTPRUNEAGE = 864000L * 3; // 30 days
-  private static final long DEFAULTEXPIREAGE = 864000L; // 10 days
+/** Manages and stores authentication state information for a given user identity. */
+public class AuthStateModel {
+  /**
+   * After a particular source IP address has not been seen for a user in DEFAULTPRUNEAGE seconds,
+   * it will be removed from the model.
+   */
+  public static final long DEFAULTPRUNEAGE = 864000L * 3; // 30 days
+
+  /**
+   * After a particular source IP address has not been seen for a user in DEFAULTEXPIREAGE seconds,
+   * it will be considered "expired". However it will still be present in the stored model.
+   */
+  public static final long DEFAULTEXPIREAGE = 864000L; // 10 days
 
   private String subject;
   private Map<String, ModelEntry> entries;
 
+  /** Response to {@link AuthStateModel} GeoVelocity analysis request */
+  public static class GeoVelocityResponse {
+    private final Long timeDifference;
+    private final Double kmDistance;
+    private final Boolean maxKmPerSExceeded;
+
+    /**
+     * Get difference in time in seconds
+     *
+     * @return Long
+     */
+    public Long getTimeDifference() {
+      return timeDifference;
+    }
+
+    /**
+     * Return true if max KM/s was exceeded
+     *
+     * @return Boolean
+     */
+    public Boolean getMaxKmPerSecondExceeded() {
+      return maxKmPerSExceeded;
+    }
+
+    /**
+     * Get distance between points in KM
+     *
+     * @return Double
+     */
+    public Double getKmDistance() {
+      return kmDistance;
+    }
+
+    /**
+     * Create new GeoVelocityResponse
+     *
+     * @param timeDifference Time difference in seconds
+     * @param kmDistance Distance between points in KM
+     */
+    public GeoVelocityResponse(Long timeDifference, Double kmDistance, Boolean maxKmPerSExceeded) {
+      this.timeDifference = timeDifference;
+      this.kmDistance = kmDistance;
+      this.maxKmPerSExceeded = maxKmPerSExceeded;
+    }
+  }
+
   /** Represents a single known source for authentication for a given user */
   @JsonIgnoreProperties(ignoreUnknown = true)
-  static class ModelEntry {
+  public static class ModelEntry {
     private Double longitude;
     private Double latitude;
     private DateTime timestamp;
@@ -100,8 +156,6 @@ public class StateModel {
       }
       return false;
     }
-
-    ModelEntry() {}
   }
 
   /** Prune entries with timestamp older than default model duration */
@@ -131,6 +185,9 @@ public class StateModel {
    *
    * <p>Note this function does not write the new state, set must be called to make changes
    * permanent.
+   *
+   * <p>This variant of the method will use the current time as the timestamp for the authentication
+   * event, instead of accepting a parameter incidating the timestamp to associated with the event.
    *
    * @param ipaddr IP address to update state with
    * @param latitude IP address's latitude
@@ -180,7 +237,7 @@ public class StateModel {
   /**
    * Get the most recent entry, or return null if there are no entries
    *
-   * @return {@link StateModel.ModelEntry}
+   * @return {@link AuthStateModel.ModelEntry}
    */
   @JsonIgnore
   public ModelEntry getLatestEntry() {
@@ -231,10 +288,10 @@ public class StateModel {
    *
    * @param user Subject name to retrieve state for
    * @param s Initialized state cursor for request
-   * @return User {@link StateModel} or null if it does not exist
+   * @return User {@link AuthStateModel} or null if it does not exist
    */
-  public static StateModel get(String user, StateCursor s) throws StateException {
-    StateModel ret = s.get(user, StateModel.class);
+  public static AuthStateModel get(String user, StateCursor s) throws StateException {
+    AuthStateModel ret = s.get(user, AuthStateModel.class);
     if (ret == null) {
       return null;
     }
@@ -255,12 +312,91 @@ public class StateModel {
   }
 
   /**
+   * Perform geo-velocity analysis using the latest entries in the model
+   *
+   * <p>The latest entry in the model (e.g., last known authentication event) is compared against
+   * the entry that precedes it. If long/lat information is available, this information is used to
+   * calculate the distance between the events and the amount of time that passed between the
+   * events.
+   *
+   * <p>If geo-velocity analysis was possible, a GeoVelocityResponse is returned, null if not.
+   *
+   * @param maxKmPerSecond The maximum KM per second to use for the analysis
+   * @return GeoVelocityResponse or null
+   */
+  public GeoVelocityResponse geoVelocityAnalyzeLatest(Double maxKmPerSecond) {
+    ArrayList<AbstractMap.SimpleEntry<String, ModelEntry>> ent = timeSortedEntries();
+
+    int s = ent.size();
+    if (s <= 1) {
+      return null;
+    }
+
+    AbstractMap.SimpleEntry<String, ModelEntry> prev = ent.get(s - 2);
+    AbstractMap.SimpleEntry<String, ModelEntry> cur = ent.get(s - 1);
+
+    // Make sure we have long/lat for both entries
+    if ((prev.getValue().getLatitude() == null)
+        || (prev.getValue().getLongitude() == null)
+        || (cur.getValue().getLatitude() == null)
+        || (cur.getValue().getLongitude() == null)) {
+      return null;
+    }
+
+    Double kmdist =
+        GeoUtil.kmBetweenTwoPoints(
+            prev.getValue().getLatitude(),
+            prev.getValue().getLongitude(),
+            cur.getValue().getLatitude(),
+            cur.getValue().getLongitude());
+
+    long td =
+        (cur.getValue().getTimestamp().getMillis() / 1000)
+            - (prev.getValue().getTimestamp().getMillis() / 1000);
+
+    if ((kmdist / td) > maxKmPerSecond) {
+      return new GeoVelocityResponse(td, kmdist, true);
+    }
+    return new GeoVelocityResponse(td, kmdist, false);
+  }
+
+  /**
+   * Return all entries in AuthStateModel as an array list, sorted by timestamp
+   *
+   * @return ArrayList
+   */
+  public ArrayList<AbstractMap.SimpleEntry<String, ModelEntry>> timeSortedEntries() {
+    ArrayList<AbstractMap.SimpleEntry<String, ModelEntry>> ret = new ArrayList<>();
+    for (Map.Entry<String, ModelEntry> entry : entries.entrySet()) {
+      ret.add(new AbstractMap.SimpleEntry<String, ModelEntry>(entry.getKey(), entry.getValue()));
+    }
+    Collections.sort(
+        ret,
+        new Comparator<AbstractMap.SimpleEntry<String, ModelEntry>>() {
+          @Override
+          public int compare(
+              AbstractMap.SimpleEntry<String, ModelEntry> lhs,
+              AbstractMap.SimpleEntry<String, ModelEntry> rhs) {
+            DateTime lhsd = lhs.getValue().getTimestamp();
+            DateTime rhsd = rhs.getValue().getTimestamp();
+            if (lhsd.isAfter(rhsd)) {
+              return 1;
+            } else if (lhsd.isBefore(rhsd)) {
+              return -1;
+            }
+            return 0;
+          }
+        });
+    return ret;
+  }
+
+  /**
    * Create new state model for user
    *
    * @param subject Subject user name
    */
   @JsonCreator
-  public StateModel(@JsonProperty("subject") String subject) {
+  public AuthStateModel(@JsonProperty("subject") String subject) {
     this.subject = subject;
     entries = new HashMap<String, ModelEntry>();
   }

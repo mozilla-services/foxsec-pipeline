@@ -2,12 +2,12 @@ package com.mozilla.secops.authprofile;
 
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.DocumentingTransform;
-import com.mozilla.secops.GeoUtil;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertIO;
+import com.mozilla.secops.authstate.AuthStateModel;
 import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.input.Input;
@@ -46,7 +46,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -611,18 +610,15 @@ public class AuthProfile implements Serializable {
 
           a.addMetadata("identity_key", userIdentity);
           // The event was for a tracked identity, initialize the state model
-          StateModel sm = StateModel.get(userIdentity, cur);
+          AuthStateModel sm = AuthStateModel.get(userIdentity, cur);
           if (sm == null) {
-            sm = new StateModel(userIdentity);
+            sm = new AuthStateModel(userIdentity);
           }
 
           String entryKey = getEntryKey(e.getNormalized().getSourceAddress());
           if (!entryKey.equals(e.getNormalized().getSourceAddress())) {
             a.addMetadata("entry_key", entryKey);
           }
-
-          // used for geo velocity analysis
-          StateModel.ModelEntry lastLocation = sm.getLatestEntry();
 
           if (sm.updateEntry(
               entryKey,
@@ -638,29 +634,16 @@ public class AuthProfile implements Serializable {
             a.setSeverity(Alert.AlertSeverity.WARNING);
             addEscalationMetadata(a, identity);
 
-            // if location velocity analysis
-            if (lastLocation != null
-                && lastLocation.getLatitude() != null
-                && lastLocation.getLongitude() != null
-                && e.getNormalized().getSourceAddressLatitude() != null
-                && e.getNormalized().getSourceAddressLongitude() != null) {
-              Double kmDistance =
-                  GeoUtil.kmBetweenTwoPoints(
-                      lastLocation.getLatitude(),
-                      lastLocation.getLongitude(),
-                      e.getNormalized().getSourceAddressLatitude(),
-                      e.getNormalized().getSourceAddressLongitude());
+            AuthStateModel.GeoVelocityResponse geoResp =
+                sm.geoVelocityAnalyzeLatest(maxKilometersPerSecond);
 
-              long timeDifference =
-                  (DateTimeUtils.currentTimeMillis() / 1000)
-                      - (lastLocation.getTimestamp().getMillis() / 1000);
-
+            if (geoResp != null) {
               log.info(
                   "{}: new location is {}km away from last location within {}s",
                   userIdentity,
-                  kmDistance,
-                  timeDifference);
-              if ((kmDistance / timeDifference) > maxKilometersPerSecond) {
+                  geoResp.getKmDistance(),
+                  geoResp.getTimeDifference());
+              if (geoResp.getMaxKmPerSecondExceeded()) {
                 log.info("{}: creating geo velocity alert", userIdentity);
                 Alert ga = AuthProfile.createBaseAlert(e);
                 ga.addMetadata("identity_key", userIdentity);
