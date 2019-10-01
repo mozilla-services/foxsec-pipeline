@@ -173,6 +173,12 @@ public class AuthProfile implements Serializable {
                         }
                       }
 
+                      if ((e.getPayloadType().equals(Payload.PayloadType.CLOUDTRAIL))
+                          && (n.getSourceAddress().equals("AWS Internal"))) {
+                        log.info("ignoring event with AWS Internal source address");
+                        return;
+                      }
+
                       if (e.getPayloadType().equals(Payload.PayloadType.GCPAUDIT)) {
                         // Some GCP audit events can be generated with an internal IP in the
                         // source address field, even though the actual event may have been
