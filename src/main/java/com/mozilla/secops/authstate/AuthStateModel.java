@@ -1,7 +1,6 @@
 package com.mozilla.secops.authstate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.GeoUtil;
@@ -12,25 +11,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeUtils;
 
 /** Manages and stores authentication state information for a given user identity. */
 public class AuthStateModel {
-  /**
-   * After a particular source IP address has not been seen for a user in DEFAULTPRUNEAGE seconds,
-   * it will be removed from the model.
-   */
-  public static final long DEFAULTPRUNEAGE = 864000L * 3; // 30 days
-
-  /**
-   * After a particular source IP address has not been seen for a user in DEFAULTEXPIREAGE seconds,
-   * it will be considered "expired". However it will still be present in the stored model.
-   */
-  public static final long DEFAULTEXPIREAGE = 864000L; // 10 days
-
   private String subject;
   private Map<String, ModelEntry> entries;
 
@@ -143,41 +128,6 @@ public class AuthStateModel {
     public void setTimestamp(DateTime ts) {
       timestamp = ts;
     }
-
-    /**
-     * Return true if ModelEntry's timestamp is older than DEFAULTEXPIREAGE.
-     *
-     * @return Boolean
-     */
-    public boolean isExpired() {
-      long mts = timestamp.getMillis() / 1000;
-      if ((DateTimeUtils.currentTimeMillis() / 1000) - mts > DEFAULTEXPIREAGE) {
-        return true;
-      }
-      return false;
-    }
-  }
-
-  /** Prune entries with timestamp older than default model duration */
-  public void pruneState() {
-    pruneState(DEFAULTPRUNEAGE);
-  }
-
-  /**
-   * Prune entries with timestamp older than specified duration from state model
-   *
-   * @param age Prune entries older than specified seconds
-   */
-  public void pruneState(Long age) {
-    Iterator<?> it = entries.entrySet().iterator();
-    while (it.hasNext()) {
-      Map.Entry<?, ?> p = (Map.Entry) it.next();
-      ModelEntry me = (ModelEntry) p.getValue();
-      long mts = me.getTimestamp().getMillis() / 1000;
-      if ((DateTimeUtils.currentTimeMillis() / 1000) - mts > age) {
-        it.remove();
-      }
-    }
   }
 
   /**
@@ -187,7 +137,7 @@ public class AuthStateModel {
    * permanent.
    *
    * <p>This variant of the method will use the current time as the timestamp for the authentication
-   * event, instead of accepting a parameter incidating the timestamp to associated with the event.
+   * event, instead of accepting a parameter indicating the timestamp to associate with the event.
    *
    * @param ipaddr IP address to update state with
    * @param latitude IP address's latitude
@@ -209,7 +159,7 @@ public class AuthStateModel {
    * @param timestamp Timestamp to associate with update
    * @param latitude IP address's latitude
    * @param longitude IP address's longitude
-   * @return True if the IP address was unknown or expired, otherwise false
+   * @return True if the IP address was unknown, otherwise false
    */
   public Boolean updateEntry(String ipaddr, DateTime timestamp, Double latitude, Double longitude) {
     ModelEntry ent = entries.get(ipaddr);
@@ -222,36 +172,11 @@ public class AuthStateModel {
       return true;
     }
 
-    // Otherwise entry is known, check if expired
-    Boolean expired = false;
-    if (ent.isExpired()) {
-      expired = true;
-    }
-    // Update the entry either way
+    // Known entry, update it
     ent.setTimestamp(timestamp);
     ent.setLatitude(latitude);
     ent.setLongitude(longitude);
-    return expired;
-  }
-
-  /**
-   * Get the most recent entry, or return null if there are no entries
-   *
-   * @return {@link AuthStateModel.ModelEntry}
-   */
-  @JsonIgnore
-  public ModelEntry getLatestEntry() {
-    ModelEntry mostRecent = null;
-    for (ModelEntry me : entries.values()) {
-      if (mostRecent == null) {
-        mostRecent = me;
-      } else {
-        if (me.getTimestamp().isAfter(mostRecent.getTimestamp())) {
-          mostRecent = me;
-        }
-      }
-    }
-    return mostRecent;
+    return false;
   }
 
   /**
@@ -262,6 +187,15 @@ public class AuthStateModel {
   @JsonProperty("entries")
   public Map<String, ModelEntry> getEntries() {
     return entries;
+  }
+
+  /**
+   * Set entries associated with model
+   *
+   * @param entries Map
+   */
+  public void setEntries(Map<String, ModelEntry> entries) {
+    this.entries = entries;
   }
 
   /**
@@ -290,12 +224,13 @@ public class AuthStateModel {
    * @param s Initialized state cursor for request
    * @return User {@link AuthStateModel} or null if it does not exist
    */
-  public static AuthStateModel get(String user, StateCursor s) throws StateException {
+  public static AuthStateModel get(String user, StateCursor s, PruningStrategy ps)
+      throws StateException {
     AuthStateModel ret = s.get(user, AuthStateModel.class);
     if (ret == null) {
       return null;
     }
-    ret.pruneState();
+    ps.pruneState(ret);
     return ret;
   }
 
@@ -306,7 +241,8 @@ public class AuthStateModel {
    *
    * @param s Initialized state cursor for request
    */
-  public void set(StateCursor s) throws StateException {
+  public void set(StateCursor s, PruningStrategy ps) throws StateException {
+    ps.pruneState(this);
     s.set(subject, this);
     s.commit();
   }

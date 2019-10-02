@@ -14,6 +14,7 @@ import com.mozilla.secops.alert.AlertConfiguration;
 import com.mozilla.secops.alert.AlertIO;
 import com.mozilla.secops.alert.TemplateManager;
 import com.mozilla.secops.authstate.AuthStateModel;
+import com.mozilla.secops.authstate.PruningStrategyEntryAge;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
@@ -499,7 +500,7 @@ public class TestAuthProfile {
     Double lat = 47.2513;
     Double lon = -122.3149;
     sm.updateEntry("216.160.83.56", oneDayAgo, lat, lon);
-    sm.set(c);
+    sm.set(c, new PruningStrategyEntryAge());
     state.done();
 
     PCollection<String> input =
@@ -549,7 +550,7 @@ public class TestAuthProfile {
     StateCursor c = state.newCursor();
     AuthStateModel sm = new AuthStateModel("wriker@mozilla.com");
     sm.updateEntry("216.160.83.56", null, null);
-    sm.set(c);
+    sm.set(c, new PruningStrategyEntryAge());
     state.done();
 
     PCollection<String> input =

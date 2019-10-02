@@ -52,6 +52,7 @@ public class Customs implements Serializable {
   public static final String CATEGORY_ACCOUNT_CREATION_ABUSE = "account_creation_abuse";
   public static final String CATEGORY_ACCOUNT_CREATION_ABUSE_DIST =
       "account_creation_abuse_distributed";
+  public static final String CATEGORY_VELOCITY = "velocity";
 
   /** Analyze input stream for account creation abuse */
   public static class AccountCreationAbuse
@@ -304,6 +305,9 @@ public class Customs implements Serializable {
                         case ACCOUNT_CREATE:
                           c.output("account_create");
                           break;
+                        case LOGIN_SUCCESS:
+                          c.output("login_success");
+                          break;
                         default:
                           return;
                       }
@@ -340,6 +344,22 @@ public class Customs implements Serializable {
 
   /** Runtime options for {@link Customs} pipeline. */
   public interface CustomsOptions extends PipelineOptions, IOOptions {
+    @Description("Use memcached state; hostname of memcached server")
+    String getMemcachedHost();
+
+    void setMemcachedHost(String value);
+
+    @Description("Use memcached state; port of memcached server")
+    @Default.Integer(11211)
+    Integer getMemcachedPort();
+
+    void setMemcachedPort(Integer value);
+
+    @Description("Use Datastore state; namespace for entities")
+    String getDatastoreNamespace();
+
+    void setDatastoreNamespace(String value);
+
     @Description("Enable account creation abuse detector")
     @Default.Boolean(false)
     Boolean getEnableAccountCreationAbuseDetector();
@@ -394,6 +414,18 @@ public class Customs implements Serializable {
 
     void setEnableSummaryAnalysis(Boolean value);
 
+    @Description("Enable velocity analysis")
+    @Default.Boolean(false)
+    Boolean getEnableVelocityDetector();
+
+    void setEnableVelocityDetector(Boolean value);
+
+    @Description("Maximum km/h for velocity analysis")
+    @Default.Integer(800)
+    Integer getMaximumKilometersPerHour();
+
+    void setMaximumKilometersPerHour(Integer value);
+
     @Description("Pubsub topic for CustomsAlert notifications; Pubsub topic")
     String getCustomsNotificationTopic();
 
@@ -425,6 +457,10 @@ public class Customs implements Serializable {
 
     if (options.getEnableSourceLoginFailureDetector()) {
       b.withTransformDoc(new SourceLoginFailure(options));
+    }
+
+    if (options.getEnableVelocityDetector()) {
+      b.withTransformDoc(new CustomsVelocity(options));
     }
 
     if (options.getEnableSummaryAnalysis()) {
@@ -459,6 +495,10 @@ public class Customs implements Serializable {
     if (options.getEnableSourceLoginFailureDetector()) {
       resultsList =
           resultsList.and(events.apply("source login failure", new SourceLoginFailure(options)));
+    }
+    if (options.getEnableVelocityDetector()) {
+      resultsList =
+          resultsList.and(events.apply("location velocity", new CustomsVelocity(options)));
     }
     if (options.getEnableSummaryAnalysis()) {
       resultsList = resultsList.and(events.apply("summary", new CustomsSummary(options)));

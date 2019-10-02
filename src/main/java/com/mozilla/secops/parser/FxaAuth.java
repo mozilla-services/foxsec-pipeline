@@ -4,13 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.maxmind.geoip2.model.CityResponse;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
 /** Payload parser for FxA authentication server log data */
-public class FxaAuth extends PayloadBase implements Serializable {
+public class FxaAuth extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   /** Event summary is determined based on source event fields */
@@ -50,14 +49,17 @@ public class FxaAuth extends PayloadBase implements Serializable {
       public String toString() {
         return "accountCreate";
       }
+    },
+    LOGIN_SUCCESS {
+      @Override
+      public String toString() {
+        return "loginSuccess";
+      }
     }
   }
 
   private com.mozilla.secops.parser.models.fxaauth.FxaAuth fxaAuthData;
   private EventSummary eventSummary;
-  private String sourceAddress;
-  private String sourceAddressCity;
-  private String sourceAddressCountry;
 
   @Override
   public String eventStringValue(EventFilterPayload.StringProperty property) {
@@ -142,36 +144,6 @@ public class FxaAuth extends PayloadBase implements Serializable {
     return eventSummary;
   }
 
-  /**
-   * Get client source address
-   *
-   * @return String
-   */
-  @JsonProperty("sourceaddress")
-  public String getSourceAddress() {
-    return sourceAddress;
-  }
-
-  /**
-   * Get source address city
-   *
-   * @return String
-   */
-  @JsonProperty("sourceaddress_city")
-  public String getSourceAddressCity() {
-    return sourceAddressCity;
-  }
-
-  /**
-   * Get source address country
-   *
-   * @return String
-   */
-  @JsonProperty("sourceaddress_country")
-  public String getSourceAddressCountry() {
-    return sourceAddressCountry;
-  }
-
   private Boolean discernLoginFailure() {
     if (!fxaAuthData.getPath().equals("/v1/account/login")) {
       return false;
@@ -194,6 +166,21 @@ public class FxaAuth extends PayloadBase implements Serializable {
     }
 
     eventSummary = EventSummary.LOGIN_FAILURE;
+    return true;
+  }
+
+  private Boolean discernLoginSuccess() {
+    if (!fxaAuthData.getPath().equals("/v1/account/login")) {
+      return false;
+    }
+    if (!fxaAuthData.getStatus().equals(200)) {
+      return false;
+    }
+    if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
+      return false;
+    }
+
+    eventSummary = EventSummary.LOGIN_SUCCESS;
     return true;
   }
 
@@ -306,6 +293,8 @@ public class FxaAuth extends PayloadBase implements Serializable {
       return;
     } else if (discernAccountCreate()) {
       return;
+    } else if (discernLoginSuccess()) {
+      return;
     }
   }
 
@@ -341,18 +330,13 @@ public class FxaAuth extends PayloadBase implements Serializable {
                 rac,
                 mapper.getTypeFactory().constructCollectionType(ArrayList.class, String.class));
         if (raca != null) {
-          sourceAddress = state.getParser().applyXffAddressSelector(String.join(",", raca));
+          String sa = state.getParser().applyXffAddressSelector(String.join(",", raca));
+          if (sa != null) {
+            setSourceAddress(sa, state, null);
+          }
         }
       } catch (IOException exc) {
         // pass
-      }
-    }
-
-    if (sourceAddress != null) {
-      CityResponse cr = state.getParser().geoIp(sourceAddress);
-      if (cr != null) {
-        sourceAddressCity = cr.getCity().getName();
-        sourceAddressCountry = cr.getCountry().getIsoCode();
       }
     }
 
