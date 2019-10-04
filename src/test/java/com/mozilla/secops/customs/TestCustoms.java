@@ -8,6 +8,8 @@ import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.ParserTest;
+import com.mozilla.secops.state.DatastoreStateInterface;
+import com.mozilla.secops.state.State;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.Arrays;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
@@ -23,16 +25,35 @@ import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 public class TestCustoms {
   @Rule public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
   private Customs.CustomsOptions getTestOptions() {
     Customs.CustomsOptions ret = PipelineOptionsFactory.as(Customs.CustomsOptions.class);
     ret.setUseEventTimestamp(true);
     ret.setMonitoredResourceIndicator("test");
     ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
+    ret.setDatastoreNamespace("testcustoms");
     return ret;
+  }
+
+  private void testEnv() throws Exception {
+    environmentVariables.set("DATASTORE_EMULATOR_HOST", "localhost:8081");
+    environmentVariables.set("DATASTORE_EMULATOR_HOST_PATH", "localhost:8081/datastore");
+    environmentVariables.set("DATASTORE_HOST", "http://localhost:8081");
+    environmentVariables.set("DATASTORE_PROJECT_ID", "foxsec-pipeline");
+    clearState();
+  }
+
+  public void clearState() throws Exception {
+    State state =
+        new State(new DatastoreStateInterface(CustomsVelocity.VELOCITY_KIND, "testcustoms"));
+    state.initialize();
+    state.deleteAll();
+    state.done();
   }
 
   public TestCustoms() {}
@@ -204,6 +225,45 @@ public class TestCustoms {
               }
               assertEquals(1, lfCnt);
               assertEquals(1, sCnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void velocityTest() throws Exception {
+    testEnv();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_velocity1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableVelocityDetector(true);
+    options.setXffAddressSelector("127.0.0.1/32");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                assertEquals("81.2.69.192", a.getMetadataValue("sourceaddress"));
+                assertEquals("00000000000000000000000000000000", a.getMetadataValue("uid"));
+                assertEquals("riker@mozilla.com", a.getMetadataValue("email"));
+                assertEquals(
+                    "00000000000000000000000000000000 velocity exceeded, "
+                        + "7740.82 km in 9 seconds",
+                    a.getSummary());
+                assertEquals("velocity", a.getMetadataValue("notify_merge"));
+                cnt++;
+              }
+              assertEquals(1, cnt);
               return null;
             });
 

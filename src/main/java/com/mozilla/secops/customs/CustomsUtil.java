@@ -42,6 +42,28 @@ public class CustomsUtil {
   }
 
   /**
+   * Extract FxA event source address latitude
+   *
+   * @param e Event
+   * @return Latitude, or null if not available
+   */
+  public static Double authGetSourceAddressLatitude(Event e) {
+    FxaAuth d = authGetPayload(e);
+    return d != null ? d.getSourceAddressLatitude() : null;
+  }
+
+  /**
+   * Extract FxA event source address longitude
+   *
+   * @param e Event
+   * @return Longitude, or null if not available
+   */
+  public static Double authGetSourceAddressLongitude(Event e) {
+    FxaAuth d = authGetPayload(e);
+    return d != null ? d.getSourceAddressLongitude() : null;
+  }
+
+  /**
    * Extract FxA event email address
    *
    * @param e Event
@@ -50,6 +72,17 @@ public class CustomsUtil {
   public static String authGetEmail(Event e) {
     com.mozilla.secops.parser.models.fxaauth.FxaAuth d = authGetData(e);
     return d != null ? d.getEmail() : null;
+  }
+
+  /**
+   * Extract FxA event UID
+   *
+   * @param e Event
+   * @return UID, or null if not found
+   */
+  public static String authGetUid(Event e) {
+    com.mozilla.secops.parser.models.fxaauth.FxaAuth d = authGetData(e);
+    return d != null ? d.getUid() : null;
   }
 
   /**

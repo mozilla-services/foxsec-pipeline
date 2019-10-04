@@ -8,6 +8,7 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertIO;
 import com.mozilla.secops.authstate.AuthStateModel;
+import com.mozilla.secops.authstate.PruningStrategyEntryAge;
 import com.mozilla.secops.identity.Identity;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.input.Input;
@@ -616,7 +617,7 @@ public class AuthProfile implements Serializable {
 
           a.addMetadata("identity_key", userIdentity);
           // The event was for a tracked identity, initialize the state model
-          AuthStateModel sm = AuthStateModel.get(userIdentity, cur);
+          AuthStateModel sm = AuthStateModel.get(userIdentity, cur, new PruningStrategyEntryAge());
           if (sm == null) {
             sm = new AuthStateModel(userIdentity);
           }
@@ -676,7 +677,7 @@ public class AuthProfile implements Serializable {
 
           // Update persistent state with new information
           try {
-            sm.set(cur);
+            sm.set(cur, new PruningStrategyEntryAge());
           } catch (StateException exc) {
             log.error("{}: error updating state: {}", userIdentity, exc.getMessage());
           }
