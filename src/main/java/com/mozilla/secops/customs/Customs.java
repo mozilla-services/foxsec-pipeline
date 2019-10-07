@@ -302,8 +302,8 @@ public class Customs implements Serializable {
                         case LOGIN_FAILURE:
                           c.output("login_failure");
                           break;
-                        case ACCOUNT_CREATE:
-                          c.output("account_create");
+                        case ACCOUNT_CREATE_SUCCESS:
+                          c.output("account_create_success");
                           break;
                         case LOGIN_SUCCESS:
                           c.output("login_success");

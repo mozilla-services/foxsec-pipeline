@@ -20,10 +20,10 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
         return "loginFailure";
       }
     },
-    ACCOUNT_STATUS_CHECK {
+    ACCOUNT_STATUS_CHECK_SUCCESS {
       @Override
       public String toString() {
-        return "accountStatusCheck";
+        return "accountStatusCheckSuccess";
       }
     },
     RECOVERY_EMAIL_VERIFY_CODE_FAILURE {
@@ -32,22 +32,22 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
         return "recoveryEmailVerifyCodeFailure";
       }
     },
-    SEND_RECOVERY_EMAIL {
+    SEND_RECOVERY_EMAIL_SUCCESS {
       @Override
       public String toString() {
-        return "sendRecoveryEmail";
+        return "sendRecoveryEmailSuccess";
       }
     },
-    SEND_SMS_CONNECT_DEVICE {
+    SEND_SMS_CONNECT_DEVICE_SUCCESS {
       @Override
       public String toString() {
-        return "sendSmsConnectDevice";
+        return "sendSmsConnectDeviceSuccess";
       }
     },
-    ACCOUNT_CREATE {
+    ACCOUNT_CREATE_SUCCESS {
       @Override
       public String toString() {
-        return "accountCreate";
+        return "accountCreateSuccess";
       }
     },
     LOGIN_SUCCESS {
@@ -56,10 +56,10 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
         return "loginSuccess";
       }
     },
-    DEVICES_LIST {
+    DEVICES_LIST_SUCCESS {
       @Override
       public String toString() {
-        return "devicesList";
+        return "devicesListSuccess";
       }
     },
     PASSWORD_FORGOT_SEND_CODE_SUCCESS {
@@ -213,7 +213,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
         || (fxaAuthData.getMethod().toLowerCase().equals("get")))) {
       return false;
     }
-    eventSummary = EventSummary.ACCOUNT_STATUS_CHECK;
+    eventSummary = EventSummary.ACCOUNT_STATUS_CHECK_SUCCESS;
     return true;
   }
 
@@ -249,7 +249,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
       return false;
     }
-    eventSummary = EventSummary.SEND_RECOVERY_EMAIL;
+    eventSummary = EventSummary.SEND_RECOVERY_EMAIL_SUCCESS;
     return true;
   }
 
@@ -263,7 +263,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
       return false;
     }
-    eventSummary = EventSummary.SEND_SMS_CONNECT_DEVICE;
+    eventSummary = EventSummary.SEND_SMS_CONNECT_DEVICE_SUCCESS;
     return true;
   }
 
@@ -277,7 +277,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     if (!(fxaAuthData.getMethod().toLowerCase().equals("post"))) {
       return false;
     }
-    eventSummary = EventSummary.ACCOUNT_CREATE;
+    eventSummary = EventSummary.ACCOUNT_CREATE_SUCCESS;
     return true;
   }
 
@@ -291,7 +291,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     if (!(fxaAuthData.getMethod().toLowerCase().equals("get"))) {
       return false;
     }
-    eventSummary = EventSummary.DEVICES_LIST;
+    eventSummary = EventSummary.DEVICES_LIST_SUCCESS;
     return true;
   }
 
