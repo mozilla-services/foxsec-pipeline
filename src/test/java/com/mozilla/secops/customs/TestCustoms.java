@@ -269,4 +269,42 @@ public class TestCustoms {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void passwordResetAbuseTest() throws Exception {
+    testEnv();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_abuse_password_reset1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnablePasswordResetAbuseDetector(true);
+    options.setXffAddressSelector("127.0.0.1/32");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                assertEquals(
+                    "test 10.0.0.1 attempted password reset on 5 distinct accounts in 10 minute window",
+                    a.getSummary());
+                assertEquals("customs", a.getCategory());
+                assertEquals("password_reset_abuse", a.getMetadataValue("customs_category"));
+                assertEquals("password_reset_abuse", a.getMetadataValue("notify_merge"));
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }

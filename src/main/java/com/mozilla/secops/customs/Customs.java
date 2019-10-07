@@ -53,6 +53,7 @@ public class Customs implements Serializable {
   public static final String CATEGORY_ACCOUNT_CREATION_ABUSE_DIST =
       "account_creation_abuse_distributed";
   public static final String CATEGORY_VELOCITY = "velocity";
+  public static final String CATEGORY_PASSWORD_RESET_ABUSE = "password_reset_abuse";
 
   /** Analyze input stream for account creation abuse */
   public static class AccountCreationAbuse
@@ -426,6 +427,19 @@ public class Customs implements Serializable {
 
     void setMaximumKilometersPerHour(Integer value);
 
+    @Description("Enable password reset abuse analysis")
+    @Default.Boolean(false)
+    Boolean getEnablePasswordResetAbuseDetector();
+
+    void setEnablePasswordResetAbuseDetector(Boolean value);
+
+    @Description(
+        "Successful password reset requests per-IP for different accounts in window to trigger alert")
+    @Default.Integer(5)
+    Integer getPasswordResetAbuseWindowThresholdPerIp();
+
+    void setPasswordResetAbuseWindowThresholdPerIp(Integer value);
+
     @Description("Pubsub topic for CustomsAlert notifications; Pubsub topic")
     String getCustomsNotificationTopic();
 
@@ -461,6 +475,10 @@ public class Customs implements Serializable {
 
     if (options.getEnableVelocityDetector()) {
       b.withTransformDoc(new CustomsVelocity(options));
+    }
+
+    if (options.getEnablePasswordResetAbuseDetector()) {
+      b.withTransformDoc(new CustomsPasswordResetAbuse(options));
     }
 
     if (options.getEnableSummaryAnalysis()) {
@@ -499,6 +517,11 @@ public class Customs implements Serializable {
     if (options.getEnableVelocityDetector()) {
       resultsList =
           resultsList.and(events.apply("location velocity", new CustomsVelocity(options)));
+    }
+    if (options.getEnablePasswordResetAbuseDetector()) {
+      resultsList =
+          resultsList.and(
+              events.apply("password reset abuse", new CustomsPasswordResetAbuse(options)));
     }
     if (options.getEnableSummaryAnalysis()) {
       resultsList = resultsList.and(events.apply("summary", new CustomsSummary(options)));
