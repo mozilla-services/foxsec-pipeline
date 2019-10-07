@@ -96,7 +96,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                 }))
         .apply(
             "velocity window",
-            Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(1))))
+            Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(5))))
         .apply("velocity gbk", GroupByKey.<String, Event>create())
         .apply(
             "velocity analyze",
