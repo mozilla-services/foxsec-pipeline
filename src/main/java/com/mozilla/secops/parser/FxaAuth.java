@@ -191,7 +191,8 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     if (!fxaAuthData.getStatus().equals(200)) {
       return false;
     }
-    if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
+    if (!((fxaAuthData.getMethod().toLowerCase().equals("post"))
+        || (fxaAuthData.getMethod().toLowerCase().equals("get")))) {
       return false;
     }
     eventSummary = EventSummary.ACCOUNT_STATUS_CHECK;
