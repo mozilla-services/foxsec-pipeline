@@ -77,6 +77,11 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                       return;
                     }
 
+                    // If no path was present in the request, also filter that here
+                    if (CustomsUtil.authGetPath(e) == null) {
+                      return;
+                    }
+
                     // Consider anything that has both a UID and a source address
                     String uid = CustomsUtil.authGetUid(e);
                     if (uid == null) {
