@@ -362,7 +362,7 @@ public class TestGatekeeper {
   public void gatekeeperDoNotIgnoreEC2InstanceTest() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-    opts.setIgnoreDNSRequestFindingApps(new String[] {});
+    opts.setIgnoreDNSRequestFindingNames(new String[] {});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
@@ -376,7 +376,7 @@ public class TestGatekeeper {
   public void gatekeeperIgnoreEC2InstanceTest() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-    opts.setIgnoreDNSRequestFindingApps(new String[] {"iTalkToCryptoMiningServers"});
+    opts.setIgnoreDNSRequestFindingNames(new String[] {"iTalkToCryptoMiningServers"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 

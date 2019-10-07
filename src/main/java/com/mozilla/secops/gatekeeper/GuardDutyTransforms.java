@@ -59,10 +59,10 @@ public class GuardDutyTransforms implements Serializable {
     void setIgnoreGDFindingTypeRegex(String[] value);
 
     @Description(
-        "Ignore all GuardDuty Findings of type DNS_REQUEST for instances with a matching \"app\" tag (multiple allowed)")
-    String[] getIgnoreDNSRequestFindingApps();
+        "Ignore all GuardDuty Findings of type DNS_REQUEST for instances with a matching \"name\" tag using regex (multiple allowed)")
+    String[] getIgnoreDNSRequestFindingNames();
 
-    void setIgnoreDNSRequestFindingApps(String[] value);
+    void setIgnoreDNSRequestFindingNames(String[] value);
 
     @Description(
         "Escalate GuardDuty Findings for any finding types that match regex (multiple allowed)")
@@ -82,7 +82,7 @@ public class GuardDutyTransforms implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private List<Pattern> exclude;
-    private String[] ignoreDNSFindingAppNames;
+    private List<Pattern> ignoreDNSFindingNames;
 
     /**
      * static initializer for filter
@@ -97,13 +97,20 @@ public class GuardDutyTransforms implements Serializable {
           exclude.add(Pattern.compile(s));
         }
       }
-      ignoreDNSFindingAppNames = opts.getIgnoreDNSRequestFindingApps();
+
+      String[] dnsIgnoreRegexes = opts.getIgnoreDNSRequestFindingNames();
+      ignoreDNSFindingNames = new ArrayList<Pattern>();
+      if (dnsIgnoreRegexes != null) {
+        for (String s : dnsIgnoreRegexes) {
+          ignoreDNSFindingNames.add(Pattern.compile(s));
+        }
+      }
     }
 
     // extracts the Mozilla-required "app" tag from the underlying resource of a GuardDuty Finding
     // if available.
     // https://mana.mozilla.org/wiki/pages/viewpage.action?spaceKey=INEN&title=Cloud+Labels+and+Tags
-    private String extractAppTag(Finding f) {
+    private String extractNameTag(Finding f) {
       if (f != null) {
         Resource rsrc = f.getResource();
         if (rsrc != null) {
@@ -111,7 +118,7 @@ public class GuardDutyTransforms implements Serializable {
           if (idets != null) {
             List<Tag> tags = idets.getTags();
             for (Tag t : tags) {
-              if (t.getKey() != null && t.getKey().equals("app")) {
+              if (t.getKey() != null && t.getKey().toLowerCase().equals("name")) {
                 return t.getValue();
               }
             }
@@ -151,10 +158,10 @@ public class GuardDutyTransforms implements Serializable {
                       && f.getService().getAction() != null
                       && f.getService().getAction().getActionType() != null
                       && f.getService().getAction().getActionType().equals("DNS_REQUEST")) {
-                    String appTag = extractAppTag(f);
-                    if (ignoreDNSFindingAppNames != null && appTag != null) {
-                      for (String whitelisted : ignoreDNSFindingAppNames) {
-                        if (whitelisted.equals(appTag)) {
+                    String ec2Name = extractNameTag(f);
+                    if (ignoreDNSFindingNames != null && ec2Name != null) {
+                      for (Pattern p : ignoreDNSFindingNames) {
+                        if (p.matcher(ec2Name).matches()) {
                           return;
                         }
                       }
