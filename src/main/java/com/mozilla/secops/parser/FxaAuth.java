@@ -55,6 +55,12 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
       public String toString() {
         return "loginSuccess";
       }
+    },
+    DEVICES_LIST {
+      @Override
+      public String toString() {
+        return "devicesList";
+      }
     }
   }
 
@@ -260,6 +266,20 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
       return false;
     }
     eventSummary = EventSummary.ACCOUNT_CREATE;
+    return true;
+  }
+
+  private Boolean discernDevicesList() {
+    if (!(fxaAuthData.getPath().equals("/v1/account/devices"))) {
+      return false;
+    }
+    if (!(fxaAuthData.getStatus().equals(200))) {
+      return false;
+    }
+    if (!(fxaAuthData.getMethod().toLowerCase().equals("get"))) {
+      return false;
+    }
+    eventSummary = EventSummary.DEVICES_LIST;
     return true;
   }
 

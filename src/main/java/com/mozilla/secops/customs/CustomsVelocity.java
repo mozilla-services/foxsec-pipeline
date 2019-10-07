@@ -71,7 +71,9 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                     Event e = c.element();
 
                     FxaAuth.EventSummary sum = CustomsUtil.authGetEventSummary(e);
-                    if (sum == FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK) {
+                    // Filter certain classes of high volume events here
+                    if ((sum == FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK)
+                        || (sum == FxaAuth.EventSummary.DEVICES_LIST)) {
                       return;
                     }
 
