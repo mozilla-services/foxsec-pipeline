@@ -61,6 +61,18 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
       public String toString() {
         return "devicesList";
       }
+    },
+    PASSWORD_FORGOT_SEND_CODE_SUCCESS {
+      @Override
+      public String toString() {
+        return "passwordForgotSendCodeSuccess";
+      }
+    },
+    PASSWORD_FORGOT_SEND_CODE_FAILURE {
+      @Override
+      public String toString() {
+        return "passwordForgotSendCodeFailure";
+      }
     }
   }
 
@@ -283,6 +295,23 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     return true;
   }
 
+  private Boolean discernPasswordForgotSendCode() {
+    if (!(fxaAuthData.getPath().equals("/v1/password/forgot/send_code"))) {
+      return false;
+    }
+    if (!(fxaAuthData.getMethod().toLowerCase().equals("post"))) {
+      return false;
+    }
+    if (fxaAuthData.getStatus().equals(200)) {
+      eventSummary = EventSummary.PASSWORD_FORGOT_SEND_CODE_SUCCESS;
+      return true;
+    } else if (fxaAuthData.getStatus().equals(400)) {
+      eventSummary = EventSummary.PASSWORD_FORGOT_SEND_CODE_FAILURE;
+      return true;
+    }
+    return false;
+  }
+
   private void discernEventSummary() {
     if (fxaAuthData.getPath() == null) {
       return;
@@ -315,6 +344,8 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     } else if (discernAccountCreate()) {
       return;
     } else if (discernLoginSuccess()) {
+      return;
+    } else if (discernPasswordForgotSendCode()) {
       return;
     }
   }

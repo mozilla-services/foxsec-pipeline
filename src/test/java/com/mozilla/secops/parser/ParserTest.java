@@ -1872,6 +1872,48 @@ public class ParserTest {
     assertNotNull(d);
     f = d.getFxaAuthData();
     assertNull(f.getUid());
+
+    buf =
+        "{\"insertId\":\"00000000000000\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fiel"
+            + "ds\":{\"agent\":\"Mozilla/5.0 (Android 7.0; Mobile; rv:65.0) Gecko/65.0 Firefox"
+            + "/65.0\",\"email\":\"riker@mozilla.com\",\"errno\":0,\"lang\":\"en-GB,en;q=0.5\""
+            + ",\"method\":\"post\",\"op\":\"request.summary\",\"path\":\"/v1/password/forgot/"
+            + "send_code\",\"remoteAddressChain\":\"[\\\"10.0.0.1\\\",\\\"127.0.0.1\\\"]\",\"s"
+            + "ervice\":\"sync\",\"status\":200,\"t\":210,\"uid\":\"00\"},\"Logger\":\"fxa-aut"
+            + "h-server\",\"Pid\":1,\"Severity\":6,\"Timestamp\":0,\"Type\":\"request.summary\""
+            + "},\"labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa\""
+            + ",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"auth_server\"},\"logName\":\"projec"
+            + "ts/fxa\",\"receiveTimestamp\":\"2019-02-15T16:56:49.052372026Z\",\"resource\":{\"label"
+            + "s\":{\"instance_id\":\"i0\",\"project_id\":\"fxa\",\"zone\":\"us-west-2b\"},\"type\":"
+            + "\"gce_instance\"},\"timestamp\":\"2019-02-15T16:56:45.751112714Z\"}";
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXAAUTH, e.getPayloadType());
+    d = e.getPayload();
+    assertNotNull(d);
+    f = d.getFxaAuthData();
+    assertEquals(FxaAuth.EventSummary.PASSWORD_FORGOT_SEND_CODE_SUCCESS, d.getEventSummary());
+
+    buf =
+        "{\"insertId\":\"00000000000000\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fiel"
+            + "ds\":{\"agent\":\"Mozilla/5.0 (Android 7.0; Mobile; rv:65.0) Gecko/65.0 Firefox"
+            + "/65.0\",\"email\":\"riker@mozilla.com\",\"errno\":102,\"lang\":\"en-GB,en;q=0.5\""
+            + ",\"method\":\"post\",\"op\":\"request.summary\",\"path\":\"/v1/password/forgot/"
+            + "send_code\",\"remoteAddressChain\":\"[\\\"10.0.0.1\\\",\\\"127.0.0.1\\\"]\",\"s"
+            + "ervice\":\"sync\",\"status\":400,\"t\":210,\"uid\":\"00\"},\"Logger\":\"fxa-aut"
+            + "h-server\",\"Pid\":1,\"Severity\":6,\"Timestamp\":0,\"Type\":\"request.summary\""
+            + "},\"labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa\""
+            + ",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"auth_server\"},\"logName\":\"projec"
+            + "ts/fxa\",\"receiveTimestamp\":\"2019-02-15T16:56:49.052372026Z\",\"resource\":{\"label"
+            + "s\":{\"instance_id\":\"i0\",\"project_id\":\"fxa\",\"zone\":\"us-west-2b\"},\"type\":"
+            + "\"gce_instance\"},\"timestamp\":\"2019-02-15T16:56:45.751112714Z\"}";
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXAAUTH, e.getPayloadType());
+    d = e.getPayload();
+    assertNotNull(d);
+    f = d.getFxaAuthData();
+    assertEquals(FxaAuth.EventSummary.PASSWORD_FORGOT_SEND_CODE_FAILURE, d.getEventSummary());
   }
 
   @Test
