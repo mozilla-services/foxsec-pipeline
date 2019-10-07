@@ -260,6 +260,10 @@ public class FxaAuth implements Serializable {
    */
   @JsonProperty("uid")
   public String getUid() {
+    if ((uid != null) && (uid.equals("00"))) {
+      // FxA will log "00" if no UID is found, treat this as the UID being nonexistent
+      return null;
+    }
     return uid;
   }
 
