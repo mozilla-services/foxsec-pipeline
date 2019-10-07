@@ -90,18 +90,7 @@ public class AuthProfile implements Serializable {
       log = LoggerFactory.getLogger(Parse.class);
       ignoreUserRegex = options.getIgnoreUserRegex();
       autoignoreUsers =
-          new String[] {
-            "cluster-autoscaler",
-            "system:unsecured",
-            "system:serviceaccount:kube-system:endpoint-controller",
-            "system:serviceaccount:kube-system:daemon-set-controller",
-            "system:serviceaccount:kube-system:horizontal-pod-autoscaler",
-            "system:serviceaccount:kube-system:node-controller",
-            "system:serviceaccount:kube-system:certificate-controller",
-            "system:serviceaccount:kube-system:ttl-controller",
-            "system:serviceaccount:kube-system:cronjob-controller",
-            "system:kube-proxy"
-          };
+          new String[] {"cluster-autoscaler", "system:unsecured", "system:kube-proxy"};
       auth0ClientIds = options.getAuth0ClientIds();
       cfg = ParserCfg.fromInputOptions(options);
     }
@@ -192,6 +181,14 @@ public class AuthProfile implements Serializable {
                               "{}: ignoring gcp audit event from internal source {}",
                               n.getSubjectUser(),
                               n.getSourceAddress());
+                          return;
+                        }
+
+                        // Auto-ignore GCP audit records for accounts prefixed with
+                        // system:serviceaccount:
+                        if (n.getSubjectUser().startsWith("system:serviceaccount:")) {
+                          log.info(
+                              "{}: ignoring GCP system service account entry", n.getSubjectUser());
                           return;
                         }
                       }
