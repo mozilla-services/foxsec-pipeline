@@ -102,7 +102,11 @@ public class CustomsAlert implements Serializable {
    */
   public static ArrayList<CustomsAlert> fromAlert(Alert a) {
     if ((a.getCategory() == null) || (!a.getCategory().equals("customs"))) {
-      throw new RuntimeException(String.format("unexpected category type %s", a.getCategory()));
+      if (a.getCategory().equals("customs-cfgtick")) {
+        return null;
+      } else {
+        throw new RuntimeException(String.format("unexpected category type %s", a.getCategory()));
+      }
     }
     switch (a.getMetadataValue("customs_category")) {
       case "account_creation_abuse":
