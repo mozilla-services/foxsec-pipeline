@@ -47,6 +47,8 @@ public class Customs implements Serializable {
   private static final long serialVersionUID = 1L;
 
   public static final String CATEGORY_SOURCE_LOGIN_FAILURE = "source_login_failure";
+  public static final String CATEGORY_SOURCE_LOGIN_FAILURE_DIST =
+      "source_login_failure_distributed";
   public static final String CATEGORY_ACCOUNT_CREATION_ABUSE = "account_creation_abuse";
   public static final String CATEGORY_ACCOUNT_CREATION_ABUSE_DIST =
       "account_creation_abuse_distributed";
@@ -298,6 +300,13 @@ public class Customs implements Serializable {
 
     void setSourceLoginFailureThreshold(Integer value);
 
+    @Description(
+        "Distinct addresses failing login for same account in 10 minute window to trigger alert")
+    @Default.Integer(10)
+    Integer getSourceLoginFailureDistributedThreshold();
+
+    void setSourceLoginFailureDistributedThreshold(Integer value);
+
     @Description("Enable customs summary analysis")
     @Default.Boolean(false)
     Boolean getEnableSummaryAnalysis();
@@ -360,6 +369,7 @@ public class Customs implements Serializable {
 
     if (options.getEnableSourceLoginFailureDetector()) {
       b.withTransformDoc(new SourceLoginFailure(options));
+      b.withTransformDoc(new SourceLoginFailureDist(options));
     }
 
     if (options.getEnableVelocityDetector()) {
@@ -401,7 +411,11 @@ public class Customs implements Serializable {
     }
     if (options.getEnableSourceLoginFailureDetector()) {
       resultsList =
-          resultsList.and(events.apply("source login failure", new SourceLoginFailure(options)));
+          resultsList
+              .and(events.apply("source login failure", new SourceLoginFailure(options)))
+              .and(
+                  events.apply(
+                      "source login failure distributed", new SourceLoginFailureDist(options)));
     }
     if (options.getEnableVelocityDetector()) {
       resultsList =

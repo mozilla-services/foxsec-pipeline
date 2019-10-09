@@ -1,6 +1,7 @@
 package com.mozilla.secops.customs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
@@ -74,7 +75,7 @@ public class TestCustoms {
             .apply(new GlobalTriggers<Event>(5))
             .apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.thatSingleton(count).isEqualTo(12L);
+    PAssert.thatSingleton(count).isEqualTo(26L);
 
     p.run().waitUntilFinish();
   }
@@ -201,7 +202,9 @@ public class TestCustoms {
         .satisfies(
             x -> {
               int lfCnt = 0;
+              int lfdCnt = 0;
               int sCnt = 0;
+              int tCnt = 0;
               for (Alert a : x) {
                 if (a.getMetadataValue("customs_category").equals("source_login_failure")) {
                   assertEquals("customs", a.getCategory());
@@ -218,13 +221,35 @@ public class TestCustoms {
                   lfCnt++;
                 } else if (a.getMetadataValue("customs_category").equals("summary")) {
                   assertEquals("customs", a.getCategory());
-                  assertEquals("10", a.getMetadataValue("login_failure"));
-                  assertEquals("test summary for period, login_failure 10", a.getSummary());
+                  assertEquals("22", a.getMetadataValue("login_failure"));
+                  assertEquals("test summary for period, login_failure 22", a.getSummary());
                   sCnt++;
+                } else if (a.getMetadataValue("customs_category")
+                    .equals("source_login_failure_distributed")) {
+                  assertEquals("customs", a.getCategory());
+                  // Should be ten, since two addresses are duplicates
+                  assertEquals("10", a.getMetadataValue("count"));
+                  assertEquals("kirk@mozilla.com", a.getMetadataValue("email"));
+                  assertEquals(
+                      "source_login_failure_distributed", a.getMetadataValue("notify_merge"));
+                  assertEquals(
+                      "source_login_failure_distributed", a.getMetadataValue("customs_category"));
+                  assertEquals(
+                      "test distributed source login failure threshold exceeded for single "
+                          + "account, 10 addresses in 600 seconds",
+                      a.getSummary());
+                  lfdCnt++;
+                } else {
+                  fail(
+                      String.format(
+                          "unexpected category %s", a.getMetadataValue("customs_category")));
                 }
+                tCnt++;
               }
               assertEquals(1, lfCnt);
+              assertEquals(1, lfdCnt);
               assertEquals(1, sCnt);
+              assertEquals(3, tCnt);
               return null;
             });
 

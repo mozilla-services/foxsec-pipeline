@@ -1,7 +1,27 @@
 package com.mozilla.secops;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /** Various miscellaneous utility functions */
 public class MiscUtil {
+  private static final String emailRe = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+
+  /**
+   * Validate email address format
+   *
+   * @param input Input
+   * @return True if valid, false if not
+   */
+  public static Boolean validEmail(String input) {
+    Pattern p = Pattern.compile(emailRe);
+    Matcher m = p.matcher(input);
+    if (m.matches()) {
+      return true;
+    }
+    return false;
+  }
+
   /**
    * Normalize an email address, stripping any + component
    *
