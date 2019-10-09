@@ -49,5 +49,15 @@ public class TestCustomsAlert {
             + "e\":\"spock@mozilla.com\"}]}";
     c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
     assertEquals(1, c.size());
+
+    buf =
+        "{\"severity\":\"info\",\"id\":\"106fb514-f402-4d41-a07a-01c8900335d1\",\"summary\":\"t"
+            + "est 10.0.0.1 attempted password reset on 5 distinct accounts in 10 minute window\",\"c"
+            + "ategory\":\"customs\",\"timestamp\":\"1970-01-01T00:00:00.000Z\",\"metadata\":[{\"key"
+            + "\":\"notify_merge\",\"value\":\"password_reset_abuse\"},{\"key\":\"customs_category\""
+            + ",\"value\":\"password_reset_abuse\"},{\"key\":\"sourceaddress\",\"value\":\"10.0.0.1"
+            + "\"},{\"key\":\"count\",\"value\":\"5\"}]}";
+    c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
+    assertEquals(1, c.size());
   }
 }
