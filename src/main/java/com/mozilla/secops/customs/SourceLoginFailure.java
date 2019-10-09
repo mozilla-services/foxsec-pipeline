@@ -17,14 +17,19 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Duration;
 
-/** Simple detection of excessive login failures per-source across fixed window */
+/**
+ * Simple detection of excessive login failures per-source across fixed window
+ *
+ * <p>The fixed window size is hardcoded to 5 minutes.
+ */
 public class SourceLoginFailure extends PTransform<PCollection<Event>, PCollection<Alert>>
     implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
+  private static final int windowSizeSeconds = 300;
+
   private final String monitoredResource;
   private final Integer threshold;
-  private final Integer windowSizeSeconds;
 
   /**
    * Initialize new SourceLoginFailure
@@ -34,7 +39,6 @@ public class SourceLoginFailure extends PTransform<PCollection<Event>, PCollecti
   public SourceLoginFailure(Customs.CustomsOptions options) {
     this.monitoredResource = options.getMonitoredResourceIndicator();
     threshold = options.getSourceLoginFailureThreshold();
-    windowSizeSeconds = options.getSourceLoginFailureWindowSize();
   }
 
   public String getTransformDoc() {

@@ -292,17 +292,11 @@ public class Customs implements Serializable {
 
     void setEnableSourceLoginFailureDetector(Boolean value);
 
-    @Description("Login failures per source-address in configured window size to trigger alert")
+    @Description("Login failures per source-address in 5 minute window to trigger alert")
     @Default.Integer(30)
     Integer getSourceLoginFailureThreshold();
 
     void setSourceLoginFailureThreshold(Integer value);
-
-    @Description("Login failures per source-address fixed window size; seconds")
-    @Default.Integer(300)
-    Integer getSourceLoginFailureWindowSize();
-
-    void setSourceLoginFailureWindowSize(Integer value);
 
     @Description("Enable customs summary analysis")
     @Default.Boolean(false)
