@@ -59,5 +59,17 @@ public class TestCustomsAlert {
             + "\"},{\"key\":\"count\",\"value\":\"5\"}]}";
     c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
     assertEquals(1, c.size());
+
+    buf =
+        "{\"severity\":\"info\",\"id\":\"e2737df3-b416-43e3-a082-9ebd110bc71c\",\"summary\":\"te"
+            + "st distributed source login failure threshold exceeded for single account, 10 addresses"
+            + " in 600 seconds\",\"category\":\"customs\",\"timestamp\":\"1970-01-01T00:00:00.000Z\",\""
+            + "metadata\":[{\"key\":\"notify_merge\",\"value\":\"source_login_failure_distributed\"},{\""
+            + "key\":\"customs_category\",\"value\":\"source_login_failure_distributed\"},{\"key\":\"em"
+            + "ail\",\"value\":\"kirk@mozilla.com\"},{\"key\":\"count\",\"value\":\"10\"},{\"key\":\"so"
+            + "urceaddresses\",\"value\":\"10.0.0.1, 10.0.0.2, 10.0.0.3, 10.0.0.4, 10.0.0.5, 10.0.0.6, "
+            + "10.0.0.7, 10.0.0.8, 10.0.0.9, 10.0.0.10\"}]}";
+    c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
+    assertEquals(10, c.size());
   }
 }

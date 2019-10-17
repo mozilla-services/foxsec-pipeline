@@ -74,6 +74,10 @@ public class CustomsAlert implements Serializable {
               Customs.CATEGORY_SOURCE_LOGIN_FAILURE,
               "Large number of account login failures from single source address in fixed time frame");
           put(
+              Customs.CATEGORY_SOURCE_LOGIN_FAILURE_DIST,
+              "Large number of account login failures for single account from multiple source "
+                  + "addresses in fixed time frame");
+          put(
               Customs.CATEGORY_PASSWORD_RESET_ABUSE,
               "Large number of password reset requests from single source address for multiple accounts in "
                   + "fixed time frame");
@@ -119,6 +123,8 @@ public class CustomsAlert implements Serializable {
         return convertAccountCreationAbuseDistributed(a);
       case "source_login_failure":
         return convertSourceLoginFailure(a);
+      case "source_login_failure_distributed":
+        return convertSourceLoginFailureDist(a);
       case "password_reset_abuse":
         return convertPasswordResetAbuse(a);
     }
@@ -161,6 +167,29 @@ public class CustomsAlert implements Serializable {
     buf.setSuggestedAction(AlertAction.SUSPECT);
     buf.setReason(reason);
     ret.add(buf);
+    return ret;
+  }
+
+  public static ArrayList<CustomsAlert> convertSourceLoginFailureDist(Alert a) {
+    ArrayList<CustomsAlert> ret = new ArrayList<>();
+
+    String reason =
+        String.format(
+            "%s addresses failed login to %s in window",
+            a.getMetadataValue("count"), a.getMetadataValue("email"));
+
+    String[] el = a.getMetadataValue("sourceaddresses").split(", ?");
+    for (String i : el) {
+      CustomsAlert ca = baseAlert(a);
+      ca.setSeverity(AlertSeverity.WARNING);
+      ca.setConfidence(100);
+      ca.setIndicatorType(IndicatorType.SOURCEADDRESS);
+      ca.setIndicator(i);
+      ca.setSuggestedAction(AlertAction.SUSPECT);
+      ca.setReason(reason);
+      ret.add(ca);
+    }
+
     return ret;
   }
 
