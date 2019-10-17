@@ -43,7 +43,7 @@ public class KinesisInput implements Serializable {
    * <p>When executed, will apply the KinesisIO transform in addition to a ParDo which splits
    * individual elements by new line, returning raw strings read from the stream.
    *
-   * @param PBegin Pipeline begin
+   * @param begin Pipeline begin
    * @return Collection of strings
    */
   public PCollection<String> toCollection(PBegin begin) {

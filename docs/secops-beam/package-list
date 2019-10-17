@@ -2,6 +2,7 @@ com.mozilla.secops
 com.mozilla.secops.alert
 com.mozilla.secops.amo
 com.mozilla.secops.authprofile
+com.mozilla.secops.authstate
 com.mozilla.secops.awsbehavior
 com.mozilla.secops.crypto
 com.mozilla.secops.customs
