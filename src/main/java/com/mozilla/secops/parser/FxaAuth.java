@@ -73,6 +73,12 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
       public String toString() {
         return "passwordForgotSendCodeFailure";
       }
+    },
+    CERTIFICATE_SIGN_SUCCESS {
+      @Override
+      public String toString() {
+        return "certificateSignSuccess";
+      }
     }
   }
 
@@ -312,6 +318,20 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     return false;
   }
 
+  public Boolean discernCertificateSignSuccess() {
+    if (!(fxaAuthData.getPath().equals("/v1/certificate/sign"))) {
+      return false;
+    }
+    if (!(fxaAuthData.getMethod().toLowerCase().equals("post"))) {
+      return false;
+    }
+    if (fxaAuthData.getStatus().equals(200)) {
+      eventSummary = EventSummary.CERTIFICATE_SIGN_SUCCESS;
+      return true;
+    }
+    return false;
+  }
+
   private void discernEventSummary() {
     if (fxaAuthData.getPath() == null) {
       return;
@@ -346,6 +366,8 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     } else if (discernLoginSuccess()) {
       return;
     } else if (discernPasswordForgotSendCode()) {
+      return;
+    } else if (discernCertificateSignSuccess()) {
       return;
     }
   }

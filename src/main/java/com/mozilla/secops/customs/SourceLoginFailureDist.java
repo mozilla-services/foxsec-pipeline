@@ -43,7 +43,7 @@ public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PColl
 
   public String getTransformDoc() {
     return String.format(
-        "Alert on %d login failures for a particular account from %d different source addresses "
+        "Alert on login failures for a particular account from %d different source addresses "
             + "in a %d second fixed window.",
         threshold, windowSizeSeconds);
   }
