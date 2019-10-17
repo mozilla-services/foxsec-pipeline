@@ -1,23 +1,24 @@
-# foxsec-pipeline
-
-[![Build Status](https://travis-ci.org/mozilla-services/foxsec-pipeline.svg?branch=master)](https://travis-ci.org/mozilla-services/foxsec-pipeline)
+# FOXSEC -pipeline
+------------------------
+#[![Build Status](https://travis-ci.org/mozilla-services/foxsec-pipeline.svg?branch=master)](https://travis-ci.org/mozilla-services/foxsec-pipeline)
 [![Documentation](https://img.shields.io/badge/documentation-link-purple.svg)](https://mozilla-services.github.io/foxsec-pipeline/secops-beam/)
 
 [Apache Beam](https://beam.apache.org/) pipelines for analyzing log data.
 
 ## Tests
+---------------
 
-Tests can be executed locally using Docker.
+ # Tests can be executed locally using Docker.
 
 ### Run all tests
-
+----------------------
 ```bash
 docker build -t foxsec-pipeline:latest .
 bin/m test
 ```
 
 ### Run a specific test
-
+-------------------------------
 ```bash
 docker build -t foxsec-pipeline:latest .
 bin/m test -Dtest=ParserTest
@@ -43,18 +44,18 @@ The output of the command can be prefixed with `cloudkms://` in an option to ena
 during pipeline execution.
 
 ## Documentation
-
+---------------------------
 * [secops-beam Java documentation](https://mozilla-services.github.io/foxsec-pipeline/secops-beam/)
 
 javadoc documentation is currently updated manually and although should be up to date, may not be current
 with master.
 
 ## Introduction to Beam
-
+--------------------------------
 To get familiar with developing pipelines in Beam, this repository also contains a small workshop that
 provides some guidance on building basic pipelines. The introduction document can be found
 [here](docs/beam-intro/INTRO.md).
 
 ## Contributing
-
-See the [contributing guidelines](./CONTRIBUTING.md).
+--------------------------
+\\See the [contributing guidelines](./CONTRIBUTING.md).
