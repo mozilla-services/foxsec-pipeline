@@ -264,6 +264,18 @@ public class Customs implements Serializable {
 
     void setEnableAccountCreationAbuseDetector(Boolean value);
 
+    @Description("Enable escalation of account creation alerts")
+    @Default.Boolean(false)
+    Boolean getEscalateAccountCreation();
+
+    void setEscalateAccountCreation(Boolean value);
+
+    @Description("Enable escalation of distributed account creation alerts")
+    @Default.Boolean(false)
+    Boolean getEscalateAccountCreationDistributed();
+
+    void setEscalateAccountCreationDistributed(Boolean value);
+
     @Description("Account creation limit for session abuse analysis")
     @Default.Integer(5)
     Integer getAccountCreationSessionLimit();
@@ -293,6 +305,18 @@ public class Customs implements Serializable {
     Boolean getEnableSourceLoginFailureDetector();
 
     void setEnableSourceLoginFailureDetector(Boolean value);
+
+    @Description("Enable escalation of source login failure alerts")
+    @Default.Boolean(false)
+    Boolean getEscalateSourceLoginFailure();
+
+    void setEscalateSourceLoginFailure(Boolean value);
+
+    @Description("Enable escalation of distributed source login failure alerts")
+    @Default.Boolean(false)
+    Boolean getEscalateSourceLoginFailureDistributed();
+
+    void setEscalateSourceLoginFailureDistributed(Boolean value);
 
     @Description("Login failures per source-address in 5 minute window to trigger alert")
     @Default.Integer(30)
@@ -330,6 +354,12 @@ public class Customs implements Serializable {
     Boolean getEnablePasswordResetAbuseDetector();
 
     void setEnablePasswordResetAbuseDetector(Boolean value);
+
+    @Description("Enable escalation of password reset abuse alerts")
+    @Default.Boolean(false)
+    Boolean getEscalatePasswordResetAbuse();
+
+    void setEscalatePasswordResetAbuse(Boolean value);
 
     @Description(
         "Successful password reset requests per-IP for different accounts in window to trigger alert")
