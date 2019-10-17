@@ -277,13 +277,13 @@ public class Customs implements Serializable {
     void setEscalateAccountCreationDistributed(Boolean value);
 
     @Description("Account creation limit for session abuse analysis")
-    @Default.Integer(5)
+    @Default.Integer(20)
     Integer getAccountCreationSessionLimit();
 
     void setAccountCreationSessionLimit(Integer value);
 
     @Description("Account creation threshold for string distance analysis")
-    @Default.Integer(5)
+    @Default.Integer(15)
     Integer getAccountCreationDistanceThreshold();
 
     void setAccountCreationDistanceThreshold(Integer value);

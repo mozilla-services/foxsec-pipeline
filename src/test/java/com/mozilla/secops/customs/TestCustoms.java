@@ -145,6 +145,7 @@ public class TestCustoms {
     // Increase session creation limit here so we don't trip an alert for that as part of
     // the same address component of the test
     options.setAccountCreationSessionLimit(10);
+    options.setAccountCreationDistanceThreshold(5);
 
     PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
 
