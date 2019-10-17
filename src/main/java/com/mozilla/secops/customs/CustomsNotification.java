@@ -65,11 +65,11 @@ public class CustomsNotification extends PTransform<PCollection<String>, PDone> 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Alert a = Alert.fromJSON(c.element());
-                    if (!allowEscalation(a)) {
-                      return;
-                    }
                     ArrayList<CustomsAlert> ca = CustomsAlert.fromAlert(a);
                     if (ca == null) {
+                      return;
+                    }
+                    if (!allowEscalation(a)) {
                       return;
                     }
                     for (CustomsAlert i : ca) {

@@ -37,6 +37,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   private final String memcachedHost;
   private final Integer memcachedPort;
   private final String datastoreNamespace;
+  private final String monitoredResource;
   private final Logger log = LoggerFactory.getLogger(CustomsVelocity.class);
 
   public String getTransformDoc() {
@@ -52,6 +53,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
    * @param options Pipeline options
    */
   public CustomsVelocity(Customs.CustomsOptions options) {
+    monitoredResource = options.getMonitoredResourceIndicator();
     maxKilometersPerSecond = options.getMaximumKilometersPerHour() / 3600.0;
     memcachedHost = options.getMemcachedHost();
     memcachedPort = options.getMemcachedPort();
@@ -71,9 +73,8 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                     Event e = c.element();
 
                     FxaAuth.EventSummary sum = CustomsUtil.authGetEventSummary(e);
-                    // Filter certain classes of high volume events here
-                    if ((sum == FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK_SUCCESS)
-                        || (sum == FxaAuth.EventSummary.DEVICES_LIST_SUCCESS)) {
+                    // Only look at login success here for now
+                    if (!(sum == FxaAuth.EventSummary.LOGIN_SUCCESS)) {
                       return;
                     }
 
@@ -192,13 +193,17 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                           alert.setCategory("customs");
                           alert.setTimestamp(e.getTimestamp());
                           alert.setNotifyMergeKey(Customs.CATEGORY_VELOCITY);
+                          alert.addMetadata("customs_category", Customs.CATEGORY_VELOCITY);
                           alert.addMetadata("sourceaddress", remoteAddress);
                           alert.addMetadata("uid", uid);
                           alert.addMetadata("email", email);
                           alert.setSummary(
                               String.format(
-                                  "%s velocity exceeded, %.2f km in %d seconds",
-                                  uid, geoResp.getKmDistance(), geoResp.getTimeDifference()));
+                                  "%s %s velocity exceeded, %.2f km in %d seconds",
+                                  monitoredResource,
+                                  uid,
+                                  geoResp.getKmDistance(),
+                                  geoResp.getTimeDifference()));
                           c.output(alert);
                         }
                       }

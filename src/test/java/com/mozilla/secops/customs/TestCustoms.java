@@ -283,7 +283,7 @@ public class TestCustoms {
                 assertEquals("00000000000000000000000000000000", a.getMetadataValue("uid"));
                 assertEquals("riker@mozilla.com", a.getMetadataValue("email"));
                 assertEquals(
-                    "00000000000000000000000000000000 velocity exceeded, "
+                    "test 00000000000000000000000000000000 velocity exceeded, "
                         + "7740.82 km in 9 seconds",
                     a.getSummary());
                 assertEquals("velocity", a.getMetadataValue("notify_merge"));
