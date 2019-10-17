@@ -74,7 +74,7 @@ public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV
                 if (summary == null) {
                   return;
                 }
-                if (!summary.equals(FxaAuth.EventSummary.ACCOUNT_CREATE)) {
+                if (!summary.equals(FxaAuth.EventSummary.ACCOUNT_CREATE_SUCCESS)) {
                   return;
                 }
 

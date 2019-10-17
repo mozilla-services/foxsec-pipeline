@@ -97,6 +97,17 @@ public class CustomsUtil {
   }
 
   /**
+   * Extract FxA event path
+   *
+   * @param e Event
+   * @return Path, or null if not found
+   */
+  public static String authGetPath(Event e) {
+    com.mozilla.secops.parser.models.fxaauth.FxaAuth d = authGetData(e);
+    return d != null ? d.getPath() : null;
+  }
+
+  /**
    * Extract FxA event service value
    *
    * @param e Event

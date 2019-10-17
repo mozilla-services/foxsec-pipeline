@@ -1,6 +1,7 @@
 package com.mozilla.secops.customs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
@@ -74,7 +75,7 @@ public class TestCustoms {
             .apply(new GlobalTriggers<Event>(5))
             .apply(Combine.globally(Count.<Event>combineFn()).withoutDefaults());
 
-    PAssert.thatSingleton(count).isEqualTo(12L);
+    PAssert.thatSingleton(count).isEqualTo(26L);
 
     p.run().waitUntilFinish();
   }
@@ -144,6 +145,7 @@ public class TestCustoms {
     // Increase session creation limit here so we don't trip an alert for that as part of
     // the same address component of the test
     options.setAccountCreationSessionLimit(10);
+    options.setAccountCreationDistanceThreshold(5);
 
     PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
 
@@ -201,7 +203,9 @@ public class TestCustoms {
         .satisfies(
             x -> {
               int lfCnt = 0;
+              int lfdCnt = 0;
               int sCnt = 0;
+              int tCnt = 0;
               for (Alert a : x) {
                 if (a.getMetadataValue("customs_category").equals("source_login_failure")) {
                   assertEquals("customs", a.getCategory());
@@ -218,13 +222,35 @@ public class TestCustoms {
                   lfCnt++;
                 } else if (a.getMetadataValue("customs_category").equals("summary")) {
                   assertEquals("customs", a.getCategory());
-                  assertEquals("10", a.getMetadataValue("login_failure"));
-                  assertEquals("test summary for period, login_failure 10", a.getSummary());
+                  assertEquals("22", a.getMetadataValue("login_failure"));
+                  assertEquals("test summary for period, login_failure 22", a.getSummary());
                   sCnt++;
+                } else if (a.getMetadataValue("customs_category")
+                    .equals("source_login_failure_distributed")) {
+                  assertEquals("customs", a.getCategory());
+                  // Should be ten, since two addresses are duplicates
+                  assertEquals("10", a.getMetadataValue("count"));
+                  assertEquals("kirk@mozilla.com", a.getMetadataValue("email"));
+                  assertEquals(
+                      "source_login_failure_distributed", a.getMetadataValue("notify_merge"));
+                  assertEquals(
+                      "source_login_failure_distributed", a.getMetadataValue("customs_category"));
+                  assertEquals(
+                      "test distributed source login failure threshold exceeded for single "
+                          + "account, 10 addresses in 600 seconds",
+                      a.getSummary());
+                  lfdCnt++;
+                } else {
+                  fail(
+                      String.format(
+                          "unexpected category %s", a.getMetadataValue("customs_category")));
                 }
+                tCnt++;
               }
               assertEquals(1, lfCnt);
+              assertEquals(1, lfdCnt);
               assertEquals(1, sCnt);
+              assertEquals(3, tCnt);
               return null;
             });
 
@@ -261,6 +287,44 @@ public class TestCustoms {
                         + "7740.82 km in 9 seconds",
                     a.getSummary());
                 assertEquals("velocity", a.getMetadataValue("notify_merge"));
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void passwordResetAbuseTest() throws Exception {
+    testEnv();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_abuse_password_reset1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnablePasswordResetAbuseDetector(true);
+    options.setXffAddressSelector("127.0.0.1/32");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                assertEquals(
+                    "test 10.0.0.1 attempted password reset on 5 distinct accounts in 10 minute window",
+                    a.getSummary());
+                assertEquals("customs", a.getCategory());
+                assertEquals("password_reset_abuse", a.getMetadataValue("customs_category"));
+                assertEquals("password_reset_abuse", a.getMetadataValue("notify_merge"));
                 cnt++;
               }
               assertEquals(1, cnt);

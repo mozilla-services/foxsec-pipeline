@@ -18,6 +18,12 @@ public class CustomsNotification extends PTransform<PCollection<String>, PDone> 
 
   private final String topic;
 
+  private final Boolean escalateAccountCreation;
+  private final Boolean escalateAccountCreationDistributed;
+  private final Boolean escalateSourceLoginFailure;
+  private final Boolean escalateSourceLoginFailureDistributed;
+  private final Boolean escalatePasswordResetAbuse;
+
   /**
    * Initialize new CustomsNotification
    *
@@ -25,6 +31,28 @@ public class CustomsNotification extends PTransform<PCollection<String>, PDone> 
    */
   public CustomsNotification(Customs.CustomsOptions options) {
     topic = options.getCustomsNotificationTopic();
+
+    escalateAccountCreation = options.getEscalateAccountCreation();
+    escalateAccountCreationDistributed = options.getEscalateAccountCreationDistributed();
+    escalateSourceLoginFailure = options.getEscalateSourceLoginFailure();
+    escalateSourceLoginFailureDistributed = options.getEscalateSourceLoginFailureDistributed();
+    escalatePasswordResetAbuse = options.getEscalatePasswordResetAbuse();
+  }
+
+  private Boolean allowEscalation(Alert a) {
+    switch (a.getMetadataValue("customs_category")) {
+      case Customs.CATEGORY_ACCOUNT_CREATION_ABUSE:
+        return escalateAccountCreation;
+      case Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST:
+        return escalateAccountCreationDistributed;
+      case Customs.CATEGORY_SOURCE_LOGIN_FAILURE:
+        return escalateSourceLoginFailure;
+      case Customs.CATEGORY_SOURCE_LOGIN_FAILURE_DIST:
+        return escalateSourceLoginFailureDistributed;
+      case Customs.CATEGORY_PASSWORD_RESET_ABUSE:
+        return escalatePasswordResetAbuse;
+    }
+    return false;
   }
 
   @Override
@@ -37,6 +65,9 @@ public class CustomsNotification extends PTransform<PCollection<String>, PDone> 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Alert a = Alert.fromJSON(c.element());
+                    if (!allowEscalation(a)) {
+                      return;
+                    }
                     ArrayList<CustomsAlert> ca = CustomsAlert.fromAlert(a);
                     if (ca == null) {
                       return;

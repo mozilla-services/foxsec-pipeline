@@ -11,13 +11,11 @@ import com.mozilla.secops.metrics.CfgTickBuilder;
 import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
-import com.mozilla.secops.parser.Parser;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -49,10 +47,13 @@ public class Customs implements Serializable {
   private static final long serialVersionUID = 1L;
 
   public static final String CATEGORY_SOURCE_LOGIN_FAILURE = "source_login_failure";
+  public static final String CATEGORY_SOURCE_LOGIN_FAILURE_DIST =
+      "source_login_failure_distributed";
   public static final String CATEGORY_ACCOUNT_CREATION_ABUSE = "account_creation_abuse";
   public static final String CATEGORY_ACCOUNT_CREATION_ABUSE_DIST =
       "account_creation_abuse_distributed";
   public static final String CATEGORY_VELOCITY = "velocity";
+  public static final String CATEGORY_PASSWORD_RESET_ABUSE = "password_reset_abuse";
 
   /** Analyze input stream for account creation abuse */
   public static class AccountCreationAbuse
@@ -153,109 +154,6 @@ public class Customs implements Serializable {
     }
   }
 
-  /** Simple detection of excessive login failures per-source across fixed window */
-  public static class SourceLoginFailure extends PTransform<PCollection<Event>, PCollection<Alert>>
-      implements DocumentingTransform {
-    private static final long serialVersionUID = 1L;
-
-    private final String monitoredResource;
-    private final Integer threshold;
-    private final Integer windowSizeSeconds;
-
-    /**
-     * Initialize new SourceLoginFailure
-     *
-     * @param options CustomsOptions
-     */
-    public SourceLoginFailure(CustomsOptions options) {
-      this.monitoredResource = options.getMonitoredResourceIndicator();
-      threshold = options.getSourceLoginFailureThreshold();
-      windowSizeSeconds = options.getSourceLoginFailureWindowSize();
-    }
-
-    public String getTransformDoc() {
-      return String.format(
-          "Alert on %d login failures from a single source in a %d second window.",
-          threshold, windowSizeSeconds);
-    }
-
-    @Override
-    public PCollection<Alert> expand(PCollection<Event> col) {
-      return col.apply(
-              "source login failure key for source",
-              ParDo.of(
-                  new DoFn<Event, KV<String, Event>>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @ProcessElement
-                    public void processElement(ProcessContext c) {
-                      Event e = c.element();
-                      FxaAuth.EventSummary s = CustomsUtil.authGetEventSummary(e);
-                      if ((s == null) || (!s.equals(FxaAuth.EventSummary.LOGIN_FAILURE))) {
-                        return;
-                      }
-                      c.output(KV.of(CustomsUtil.authGetSourceAddress(c.element()), e));
-                    }
-                  }))
-          .apply(
-              "source login failure fixed windows",
-              Window.<KV<String, Event>>into(
-                  FixedWindows.of(Duration.standardSeconds(windowSizeSeconds))))
-          .apply("source login failure gbk", GroupByKey.<String, Event>create())
-          .apply(
-              "source login failure analysis",
-              ParDo.of(
-                  new DoFn<KV<String, Iterable<Event>>, Alert>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @ProcessElement
-                    public void processElement(ProcessContext c) {
-                      int cnt = 0;
-
-                      String addr = c.element().getKey();
-                      Iterable<Event> events = c.element().getValue();
-                      ArrayList<String> accts = new ArrayList<>();
-
-                      for (Event i : events) {
-                        String a = CustomsUtil.authGetEmail(i);
-                        if (a == null) {
-                          continue;
-                        }
-                        if (!accts.contains(a)) {
-                          accts.add(a);
-                        }
-                        cnt++;
-                      }
-                      if (cnt < threshold) {
-                        return;
-                      }
-                      Alert alert = new Alert();
-                      alert.setCategory("customs");
-                      alert.setTimestamp(Parser.getLatestTimestamp(events));
-                      alert.setNotifyMergeKey(CATEGORY_SOURCE_LOGIN_FAILURE);
-                      alert.addMetadata("customs_category", CATEGORY_SOURCE_LOGIN_FAILURE);
-                      alert.addMetadata("sourceaddress", addr);
-                      alert.addMetadata("count", Integer.toString(cnt));
-                      alert.setSummary(
-                          String.format(
-                              "%s source login failure threshold exceeded, %s %d in %d seconds",
-                              monitoredResource, addr, cnt, windowSizeSeconds));
-                      String buf = "";
-                      for (String s : accts) {
-                        if (buf.isEmpty()) {
-                          buf = s;
-                        } else {
-                          buf += ", " + s;
-                        }
-                      }
-                      alert.addMetadata("email", buf);
-                      c.output(alert);
-                    }
-                  }))
-          .apply("source login failure global windows", new GlobalTriggers<Alert>(5));
-    }
-  }
-
   /**
    * Summarizes various events processed by Customs pipeline
    *
@@ -302,8 +200,8 @@ public class Customs implements Serializable {
                         case LOGIN_FAILURE:
                           c.output("login_failure");
                           break;
-                        case ACCOUNT_CREATE:
-                          c.output("account_create");
+                        case ACCOUNT_CREATE_SUCCESS:
+                          c.output("account_create_success");
                           break;
                         case LOGIN_SUCCESS:
                           c.output("login_success");
@@ -366,14 +264,26 @@ public class Customs implements Serializable {
 
     void setEnableAccountCreationAbuseDetector(Boolean value);
 
+    @Description("Enable escalation of account creation alerts")
+    @Default.Boolean(false)
+    Boolean getEscalateAccountCreation();
+
+    void setEscalateAccountCreation(Boolean value);
+
+    @Description("Enable escalation of distributed account creation alerts")
+    @Default.Boolean(false)
+    Boolean getEscalateAccountCreationDistributed();
+
+    void setEscalateAccountCreationDistributed(Boolean value);
+
     @Description("Account creation limit for session abuse analysis")
-    @Default.Integer(5)
+    @Default.Integer(20)
     Integer getAccountCreationSessionLimit();
 
     void setAccountCreationSessionLimit(Integer value);
 
     @Description("Account creation threshold for string distance analysis")
-    @Default.Integer(5)
+    @Default.Integer(15)
     Integer getAccountCreationDistanceThreshold();
 
     void setAccountCreationDistanceThreshold(Integer value);
@@ -396,17 +306,30 @@ public class Customs implements Serializable {
 
     void setEnableSourceLoginFailureDetector(Boolean value);
 
-    @Description("Login failures per source-address in configured window size to trigger alert")
+    @Description("Enable escalation of source login failure alerts")
+    @Default.Boolean(false)
+    Boolean getEscalateSourceLoginFailure();
+
+    void setEscalateSourceLoginFailure(Boolean value);
+
+    @Description("Enable escalation of distributed source login failure alerts")
+    @Default.Boolean(false)
+    Boolean getEscalateSourceLoginFailureDistributed();
+
+    void setEscalateSourceLoginFailureDistributed(Boolean value);
+
+    @Description("Login failures per source-address in 5 minute window to trigger alert")
     @Default.Integer(30)
     Integer getSourceLoginFailureThreshold();
 
     void setSourceLoginFailureThreshold(Integer value);
 
-    @Description("Login failures per source-address fixed window size; seconds")
-    @Default.Integer(300)
-    Integer getSourceLoginFailureWindowSize();
+    @Description(
+        "Distinct addresses failing login for same account in 10 minute window to trigger alert")
+    @Default.Integer(10)
+    Integer getSourceLoginFailureDistributedThreshold();
 
-    void setSourceLoginFailureWindowSize(Integer value);
+    void setSourceLoginFailureDistributedThreshold(Integer value);
 
     @Description("Enable customs summary analysis")
     @Default.Boolean(false)
@@ -425,6 +348,25 @@ public class Customs implements Serializable {
     Integer getMaximumKilometersPerHour();
 
     void setMaximumKilometersPerHour(Integer value);
+
+    @Description("Enable password reset abuse analysis")
+    @Default.Boolean(false)
+    Boolean getEnablePasswordResetAbuseDetector();
+
+    void setEnablePasswordResetAbuseDetector(Boolean value);
+
+    @Description("Enable escalation of password reset abuse alerts")
+    @Default.Boolean(false)
+    Boolean getEscalatePasswordResetAbuse();
+
+    void setEscalatePasswordResetAbuse(Boolean value);
+
+    @Description(
+        "Successful password reset requests per-IP for different accounts in window to trigger alert")
+    @Default.Integer(5)
+    Integer getPasswordResetAbuseWindowThresholdPerIp();
+
+    void setPasswordResetAbuseWindowThresholdPerIp(Integer value);
 
     @Description("Pubsub topic for CustomsAlert notifications; Pubsub topic")
     String getCustomsNotificationTopic();
@@ -457,10 +399,15 @@ public class Customs implements Serializable {
 
     if (options.getEnableSourceLoginFailureDetector()) {
       b.withTransformDoc(new SourceLoginFailure(options));
+      b.withTransformDoc(new SourceLoginFailureDist(options));
     }
 
     if (options.getEnableVelocityDetector()) {
       b.withTransformDoc(new CustomsVelocity(options));
+    }
+
+    if (options.getEnablePasswordResetAbuseDetector()) {
+      b.withTransformDoc(new CustomsPasswordResetAbuse(options));
     }
 
     if (options.getEnableSummaryAnalysis()) {
@@ -494,11 +441,20 @@ public class Customs implements Serializable {
     }
     if (options.getEnableSourceLoginFailureDetector()) {
       resultsList =
-          resultsList.and(events.apply("source login failure", new SourceLoginFailure(options)));
+          resultsList
+              .and(events.apply("source login failure", new SourceLoginFailure(options)))
+              .and(
+                  events.apply(
+                      "source login failure distributed", new SourceLoginFailureDist(options)));
     }
     if (options.getEnableVelocityDetector()) {
       resultsList =
           resultsList.and(events.apply("location velocity", new CustomsVelocity(options)));
+    }
+    if (options.getEnablePasswordResetAbuseDetector()) {
+      resultsList =
+          resultsList.and(
+              events.apply("password reset abuse", new CustomsPasswordResetAbuse(options)));
     }
     if (options.getEnableSummaryAnalysis()) {
       resultsList = resultsList.and(events.apply("summary", new CustomsSummary(options)));

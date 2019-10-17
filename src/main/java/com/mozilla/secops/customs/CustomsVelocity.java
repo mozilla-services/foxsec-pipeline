@@ -71,7 +71,14 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                     Event e = c.element();
 
                     FxaAuth.EventSummary sum = CustomsUtil.authGetEventSummary(e);
-                    if (sum == FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK) {
+                    // Filter certain classes of high volume events here
+                    if ((sum == FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK_SUCCESS)
+                        || (sum == FxaAuth.EventSummary.DEVICES_LIST_SUCCESS)) {
+                      return;
+                    }
+
+                    // If no path was present in the request, also filter that here
+                    if (CustomsUtil.authGetPath(e) == null) {
                       return;
                     }
 
@@ -89,7 +96,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                 }))
         .apply(
             "velocity window",
-            Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(1))))
+            Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(5))))
         .apply("velocity gbk", GroupByKey.<String, Event>create())
         .apply(
             "velocity analyze",

@@ -20,10 +20,10 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
         return "loginFailure";
       }
     },
-    ACCOUNT_STATUS_CHECK {
+    ACCOUNT_STATUS_CHECK_SUCCESS {
       @Override
       public String toString() {
-        return "accountStatusCheck";
+        return "accountStatusCheckSuccess";
       }
     },
     RECOVERY_EMAIL_VERIFY_CODE_FAILURE {
@@ -32,28 +32,46 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
         return "recoveryEmailVerifyCodeFailure";
       }
     },
-    SEND_RECOVERY_EMAIL {
+    SEND_RECOVERY_EMAIL_SUCCESS {
       @Override
       public String toString() {
-        return "sendRecoveryEmail";
+        return "sendRecoveryEmailSuccess";
       }
     },
-    SEND_SMS_CONNECT_DEVICE {
+    SEND_SMS_CONNECT_DEVICE_SUCCESS {
       @Override
       public String toString() {
-        return "sendSmsConnectDevice";
+        return "sendSmsConnectDeviceSuccess";
       }
     },
-    ACCOUNT_CREATE {
+    ACCOUNT_CREATE_SUCCESS {
       @Override
       public String toString() {
-        return "accountCreate";
+        return "accountCreateSuccess";
       }
     },
     LOGIN_SUCCESS {
       @Override
       public String toString() {
         return "loginSuccess";
+      }
+    },
+    DEVICES_LIST_SUCCESS {
+      @Override
+      public String toString() {
+        return "devicesListSuccess";
+      }
+    },
+    PASSWORD_FORGOT_SEND_CODE_SUCCESS {
+      @Override
+      public String toString() {
+        return "passwordForgotSendCodeSuccess";
+      }
+    },
+    PASSWORD_FORGOT_SEND_CODE_FAILURE {
+      @Override
+      public String toString() {
+        return "passwordForgotSendCodeFailure";
       }
     }
   }
@@ -191,10 +209,11 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     if (!fxaAuthData.getStatus().equals(200)) {
       return false;
     }
-    if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
+    if (!((fxaAuthData.getMethod().toLowerCase().equals("post"))
+        || (fxaAuthData.getMethod().toLowerCase().equals("get")))) {
       return false;
     }
-    eventSummary = EventSummary.ACCOUNT_STATUS_CHECK;
+    eventSummary = EventSummary.ACCOUNT_STATUS_CHECK_SUCCESS;
     return true;
   }
 
@@ -230,7 +249,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
       return false;
     }
-    eventSummary = EventSummary.SEND_RECOVERY_EMAIL;
+    eventSummary = EventSummary.SEND_RECOVERY_EMAIL_SUCCESS;
     return true;
   }
 
@@ -244,7 +263,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
       return false;
     }
-    eventSummary = EventSummary.SEND_SMS_CONNECT_DEVICE;
+    eventSummary = EventSummary.SEND_SMS_CONNECT_DEVICE_SUCCESS;
     return true;
   }
 
@@ -258,8 +277,39 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     if (!(fxaAuthData.getMethod().toLowerCase().equals("post"))) {
       return false;
     }
-    eventSummary = EventSummary.ACCOUNT_CREATE;
+    eventSummary = EventSummary.ACCOUNT_CREATE_SUCCESS;
     return true;
+  }
+
+  private Boolean discernDevicesList() {
+    if (!(fxaAuthData.getPath().equals("/v1/account/devices"))) {
+      return false;
+    }
+    if (!(fxaAuthData.getStatus().equals(200))) {
+      return false;
+    }
+    if (!(fxaAuthData.getMethod().toLowerCase().equals("get"))) {
+      return false;
+    }
+    eventSummary = EventSummary.DEVICES_LIST_SUCCESS;
+    return true;
+  }
+
+  private Boolean discernPasswordForgotSendCode() {
+    if (!(fxaAuthData.getPath().equals("/v1/password/forgot/send_code"))) {
+      return false;
+    }
+    if (!(fxaAuthData.getMethod().toLowerCase().equals("post"))) {
+      return false;
+    }
+    if (fxaAuthData.getStatus().equals(200)) {
+      eventSummary = EventSummary.PASSWORD_FORGOT_SEND_CODE_SUCCESS;
+      return true;
+    } else if (fxaAuthData.getStatus().equals(400)) {
+      eventSummary = EventSummary.PASSWORD_FORGOT_SEND_CODE_FAILURE;
+      return true;
+    }
+    return false;
   }
 
   private void discernEventSummary() {
@@ -294,6 +344,8 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     } else if (discernAccountCreate()) {
       return;
     } else if (discernLoginSuccess()) {
+      return;
+    } else if (discernPasswordForgotSendCode()) {
       return;
     }
   }
