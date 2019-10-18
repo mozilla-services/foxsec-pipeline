@@ -28,8 +28,14 @@ public class AlertFormatter extends DoFn<Alert, String> {
     maxmindIspDbPath = options.getMaxmindIspDbPath();
   }
 
-  // Add additional GeoIP data if not already present
-  private void addGeoIPData(Alert a) {
+  /**
+   * Process metadata fields and add GeoIP information
+   *
+   * @param a Alert
+   * @param addressFields Array of metadata keys to treat as address fields
+   * @param geoip Initialized GeoIP
+   */
+  public static void addGeoIPData(Alert a, String[] addressFields, GeoIP geoip) {
     if (geoip == null || addressFields == null) {
       return;
     }
@@ -84,7 +90,7 @@ public class AlertFormatter extends DoFn<Alert, String> {
       a.addMetadata("monitored_resource", monitoredResourceIndicator);
     }
 
-    addGeoIPData(a);
+    addGeoIPData(a, addressFields, geoip);
     c.output(a.toJSON());
   }
 }
