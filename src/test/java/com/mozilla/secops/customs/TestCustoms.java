@@ -297,6 +297,29 @@ public class TestCustoms {
   }
 
   @Test
+  public void velocityTestBelowMinimumDistance() throws Exception {
+    testEnv();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_velocity1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableVelocityDetector(true);
+    options.setXffAddressSelector("127.0.0.1/32");
+    options.setMinimumDistanceForAlert(9000.0);
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts).empty();
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void passwordResetAbuseTest() throws Exception {
     testEnv();
 

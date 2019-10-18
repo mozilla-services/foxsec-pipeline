@@ -33,6 +33,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   public static final String VELOCITY_KIND = "customs_velocity";
 
   private final Double maxKilometersPerSecond;
+  private final Double minimumDistanceForAlert;
 
   private final String memcachedHost;
   private final Integer memcachedPort;
@@ -55,6 +56,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   public CustomsVelocity(Customs.CustomsOptions options) {
     monitoredResource = options.getMonitoredResourceIndicator();
     maxKilometersPerSecond = options.getMaximumKilometersPerHour() / 3600.0;
+    minimumDistanceForAlert = options.getMinimumDistanceForAlert();
     memcachedHost = options.getMemcachedHost();
     memcachedPort = options.getMemcachedPort();
     datastoreNamespace = options.getDatastoreNamespace();
@@ -187,7 +189,16 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                             uid,
                             geoResp.getKmDistance(),
                             geoResp.getTimeDifference());
-                        if (geoResp.getMaxKmPerSecondExceeded()) {
+
+                        boolean minDistanceMet = true;
+                        if (minimumDistanceForAlert != null) {
+                          if (geoResp.getKmDistance() < minimumDistanceForAlert) {
+                            log.info("{}: will skip alert as minimum distance was not met", uid);
+                            minDistanceMet = false;
+                          }
+                        }
+
+                        if (geoResp.getMaxKmPerSecondExceeded() && minDistanceMet) {
                           log.info("{}: creating velocity alert", uid);
                           Alert alert = new Alert();
                           alert.setCategory("customs");
