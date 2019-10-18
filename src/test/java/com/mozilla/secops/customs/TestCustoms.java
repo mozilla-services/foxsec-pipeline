@@ -280,6 +280,7 @@ public class TestCustoms {
               int cnt = 0;
               for (Alert a : x) {
                 assertEquals("81.2.69.192", a.getMetadataValue("sourceaddress"));
+                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress_previous"));
                 assertEquals("00000000000000000000000000000000", a.getMetadataValue("uid"));
                 assertEquals("riker@mozilla.com", a.getMetadataValue("email"));
                 assertEquals(
@@ -287,11 +288,40 @@ public class TestCustoms {
                         + "7740.82 km in 9 seconds",
                     a.getSummary());
                 assertEquals("velocity", a.getMetadataValue("notify_merge"));
+                assertEquals("London", a.getMetadataValue("sourceaddress_city"));
+                assertEquals("GB", a.getMetadataValue("sourceaddress_country"));
+                assertEquals("Milton", a.getMetadataValue("sourceaddress_previous_city"));
+                assertEquals("US", a.getMetadataValue("sourceaddress_previous_country"));
+                assertEquals("7740.82", a.getMetadataValue("km_distance"));
+                assertEquals("9", a.getMetadataValue("time_delta_seconds"));
                 cnt++;
               }
               assertEquals(1, cnt);
               return null;
             });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void velocityTestBelowMinimumDistance() throws Exception {
+    testEnv();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_velocity1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableVelocityDetector(true);
+    options.setXffAddressSelector("127.0.0.1/32");
+    options.setMinimumDistanceForAlert(9000.0);
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts).empty();
 
     p.run().waitUntilFinish();
   }

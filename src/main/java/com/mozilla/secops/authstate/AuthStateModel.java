@@ -25,6 +25,49 @@ public class AuthStateModel {
     private final Double kmDistance;
     private final Boolean maxKmPerSExceeded;
 
+    private String previousSource;
+    private String currentSource;
+
+    /**
+     * Get previous source address
+     *
+     * @return String, or null if not set in response
+     */
+    public String getPreviousSource() {
+      return previousSource;
+    }
+
+    /**
+     * Get current source address
+     *
+     * @return String, or null if not set in response
+     */
+    public String getCurrentSource() {
+      return currentSource;
+    }
+
+    /**
+     * Set previous source address
+     *
+     * @param previousSource Previous source address
+     * @return this for chaining
+     */
+    public GeoVelocityResponse withPreviousSource(String previousSource) {
+      this.previousSource = previousSource;
+      return this;
+    }
+
+    /**
+     * Set current source address
+     *
+     * @param currentSource Current source address
+     * @return this for chaining
+     */
+    public GeoVelocityResponse withCurrentSource(String currentSource) {
+      this.currentSource = currentSource;
+      return this;
+    }
+
     /**
      * Get difference in time in seconds
      *
@@ -291,9 +334,13 @@ public class AuthStateModel {
             - (prev.getValue().getTimestamp().getMillis() / 1000);
 
     if ((kmdist / td) > maxKmPerSecond) {
-      return new GeoVelocityResponse(td, kmdist, true);
+      return new GeoVelocityResponse(td, kmdist, true)
+          .withPreviousSource(prev.getKey())
+          .withCurrentSource(cur.getKey());
     }
-    return new GeoVelocityResponse(td, kmdist, false);
+    return new GeoVelocityResponse(td, kmdist, false)
+        .withPreviousSource(prev.getKey())
+        .withCurrentSource(cur.getKey());
   }
 
   /**

@@ -349,6 +349,11 @@ public class Customs implements Serializable {
 
     void setMaximumKilometersPerHour(Integer value);
 
+    @Description("Minimum distance that must be travelled to create velocity alert")
+    Double getMinimumDistanceForAlert();
+
+    void setMinimumDistanceForAlert(Double value);
+
     @Description("Enable password reset abuse analysis")
     @Default.Boolean(false)
     Boolean getEnablePasswordResetAbuseDetector();
