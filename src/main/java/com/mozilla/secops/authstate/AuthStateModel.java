@@ -114,6 +114,26 @@ public class AuthStateModel {
     private Double longitude;
     private Double latitude;
     private DateTime timestamp;
+    private String userAgent;
+
+    /**
+     * Set user agent field
+     *
+     * @param userAgent User agent
+     */
+    public void setUserAgent(String userAgent) {
+      this.userAgent = userAgent;
+    }
+
+    /**
+     * Get user agent field
+     *
+     * @return User agent, or null if unset
+     */
+    @JsonProperty("useragent")
+    public String getUserAgent() {
+      return userAgent;
+    }
 
     /**
      * Set model latitude field
@@ -174,6 +194,33 @@ public class AuthStateModel {
   }
 
   /**
+   * Information used in a model update request
+   *
+   * <p>At a minimum, the IP address field must be set.
+   *
+   * <p>If the timestamp field is not set, the update will occur using the current time as the
+   * timestamp.
+   *
+   * <p>Latitude, longitude, and user agent should be set if known, otherwise should be null.
+   */
+  public static class ModelEntryUpdate {
+    /** IP address to update model with */
+    public String ipAddress;
+
+    /** Timestamp to associate with entry */
+    public DateTime timestamp;
+
+    /** IP address GeoIP latitude */
+    public Double latitude;
+
+    /** IP address GeoIP longitude */
+    public Double longitude;
+
+    /** An optional user agent to associate with the update */
+    public String userAgent;
+  }
+
+  /**
    * Update state entry for user to indicate authentication from address
    *
    * <p>Note this function does not write the new state, set must be called to make changes
@@ -181,6 +228,9 @@ public class AuthStateModel {
    *
    * <p>This variant of the method will use the current time as the timestamp for the authentication
    * event, instead of accepting a parameter indicating the timestamp to associate with the event.
+   *
+   * <p>This variant of updateEntry does not support including a user agent with the update, pass
+   * ModelEntryUpdate for that.
    *
    * @param ipaddr IP address to update state with
    * @param latitude IP address's latitude
@@ -198,6 +248,9 @@ public class AuthStateModel {
    * <p>Note this function does not write the new state, set must be called to make changes
    * permanent.
    *
+   * <p>This variant of updateEntry does not support including a user agent with the update, pass
+   * ModelEntryUpdate for that.
+   *
    * @param ipaddr IP address to update state with
    * @param timestamp Timestamp to associate with update
    * @param latitude IP address's latitude
@@ -205,20 +258,48 @@ public class AuthStateModel {
    * @return True if the IP address was unknown, otherwise false
    */
   public Boolean updateEntry(String ipaddr, DateTime timestamp, Double latitude, Double longitude) {
-    ModelEntry ent = entries.get(ipaddr);
+    ModelEntryUpdate m = new ModelEntryUpdate();
+    m.ipAddress = ipaddr;
+    m.timestamp = timestamp;
+    m.latitude = latitude;
+    m.longitude = longitude;
+    return updateEntry(m);
+  }
+
+  /**
+   * Update state entry for user to indicate authentication from address setting specified timestamp
+   * on the entry
+   *
+   * <p>Note this function does not write the new state, set must be called to make changes
+   * permanent.
+   *
+   * @param request ModelEntryUpdate
+   * @return True if the IP address was unknown, otherwise false
+   */
+  public Boolean updateEntry(ModelEntryUpdate request) {
+    if (request.ipAddress == null) {
+      throw new IllegalArgumentException("ipAddress in ModelEntryUpdate cannot be null");
+    }
+    DateTime timestamp = request.timestamp;
+    if (timestamp == null) {
+      timestamp = new DateTime();
+    }
+    ModelEntry ent = entries.get(request.ipAddress);
     if (ent == null) { // New entry for this user model
       ent = new ModelEntry();
       ent.setTimestamp(timestamp);
-      ent.setLatitude(latitude);
-      ent.setLongitude(longitude);
-      entries.put(ipaddr, ent);
+      ent.setLatitude(request.latitude);
+      ent.setLongitude(request.longitude);
+      ent.setUserAgent(request.userAgent);
+      entries.put(request.ipAddress, ent);
       return true;
     }
 
     // Known entry, update it
     ent.setTimestamp(timestamp);
-    ent.setLatitude(latitude);
-    ent.setLongitude(longitude);
+    ent.setLatitude(request.latitude);
+    ent.setLongitude(request.longitude);
+    ent.setUserAgent(request.userAgent);
     return false;
   }
 

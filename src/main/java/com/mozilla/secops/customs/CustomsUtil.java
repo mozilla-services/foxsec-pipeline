@@ -108,6 +108,17 @@ public class CustomsUtil {
   }
 
   /**
+   * Extract FxA agent
+   *
+   * @param e Event
+   * @return Agent, or null if not found
+   */
+  public static String authGetUserAgent(Event e) {
+    com.mozilla.secops.parser.models.fxaauth.FxaAuth d = authGetData(e);
+    return d != null ? d.getAgent() : null;
+  }
+
+  /**
    * Extract FxA event service value
    *
    * @param e Event
