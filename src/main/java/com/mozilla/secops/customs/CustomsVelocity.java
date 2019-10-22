@@ -179,7 +179,14 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                       }
 
                       // Update the state entry; we want to use the timestamp on the event here
-                      if (!sm.updateEntry(remoteAddress, e.getTimestamp(), latitude, longitude)) {
+                      AuthStateModel.ModelEntryUpdate uRequest =
+                          new AuthStateModel.ModelEntryUpdate();
+                      uRequest.ipAddress = remoteAddress;
+                      uRequest.timestamp = e.getTimestamp();
+                      uRequest.latitude = latitude;
+                      uRequest.longitude = longitude;
+                      uRequest.userAgent = CustomsUtil.authGetUserAgent(e);
+                      if (!sm.updateEntry(uRequest)) {
                         // Address was already seen, so just update the state and continue
                         try {
                           sm.set(cur, new PruningStrategyLatest());
