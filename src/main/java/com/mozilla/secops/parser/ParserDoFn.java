@@ -79,15 +79,17 @@ public class ParserDoFn extends DoFn<String, Event> {
     Event e = ep.parse(c.element());
     if (e != null) {
       // If a common input filter has been configured, apply that first
-      if (commonInputFilter != null) {
+      if ((e.getEventFlag().equals(Event.EventFlag.FLAG_OK)) && (commonInputFilter != null)) {
         if (!(commonInputFilter.matches(e))) {
-          return;
+          e.setEventFlag(Event.EventFlag.FLAG_COMMON_INPUT_FILTER_MISMATCH);
         }
       }
 
-      if (inlineFilter != null) {
+      // If the event is still marked OK (the common input filter if set passed) and
+      // we have an inline filter, apply it
+      if ((e.getEventFlag().equals(Event.EventFlag.FLAG_OK)) && (inlineFilter != null)) {
         if (!(inlineFilter.matches(e))) {
-          return;
+          e.setEventFlag(Event.EventFlag.FLAG_INLINE_FILTER_MISMATCH);
         }
       }
       if ((cfg != null) && cfg.getUseEventTimestamp()) {

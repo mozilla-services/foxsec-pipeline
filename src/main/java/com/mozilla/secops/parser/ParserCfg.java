@@ -22,6 +22,7 @@ public class ParserCfg implements Serializable {
   private ArrayList<String> xffAddressSelectorSubnets;
   private String idmanagerPath;
   private Boolean useEventTimestamp;
+  private Integer maxTimestampDifference;
 
   private String stackdriverProjectFilter;
   private String[] stackdriverLabelFilters;
@@ -39,6 +40,7 @@ public class ParserCfg implements Serializable {
     cfg.setMaxmindIspDbPath(options.getMaxmindIspDbPath());
     cfg.setIdentityManagerPath(options.getIdentityManagerPath());
     cfg.setParserFastMatcher(options.getParserFastMatcher());
+    cfg.setMaximumAllowableTimestampDifference(options.getMaximumAllowableTimestampDifference());
     if (options.getXffAddressSelector() != null) {
       String parts[] = options.getXffAddressSelector().split(",");
       if (parts.length > 0) {
@@ -249,6 +251,30 @@ public class ParserCfg implements Serializable {
   @JsonProperty("stackdriver_project_filter")
   public void setStackdriverProjectFilter(String stackdriverProjectFilter) {
     this.stackdriverProjectFilter = stackdriverProjectFilter;
+  }
+
+  /**
+   * Get maximum allowable timestamp difference in seconds
+   *
+   * @return Integer or null if unset
+   */
+  public Integer getMaximumAllowableTimestampDifference() {
+    return maxTimestampDifference;
+  }
+
+  /**
+   * Set maximum allowable timestamp difference in seconds
+   *
+   * <p>By default, the event timestamp is not inspected by the parser. If this option is set, the
+   * parsed event timestamp will be compared to the current time. If the difference in seconds
+   * exceeds the specified value, the FLAG_TIMESTAMP_TOO_OLD event flag will be set on the parsed
+   * event.
+   *
+   * @param maxTimestampDifference Seconds
+   */
+  @JsonProperty("max_timestamp_difference")
+  void setMaximumAllowableTimestampDifference(Integer maxTimestampDifference) {
+    this.maxTimestampDifference = maxTimestampDifference;
   }
 
   /** Construct default parser configuration */

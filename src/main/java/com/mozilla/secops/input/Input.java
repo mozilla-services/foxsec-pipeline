@@ -15,10 +15,14 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TupleTagList;
 
 /**
  * Standard data ingestion
@@ -407,26 +411,33 @@ public class Input implements Serializable {
 
                               @ProcessElement
                               public void processElement(ProcessContext c) {
-                                String el = c.element();
-                                // As an optimization, if a parser fast match element is set we can
-                                // apply it right here, and avoid passing elements in the collection
-                                // which will be dropped later.
-                                String fm = null;
-                                if (i.getParserConfiguration() != null) {
-                                  fm = i.getParserConfiguration().getParserFastMatcher();
-                                }
-                                if (fm != null) {
-                                  if (!el.contains(fm) && !el.contains("configuration_tick")) {
-                                    return;
-                                  }
-                                }
-
-                                c.output(KV.of(i.getName(), el));
+                                c.output(KV.of(i.getName(), c.element()));
                               }
                             })));
       }
 
-      return list.apply(Flatten.<KV<String, String>>pCollections()).apply(ParDo.of(fn));
+      PCollection<KV<String, Event>> pEvents =
+          list.apply(Flatten.<KV<String, String>>pCollections()).apply(ParDo.of(fn));
+
+      TupleTag<KV<String, Event>> okEvents =
+          new TupleTag<KV<String, Event>>() {
+            private static final long serialVersionUID = 1L;
+          };
+      TupleTag<KV<String, Event>> discardEvents =
+          new TupleTag<KV<String, Event>>() {
+            private static final long serialVersionUID = 1L;
+          };
+
+      PCollectionTuple res =
+          pEvents.apply(
+              ParDo.of(new MultiInputIsolator(okEvents, discardEvents))
+                  .withOutputTags(okEvents, TupleTagList.of(discardEvents)));
+
+      res.get(discardEvents)
+          .apply(Values.create())
+          .apply("discard summary", new InputDiscardSummary("multiplex"));
+
+      return res.get(okEvents);
     }
 
     /**

@@ -361,16 +361,6 @@ public class Parser {
    * @return {@link Event} or null if the event should be ignored
    */
   public Event parse(String input) {
-    String fm = cfg.getParserFastMatcher();
-    // If a fast matcher is set, test the input immediately against it and discard the
-    // event if it does not match. A special case exists here to always pass messages that
-    // appear to be configuration ticks from CompositeInput.
-    if (fm != null && input != null) {
-      if (!input.contains(fm) && !input.contains("configuration_tick")) {
-        return null;
-      }
-    }
-
     ParserState state = new ParserState(this);
     state.setGoogleJacksonFactory(googleJacksonFactory);
 
@@ -379,6 +369,21 @@ public class Parser {
     }
 
     Event e = new Event();
+
+    String fm = cfg.getParserFastMatcher();
+    // If a fast matcher is set, test the input immediately against it and discard the
+    // event if it does not match. A special case exists here to always pass messages that
+    // appear to be configuration ticks from CompositeInput.
+    if (fm != null && input != null) {
+      if (!input.contains(fm) && !input.contains("configuration_tick")) {
+        // This is a fast matcher miss; we will still return a raw event but set the fast
+        // matcher event flag
+        e.setPayload(new Raw(input, e, state));
+        e.setEventFlag(Event.EventFlag.FLAG_FASTMATCH_MISMATCH);
+        return e;
+      }
+    }
+
     input = stripEncapsulation(e, input, state);
     // If the strip function returns null we will just ignore the event and return null
     if (input == null) {
@@ -399,6 +404,13 @@ public class Parser {
         log.warn(exc.getMessage());
       }
       break;
+    }
+
+    if (cfg.getMaximumAllowableTimestampDifference() != null) {
+      long d = new DateTime().getMillis() - e.getTimestamp().getMillis();
+      if (d > (cfg.getMaximumAllowableTimestampDifference() * 1000)) {
+        e.setEventFlag(Event.EventFlag.FLAG_TIMESTAMP_TOO_OLD);
+      }
     }
 
     return e;

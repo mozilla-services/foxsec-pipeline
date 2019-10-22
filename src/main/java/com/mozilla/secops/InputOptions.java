@@ -67,6 +67,13 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
 
   void setParserFastMatcher(String value);
 
+  @Description(
+      "Maximum allowable timestamp difference, events with timestamp difference older than value "
+          + "in seconds will be flagged; integer")
+  Integer getMaximumAllowableTimestampDifference();
+
+  void setMaximumAllowableTimestampDifference(Integer value);
+
   @Description("Configuration tick interval, 0 to disable; seconds")
   @Default.Integer(0)
   Integer getGenerateConfigurationTicksInterval();

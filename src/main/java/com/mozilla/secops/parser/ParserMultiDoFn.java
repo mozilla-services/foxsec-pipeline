@@ -102,15 +102,15 @@ public class ParserMultiDoFn extends DoFn<KV<String, String>, KV<String, Event>>
       return;
     }
 
-    if (common != null) {
+    if ((e.getEventFlag().equals(Event.EventFlag.FLAG_OK)) && (common != null)) {
       if (!(common.matches(e))) {
-        return;
+        e.setEventFlag(Event.EventFlag.FLAG_COMMON_INPUT_FILTER_MISMATCH);
       }
     }
 
-    if (inline != null) {
+    if ((e.getEventFlag().equals(Event.EventFlag.FLAG_OK)) && (inline != null)) {
       if (!(inline.matches(e))) {
-        return;
+        e.setEventFlag(Event.EventFlag.FLAG_INLINE_FILTER_MISMATCH);
       }
     }
 

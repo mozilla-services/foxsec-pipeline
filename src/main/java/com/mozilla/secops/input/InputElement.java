@@ -20,6 +20,9 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TupleTagList;
 
 /**
  * InputElement represents a set of input sources that will always result in a single output
@@ -159,7 +162,26 @@ public class InputElement implements Serializable {
     if (filter != null) {
       fn = fn.withInlineEventFilter(filter);
     }
-    return col.apply(String.format("%s parse", name), ParDo.of(fn));
+
+    TupleTag<Event> okEvents =
+        new TupleTag<Event>() {
+          private static final long serialVersionUID = 1L;
+        };
+    TupleTag<Event> discardEvents =
+        new TupleTag<Event>() {
+          private static final long serialVersionUID = 1L;
+        };
+
+    PCollectionTuple res =
+        col.apply(String.format("%s parse", name), ParDo.of(fn))
+            .apply(
+                ParDo.of(new InputIsolator(okEvents, discardEvents))
+                    .withOutputTags(okEvents, TupleTagList.of(discardEvents)));
+
+    res.get(discardEvents)
+        .apply(String.format("%s discard summary", name), new InputDiscardSummary(name));
+
+    return res.get(okEvents);
   }
 
   /**

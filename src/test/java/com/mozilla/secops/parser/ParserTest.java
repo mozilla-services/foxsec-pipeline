@@ -8,6 +8,9 @@ import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
 import java.util.ArrayList;
 import java.util.Map;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
 
 public class ParserTest {
@@ -269,6 +272,7 @@ public class ParserTest {
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
+    assertEquals(Event.EventFlag.FLAG_OK, e.getEventFlag());
     assertEquals(Payload.PayloadType.GLB, e.getPayloadType());
     GLB g = e.getPayload();
     assertNotNull(g);
@@ -960,8 +964,57 @@ public class ParserTest {
 
     Parser p = new Parser(cfg);
 
-    assertNull(p.parse("riker test"));
-    assertNotNull(p.parse("picard test"));
+    Event e = p.parse("riker test");
+    assertNotNull(e);
+    assertEquals(Event.EventFlag.FLAG_FASTMATCH_MISMATCH, e.getEventFlag());
+
+    e = p.parse("picard test");
+    assertNotNull(e);
+    assertEquals(Event.EventFlag.FLAG_OK, e.getEventFlag());
+  }
+
+  @Test
+  public void testTimestampTooOld() throws Exception {
+    String bufPre =
+        "{\"httpRequest\":{\"referer\":\"https://send.firefox.com/\",\"remoteIp\":"
+            + "\"127.0.0.1\",\"requestMethod\":\"GET\",\"requestSize\":\"43\",\"requestUrl\":\"htt"
+            + "ps://send.firefox.com/public/locales/en-US/send.js?test=test\",\"responseSize\":\"2692\","
+            + "\"serverIp\":\"10.8.0.3\",\"status\":200,\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel M"
+            + "ac OS X 10_13_3)"
+            + "\"},\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"@type\":\"type.googleapis.com/"
+            + "google.cloud.loadbalancing.type.LoadBalancerLogEntry\",\"statusDetails\":\"response_sent"
+            + "_by_backend\"},\"logName\":\"projects/moz/logs/requests\",\"receiveTim"
+            + "estamp\":\"2018-09-28T18:55:12.840306467Z\",\"resource\":{\"labels\":{\"backend_service_"
+            + "name\":\"\",\"forwarding_rule_name\":\"k8s-fws-prod-"
+            + "6cb3697\",\"project_id\":\"moz\",\"target_proxy_name\":\"k8s-tps-prod-"
+            + "97\",\"url_map_name\":\"k8s-um-prod"
+            + "-app-1\",\"zone\":\"global\"},\"type\":\"http_load_balancer\"}"
+            + ",\"severity\":\"INFO\",\"spanId\":\"AAAAAAAAAAAAAAAA\",\"timestamp\":\"";
+    String bufPost = "\",\"trace\":\"projects/moz/traces/AAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAA\"}";
+
+    DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.000000000'Z'");
+    DateTime now = new DateTime(DateTimeZone.UTC);
+
+    String buf = bufPre + dtf.print(now) + bufPost;
+    String bufOld = bufPre + dtf.print(now.minusMinutes(30)) + bufPost;
+
+    ParserCfg cfg = new ParserCfg();
+    Parser p = new Parser(cfg);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Event.EventFlag.FLAG_OK, e.getEventFlag());
+    e = p.parse(bufOld);
+    assertNotNull(e);
+    assertEquals(Event.EventFlag.FLAG_OK, e.getEventFlag());
+
+    cfg.setMaximumAllowableTimestampDifference(60);
+    p = new Parser(cfg);
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Event.EventFlag.FLAG_OK, e.getEventFlag());
+    e = p.parse(bufOld);
+    assertNotNull(e);
+    assertEquals(Event.EventFlag.FLAG_TIMESTAMP_TOO_OLD, e.getEventFlag());
   }
 
   @Test

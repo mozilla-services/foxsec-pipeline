@@ -26,6 +26,25 @@ import org.joda.time.DateTimeZone;
 public class Event implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  /**
+   * Event flags control how downstream transforms may handle an event, and are set during the
+   * parsing process.
+   *
+   * <p>All events default to FLAG_OK, and will be set otherwise under certain circumstances.
+   */
+  public enum EventFlag {
+    /** A normal event, can be considered to have no specific flag set */
+    FLAG_OK,
+    /** The event did not match the specified inline event filter */
+    FLAG_INLINE_FILTER_MISMATCH,
+    /** Parser fast matcher mismatch */
+    FLAG_FASTMATCH_MISMATCH,
+    /** Common input filter mismatch */
+    FLAG_COMMON_INPUT_FILTER_MISMATCH,
+    /** The event timestamp was older than is permitted by the parser configuration */
+    FLAG_TIMESTAMP_TOO_OLD
+  }
+
   private Payload<? extends PayloadBase> payload;
   private final UUID eventId;
   private DateTime timestamp;
@@ -33,6 +52,8 @@ public class Event implements Serializable {
   private Mozlog mozlog;
   private String stackdriverProject;
   private Map<String, String> stackdriverLabels;
+
+  private EventFlag eventFlag;
 
   /**
    * Create a new {@link Event} object.
@@ -45,6 +66,8 @@ public class Event implements Serializable {
 
     // Default the event timestamp to creation time
     timestamp = new DateTime(DateTimeZone.UTC);
+
+    eventFlag = EventFlag.FLAG_OK;
   }
 
   @Override
@@ -93,6 +116,24 @@ public class Event implements Serializable {
 
   private void setPayloadType(Payload.PayloadType value) {
     // Noop setter, required for event deserialization
+  }
+
+  /**
+   * Get event flag
+   *
+   * @return EventFlag
+   */
+  public EventFlag getEventFlag() {
+    return eventFlag;
+  }
+
+  /**
+   * Set event flag
+   *
+   * @param eventFlag EventFlag
+   */
+  public void setEventFlag(EventFlag eventFlag) {
+    this.eventFlag = eventFlag;
   }
 
   /**
