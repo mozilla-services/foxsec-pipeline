@@ -90,4 +90,14 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   Integer getMaxAllowableTimestampDifference();
 
   void setMaxAllowableTimestampDifference(Integer value);
+
+  @Description("Maxmind Account Id for using Minfraud (supports RuntimeSecrets).")
+  String getMaxmindAccountId();
+
+  void setMaxmindAccountId(String value);
+
+  @Description("Maxmind License Key for using Minfraud (supports RuntimeSecrets).")
+  String getMaxmindLicenseKey();
+
+  void setMaxmindLicenseKey(String value);
 }

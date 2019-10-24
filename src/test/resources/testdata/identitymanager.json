@@ -6,36 +6,32 @@
 
         "wcrusher@mozilla.com": {
             "aliases": [ "wesley" ],
-            "fragment": "wcrusher",
-            "notify": {
-              "direct_slack_notify": false
+            "notify" : {
+              "email": "wcrusher@mozilla.com",
+              "method": "EMAIL"
+            },
+            "alert": {
+              "email": "testing-wcrusher@mozilla.com",
+              "method": "EMAIL"
             }
         },
 
         "wriker@mozilla.com": {
             "aliases": [ "numberone", "riker", "riker@mozilla.com" ],
-            "fragment": "riker",
-            "escalate_to": "picard@mozilla.com",
-            "notify": {
-                "direct_email_notify_format": "holodeck-%s@mozilla.com",
-                "direct_slack_notify": true
+            "notify" : {
+              "email": "wriker@mozilla.com",
+              "method": "EMAIL"
             },
-            "feature_flags": {
-                "slack_confirmation_alert": true
-            }
+            "alert": {
+                "email": "holodeck-riker@mozilla.com",
+                "method": "SLACK"
+            },
+            "escalate_to": "picard@mozilla.com"
         }
-    },
-    "default_notify": {
-        "direct_email_notify": true,
-        "direct_slack_notify": false,
-        "direct_email_notify_format": "testing-%s@mozilla.com"
-    },
-    "default_feature_flags": {
-        "slack_confirmation_alert": false
     },
     "aws_account_map": {
         "123456789": "riker-vacationing-on-risa",
-	"123456789012": "mock-aws-account-name"
+        "123456789012": "mock-aws-account-name"
     },
     "named_subnets": {
       "office": "fd00:0:0:0:0:0:0:0/48"
