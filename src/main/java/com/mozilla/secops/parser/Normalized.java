@@ -25,6 +25,7 @@ public class Normalized implements Serializable {
   private String sourceAddressCountry;
   private Double sourceAddressLatitude;
   private Double sourceAddressLongitude;
+  private String sourceAddressTimeZone;
   private String object;
   private String requestMethod;
   private String requestUrl;
@@ -213,6 +214,24 @@ public class Normalized implements Serializable {
    */
   public void setSourceAddressCountry(String sourceAddressCountry) {
     this.sourceAddressCountry = sourceAddressCountry;
+  }
+
+  /**
+   * Get source address time zone field
+   *
+   * @return Source address time zone, or null if not present
+   */
+  public String getSourceAddressTimeZone() {
+    return sourceAddressTimeZone;
+  }
+
+  /**
+   * Set source address time zone field
+   *
+   * @param sourceAddressTimeZone IANA time zone string, e.g., Europe/London
+   */
+  public void setSourceAddressTimeZone(String sourceAddressTimeZone) {
+    this.sourceAddressTimeZone = sourceAddressTimeZone;
   }
 
   /**

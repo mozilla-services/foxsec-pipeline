@@ -17,6 +17,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
   private String sourceAddressCountry;
   private Double sourceAddressLatitude;
   private Double sourceAddressLongitude;
+  private String sourceTimeZone;
 
   /**
    * Set source address field
@@ -48,6 +49,10 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
             && (cr.getLocation().getLongitude() != null)) {
           sourceAddressLatitude = cr.getLocation().getLatitude();
           sourceAddressLongitude = cr.getLocation().getLongitude();
+
+          if (cr.getLocation().getTimeZone() != null) {
+            sourceTimeZone = cr.getLocation().getTimeZone();
+          }
         }
       }
     }
@@ -59,6 +64,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
       n.setSourceAddressCountry(sourceAddressCountry);
       n.setSourceAddressLatitude(sourceAddressLatitude);
       n.setSourceAddressLongitude(sourceAddressLongitude);
+      n.setSourceAddressTimeZone(sourceTimeZone);
     }
   }
 
