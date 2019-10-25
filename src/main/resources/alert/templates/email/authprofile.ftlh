@@ -109,7 +109,7 @@
                       <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;">
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        We noticed a login for ${username} to ${object} at ${alert.timestamp?datetime.iso_m_nz}.
+                        We noticed a login for ${username} to ${object} at ${event_timestamp}.
                         </p>
 
                         <#if category == "state_analyze">
@@ -123,8 +123,14 @@
                         </#if>
 
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
-                        ${alert.timestamp?datetime.iso_m_nz} - ${sourceaddress} - ${sourceaddress_city}, ${sourceaddress_country}
+                        ${event_timestamp} - ${sourceaddress} - ${sourceaddress_city}, ${sourceaddress_country}
                         </p>
+
+                        <#if event_timestamp_source_local??>
+                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">
+                        Timestamp for login based on source address time zone was ${event_timestamp_source_local}.
+                        </p>
+                        </#if>
 
                         <#if category == "state_analyze">
                         <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">

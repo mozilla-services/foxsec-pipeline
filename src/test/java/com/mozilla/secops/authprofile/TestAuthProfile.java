@@ -34,8 +34,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -54,8 +52,12 @@ public class TestAuthProfile {
       return null;
     }
 
-    DateTimeFormatter fmt = DateTimeFormat.forPattern("MMM d, yyyy h:mm:ss aa");
-    in = in.replaceAll("DATESTAMP", fmt.print(a.getTimestamp()));
+    in = in.replaceAll("DATESTAMP", a.getMetadataValue("event_timestamp"));
+
+    if (a.getMetadataValue("event_timestamp_source_local") != null) {
+      in = in.replaceAll("DATELOCALSTAMP", a.getMetadataValue("event_timestamp_source_local"));
+    }
+
     return in.replaceAll("ALERTID", a.getAlertId().toString());
   }
 
@@ -209,6 +211,9 @@ public class TestAuthProfile {
                   assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
                   assertEquals("US", a.getMetadataValue("sourceaddress_country"));
                   assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
+                  assertEquals(
+                      "2018-09-18T15:15:38.000-07:00",
+                      a.getMetadataValue("event_timestamp_source_local"));
                 } else if (a.getMetadataValue("category").equals("cfgtick")) {
                   cfgTickCnt++;
                   assertEquals("authprofile-cfgtick", a.getCategory());

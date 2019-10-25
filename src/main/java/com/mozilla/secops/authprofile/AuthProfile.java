@@ -47,6 +47,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -780,6 +781,12 @@ public class AuthProfile implements Serializable {
     } else {
       a.addMetadata("sourceaddress_country", "unknown");
     }
+    String tz = n.getSourceAddressTimeZone();
+    if (tz != null) {
+      a.addMetadata("sourceaddress_timezone", tz);
+    } else {
+      a.addMetadata("sourceaddress_timezone", "unknown");
+    }
 
     if (e.getNormalized().isOfType(Normalized.Type.AUTH)) {
       a.addMetadata("auth_alert_type", "auth");
@@ -790,6 +797,13 @@ public class AuthProfile implements Serializable {
     DateTime eventTimestamp = e.getTimestamp();
     if (eventTimestamp != null) {
       a.addMetadata("event_timestamp", eventTimestamp.toString());
+
+      if (tz != null) {
+        DateTimeZone dtz = DateTimeZone.forID(tz);
+        if (dtz != null) {
+          a.addMetadata("event_timestamp_source_local", eventTimestamp.withZone(dtz).toString());
+        }
+      }
     }
 
     return a;
