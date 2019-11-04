@@ -23,6 +23,7 @@ public class ParserMultiDoFn extends DoFn<KV<String, String>, KV<String, Event>>
   private HashMap<String, ParserCfg> configurations;
   private HashMap<String, EventFilter> inlineFilters;
   private HashMap<String, EventFilter> commonInputFilters;
+  private HashMap<String, ParserMetrics> metrics;
 
   private transient HashMap<String, Parser> parsers;
 
@@ -31,6 +32,7 @@ public class ParserMultiDoFn extends DoFn<KV<String, String>, KV<String, Event>>
     configurations = new HashMap<String, ParserCfg>();
     inlineFilters = new HashMap<String, EventFilter>();
     commonInputFilters = new HashMap<String, EventFilter>();
+    metrics = new HashMap<String, ParserMetrics>();
   }
 
   /**
@@ -48,6 +50,7 @@ public class ParserMultiDoFn extends DoFn<KV<String, String>, KV<String, Event>>
     if (inlineFilter != null) {
       inlineFilters.put(name, inlineFilter);
     }
+    metrics.put(name, new ParserMetrics(name));
   }
 
   @Setup
@@ -96,8 +99,15 @@ public class ParserMultiDoFn extends DoFn<KV<String, String>, KV<String, Event>>
     EventFilter common = commonInputFilters.get(raw.getKey());
     EventFilter inline = inlineFilters.get(raw.getKey());
     ParserCfg cfg = configurations.get(raw.getKey());
+    ParserMetrics metric = metrics.get(raw.getKey());
 
-    Event e = p.parse(raw.getValue());
+    Event e;
+    try {
+      e = p.parse(raw.getValue());
+    } catch (Parser.EventTooOldException exc) {
+      metric.eventTooOld();
+      return;
+    }
     if (e == null) {
       return;
     }

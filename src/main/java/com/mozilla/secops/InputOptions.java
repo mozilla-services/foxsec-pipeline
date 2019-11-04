@@ -83,4 +83,11 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   String getInputIprepd();
 
   void setInputIprepd(String value);
+
+  @Description(
+      "Max allowable timestamp difference, events with timestamp older than value in seconds will "
+          + "be dropped; integer")
+  Integer getMaxAllowableTimestampDifference();
+
+  void setMaxAllowableTimestampDifference(Integer value);
 }

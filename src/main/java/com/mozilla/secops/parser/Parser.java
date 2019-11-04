@@ -48,6 +48,20 @@ public class Parser {
   private IdentityManager idmanager;
 
   /**
+   * Indicates the extracted event timestamp was too old
+   *
+   * <p>This exception will be thrown if the event timestamp a payload parser extracts from a raw
+   * event is older than the maximum allowable timestamp difference set in the parser configuration.
+   */
+  public static class EventTooOldException extends Exception {
+    private static final long serialVersionUID = 1L;
+
+    public EventTooOldException(String message) {
+      super(message);
+    }
+  }
+
+  /**
    * Given an interable of events, return the latest timestamp
    *
    * @param events Event list
@@ -360,7 +374,7 @@ public class Parser {
    * @param input Input string
    * @return {@link Event} or null if the event should be ignored
    */
-  public Event parse(String input) {
+  public Event parse(String input) throws EventTooOldException {
     String fm = cfg.getParserFastMatcher();
     // If a fast matcher is set, test the input immediately against it and discard the
     // event if it does not match. A special case exists here to always pass messages that
@@ -399,6 +413,15 @@ public class Parser {
         log.warn(exc.getMessage());
       }
       break;
+    }
+
+    Integer mtd = cfg.getMaxTimestampDifference();
+    if (mtd != null) {
+      long d = new DateTime().getMillis() - e.getTimestamp().getMillis();
+      if (d > (mtd * 1000)) {
+        throw new EventTooOldException(
+            String.format("event timestamp was too old, %s", e.getTimestamp().toString()));
+      }
     }
 
     return e;
