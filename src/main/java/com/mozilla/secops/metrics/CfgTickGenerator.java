@@ -39,7 +39,12 @@ public class CfgTickGenerator extends PTransform<PBegin, PCollection<String>> {
   private void validateMessageFormat() {
     // Make sure we can parse the message that has been generated
     Parser p = new Parser();
-    Event e = p.parse(message);
+    Event e;
+    try {
+      e = p.parse(message);
+    } catch (Parser.EventTooOldException exc) {
+      throw new RuntimeException(exc.getMessage());
+    }
     if (e == null) {
       throw new RuntimeException("generated configuration tick failed parse validation");
     }

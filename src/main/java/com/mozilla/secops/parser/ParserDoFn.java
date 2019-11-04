@@ -12,6 +12,8 @@ public class ParserDoFn extends DoFn<String, Event> {
   private EventFilter commonInputFilter;
   private ParserCfg cfg;
 
+  private final ParserMetrics metrics = new ParserMetrics(null);
+
   /**
    * Install an inline {@link EventFilter} in this transform
    *
@@ -76,7 +78,13 @@ public class ParserDoFn extends DoFn<String, Event> {
 
   @ProcessElement
   public void processElement(ProcessContext c) {
-    Event e = ep.parse(c.element());
+    Event e;
+    try {
+      e = ep.parse(c.element());
+    } catch (Parser.EventTooOldException exc) {
+      metrics.eventTooOld();
+      return;
+    }
     if (e != null) {
       // If a common input filter has been configured, apply that first
       if (commonInputFilter != null) {

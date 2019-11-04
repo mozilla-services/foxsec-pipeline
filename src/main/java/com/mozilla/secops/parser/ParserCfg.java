@@ -22,6 +22,7 @@ public class ParserCfg implements Serializable {
   private ArrayList<String> xffAddressSelectorSubnets;
   private String idmanagerPath;
   private Boolean useEventTimestamp;
+  private Integer maxTimestampDifference;
 
   private String stackdriverProjectFilter;
   private String[] stackdriverLabelFilters;
@@ -47,6 +48,7 @@ public class ParserCfg implements Serializable {
     }
     cfg.setStackdriverProjectFilter(options.getStackdriverProjectFilter());
     cfg.setStackdriverLabelFilters(options.getStackdriverLabelFilters());
+    cfg.setMaxTimestampDifference(options.getMaxAllowableTimestampDifference());
     return cfg;
   }
 
@@ -254,5 +256,31 @@ public class ParserCfg implements Serializable {
   /** Construct default parser configuration */
   public ParserCfg() {
     useEventTimestamp = false;
+  }
+
+  /**
+   * Set maximum allowable timestamp difference
+   *
+   * <p>If set, events which are parsed will have the timestamp included with the event compared
+   * against the current time. If the difference exceeds the specified value in seconds, the event
+   * will be dropped.
+   *
+   * <p>By default, this value is not set. Note that not all payload parsers will extract and set an
+   * event timestamp. In cases where this does not happen, the event timestamp will just default to
+   * the time the event was parsed (current time).
+   *
+   * @param maxTimestampDifference Max timestamp difference in seconds
+   */
+  public void setMaxTimestampDifference(Integer maxTimestampDifference) {
+    this.maxTimestampDifference = maxTimestampDifference;
+  }
+
+  /**
+   * Get maximum allowable timestamp difference
+   *
+   * @return Difference in seconds, or null if unset
+   */
+  public Integer getMaxTimestampDifference() {
+    return maxTimestampDifference;
   }
 }

@@ -8,6 +8,9 @@ import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
 import java.util.ArrayList;
 import java.util.Map;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
 
 public class ParserTest {
@@ -356,7 +359,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseBmoAuditStackdriver() {
+  public void testParseBmoAuditStackdriver() throws Exception {
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":2,\"Fields\":{\"msg\""
             + ":\"successful login of spock@mozilla.com from 216.160.83.56 using \\\"Mozilla/5.0\\\", auth"
@@ -397,7 +400,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseBmoAuditCreateBugStackdriver() {
+  public void testParseBmoAuditCreateBugStackdriver() throws Exception {
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":2,\"Field"
             + "s\":{\"msg\":\"spock@mozilla.com <216.160.83.56> created bug 0000000\",\""
@@ -432,7 +435,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseIPrepdStackdriver() {
+  public void testParseIPrepdStackdriver() throws Exception {
     String buf =
         "{\"insertId\":\"sample-insert-id\",\"jsonPayload\":{\"Fields\":{\"exception\": false,"
             + "\"msg\":\"violation applied\",\"decay_after\":\"0001-01-01T00:00:00Z\",\"original_reputation\":"
@@ -459,7 +462,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseIPrepdMozLog() {
+  public void testParseIPrepdMozLog() throws Exception {
     String buf =
         "{\"Fields\":{\"exception\":false,\"msg\":\"violation applied\","
             + "\"decay_after\":\"0001-01-01T00:00:00Z\",\"original_reputation\": 100,"
@@ -484,7 +487,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseMozlogDuopullBypass() {
+  public void testParseMozlogDuopullBypass() throws Exception {
     String buf =
         "{\"EnvVersion\": \"2.0\", \"Severity\": 6, \"Fields\": "
             + "{\"event_description_valid_secs\": 3600, \"event_description_count\": 1, "
@@ -511,7 +514,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseDuopullBypass() {
+  public void testParseDuopullBypass() throws Exception {
     String buf =
         "{\"event_description_valid_secs\": 3600, \"event_description_count\": 1, "
             + "\"event_description_user_id\": \"ZZZZZZZZZZZZZZZZZZZZ\", \"event_object\": \"worf\", "
@@ -535,7 +538,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseStackdriverTextDuopullBypass() {
+  public void testParseStackdriverTextDuopullBypass() throws Exception {
     String buf =
         "{\"insertId\":\"f8p4mz1a3ldcos1xz\",\"labels\":{\"compute.googleapis.com/resource_"
             + "name\":\"emit-bastion\"},\"logName\":\"projects/sandbox-00/logs/syslog\",\"receiveTimestamp"
@@ -567,7 +570,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseStackdriverJsonDuopullBypass() {
+  public void testParseStackdriverJsonDuopullBypass() throws Exception {
     String buf =
         "{\"insertId\":\"f8p4mz1a3ldcos1xz\",\"labels\":{\"compute.googleapis.com/resource_"
             + "name\":\"emit-bastion\"},\"logName\":\"projects/sandbox-00/logs/syslog\",\"receiveTimestamp\":"
@@ -598,7 +601,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseStackdriverJsonDuopullAuthV2() {
+  public void testParseStackdriverJsonDuopullAuthV2() throws Exception {
     String buf =
         "{\"insertId\": \"18osuk3fbh39dp\",\"jsonPayload\": {\"Fields\":"
             + "{\"event_access_device_hostname\": null,\"event_access_device_location_city\":"
@@ -635,7 +638,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseStackdriverJsonDuopullAdminLogin() {
+  public void testParseStackdriverJsonDuopullAdminLogin() throws Exception {
     String buf =
         "{\"insertId\": \"gh39djdfyz4lya\",\"jsonPayload\": {\"Fields\": {\"event_object\": null,"
             + "\"event_username\": \"riker\",\"event_description_factor\": \"push\",\"msg\": \"duopull event\","
@@ -671,7 +674,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAmoDockerAmoLogin() {
+  public void testParseAmoDockerAmoLogin() throws Exception {
     String buf =
         "{\"Timestamp\": 1559088435038770944, \"Type\": \"z.users\", \"Logger\": \"http_app_"
             + "addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2.0\","
@@ -695,7 +698,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAmoDockerAmoStackdriverLogin() {
+  public void testParseAmoDockerAmoStackdriverLogin() throws Exception {
     String buf =
         "{\"insertId\":\"11111111111111\",\"jsonPayload\":{\"Fields\":{\"remoteAddress"
             + "Chain\":\"1.2.3.4\",\"uid\":\"<anon>\",\"msg\":\"User (00000000: User Name) l"
@@ -724,7 +727,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAmoDockerAmoNewVersion() {
+  public void testParseAmoDockerAmoNewVersion() throws Exception {
     String buf =
         "{\"Timestamp\": 1559088455564122624, \"Type\": \"z.versions\", \"Logger\": \"http_"
             + "app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2"
@@ -750,7 +753,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAmoUploadMnt() {
+  public void testParseAmoUploadMnt() throws Exception {
     String buf =
         "{\"Timestamp\": 1562177982234531072, \"Type\": \"z.files\", \"Logger\": \"http_ap"
             + "p_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2."
@@ -771,7 +774,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAmoDockerAmoFileUpload() {
+  public void testParseAmoDockerAmoFileUpload() throws Exception {
     String buf =
         "{\"Timestamp\": 1561211871139126528, \"Type\": \"z\", \"Logger\": \"htt"
             + "p_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", "
@@ -793,7 +796,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAmoGotProfile() {
+  public void testParseAmoGotProfile() throws Exception {
     String buf =
         "{\"Timestamp\": 1559088104777733120, \"Type\": \"accounts.verify\", \"Logger\":"
             + " \"http_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVers"
@@ -817,7 +820,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAmoRestrictedEmail() {
+  public void testParseAmoRestrictedEmail() throws Exception {
     String buf =
         "{\"Timestamp\": 1560523200813063936, \"Type\": \"z.users\", \"Logger\": \"http"
             + "_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \""
@@ -839,7 +842,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAmoRestrictedIp() {
+  public void testParseAmoRestrictedIp() throws Exception {
     String buf =
         "{\"Timestamp\": 1560523200813063936, \"Type\": \"z.users\", \"Logger\": \"http"
             + "_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \""
@@ -861,7 +864,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAlert() {
+  public void testParseAlert() throws Exception {
     String buf =
         "{\"severity\":\"info\",\"id\":\"3ddcbcff-f334-4189-953c-14a34a2cc030\",\"summa"
             + "ry\":\"test suspicious account creation, 216.160.83.56 3\",\"category\":\"cust"
@@ -886,7 +889,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseTaskcluster() {
+  public void testParseTaskcluster() throws Exception {
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
             + "\":{\"apiVersion\":\"v1\",\"clientId\":\"mozilla-auth0/ad|Mozilla-LDAP|riker/servi"
@@ -962,6 +965,48 @@ public class ParserTest {
 
     assertNull(p.parse("riker test"));
     assertNotNull(p.parse("picard test"));
+  }
+
+  @Test
+  public void testParserMaxTimeDifference() throws Exception {
+    String bufPre =
+        "{\"httpRequest\":{\"referer\":\"https://send.firefox.com/\",\"remoteIp\":"
+            + "\"127.0.0.1\",\"requestMethod\":\"GET\",\"requestSize\":\"43\",\"requestUrl\":\"htt"
+            + "ps://send.firefox.com/public/locales/en-US/send.js?test=test\",\"responseSize\":\"2692\","
+            + "\"serverIp\":\"10.8.0.3\",\"status\":200,\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel M"
+            + "ac OS X 10_13_3)"
+            + "\"},\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"@type\":\"type.googleapis.com/"
+            + "google.cloud.loadbalancing.type.LoadBalancerLogEntry\",\"statusDetails\":\"response_sent"
+            + "_by_backend\"},\"logName\":\"projects/moz/logs/requests\",\"receiveTim"
+            + "estamp\":\"2018-09-28T18:55:12.840306467Z\",\"resource\":{\"labels\":{\"backend_service_"
+            + "name\":\"\",\"forwarding_rule_name\":\"k8s-fws-prod-"
+            + "6cb3697\",\"project_id\":\"moz\",\"target_proxy_name\":\"k8s-tps-prod-"
+            + "97\",\"url_map_name\":\"k8s-um-prod"
+            + "-app-1\",\"zone\":\"global\"},\"type\":\"http_load_balancer\"}"
+            + ",\"severity\":\"INFO\",\"spanId\":\"AAAAAAAAAAAAAAAA\",\"timestamp\":\"";
+    String bufPost = "\",\"trace\":\"projects/moz/traces/AAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAA\"}";
+
+    DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.000000000'Z'");
+    DateTime now = new DateTime(DateTimeZone.UTC);
+
+    String buf = bufPre + dtf.print(now) + bufPost;
+    String bufOld = bufPre + dtf.print(now.minusMinutes(30)) + bufPost;
+
+    ParserCfg cfg = new ParserCfg();
+    Parser p = new Parser(cfg);
+    assertNotNull(p.parse(buf));
+    assertNotNull(p.parse(bufOld));
+
+    cfg.setMaxTimestampDifference(300);
+    p = new Parser(cfg);
+    assertNotNull(p.parse(buf));
+    Boolean af = false;
+    try {
+      p.parse(bufOld);
+    } catch (Parser.EventTooOldException exc) {
+      af = true;
+    }
+    assertTrue(af);
   }
 
   @Test
@@ -1359,7 +1404,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseGcpAudit() {
+  public void testParseGcpAudit() throws Exception {
     String buf =
         "{\"protoPayload\":{\"@type\":\"type.googleapis.com/google.cloud.audit.AuditLog\","
             + "\"status\":{},\"authenticationInfo\":{\"principalEmail\":\"laforge@mozilla.com\"},"
@@ -1411,7 +1456,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseNginxStackdriverVariant1() {
+  public void testParseNginxStackdriverVariant1() throws Exception {
     String buf =
         "{\"insertId\":\"XXXXXXXXXXXXX\",\"jsonPayload\":{\"x_forwarded_proto\":\"https\",\"remote_"
             + "addr\":\"216.160.83.56\",\"user_agent\":\"Mozilla\",\"referrer\":\"https://mozilla.org/\",\""
@@ -1455,7 +1500,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseNginxStackdriverVariant2() {
+  public void testParseNginxStackdriverVariant2() throws Exception {
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAA\",\"jsonPayload\":{\"agent\":\"Mozilla/5.0\",\"bytes_sent\""
             + ":\"97\",\"cache_status\":\"-\",\"code\":\"200\",\"gzip_ratio\":\"0.68\",\"referrer\":\"h"
@@ -1492,7 +1537,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseNginxStackdriverVariant2MultiRemote() {
+  public void testParseNginxStackdriverVariant2MultiRemote() throws Exception {
     // Test cases where the remote_ip field contains multiple addresses, e.g., XFF
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAA\",\"jsonPayload\":{\"agent\":\"Mozilla/5.0\",\"bytes_sent\""
@@ -1532,7 +1577,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseETDFindingStackdriver() {
+  public void testParseETDFindingStackdriver() throws Exception {
     String buf =
         "{ \"insertId\": \"-7744mva3\","
             + "  \"logName\": \"projects/eap-testing-project/logs/threatdetection.googleapis.com%2Fdetection\","
@@ -1625,7 +1670,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseETDFinding() {
+  public void testParseETDFinding() throws Exception {
     String buf =
         "  {  \"detectionCategory\": {"
             + "      \"indicator\": \"domain\","
@@ -1704,7 +1749,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseApacheCombined() {
+  public void testParseApacheCombined() throws Exception {
     String buf =
         "\"216.160.83.56\" - - [19/Mar/2019:14:52:39 -0500] \"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"
             + " 3697 \"https://mozilla.org/item/10\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:"
@@ -1740,7 +1785,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseApacheCombinedXffUser() {
+  public void testParseApacheCombinedXffUser() throws Exception {
     String buf =
         "\"127.0.0.1, 10.0.0.1, 216.160.83.56\" - riker [19/Mar/2019:14:52:39 -0500] "
             + "\"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"
@@ -1777,7 +1822,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseFxaAuth() {
+  public void testParseFxaAuth() throws Exception {
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
             + "\":{\"agent\":\"Mozilla/5.0\",\"email\":\"spock@mozilla.com\",\"errno\":103,\"ke"
@@ -1993,7 +2038,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseCfgTick() {
+  public void testParseCfgTick() throws Exception {
     String buf =
         "{\"configuration_tick\": true, \"string\": \"test\", \"integer\": 100, \"boolean\": true,"
             + "\"array_string\": [\"one\", \"two\"], \"array_int\": [1, 2]}";
@@ -2015,7 +2060,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseSyslogTs() {
+  public void testParseSyslogTs() throws Exception {
     String[] datelist = {
       "Feb  8 20:23:32", "Sep 18 20:23:32", "Sep 18 15:23:32", "Dec 31 15:23:32",
     };
@@ -2030,7 +2075,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAndCorrectSyslogTs() {
+  public void testParseAndCorrectSyslogTs() throws Exception {
     Event e = new Event();
     e.setTimestamp(Parser.parseISO8601("2018-09-19T18:55:12.469Z"));
 
