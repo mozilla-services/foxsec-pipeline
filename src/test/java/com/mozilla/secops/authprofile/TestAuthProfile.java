@@ -28,7 +28,6 @@ import java.util.Collection;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
-import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
@@ -161,6 +160,9 @@ public class TestAuthProfile {
                   if (actualSummary.equals(
                       "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                           + "216.160.83.56 [Milton/US]")) {
+                    assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                    assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
+                    assertEquals("US", a.getMetadataValue("sourceaddress_country"));
                     infoCnt++;
                     assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                     assertNull(a.getMetadataValue("notify_email_direct"));
@@ -184,10 +186,15 @@ public class TestAuthProfile {
                   } else if (actualSummary.equals(
                       "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                           + "new source 216.160.83.56 [Milton/US]")) {
+                    assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                    assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
+                    assertEquals("US", a.getMetadataValue("sourceaddress_country"));
                     newCnt++;
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                    assertNull(a.getMetadataValue("notify_email_direct"));
+                    assertEquals(a.getMetadataValue("notify_slack_direct"), "wriker@mozilla.com");
                     assertEquals(
-                        "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                        a.getMetadataValue("alert_notification_type"), "slack_confirmation");
                     assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
 
                     // Verify sample rendered email template for new source
@@ -207,9 +214,6 @@ public class TestAuthProfile {
                   assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                   assertEquals("riker", a.getMetadataValue("username"));
                   assertEquals("emit-bastion", a.getMetadataValue("object"));
-                  assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                  assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
-                  assertEquals("US", a.getMetadataValue("sourceaddress_country"));
                   assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
                   assertEquals(
                       "2018-09-18T15:15:38.000-07:00",
@@ -285,8 +289,10 @@ public class TestAuthProfile {
                   if (a.getMetadataValue("username").equals("riker@mozilla.com")) {
                     // GcpAudit event should have generated a warning
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                    assertNull(a.getMetadataValue("notify_email_direct"));
+                    assertEquals(a.getMetadataValue("notify_slack_direct"), "wriker@mozilla.com");
                     assertEquals(
-                        "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                        a.getMetadataValue("alert_notification_type"), "slack_confirmation");
                     assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                     assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                     assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
@@ -421,15 +427,17 @@ public class TestAuthProfile {
                 if (actualSummary.matches("(.*)new source fd00(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertEquals(
-                      "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  assertNull(a.getMetadataValue("notify_email_direct"));
+                  assertEquals(a.getMetadataValue("notify_slack_direct"), "wriker@mozilla.com");
+                  assertEquals(a.getMetadataValue("alert_notification_type"), "slack_confirmation");
                   assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                   assertEquals("office", a.getMetadataValue("entry_key"));
                 } else if (actualSummary.matches("(.*)new source aaaa(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertEquals(
-                      "holodeck-riker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  assertNull(a.getMetadataValue("notify_email_direct"));
+                  assertEquals(a.getMetadataValue("notify_slack_direct"), "wriker@mozilla.com");
+                  assertEquals(a.getMetadataValue("alert_notification_type"), "slack_confirmation");
                   assertNull(a.getMetadataValue("entry_key"));
                   assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                 }
@@ -441,146 +449,6 @@ public class TestAuthProfile {
                 assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
               }
               assertEquals(2L, newCnt);
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void analyzeTestGeoVelocityAlert() throws Exception {
-    testEnv();
-    AuthProfile.AuthProfileOptions options = getTestOptions();
-    // Set a low `maxKilometersPerSecond`
-    options.setMaximumKilometersPerHour(1);
-
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/authprof_geovelocity_buffer1.txt", p);
-    PCollection<Alert> res = AuthProfile.processInput(input, options);
-
-    PAssert.that(res)
-        .satisfies(
-            results -> {
-              int geoAlert = 0;
-              for (Alert a : results) {
-                assertEquals("authprofile", a.getCategory());
-                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
-                assertEquals("riker", a.getMetadataValue("username"));
-                assertEquals("emit-bastion", a.getMetadataValue("object"));
-                String actualSummary = a.getSummary();
-                if (actualSummary.contains("geovelocity anomaly detected on authentication event")
-                    && actualSummary.contains("81.2.69.192")) {
-                  geoAlert++;
-                  assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                  assertNull(a.getMetadataValue("notify_email_direct"));
-                  assertNull(a.getMetadataValue("escalate_to"));
-                  assertEquals("geo_velocity", a.getMetadataValue("category"));
-                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
-                }
-              }
-              assertEquals(1, geoAlert);
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void analyzeTestGeoVelocityAlertDefaults() throws Exception {
-    testEnv();
-    AuthProfile.AuthProfileOptions options = getTestOptions();
-
-    // Preload mock data
-    State state =
-        new State(
-            new DatastoreStateInterface(
-                options.getDatastoreKind(), options.getDatastoreNamespace()));
-    state.initialize();
-    StateCursor c = state.newCursor();
-    AuthStateModel sm = new AuthStateModel("wriker@mozilla.com");
-    DateTime n = new DateTime();
-    // Set it to be a day ago so that we can test that moving a new entry far away
-    // geographically in a long period of time does not create an alert.
-    DateTime oneDayAgo = n.minusHours(24);
-    Double lat = 47.2513;
-    Double lon = -122.3149;
-    sm.updateEntry("216.160.83.56", oneDayAgo, lat, lon);
-    sm.set(c, new PruningStrategyEntryAge());
-    state.done();
-
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/authprof_geovelocity_buffer2.txt", p);
-    PCollection<Alert> res = AuthProfile.processInput(input, options);
-
-    PCollection<Long> count = res.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(3L);
-
-    PAssert.that(res)
-        .satisfies(
-            results -> {
-              int geoAlert = 0;
-              for (Alert a : results) {
-                assertEquals("authprofile", a.getCategory());
-                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
-                assertEquals("riker", a.getMetadataValue("username"));
-                assertEquals("emit-bastion", a.getMetadataValue("object"));
-                String actualSummary = a.getSummary();
-                if (actualSummary.contains(
-                    "geovelocity anomaly detected on authentication event")) {
-                  geoAlert++;
-                  assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                  assertNull(a.getMetadataValue("notify_email_direct"));
-                  assertNull(a.getMetadataValue("escalate_to"));
-                  assertEquals("geo_velocity", a.getMetadataValue("category"));
-                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
-                }
-              }
-              assertEquals(1, geoAlert);
-              return null;
-            });
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void analyzeTestGeoVelocityIgnoresOldStateEntries() throws Exception {
-    testEnv();
-    AuthProfile.AuthProfileOptions options = getTestOptions();
-
-    // Preload mock data with no lat/lon
-    State state =
-        new State(
-            new DatastoreStateInterface(
-                options.getDatastoreKind(), options.getDatastoreNamespace()));
-    state.initialize();
-    StateCursor c = state.newCursor();
-    AuthStateModel sm = new AuthStateModel("wriker@mozilla.com");
-    sm.updateEntry("216.160.83.56", null, null);
-    sm.set(c, new PruningStrategyEntryAge());
-    state.done();
-
-    PCollection<String> input =
-        TestUtil.getTestInput("/testdata/authprof_geovelocity_buffer3.txt", p);
-    PCollection<Alert> res = AuthProfile.processInput(input, options);
-
-    PCollection<Long> count = res.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(1L);
-
-    PAssert.that(res)
-        .satisfies(
-            results -> {
-              int geoAlert = 0;
-              for (Alert a : results) {
-                assertEquals("authprofile", a.getCategory());
-                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
-                assertEquals("riker", a.getMetadataValue("username"));
-                assertEquals("emit-bastion", a.getMetadataValue("object"));
-                String actualSummary = a.getSummary();
-                if (actualSummary.contains(
-                    "geovelocity anomaly detected on authentication event")) {
-                  geoAlert++;
-                }
-              }
-              assertEquals(0, geoAlert);
               return null;
             });
 
@@ -625,6 +493,79 @@ public class TestAuthProfile {
                 assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
                 assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
                 assertEquals("US", a.getMetadataValue("sourceaddress_country"));
+              }
+              assertEquals(1L, newCnt);
+              // Should have one informational since the rest of the duplicates will be
+              // filtered in window since they were already seen
+              assertEquals(1L, infoCnt);
+
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void analyzeTestMaxDistance() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+
+    // Preload mock data
+    State state =
+        new State(
+            new DatastoreStateInterface(
+                options.getDatastoreKind(), options.getDatastoreNamespace()));
+    state.initialize();
+    StateCursor c = state.newCursor();
+    AuthStateModel sm = new AuthStateModel("wriker@mozilla.com");
+    DateTime n = new DateTime();
+    DateTime oneDayAgo = n.minusHours(1);
+    Double lat = 58.4162;
+    Double lon = 15.6162;
+    sm.updateEntry("89.160.20.128", oneDayAgo, lat, lon);
+    sm.set(c, new PruningStrategyEntryAge());
+    state.done();
+
+    options.setEnableCritObjectAnalysis(false);
+    options.setMinfraudIgnore(true);
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer7.txt", p);
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long newCnt = 0;
+              long infoCnt = 0;
+              for (Alert a : results) {
+                if (a.getMetadataValue("category").equals("state_analyze")) {
+                  assertEquals("authprofile", a.getCategory());
+                  assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
+                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
+                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                  String actualSummary = a.getSummary();
+                  if (actualSummary.equals(
+                      "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                          + "89.160.20.112 [Linköping/SE]")) {
+                    infoCnt++;
+                    assertEquals("89.160.20.112", a.getMetadataValue("sourceaddress"));
+                    assertEquals("Linköping", a.getMetadataValue("sourceaddress_city"));
+                    assertEquals("SE", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                    assertNull(a.getMetadataValue("notify_email_direct"));
+                    assertNull(a.getMetadataValue("notify_slack_direct"));
+                    assertNull(a.getMetadataValue("escalate_to"));
+                  } else if (actualSummary.equals(
+                      "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                          + "new source 89.160.20.112 [Linköping/SE]")) {
+                    newCnt++;
+                    assertEquals("89.160.20.112", a.getMetadataValue("sourceaddress"));
+                    assertEquals("Linköping", a.getMetadataValue("sourceaddress_city"));
+                    assertEquals("SE", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                    assertEquals("wriker@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                    assertNull(a.getMetadataValue("notify_slack_direct"));
+                  }
+                }
               }
               assertEquals(1L, newCnt);
               // Should have one informational since the rest of the duplicates will be

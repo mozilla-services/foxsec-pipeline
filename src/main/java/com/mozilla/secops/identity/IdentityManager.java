@@ -19,9 +19,7 @@ import java.util.Map;
 public class IdentityManager {
   private Map<String, Identity> identities;
   private Map<String, String> awsAccountMap;
-  private Notify defaultNotification;
   private Map<String, String> namedSubnets;
-  private FeatureFlags defaultFeatureFlags;
 
   /**
    * Load identity manager configuration from a resource file
@@ -64,26 +62,6 @@ public class IdentityManager {
   @JsonProperty("identities")
   public Map<String, Identity> getIdentities() {
     return identities;
-  }
-
-  /**
-   * Get default notification configuration
-   *
-   * @return Default notification configuration as {@link Notify}
-   */
-  @JsonProperty("default_notify")
-  public Notify getDefaultNotification() {
-    return defaultNotification;
-  }
-
-  /**
-   * Get default feature flags
-   *
-   * @return Default feature flags configuration as {@link FeatureFlags}
-   */
-  @JsonProperty("default_feature_flags")
-  public FeatureFlags getDefaultFeatureFlags() {
-    return defaultFeatureFlags;
   }
 
   /**

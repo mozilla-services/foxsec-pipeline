@@ -3,6 +3,7 @@ package com.mozilla.secops.authprofile;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IOOptions;
+import com.mozilla.secops.Minfraud;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
@@ -36,6 +37,7 @@ import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.Hidden;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -396,10 +398,15 @@ public class AuthProfile implements Serializable {
     private final String datastoreKind;
     private final String idmanagerPath;
     private final Double maxKilometersPerSecond;
+    private final String maxmindAccountId;
+    private final String maxmindLicenseKey;
+    private final Double maxKilometersStatic;
+    private final Boolean minfraudIgnore;
     private CidrUtil cidrGcp;
     private IdentityManager idmanager;
     private Logger log;
     private State state;
+    private Minfraud minfraud;
 
     /**
      * Static initializer for {@link StateAnalyze} using specified pipeline options
@@ -413,6 +420,10 @@ public class AuthProfile implements Serializable {
       datastoreKind = options.getDatastoreKind();
       idmanagerPath = options.getIdentityManagerPath();
       maxKilometersPerSecond = options.getMaximumKilometersPerHour() / 3600.0;
+      maxKilometersStatic = options.getMaximumKilometersFromLastLogin();
+      maxmindAccountId = options.getMaxmindAccountId();
+      maxmindLicenseKey = options.getMaxmindLicenseKey();
+      minfraudIgnore = options.getMinfraudIgnore();
     }
 
     public String getTransformDoc() {
@@ -438,6 +449,10 @@ public class AuthProfile implements Serializable {
         throw new IllegalArgumentException("could not find valid state parameters in options");
       }
       state.initialize();
+
+      if (maxmindAccountId != null || maxmindLicenseKey != null) {
+        minfraud = new Minfraud(maxmindAccountId, maxmindLicenseKey);
+      }
     }
 
     @Teardown
@@ -453,65 +468,30 @@ public class AuthProfile implements Serializable {
       return ipAddr;
     }
 
-    private void addEscalationMetadata(Alert a, Identity identity) {
-      if (identity.getEscalateTo() != null) {
-        a.addMetadata("escalate_to", identity.getEscalateTo());
-      }
-
-      String dnote = identity.getEmailNotifyDirect(idmanager.getDefaultNotification());
-      if (dnote != null) {
-        log.info(
-            "{}: adding direct email notification metadata route to {}",
-            a.getMetadataValue("identity_key"),
-            dnote);
-        a.addMetadata("notify_email_direct", dnote);
-      }
-      if (identity.getSlackNotifyDirect(idmanager.getDefaultNotification())) {
-        log.info("{}: adding direct slack notification", a.getMetadataValue("identity_key"));
-        a.addMetadata("notify_slack_direct", a.getMetadataValue("identity_key"));
-        if (identity.getSlackConfirmationAlertFeatureFlag(idmanager.getDefaultFeatureFlags())) {
-          a.addMetadata("alert_notification_type", "slack_confirmation");
-        } else {
+    private void addEscalationMetadata(
+        Alert a, Identity identity, String identityKey, Boolean onlyNotify) {
+      if (onlyNotify) {
+        if (identity.shouldNotifyViaSlack()) {
+          a.addMetadata("notify_slack_direct", a.getMetadataValue("identity_key"));
           a.addMetadata("alert_notification_type", "slack_notification");
+        } else if (identity.shouldNotifyViaEmail()) {
+          a.addMetadata("notify_email_direct", identity.getNotify().getEmail());
+        } else {
+          log.error("No notification method set for {}", identityKey);
+        }
+      } else {
+        if (identity.getEscalateTo() != null) {
+          a.addMetadata("escalate_to", identity.getEscalateTo());
+        }
+        if (identity.shouldAlertViaSlack()) {
+          a.addMetadata("notify_slack_direct", a.getMetadataValue("identity_key"));
+          a.addMetadata("alert_notification_type", "slack_confirmation");
+        } else if (identity.shouldAlertViaEmail()) {
+          a.addMetadata("notify_email_direct", identity.getAlert().getEmail());
+        } else {
+          log.error("No alerting method set for {}", identityKey);
         }
       }
-    }
-
-    private void buildGeoVelocityAlertSummary(Event e, Alert a) {
-      String summary =
-          String.format(
-              "geovelocity anomaly detected on authentication event by %s [%s] to %s, ",
-              e.getNormalized().getSubjectUser(),
-              a.getMetadataValue("identity_key") != null
-                  ? a.getMetadataValue("identity_key")
-                  : "untracked",
-              e.getNormalized().getObject());
-      summary =
-          summary
-              + String.format(
-                  "%s [%s/%s]",
-                  a.getMetadataValue("sourceaddress"),
-                  a.getMetadataValue("sourceaddress_city"),
-                  a.getMetadataValue("sourceaddress_country"));
-      a.setSummary(summary);
-    }
-
-    private void buildGeoVelocityAlertPayload(Event e, Alert a) {
-      String msg =
-          "Geovelocity anomaly detected on an authentication event for user %s accessing %s from %s [%s/%s].";
-      if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
-        msg =
-            "Geovelocity anomaly detected on a sensitive event for user %s in association with %s from %s [%s/%s].";
-      }
-      String payload =
-          String.format(
-              msg,
-              a.getMetadataValue("username"),
-              a.getMetadataValue("object"),
-              a.getMetadataValue("sourceaddress"),
-              a.getMetadataValue("sourceaddress_city"),
-              a.getMetadataValue("sourceaddress_country"));
-      a.addToPayload(payload);
     }
 
     private void buildAlertSummary(Event e, Alert a) {
@@ -536,7 +516,7 @@ public class AuthProfile implements Serializable {
       a.setSummary(summary);
     }
 
-    private void buildAlertPayload(Event e, Alert a) {
+    private void buildAlertPayload(Event e, Alert a, String message) {
       String msg = "An authentication event for user %s was detected to access %s from %s [%s/%s].";
       if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
         msg = "A sensitive event from user %s was detected in association with %s from %s [%s/%s].";
@@ -549,12 +529,8 @@ public class AuthProfile implements Serializable {
               a.getMetadataValue("sourceaddress"),
               a.getMetadataValue("sourceaddress_city"),
               a.getMetadataValue("sourceaddress_country"));
-      if (a.getMetadataValue("identity_key") != null) {
-        if (a.getSeverity().equals(Alert.AlertSeverity.WARNING)) {
-          payload = payload + " This occurred from a source address unknown to the system.";
-        } else {
-          payload = payload + " This occurred from a known source address.";
-        }
+      if (message != null) {
+        payload = payload + " " + message;
       } else {
         payload = payload + " This event occurred for an untracked identity.";
       }
@@ -598,11 +574,16 @@ public class AuthProfile implements Serializable {
           // logic here
           a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
           buildAlertSummary(e, a);
-          buildAlertPayload(e, a);
+          if (a.getMetadataValue("identity_key") != null) {
+            buildAlertPayload(e, a, "This occurred from a known source address.");
+          } else {
+            buildAlertPayload(e, a, null);
+          }
           c.output(a);
           continue;
         }
 
+        Boolean onlyNotify = false;
         if (identity == null) {
           a.addMetadata("identity_untracked", "true");
           // We do not keep state for untracked identities, but just use the known address
@@ -612,6 +593,15 @@ public class AuthProfile implements Serializable {
           a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
         } else {
           StateCursor cur = state.newCursor();
+
+          boolean minfraudOk = false;
+          if (minfraud != null) {
+            minfraudOk = e.getNormalized().insightsEnrichment(minfraud);
+            AuthProfile.insightsEnrichAlert(a, e);
+          }
+          if (minfraudIgnore) {
+            minfraudOk = true;
+          }
 
           a.addMetadata("identity_key", userIdentity);
           // The event was for a tracked identity, initialize the state model
@@ -631,46 +621,86 @@ public class AuthProfile implements Serializable {
               e.getNormalized().getSourceAddressLongitude())) {
 
             // Address was new
-            log.info(
-                "{}: escalating alert criteria for new source: {} {}",
-                userIdentity,
-                e.getNormalized().getSubjectUser(),
-                e.getNormalized().getSourceAddress());
-            a.setSeverity(Alert.AlertSeverity.WARNING);
-            addEscalationMetadata(a, identity);
-
-            AuthStateModel.GeoVelocityResponse geoResp =
-                sm.geoVelocityAnalyzeLatest(maxKilometersPerSecond);
-
-            if (geoResp != null) {
+            if (!minfraudOk) {
               log.info(
-                  "{}: new location is {}km away from last location within {}s",
+                  "{}: escalating alert criteria for new source (couldn't get minfraud insights): {} {}",
                   userIdentity,
-                  geoResp.getKmDistance(),
-                  geoResp.getTimeDifference());
-              if (geoResp.getMaxKmPerSecondExceeded()) {
-                log.info("{}: creating geo velocity alert", userIdentity);
-                Alert ga = AuthProfile.createBaseAlert(e);
-                ga.addMetadata("identity_key", userIdentity);
-                ga.addMetadata("category", "geo_velocity");
-                // TODO: Once this has run for a while, should switch to CRITICAL and add escalation
-                // metadata
-                ga.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
-                buildGeoVelocityAlertSummary(e, ga);
-                buildGeoVelocityAlertPayload(e, ga);
-                c.output(ga);
+                  e.getNormalized().getSubjectUser(),
+                  e.getNormalized().getSourceAddress());
+              a.setSeverity(Alert.AlertSeverity.WARNING);
+              buildAlertPayload(e, a, "This occurred from a source address unknown to the system.");
+            } else if (e.getNormalized().getSourceAddressIsAnonymous() != null
+                && e.getNormalized().getSourceAddressIsAnonymous()) {
+              log.info(
+                  "{}: escalating alert criteria for new source from anonymity network: {} {}",
+                  userIdentity,
+                  e.getNormalized().getSubjectUser(),
+                  e.getNormalized().getSourceAddress());
+              a.setSeverity(Alert.AlertSeverity.WARNING);
+              buildAlertPayload(
+                  e,
+                  a,
+                  "This occurred from a source address unknown to the system and marked as from an anonymity network.");
+            } else if (e.getNormalized().getSourceAddressIsHostingProvider() != null
+                && e.getNormalized().getSourceAddressIsHostingProvider()) {
+              log.info(
+                  "{}: escalating alert criteria for new source from hosting provider: {} {}",
+                  userIdentity,
+                  e.getNormalized().getSubjectUser(),
+                  e.getNormalized().getSourceAddress());
+              a.setSeverity(Alert.AlertSeverity.WARNING);
+              buildAlertPayload(
+                  e,
+                  a,
+                  "This occurred from a source address unknown to the system and marked as from a hosting provider.");
+            } else {
+              AuthStateModel.GeoVelocityResponse geoResp =
+                  sm.geoVelocityAnalyzeLatest(maxKilometersPerSecond);
+              if (geoResp != null) {
+                if (geoResp.getKmDistance() > maxKilometersStatic) {
+                  log.info(
+                      "{}: escalating alert criteria for new source outside of allowed distance from last login: {} {}",
+                      userIdentity,
+                      e.getNormalized().getSubjectUser(),
+                      e.getNormalized().getSourceAddress());
+                  a.setSeverity(Alert.AlertSeverity.WARNING);
+                  buildAlertPayload(
+                      e,
+                      a,
+                      "This occurred from a source address unknown to the system and outside of the allowed range from your last authentication event.");
+                } else {
+                  log.info(
+                      "{}: creating notification-only alert for new source inside of allowed distance from last login: {} {}",
+                      userIdentity,
+                      e.getNormalized().getSubjectUser(),
+                      e.getNormalized().getSourceAddress());
+                  a.setSeverity(Alert.AlertSeverity.WARNING);
+                  onlyNotify = true;
+                  buildAlertPayload(
+                      e,
+                      a,
+                      "This occurred from a source address unknown to the system, but near your last authentication event.");
+                }
+              } else {
+                log.info(
+                    "{}: escalating alert criteria for new source (couldn't get geo velocity information): {} {}",
+                    userIdentity,
+                    e.getNormalized().getSubjectUser(),
+                    e.getNormalized().getSourceAddress());
+                a.setSeverity(Alert.AlertSeverity.WARNING);
+                buildAlertPayload(
+                    e, a, "This occurred from a source address unknown to the system.");
               }
             }
-
           } else {
             seenKnownAddresses.add(e.getNormalized().getSourceAddress());
-
             // Address was known
             log.info(
                 "{}: access from known source: {} {}",
                 userIdentity,
                 e.getNormalized().getSubjectUser(),
                 e.getNormalized().getSourceAddress());
+            buildAlertPayload(e, a, "This occurred from a known source address.");
           }
 
           // Update persistent state with new information
@@ -681,8 +711,10 @@ public class AuthProfile implements Serializable {
           }
         }
 
+        if (a.getSeverity().equals(Alert.AlertSeverity.WARNING)) {
+          addEscalationMetadata(a, identity, userIdentity, onlyNotify);
+        }
         buildAlertSummary(e, a);
-        buildAlertPayload(e, a);
         c.output(a);
       }
     }
@@ -739,7 +771,7 @@ public class AuthProfile implements Serializable {
 
     void setCritObjects(String[] value);
 
-    @Description("Maxmimum km/hr for location velocity analysis")
+    @Description("Maximum km/hr for location velocity analysis")
     @Default.Integer(800)
     Integer getMaximumKilometersPerHour();
 
@@ -749,6 +781,19 @@ public class AuthProfile implements Serializable {
     String[] getAuth0ClientIds();
 
     void setAuth0ClientIds(String[] value);
+
+    @Description("Maximum kilometers from last login without confirmation alert")
+    @Default.Double(20)
+    Double getMaximumKilometersFromLastLogin();
+
+    void setMaximumKilometersFromLastLogin(Double value);
+
+    @Description("Hidden value for testing; true means minfraud will be ignored.")
+    @Default.Boolean(false)
+    @Hidden
+    Boolean getMinfraudIgnore();
+
+    void setMinfraudIgnore(Boolean value);
   }
 
   /**
@@ -807,6 +852,45 @@ public class AuthProfile implements Serializable {
     }
 
     return a;
+  }
+
+  /**
+   * Add minfraud insights data into alert metadata
+   *
+   * @param e Event
+   * @param a Alert
+   */
+  public static void insightsEnrichAlert(Alert a, Event e) {
+    Normalized n = e.getNormalized();
+
+    if (n.getSourceAddressRiskScore() != null) {
+      a.addMetadata("sourceaddress_riskscore", String.valueOf(n.getSourceAddressRiskScore()));
+    }
+    if (n.getSourceAddressIsAnonymous() != null) {
+      a.addMetadata("sourceaddress_is_anonymous", String.valueOf(n.getSourceAddressIsAnonymous()));
+    }
+    if (n.getSourceAddressIsAnonymousVpn() != null) {
+      a.addMetadata(
+          "sourceaddress_is_anonymous_vpn", String.valueOf(n.getSourceAddressIsAnonymousVpn()));
+    }
+    if (n.getSourceAddressIsHostingProvider() != null) {
+      a.addMetadata(
+          "sourceaddress_is_hosting_provider",
+          String.valueOf(n.getSourceAddressIsHostingProvider()));
+    }
+    if (n.getSourceAddressIsLegitimateProxy() != null) {
+      a.addMetadata(
+          "sourceaddress_is_legitimate_proxy",
+          String.valueOf(n.getSourceAddressIsLegitimateProxy()));
+    }
+    if (n.getSourceAddressIsPublicProxy() != null) {
+      a.addMetadata(
+          "sourceaddress_is_public_proxy", String.valueOf(n.getSourceAddressIsPublicProxy()));
+    }
+    if (n.getSourceAddressIsTorExitNode() != null) {
+      a.addMetadata(
+          "sourceaddress_is_tor_exit_node", String.valueOf(n.getSourceAddressIsTorExitNode()));
+    }
   }
 
   /**

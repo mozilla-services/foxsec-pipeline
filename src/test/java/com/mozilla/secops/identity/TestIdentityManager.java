@@ -33,56 +33,36 @@ public class TestIdentityManager {
     IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
     assertNotNull(mgr);
 
-    // Test standard case, identity with fragment and aliases
+    // Test standard case
     String testId = "wcrusher@mozilla.com";
     Identity id = mgr.getIdentity(testId);
     assertNotNull(id);
-    assertEquals(
-        "testing-wcrusher@mozilla.com", id.getEmailNotifyDirect(mgr.getDefaultNotification()));
-    assertEquals("wcrusher", id.getFragment());
+    assertEquals("testing-wcrusher@mozilla.com", id.getAlert().getEmail());
+    assertTrue(id.shouldAlertViaEmail());
+    assertTrue(id.shouldNotifyViaEmail());
 
-    // Identity missing fragment, should not notify directly
+    // Identity missing notification preferences, should not notify directly
     testId = "testuser@mozilla.com";
     id = mgr.getIdentity(testId);
     assertNotNull(id);
-    assertNull(id.getEmailNotifyDirect(mgr.getDefaultNotification()));
     assertNull(id.getEscalateTo());
-    assertFalse(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
-    assertFalse(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
-    assertNull(id.getFragment());
+    assertFalse(id.shouldAlertViaSlack());
+    assertFalse(id.shouldNotifyViaSlack());
+    assertFalse(id.shouldAlertViaEmail());
+    assertFalse(id.shouldNotifyViaEmail());
+    assertNull(id.getAlert());
+    assertNull(id.getNotify());
 
-    // Identity with direct email format override
+    // Identity with mixed contact methods
     testId = "wriker@mozilla.com";
     id = mgr.getIdentity(testId);
     assertNotNull(id);
-    assertEquals(
-        "holodeck-riker@mozilla.com", id.getEmailNotifyDirect(mgr.getDefaultNotification()));
-    assertEquals("riker", id.getFragment());
+    assertEquals("holodeck-riker@mozilla.com", id.getAlert().getEmail());
     assertEquals("picard@mozilla.com", id.getEscalateTo());
-    assertTrue(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
-    assertTrue(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
-  }
-
-  @Test
-  public void identityManagerNotifyNoDefaultsTest() throws Exception {
-    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager_nodefaults.json");
-    assertNotNull(mgr);
-
-    Identity id = mgr.getIdentity("wriker@mozilla.com");
-    assertNotNull(id);
-    assertEquals(
-        "holodeck-riker@mozilla.com", id.getEmailNotifyDirect(mgr.getDefaultNotification()));
-    assertEquals("riker", id.getFragment());
-    assertEquals("picard@mozilla.com", id.getEscalateTo());
-    assertTrue(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
-    assertTrue(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
-
-    id = mgr.getIdentity("wcrusher@mozilla.com");
-    assertNotNull(id);
-    assertNull(id.getEmailNotifyDirect(mgr.getDefaultNotification()));
-    assertNull(id.getEscalateTo());
-    assertFalse(id.getSlackNotifyDirect(mgr.getDefaultNotification()));
-    assertFalse(id.getSlackConfirmationAlertFeatureFlag(mgr.getDefaultFeatureFlags()));
+    assertTrue(id.shouldAlertViaSlack());
+    assertTrue(id.shouldNotifyViaEmail());
+    assertFalse(id.shouldNotifyViaSlack());
+    assertFalse(id.shouldAlertViaEmail());
   }
 
   @Test

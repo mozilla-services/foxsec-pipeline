@@ -1,5 +1,7 @@
 package com.mozilla.secops.parser;
 
+import com.maxmind.minfraud.response.InsightsResponse;
+import com.mozilla.secops.Minfraud;
 import java.io.Serializable;
 import java.util.EnumSet;
 
@@ -26,6 +28,13 @@ public class Normalized implements Serializable {
   private Double sourceAddressLatitude;
   private Double sourceAddressLongitude;
   private String sourceAddressTimeZone;
+  private Double sourceAddressRiskScore;
+  private Boolean sourceAddressIsAnonymous;
+  private Boolean sourceAddressIsAnonymousVpn;
+  private Boolean sourceAddressIsHostingProvider;
+  private Boolean sourceAddressIsLegitimateProxy;
+  private Boolean sourceAddressIsPublicProxy;
+  private Boolean sourceAddressIsTorExitNode;
   private String object;
   private String requestMethod;
   private String requestUrl;
@@ -271,6 +280,132 @@ public class Normalized implements Serializable {
   }
 
   /**
+   * Get source address risks core from minfraud
+   *
+   * @return Source address risk score
+   */
+  public Double getSourceAddressRiskScore() {
+    return sourceAddressRiskScore;
+  }
+
+  /**
+   * Set source address risks core from minfraud
+   *
+   * @param sourceAddressRiskScore riskscore value
+   */
+  void setSourceAddressRiskScore(Double sourceAddressRiskScore) {
+    this.sourceAddressRiskScore = sourceAddressRiskScore;
+  }
+
+  /**
+   * Get source address isanonymous
+   *
+   * @return True if source address is apart of an anonmity network
+   */
+  public Boolean getSourceAddressIsAnonymous() {
+    return sourceAddressIsAnonymous;
+  }
+
+  /**
+   * Set source address isanonymous
+   *
+   * @param sourceAddressIsAnonymous isanonymous value
+   */
+  void setSourceAddressIsAnonymous(Boolean sourceAddressIsAnonymous) {
+    this.sourceAddressIsAnonymous = sourceAddressIsAnonymous;
+  }
+
+  /**
+   * Get source address isanonymousvpn
+   *
+   * @return True if source address is an anonymous vpn
+   */
+  public Boolean getSourceAddressIsAnonymousVpn() {
+    return sourceAddressIsAnonymousVpn;
+  }
+
+  /**
+   * Set source address isanonymousvpn
+   *
+   * @param sourceAddressIsAnonymousVpn isanonymous value
+   */
+  void setSourceAddressIsAnonymousVpn(Boolean sourceAddressIsAnonymous) {
+    this.sourceAddressIsAnonymousVpn = sourceAddressIsAnonymous;
+  }
+
+  /**
+   * Get source address ishostingprovider
+   *
+   * @return True if source address is from a hosting provider
+   */
+  public Boolean getSourceAddressIsHostingProvider() {
+    return sourceAddressIsHostingProvider;
+  }
+
+  /**
+   * Set source address ishostingprovider
+   *
+   * @param sourceAddressIsHostingProvider ishostingprovider value
+   */
+  void setSourceAddressIsHostingProvider(Boolean sourceAddressIsHostingProvider) {
+    this.sourceAddressIsHostingProvider = sourceAddressIsHostingProvider;
+  }
+
+  /**
+   * Get source address islegitimateproxy
+   *
+   * @return True if source address is a legitimate proxy
+   */
+  public Boolean getSourceAddressIsLegitimateProxy() {
+    return sourceAddressIsLegitimateProxy;
+  }
+
+  /**
+   * Set source address islegitimateproxy
+   *
+   * @param sourceAddressIsLegitimateProxy islegitimateproxy value
+   */
+  void setSourceAddressIsLegitimateProxy(Boolean sourceAddressIsLegitimateProxy) {
+    this.sourceAddressIsLegitimateProxy = sourceAddressIsLegitimateProxy;
+  }
+
+  /**
+   * Get source address ispublicproxy
+   *
+   * @return True if source address is a public proxy
+   */
+  public Boolean getSourceAddressIsPublicProxy() {
+    return sourceAddressIsPublicProxy;
+  }
+
+  /**
+   * Set source address ispublicproxy
+   *
+   * @param sourceAddressIsPublicProxy ispublicproxy value
+   */
+  void setSourceAddressIsPublicProxy(Boolean sourceAddressIsPublicProxy) {
+    this.sourceAddressIsPublicProxy = sourceAddressIsPublicProxy;
+  }
+
+  /**
+   * Get source address istorexitnode
+   *
+   * @return True if source address is a tor exit node
+   */
+  public Boolean getSourceAddressIsTorExitNode() {
+    return sourceAddressIsTorExitNode;
+  }
+
+  /**
+   * Set source address istorexitnode
+   *
+   * @param sourceAddressIsTorExitNode istorexitnode value
+   */
+  void setSourceAddressIsTorExitNode(Boolean sourceAddressIsTorExitNode) {
+    this.sourceAddressIsTorExitNode = sourceAddressIsTorExitNode;
+  }
+
+  /**
    * Get request method field
    *
    * @return Request method string
@@ -376,5 +511,30 @@ public class Normalized implements Serializable {
    */
   public void setUserAgent(String userAgent) {
     this.userAgent = userAgent;
+  }
+
+  /**
+   * Include details from Minfraud Insights into Normalized
+   *
+   * <p>Will do nothing if sourceAddress is null
+   *
+   * @param mf Minfraud client
+   */
+  public boolean insightsEnrichment(Minfraud mf) {
+    if (sourceAddress == null) {
+      return false;
+    }
+    InsightsResponse ir = mf.getInsights(sourceAddress, null);
+    if (ir != null) {
+      setSourceAddressRiskScore(ir.getIpAddress().getRisk());
+      setSourceAddressIsAnonymous(ir.getIpAddress().getTraits().isAnonymous());
+      setSourceAddressIsAnonymousVpn(ir.getIpAddress().getTraits().isAnonymousVpn());
+      setSourceAddressIsHostingProvider(ir.getIpAddress().getTraits().isHostingProvider());
+      setSourceAddressIsLegitimateProxy(ir.getIpAddress().getTraits().isLegitimateProxy());
+      setSourceAddressIsPublicProxy(ir.getIpAddress().getTraits().isPublicProxy());
+      setSourceAddressIsTorExitNode(ir.getIpAddress().getTraits().isTorExitNode());
+      return true;
+    }
+    return false;
   }
 }

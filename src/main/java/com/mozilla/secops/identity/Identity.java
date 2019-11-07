@@ -1,25 +1,15 @@
 package com.mozilla.secops.identity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 
 /** Represents a single identity */
 public class Identity {
   private ArrayList<String> aliases;
-  private String fragment;
-  private Notify notify;
-  private FeatureFlags featureFlags;
+  private NotificationPreferences notify;
+  private NotificationPreferences alert;
   private String escalateTo;
-
-  /**
-   * Get identity fragment
-   *
-   * @return Fragment string
-   */
-  @JsonProperty("fragment")
-  public String getFragment() {
-    return fragment;
-  }
 
   /**
    * Get escalate to email address
@@ -44,103 +34,56 @@ public class Identity {
   /**
    * Get notification preferences for identity
    *
-   * @return {@link Notify}
+   * @return {@link NotificationPreferences}
    */
   @JsonProperty("notify")
-  public Notify getNotify() {
+  public NotificationPreferences getNotify() {
     return notify;
   }
 
   /**
-   * Get feature flags for identity
+   * Get alerting preferences for identity
    *
-   * @return {@link FeatureFlags}
+   * @return {@link NotificationPreferences}
    */
-  @JsonProperty("feature_flags")
-  public FeatureFlags getFeatureFlags() {
-    return featureFlags;
+  @JsonProperty("alert")
+  public NotificationPreferences getAlert() {
+    return alert;
   }
 
-  /**
-   * Resolve direct email notification target for identity
-   *
-   * @param defaultNotification Default notification preferences if unset in identity
-   */
-  public String getEmailNotifyDirect(Notify defaultNotification) {
-    // If the fragment is unset, will not notify
-    if (fragment == null) {
-      return null;
-    }
-
-    if (notify != null) {
-      if (notify.getDirectEmailNotify() != null && notify.getDirectEmailNotify() == false) {
-        // Explicitly disabled for identity, no notification
-        return null;
-      }
-    } else if (notify == null) {
-      // Unset, consult global setting
-      if ((defaultNotification == null)
-          || (defaultNotification.getDirectEmailNotify() != null
-              && defaultNotification.getDirectEmailNotify() == false)) {
-        // Also disabled globally, no notification
-        return null;
-      }
-    }
-
-    String fstring = null;
-    if (notify != null) {
-      fstring = notify.getDirectEmailNotifyFormat();
-    }
-    if (fstring == null) {
-      // Unset for identity, use global
-      fstring = defaultNotification.getDirectEmailNotifyFormat();
-    }
-    if (fstring == null) {
-      return null;
-    }
-    return String.format(fstring, fragment);
-  }
-
-  /**
-   * Returns boolean that is true if this identity should get a direct notification via Slack
-   *
-   * @param defaultNotification Default notification preferences if unset in identity
-   */
-  public Boolean getSlackNotifyDirect(Notify defaultNotification) {
-    if (notify != null) {
-      if (notify.getDirectSlackNotify() != null) {
-        return notify.getDirectSlackNotify();
-      }
-    }
-
-    if ((defaultNotification == null)
-        || (defaultNotification.getDirectSlackNotify() != null
-            && defaultNotification.getDirectSlackNotify() == false)) {
+  /** Returns true if this identity should be notified via slack */
+  @JsonIgnore
+  public Boolean shouldNotifyViaSlack() {
+    if (notify == null || notify.getMethod() == null) {
       return false;
     }
-
-    return true;
+    return notify.getMethod() == NotificationPreferences.Method.SLACK;
   }
 
-  /**
-   * Returns boolean that is true if this identity shoud get a slack confirmation alert.
-   * getSlackNotifyDirect() must also return true for this feature flag to be used.
-   *
-   * @param defaultFeatureFlags Default feature flags if unset in identity
-   */
-  public Boolean getSlackConfirmationAlertFeatureFlag(FeatureFlags defaultFeatureFlags) {
-    if (featureFlags != null) {
-      if (featureFlags.getSlackConfirmationAlert() != null) {
-        return featureFlags.getSlackConfirmationAlert();
-      }
-    }
-
-    if ((defaultFeatureFlags == null)
-        || (defaultFeatureFlags.getSlackConfirmationAlert() != null
-            && defaultFeatureFlags.getSlackConfirmationAlert() == false)) {
+  /** Returns true if this identity should be notified via email */
+  @JsonIgnore
+  public Boolean shouldNotifyViaEmail() {
+    if (notify == null || notify.getMethod() == null) {
       return false;
     }
+    return notify.getMethod() == NotificationPreferences.Method.EMAIL;
+  }
 
-    return true;
+  /** Returns true if this identity should be alerted via slack */
+  @JsonIgnore
+  public Boolean shouldAlertViaSlack() {
+    if (alert == null || alert.getMethod() == null) {
+      return false;
+    }
+    return alert.getMethod() == NotificationPreferences.Method.SLACK;
+  }
+
+  /** Returns true if this identity should be alerted via email */
+  @JsonIgnore
+  public Boolean shouldAlertViaEmail() {
+    if (alert == null || alert.getMethod() == null) {
+      return false;
+    }
+    return alert.getMethod() == NotificationPreferences.Method.EMAIL;
   }
 }
