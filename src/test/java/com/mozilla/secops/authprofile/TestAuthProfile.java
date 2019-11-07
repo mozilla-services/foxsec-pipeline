@@ -8,6 +8,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.mozilla.secops.Minfraud;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertConfiguration;
@@ -75,6 +76,8 @@ public class TestAuthProfile {
     state.initialize();
     state.deleteAll();
     state.done();
+    Minfraud.cacheClear();
+    Minfraud.setCacheOnly(true);
   }
 
   private AuthProfile.AuthProfileOptions getTestOptions() {
@@ -88,11 +91,6 @@ public class TestAuthProfile {
   }
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
-
-  @Test
-  public void noopPipelineTest() throws Exception {
-    p.run().waitUntilFinish();
-  }
 
   @Test
   public void parseExtractGBKTest() throws Exception {
@@ -133,6 +131,8 @@ public class TestAuthProfile {
     AuthProfile.AuthProfileOptions options = getTestOptions();
 
     // Enable configuration tick generation in the pipeline for this test, and use Input
+    //
+    // Also, leave minFraud disabled here
     options.setInputFile(new String[] {"./target/test-classes/testdata/authprof_buffer1.txt"});
     options.setGenerateConfigurationTicksInterval(1);
     options.setGenerateConfigurationTicksMaximum(5L);
@@ -167,6 +167,7 @@ public class TestAuthProfile {
                     assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                     assertNull(a.getMetadataValue("notify_email_direct"));
                     assertNull(a.getMetadataValue("escalate_to"));
+                    assertEquals("known_ip", a.getMetadataValue("state_action_type"));
 
                     // Verify sample rendered email template for known source
                     try {
@@ -196,6 +197,10 @@ public class TestAuthProfile {
                     assertEquals(
                         a.getMetadataValue("alert_notification_type"), "slack_confirmation");
                     assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
+                    // Should be indicated as an unknown IP, and minFraud/GeoIP failure as we have
+                    // not configured minFraud
+                    assertEquals(
+                        "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
 
                     // Verify sample rendered email template for new source
                     try {
@@ -251,6 +256,10 @@ public class TestAuthProfile {
   public void analyzeMixedTest() throws Exception {
     testEnv();
     AuthProfile.AuthProfileOptions options = getTestOptions();
+    options.setMaxmindAccountId("0");
+    options.setMaxmindLicenseKey("something");
+    Minfraud.cacheInsightsResource("216.160.83.56", "/testdata/minfraud/insights_normal1.json");
+    Minfraud.cacheInsightsResource("127.0.0.1", "/testdata/minfraud/insights_normal1.json");
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
 
     PCollection<Alert> res = AuthProfile.processInput(input, options);
@@ -285,6 +294,8 @@ public class TestAuthProfile {
                   assertEquals("true", a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
                   assertThat(a.getSummary(), containsString("untracked"));
                   assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
+                  // No action type on untracked identity
+                  assertNull(a.getMetadataValue("state_action_type"));
                 } else if ((iKey != null) && (iKey.equals("wriker@mozilla.com"))) {
                   if (a.getMetadataValue("username").equals("riker@mozilla.com")) {
                     // GcpAudit event should have generated a warning
@@ -298,6 +309,9 @@ public class TestAuthProfile {
                     assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
                     assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                     assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                    // Geo will fail on 127.0.0.1
+                    assertEquals(
+                        "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
                   }
                 }
               }
@@ -315,6 +329,10 @@ public class TestAuthProfile {
   public void analyzeMixedIgnoreTest() throws Exception {
     testEnv();
     AuthProfile.AuthProfileOptions options = getTestOptions();
+    options.setMaxmindAccountId("0");
+    options.setMaxmindLicenseKey("something");
+    Minfraud.cacheInsightsResource("216.160.83.56", "/testdata/minfraud/insights_normal1.json");
+    Minfraud.cacheInsightsResource("127.0.0.1", "/testdata/minfraud/insights_normal1.json");
     options.setIgnoreUserRegex(new String[] {"^laforge@.*"});
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
 
@@ -348,6 +366,8 @@ public class TestAuthProfile {
   public void analyzeGcpAlertIOIgnoreTest() throws Exception {
     testEnv();
     AuthProfile.AuthProfileOptions options = getTestOptions();
+    options.setMaxmindAccountId("0");
+    options.setMaxmindLicenseKey("something");
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer5.txt", p);
 
     PCollection<Alert> res = AuthProfile.processInput(input, options);
@@ -359,6 +379,7 @@ public class TestAuthProfile {
               for (Alert a : results) {
                 // GCP origin and GcpAudit event, AlertIO ignore flag should be set
                 assertEquals("true", a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                assertEquals("gcp_internal", a.getMetadataValue("state_action_type"));
                 assertEquals("authprofile", a.getCategory());
                 assertEquals(
                     "authentication event observed laforge@mozilla.com [untracked] to "
@@ -376,6 +397,10 @@ public class TestAuthProfile {
   public void analyzeMixedIgnoreUnknownIdTest() throws Exception {
     testEnv();
     AuthProfile.AuthProfileOptions options = getTestOptions();
+    options.setMaxmindAccountId("0");
+    options.setMaxmindLicenseKey("something");
+    Minfraud.cacheInsightsResource("216.160.83.56", "/testdata/minfraud/insights_normal1.json");
+    Minfraud.cacheInsightsResource("127.0.0.1", "/testdata/minfraud/insights_normal1.json");
     options.setIgnoreUnknownIdentities(true);
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer2.txt", p);
 
@@ -409,6 +434,14 @@ public class TestAuthProfile {
   public void analyzeNamedSubnetsTest() throws Exception {
     testEnv();
     AuthProfile.AuthProfileOptions options = getTestOptions();
+    options.setMaxmindAccountId("0");
+    options.setMaxmindLicenseKey("something");
+    Minfraud.cacheInsightsResource(
+        "fd00:0:0:0:0:0:0:1", "/testdata/minfraud/insights_normal1.json");
+    Minfraud.cacheInsightsResource(
+        "fd00:0:0:0:0:0:0:2", "/testdata/minfraud/insights_normal1.json");
+    Minfraud.cacheInsightsResource(
+        "aaaa:0:0:0:0:0:0:1", "/testdata/minfraud/insights_normal1.json");
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer3.txt", p);
 
     PCollection<Alert> res = AuthProfile.processInput(input, options);
@@ -432,6 +465,8 @@ public class TestAuthProfile {
                   assertEquals(a.getMetadataValue("alert_notification_type"), "slack_confirmation");
                   assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
                   assertEquals("office", a.getMetadataValue("entry_key"));
+                  assertEquals(
+                      "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
                 } else if (actualSummary.matches("(.*)new source aaaa(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
@@ -440,6 +475,8 @@ public class TestAuthProfile {
                   assertEquals(a.getMetadataValue("alert_notification_type"), "slack_confirmation");
                   assertNull(a.getMetadataValue("entry_key"));
                   assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
+                  assertEquals(
+                      "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
                 }
                 assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
                 assertEquals("riker", a.getMetadataValue("username"));
@@ -463,6 +500,9 @@ public class TestAuthProfile {
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer6.txt", p);
     options.setEnableCritObjectAnalysis(false);
     options.setAuth0ClientIds(new String[] {"1234567890"});
+    options.setMaxmindAccountId("0");
+    options.setMaxmindLicenseKey("something");
+    Minfraud.cacheInsightsResource("216.160.83.56", "/testdata/minfraud/insights_normal1.json");
     PCollection<Alert> res = AuthProfile.processInput(input, options);
 
     PAssert.that(res)
@@ -480,11 +520,15 @@ public class TestAuthProfile {
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                   assertNull(a.getMetadataValue("notify_email_direct"));
                   assertNull(a.getMetadataValue("escalate_to"));
+                  assertEquals("known_ip", a.getMetadataValue("state_action_type"));
                 } else if (actualSummary.equals(
                     "authentication event observed wriker@mozilla.com [wriker@mozilla.com] to www.enterprise.com, "
                         + "new source 216.160.83.56 [Milton/US]")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                  // No previous state, GeoIP will fail
+                  assertEquals(
+                      "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
                 }
                 assertEquals("state_analyze", a.getMetadataValue("category"));
                 assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
@@ -527,7 +571,10 @@ public class TestAuthProfile {
     state.done();
 
     options.setEnableCritObjectAnalysis(false);
-    options.setMinfraudIgnore(true);
+    // Tests will use minFraud cache, but we need some placeholder account here
+    options.setMaxmindAccountId("0");
+    options.setMaxmindLicenseKey("something");
+    Minfraud.cacheInsightsResource("89.160.20.112", "/testdata/minfraud/insights_normal1.json");
     PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer7.txt", p);
     PCollection<Alert> res = AuthProfile.processInput(input, options);
 
@@ -564,6 +611,92 @@ public class TestAuthProfile {
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     assertEquals("wriker@mozilla.com", a.getMetadataValue("notify_email_direct"));
                     assertNull(a.getMetadataValue("notify_slack_direct"));
+                    assertEquals("false", a.getMetadataValue("sourceaddress_is_anonymous"));
+                    assertEquals("false", a.getMetadataValue("sourceaddress_is_anonymous_vpn"));
+                    assertEquals("false", a.getMetadataValue("sourceaddress_is_hosting_provider"));
+                    assertEquals("unknown_ip_within_geo", a.getMetadataValue("state_action_type"));
+                  }
+                }
+              }
+              assertEquals(1L, newCnt);
+              // Should have one informational since the rest of the duplicates will be
+              // filtered in window since they were already seen
+              assertEquals(1L, infoCnt);
+
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void analyzeTestMinfraudHosting() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+
+    // Preload mock data
+    State state =
+        new State(
+            new DatastoreStateInterface(
+                options.getDatastoreKind(), options.getDatastoreNamespace()));
+    state.initialize();
+    StateCursor c = state.newCursor();
+    AuthStateModel sm = new AuthStateModel("wriker@mozilla.com");
+    DateTime n = new DateTime();
+    DateTime oneDayAgo = n.minusHours(1);
+    Double lat = 58.4162;
+    Double lon = 15.6162;
+    sm.updateEntry("89.160.20.128", oneDayAgo, lat, lon);
+    sm.set(c, new PruningStrategyEntryAge());
+    state.done();
+
+    options.setEnableCritObjectAnalysis(false);
+    // Tests will use minFraud cache, but we need some placeholder account here
+    options.setMaxmindAccountId("0");
+    options.setMaxmindLicenseKey("something");
+    Minfraud.cacheInsightsResource("89.160.20.112", "/testdata/minfraud/insights_hosting1.json");
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer7.txt", p);
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long newCnt = 0;
+              long infoCnt = 0;
+              for (Alert a : results) {
+                if (a.getMetadataValue("category").equals("state_analyze")) {
+                  assertEquals("authprofile", a.getCategory());
+                  assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
+                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
+                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                  String actualSummary = a.getSummary();
+                  if (actualSummary.equals(
+                      "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                          + "89.160.20.112 [Linköping/SE]")) {
+                    infoCnt++;
+                    assertEquals("89.160.20.112", a.getMetadataValue("sourceaddress"));
+                    assertEquals("Linköping", a.getMetadataValue("sourceaddress_city"));
+                    assertEquals("SE", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                    assertNull(a.getMetadataValue("notify_email_direct"));
+                    assertNull(a.getMetadataValue("notify_slack_direct"));
+                    assertNull(a.getMetadataValue("escalate_to"));
+                  } else if (actualSummary.equals(
+                      "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
+                          + "new source 89.160.20.112 [Linköping/SE]")) {
+                    newCnt++;
+                    assertEquals("89.160.20.112", a.getMetadataValue("sourceaddress"));
+                    assertEquals("Linköping", a.getMetadataValue("sourceaddress_city"));
+                    assertEquals("SE", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                    assertNull(a.getMetadataValue("notify_email_direct"));
+                    assertEquals("wriker@mozilla.com", a.getMetadataValue("notify_slack_direct"));
+                    assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
+                    assertEquals("false", a.getMetadataValue("sourceaddress_is_anonymous"));
+                    assertEquals("false", a.getMetadataValue("sourceaddress_is_anonymous_vpn"));
+                    assertEquals("true", a.getMetadataValue("sourceaddress_is_hosting_provider"));
+                    assertEquals(
+                        "unknown_ip_hosting_provider", a.getMetadataValue("state_action_type"));
                   }
                 }
               }

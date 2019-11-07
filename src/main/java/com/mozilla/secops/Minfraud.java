@@ -1,5 +1,11 @@
 package com.mozilla.secops;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.InjectableValues;
+import com.fasterxml.jackson.databind.InjectableValues.Std;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.maxmind.minfraud.WebServiceClient;
 import com.maxmind.minfraud.exception.AuthenticationException;
 import com.maxmind.minfraud.exception.HttpException;
@@ -13,9 +19,13 @@ import com.maxmind.minfraud.request.Transaction;
 import com.maxmind.minfraud.response.InsightsResponse;
 import com.mozilla.secops.crypto.RuntimeSecrets;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -26,10 +36,59 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Query Maxmind minFraud API */
 public class Minfraud implements Serializable {
   private static final long serialVersionUID = 1L;
   private final Logger log;
   private WebServiceClient mfClient;
+  private static Boolean cacheOnly = false;
+
+  private static HashMap<String, InsightsResponse> cache = new HashMap<>();
+
+  /**
+   * Enable cache only
+   *
+   * @param value True to enable cache only
+   */
+  public static void setCacheOnly(Boolean value) {
+    cacheOnly = value;
+  }
+
+  /**
+   * Clear insights cache
+   *
+   * <p>Intended for tests.
+   */
+  public static void cacheClear() {
+    cache.clear();
+  }
+
+  /**
+   * Cache and force a particular response for an IP address
+   *
+   * <p>This method can be used to cache a response for an IP address, which will be returned for an
+   * insights query (instead of querying the actual API).
+   *
+   * <p>Intended for tests.
+   *
+   * @param ipAddress IP address
+   * @param resourcePath Path to resource JSON file to use as response
+   */
+  public static void cacheInsightsResource(String ipAddress, String resourcePath)
+      throws IOException {
+    InputStream in = Minfraud.class.getResourceAsStream(resourcePath);
+    if (in == null) {
+      throw new IOException("invalid resource path");
+    }
+    ObjectMapper o = new ObjectMapper();
+    o.disable(MapperFeature.CAN_OVERRIDE_ACCESS_MODIFIERS);
+    o.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    o.setDateFormat(new StdDateFormat().withColonInTimeZone(true));
+    List<String> locales = Collections.singletonList("en");
+    InjectableValues inj = new Std().addValue("locales", locales);
+    InsightsResponse r = o.readerFor(InsightsResponse.class).with(inj).readValue(in);
+    cache.put(ipAddress, r);
+  }
 
   /**
    * Get Insights response from Minfraud using an IP address and an optional email address
@@ -43,6 +102,14 @@ public class Minfraud implements Serializable {
   public InsightsResponse getInsights(String ipAddress, String email) {
     if (ipAddress == null) {
       return null;
+    }
+
+    if (cache.containsKey(ipAddress)) {
+      return cache.get(ipAddress);
+    }
+
+    if (cacheOnly) {
+      throw new RuntimeException(String.format("cache only with cache miss, %s", ipAddress));
     }
 
     Transaction.Builder txb;
