@@ -349,7 +349,7 @@ public class Customs implements Serializable {
 
     void setMaximumKilometersPerHour(Integer value);
 
-    @Description("Minimum distance that must be travelled to create velocity alert")
+    @Description("Minimum distance that must be travelled (km) to create velocity alert")
     Double getMinimumDistanceForAlert();
 
     void setMinimumDistanceForAlert(Double value);
