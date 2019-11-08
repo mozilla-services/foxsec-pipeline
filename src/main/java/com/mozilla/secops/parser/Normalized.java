@@ -519,6 +519,7 @@ public class Normalized implements Serializable {
    * <p>Will do nothing if sourceAddress is null
    *
    * @param mf Minfraud client
+   * @return True if enrichment was successful, false otherwise
    */
   public boolean insightsEnrichment(Minfraud mf) {
     if (sourceAddress == null) {

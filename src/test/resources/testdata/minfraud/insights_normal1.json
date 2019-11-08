@@ -1,0 +1,185 @@
+{
+  "id": "5bc5d6c2-b2c8-40af-87f4-6d61af86b6ae",
+  "risk_score": 0.01,
+  "funds_remaining": 25,
+  "queries_remaining": 1666,
+  "ip_address": {
+    "risk": 0.01,
+    "city": {
+      "confidence": 25,
+      "geoname_id": 54321,
+      "names": {
+        "de": "Los Angeles",
+        "en": "Los Angeles",
+        "es": "Los Ángeles",
+        "fr": "Los Angeles",
+        "ja": "ロサンゼルス市",
+        "pt-BR": "Los Angeles",
+        "ru": "Лос-Анджелес",
+        "zh-CN": "洛杉矶"
+      }
+    },
+    "continent": {
+      "code": "NA",
+      "geoname_id": 123456,
+      "names": {
+        "de": "Nordamerika",
+        "en": "North America",
+        "es": "América del Norte",
+        "fr": "Amérique du Nord",
+        "ja": "北アメリカ",
+        "pt-BR": "América do Norte",
+        "ru": "Северная Америка",
+        "zh-CN": "北美洲"
+      }
+    },
+    "country": {
+      "confidence": 75,
+      "geoname_id": 6252001,
+      "is_in_european_union": true,
+      "iso_code": "US",
+      "names": {
+        "de": "USA",
+        "en": "United States",
+        "es": "Estados Unidos",
+        "fr": "États-Unis",
+        "ja": "アメリカ合衆国",
+        "pt-BR": "Estados Unidos",
+        "ru": "США",
+        "zh-CN": "美国"
+      }
+    },
+    "location": {
+      "accuracy_radius": 20,
+      "average_income": 50321,
+      "latitude": 37.6293,
+      "local_time": "2015-04-26T01:37:17-08:00",
+      "longitude": -122.1163,
+      "metro_code": 807,
+      "population_density": 7122,
+      "time_zone": "America/Los_Angeles"
+    },
+    "postal": {
+      "code": "90001",
+      "confidence": 10
+    },
+    "registered_country": {
+      "geoname_id": 6252001,
+      "is_in_european_union": true,
+      "iso_code": "US",
+      "names": {
+        "de": "USA",
+        "en": "United States",
+        "es": "Estados Unidos",
+        "fr": "États-Unis",
+        "ja": "アメリカ合衆国",
+        "pt-BR": "Estados Unidos",
+        "ru": "США",
+        "zh-CN": "美国"
+      }
+    },
+    "represented_country": {
+      "geoname_id": 6252001,
+      "is_in_european_union": true,
+      "iso_code": "US",
+      "names": {
+        "de": "USA",
+        "en": "United States",
+        "es": "Estados Unidos",
+        "fr": "États-Unis",
+        "ja": "アメリカ合衆国",
+        "pt-BR": "Estados Unidos",
+        "ru": "США",
+        "zh-CN": "美国"
+      },
+      "type": "military"
+    },
+    "subdivisions": [
+      {
+        "confidence": 50,
+        "geoname_id": 5332921,
+        "iso_code": "CA",
+        "names": {
+          "de": "Kalifornien",
+          "en": "California",
+          "es": "California",
+          "fr": "Californie",
+          "ja": "カリフォルニア",
+          "ru": "Калифорния",
+          "zh-CN": "加州"
+        }
+      }
+    ],
+    "traits": {
+      "autonomous_system_number": 1239,
+      "autonomous_system_organization": "Linkem IR WiMax Network",
+      "domain": "example.com",
+      "ip_address": "1.2.3.4",
+      "is_anonymous": false,
+      "is_anonymous_proxy": false,
+      "is_anonymous_vpn": false,
+      "is_hosting_provider": false,
+      "is_public_proxy": false,
+      "is_satellite_provider": false,
+      "is_tor_exit_node": false,
+      "isp": "Linkem spa",
+      "network": "1.2.3.0/24",
+      "organization": "Linkem IR WiMax Network",
+      "static_ip_score": 1.5,
+      "user_count": 1,
+      "user_type": "traveler"
+    }
+  },
+  "credit_card": {
+    "issuer": {
+      "name": "Bank of America",
+      "matches_provided_name": true,
+      "phone_number": "800-732-9194",
+      "matches_provided_phone_number": true
+    },
+    "brand": "Visa",
+    "country": "US",
+    "is_issued_in_billing_address_country": true,
+    "is_prepaid": true,
+    "is_virtual": true,
+    "type": "credit"
+  },
+  "device": {
+    "confidence": 99,
+    "id": "7835b099-d385-4e5b-969e-7df26181d73b",
+    "last_seen": "2016-06-08T14:16:38Z",
+    "local_time": "2018-01-02T10:40:11-08:00"
+  },
+  "email": {
+    "first_seen": "2016-02-03",
+    "is_free": false,
+    "is_high_risk": true
+  },
+  "shipping_address": {
+    "is_high_risk": true,
+    "is_postal_in_city": true,
+    "latitude": 37.632,
+    "longitude": -122.313,
+    "distance_to_ip_location": 15,
+    "distance_to_billing_address": 22,
+    "is_in_ip_country": true
+  },
+  "billing_address": {
+    "is_postal_in_city": true,
+    "latitude": 37.545,
+    "longitude": -122.421,
+    "distance_to_ip_location": 100,
+    "is_in_ip_country": true
+  },
+  "disposition": {
+    "action": "accept",
+    "reason": "default"
+  },
+  "warnings": [
+    {
+      "code": "INPUT_INVALID",
+      "warning": "Encountered value at /shipping/city that does not meet the required constraints",
+      "input_pointer": "/shipping/city"
+    }
+  ]
+}

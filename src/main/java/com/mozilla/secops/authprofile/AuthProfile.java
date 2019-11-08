@@ -37,7 +37,6 @@ import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.Hidden;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -392,6 +391,65 @@ public class AuthProfile implements Serializable {
       implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * The metadata field set in the alert that indicates the type of action the state analysis step
+     * is indicating.
+     */
+    public static final String META_ACTION_TYPE = "state_action_type";
+
+    /**
+     * The outcome of state analysis can result in various actions being taken. The metadata action
+     * type field present in the generated alert controls how various payload text and other
+     * attributes are set.
+     */
+    public enum ActionType {
+      /** Known IP for identity */
+      KNOWN_IP("known_ip"),
+      /** Unknown IP, but within GeoIP distance of previous known source address */
+      UNKNOWN_IP_WITHIN_GEO("unknown_ip_within_geo"),
+      /** Unknown IP, and outside GeoIP distance of previous known source address */
+      UNKNOWN_IP_OUTSIDE_GEO("unknown_ip_outside_geo"),
+      /** Unknown IP, and minFraud hosting provider indication */
+      UNKNOWN_IP_HOSTING_PROVIDER("unknown_ip_hosting_provider"),
+      /** Unknown IP, and minFraud anonymity network indication */
+      UNKNOWN_IP_ANON_NETWORK("unknown_ip_anon_network"),
+      /** Unknown IP, and minFraud or GeoIP resolution failed */
+      UNKNOWN_IP_MINFRAUD_GEO_FAILURE("unknown_ip_minfraud_geo_failure"),
+      /** Event was GCP internal (GCP address, GCPAUDIT) */
+      GCP_INTERNAL("gcp_internal");
+
+      private String text;
+
+      /**
+       * Create new action type
+       *
+       * @param text String
+       */
+      ActionType(String text) {
+        this.text = text;
+      }
+
+      @Override
+      public String toString() {
+        return this.text;
+      }
+
+      /**
+       * Return ActionType using string format
+       *
+       * @param text String
+       * @return ActionType, or null if string does not match known type
+       */
+      public static ActionType fromString(String text) {
+        for (ActionType i : ActionType.values()) {
+          if (i.text.equals(text)) {
+            return i;
+          }
+        }
+        return null;
+      }
+    }
+
     private final String memcachedHost;
     private final Integer memcachedPort;
     private final String datastoreNamespace;
@@ -401,7 +459,6 @@ public class AuthProfile implements Serializable {
     private final String maxmindAccountId;
     private final String maxmindLicenseKey;
     private final Double maxKilometersStatic;
-    private final Boolean minfraudIgnore;
     private CidrUtil cidrGcp;
     private IdentityManager idmanager;
     private Logger log;
@@ -423,7 +480,6 @@ public class AuthProfile implements Serializable {
       maxKilometersStatic = options.getMaximumKilometersFromLastLogin();
       maxmindAccountId = options.getMaxmindAccountId();
       maxmindLicenseKey = options.getMaxmindLicenseKey();
-      minfraudIgnore = options.getMinfraudIgnore();
     }
 
     public String getTransformDoc() {
@@ -516,7 +572,7 @@ public class AuthProfile implements Serializable {
       a.setSummary(summary);
     }
 
-    private void buildAlertPayload(Event e, Alert a, String message) {
+    private void buildAlertPayload(Event e, Alert a) {
       String msg = "An authentication event for user %s was detected to access %s from %s [%s/%s].";
       if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
         msg = "A sensitive event from user %s was detected in association with %s from %s [%s/%s].";
@@ -529,11 +585,53 @@ public class AuthProfile implements Serializable {
               a.getMetadataValue("sourceaddress"),
               a.getMetadataValue("sourceaddress_city"),
               a.getMetadataValue("sourceaddress_country"));
-      if (message != null) {
-        payload = payload + " " + message;
-      } else {
-        payload = payload + " This event occurred for an untracked identity.";
+
+      if (a.getMetadataValue(META_ACTION_TYPE) == null) {
+        throw new RuntimeException("state alert had no action type");
       }
+      ActionType at = ActionType.fromString(a.getMetadataValue(META_ACTION_TYPE));
+      if (at == null) {
+        throw new RuntimeException("state alert had invalid action type");
+      }
+
+      switch (at) {
+        case KNOWN_IP:
+          payload = payload + " This occurred from a known source address.";
+          break;
+        case UNKNOWN_IP_WITHIN_GEO:
+          payload =
+              payload
+                  + " This occurred from a source address unknown to the system, but "
+                  + "near your last authentication event.";
+          break;
+        case UNKNOWN_IP_OUTSIDE_GEO:
+          payload =
+              payload
+                  + " This occurred from a source address unknown to the system and "
+                  + "outside of the allowed range from your last authentication event.";
+          break;
+        case UNKNOWN_IP_ANON_NETWORK:
+          payload =
+              payload
+                  + " This occurred from a source address unknown to the system "
+                  + "and marked as from an anonymity network.";
+          break;
+        case UNKNOWN_IP_HOSTING_PROVIDER:
+          payload =
+              payload
+                  + " This occurred from a source address unknown to the system "
+                  + "and marked as from a hosting provider.";
+          break;
+        case UNKNOWN_IP_MINFRAUD_GEO_FAILURE:
+          payload = payload + " This occurred from a source address unknown to the system.";
+          break;
+        case GCP_INTERNAL:
+          payload = payload + " This occurred from a GCP source IP, and was a GCP audit event.";
+          break;
+        default:
+          throw new RuntimeException("action type could not be handled in payload generation");
+      }
+
       payload =
           payload
               + "\n\nIf this was not you, or you have any questions about "
@@ -573,12 +671,9 @@ public class AuthProfile implements Serializable {
           // Skip AlertIO if it's a GCP event from GCP source, we can also skip the remainder of the
           // logic here
           a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
+          a.addMetadata(META_ACTION_TYPE, ActionType.GCP_INTERNAL.toString());
           buildAlertSummary(e, a);
-          if (a.getMetadataValue("identity_key") != null) {
-            buildAlertPayload(e, a, "This occurred from a known source address.");
-          } else {
-            buildAlertPayload(e, a, null);
-          }
+          buildAlertPayload(e, a);
           c.output(a);
           continue;
         }
@@ -598,9 +693,6 @@ public class AuthProfile implements Serializable {
           if (minfraud != null) {
             minfraudOk = e.getNormalized().insightsEnrichment(minfraud);
             AuthProfile.insightsEnrichAlert(a, e);
-          }
-          if (minfraudIgnore) {
-            minfraudOk = true;
           }
 
           a.addMetadata("identity_key", userIdentity);
@@ -622,85 +714,92 @@ public class AuthProfile implements Serializable {
 
             // Address was new
             if (!minfraudOk) {
+              // If the address was new, and the minFraud enrichment failed, always escalate
               log.info(
                   "{}: escalating alert criteria for new source (couldn't get minfraud insights): {} {}",
                   userIdentity,
                   e.getNormalized().getSubjectUser(),
                   e.getNormalized().getSourceAddress());
               a.setSeverity(Alert.AlertSeverity.WARNING);
-              buildAlertPayload(e, a, "This occurred from a source address unknown to the system.");
+              a.addMetadata(
+                  META_ACTION_TYPE, ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
+              buildAlertPayload(e, a);
             } else if (e.getNormalized().getSourceAddressIsAnonymous() != null
                 && e.getNormalized().getSourceAddressIsAnonymous()) {
+              // Address was new, and corresponds with an anonymity network, always escalate
               log.info(
                   "{}: escalating alert criteria for new source from anonymity network: {} {}",
                   userIdentity,
                   e.getNormalized().getSubjectUser(),
                   e.getNormalized().getSourceAddress());
               a.setSeverity(Alert.AlertSeverity.WARNING);
-              buildAlertPayload(
-                  e,
-                  a,
-                  "This occurred from a source address unknown to the system and marked as from an anonymity network.");
+              a.addMetadata(META_ACTION_TYPE, ActionType.UNKNOWN_IP_ANON_NETWORK.toString());
+              buildAlertPayload(e, a);
             } else if (e.getNormalized().getSourceAddressIsHostingProvider() != null
                 && e.getNormalized().getSourceAddressIsHostingProvider()) {
+              // Address was new, and corresponds with a hosting provider, always escalate
               log.info(
                   "{}: escalating alert criteria for new source from hosting provider: {} {}",
                   userIdentity,
                   e.getNormalized().getSubjectUser(),
                   e.getNormalized().getSourceAddress());
               a.setSeverity(Alert.AlertSeverity.WARNING);
-              buildAlertPayload(
-                  e,
-                  a,
-                  "This occurred from a source address unknown to the system and marked as from a hosting provider.");
+              a.addMetadata(META_ACTION_TYPE, ActionType.UNKNOWN_IP_HOSTING_PROVIDER.toString());
+              buildAlertPayload(e, a);
             } else {
+              // If we get this far, it was a new IP and minFraud indicates it was not a hosting
+              // provider or anonymity network. Attempt GeoIP analysis.
               AuthStateModel.GeoVelocityResponse geoResp =
                   sm.geoVelocityAnalyzeLatest(maxKilometersPerSecond);
               if (geoResp != null) {
                 if (geoResp.getKmDistance() > maxKilometersStatic) {
+                  // The GeoIP resolved distance of the new login exceeds our configuration, so
+                  // generate an escalation.
                   log.info(
-                      "{}: escalating alert criteria for new source outside of allowed distance from last login: {} {}",
+                      "{}: escalating alert criteria for new source outside of allowed distance "
+                          + "from last login: {} {}",
                       userIdentity,
                       e.getNormalized().getSubjectUser(),
                       e.getNormalized().getSourceAddress());
                   a.setSeverity(Alert.AlertSeverity.WARNING);
-                  buildAlertPayload(
-                      e,
-                      a,
-                      "This occurred from a source address unknown to the system and outside of the allowed range from your last authentication event.");
+                  a.addMetadata(META_ACTION_TYPE, ActionType.UNKNOWN_IP_OUTSIDE_GEO.toString());
+                  buildAlertPayload(e, a);
                 } else {
+                  // New IP, but within acceptable distance. Generate a notification only.
                   log.info(
-                      "{}: creating notification-only alert for new source inside of allowed distance from last login: {} {}",
+                      "{}: creating notification only alert for new source inside of allowed "
+                          + "distance from last login: {} {}",
                       userIdentity,
                       e.getNormalized().getSubjectUser(),
                       e.getNormalized().getSourceAddress());
                   a.setSeverity(Alert.AlertSeverity.WARNING);
+                  a.addMetadata(META_ACTION_TYPE, ActionType.UNKNOWN_IP_WITHIN_GEO.toString());
                   onlyNotify = true;
-                  buildAlertPayload(
-                      e,
-                      a,
-                      "This occurred from a source address unknown to the system, but near your last authentication event.");
+                  buildAlertPayload(e, a);
                 }
               } else {
+                // GeoIP analysis failed, generate an escalation.
                 log.info(
                     "{}: escalating alert criteria for new source (couldn't get geo velocity information): {} {}",
                     userIdentity,
                     e.getNormalized().getSubjectUser(),
                     e.getNormalized().getSourceAddress());
                 a.setSeverity(Alert.AlertSeverity.WARNING);
-                buildAlertPayload(
-                    e, a, "This occurred from a source address unknown to the system.");
+                a.addMetadata(
+                    META_ACTION_TYPE, ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
+                buildAlertPayload(e, a);
               }
             }
           } else {
+            // The address was known
             seenKnownAddresses.add(e.getNormalized().getSourceAddress());
-            // Address was known
             log.info(
                 "{}: access from known source: {} {}",
                 userIdentity,
                 e.getNormalized().getSubjectUser(),
                 e.getNormalized().getSourceAddress());
-            buildAlertPayload(e, a, "This occurred from a known source address.");
+            a.addMetadata(META_ACTION_TYPE, ActionType.KNOWN_IP.toString());
+            buildAlertPayload(e, a);
           }
 
           // Update persistent state with new information
@@ -787,13 +886,6 @@ public class AuthProfile implements Serializable {
     Double getMaximumKilometersFromLastLogin();
 
     void setMaximumKilometersFromLastLogin(Double value);
-
-    @Description("Hidden value for testing; true means minfraud will be ignored.")
-    @Default.Boolean(false)
-    @Hidden
-    Boolean getMinfraudIgnore();
-
-    void setMinfraudIgnore(Boolean value);
   }
 
   /**
@@ -912,6 +1004,15 @@ public class AuthProfile implements Serializable {
     return b.build();
   }
 
+  /**
+   * Process input collection
+   *
+   * <p>Process collection of input events, returning a collection of alerts as required.
+   *
+   * @param input Input collection
+   * @param options Pipeline options
+   * @return Output collection
+   */
   public static PCollection<Alert> processInput(
       PCollection<String> input, AuthProfileOptions options) {
     PCollectionList<Alert> alertList = PCollectionList.empty(input.getPipeline());
