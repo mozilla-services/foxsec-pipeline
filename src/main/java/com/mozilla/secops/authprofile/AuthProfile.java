@@ -689,12 +689,6 @@ public class AuthProfile implements Serializable {
         } else {
           StateCursor cur = state.newCursor();
 
-          boolean minfraudOk = false;
-          if (minfraud != null) {
-            minfraudOk = e.getNormalized().insightsEnrichment(minfraud);
-            AuthProfile.insightsEnrichAlert(a, e);
-          }
-
           a.addMetadata("identity_key", userIdentity);
           // The event was for a tracked identity, initialize the state model
           AuthStateModel sm = AuthStateModel.get(userIdentity, cur, new PruningStrategyEntryAge());
@@ -711,8 +705,16 @@ public class AuthProfile implements Serializable {
               entryKey,
               e.getNormalized().getSourceAddressLatitude(),
               e.getNormalized().getSourceAddressLongitude())) {
+            // If we end up here the address was new.
+            //
+            // Enrich the event with data from minFraud; we only want to do this for unknown
+            // addresses to reduce API query volume.
+            boolean minfraudOk = false;
+            if (minfraud != null) {
+              minfraudOk = e.getNormalized().insightsEnrichment(minfraud);
+              AuthProfile.insightsEnrichAlert(a, e);
+            }
 
-            // Address was new
             if (!minfraudOk) {
               // If the address was new, and the minFraud enrichment failed, always escalate
               log.info(
