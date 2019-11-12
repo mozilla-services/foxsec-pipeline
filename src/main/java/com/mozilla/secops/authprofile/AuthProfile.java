@@ -459,6 +459,7 @@ public class AuthProfile implements Serializable {
     private final String maxmindAccountId;
     private final String maxmindLicenseKey;
     private final Double maxKilometersStatic;
+    private final String gcpProject;
     private CidrUtil cidrGcp;
     private IdentityManager idmanager;
     private Logger log;
@@ -480,6 +481,7 @@ public class AuthProfile implements Serializable {
       maxKilometersStatic = options.getMaximumKilometersFromLastLogin();
       maxmindAccountId = options.getMaxmindAccountId();
       maxmindLicenseKey = options.getMaxmindLicenseKey();
+      gcpProject = options.getProject();
     }
 
     public String getTransformDoc() {
@@ -507,7 +509,7 @@ public class AuthProfile implements Serializable {
       state.initialize();
 
       if (maxmindAccountId != null || maxmindLicenseKey != null) {
-        minfraud = new Minfraud(maxmindAccountId, maxmindLicenseKey);
+        minfraud = new Minfraud(maxmindAccountId, maxmindLicenseKey, gcpProject);
       }
     }
 

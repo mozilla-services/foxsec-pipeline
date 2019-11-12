@@ -160,20 +160,25 @@ public class Minfraud implements Serializable {
    * Create Minfraud client by passing in accountId and licenseKey.
    *
    * <p>Supports RuntimeSecrets
+   *
+   * @param accountId Minfraud Account ID
+   * @param licenseKey Minfraud License Key
+   * @param project GCP project name, only required if decrypting accountId or licenseKey via
+   *     RuntimeSecrets
    */
-  public Minfraud(String accountId, String licenseKey) {
+  public Minfraud(String accountId, String licenseKey, String project) {
     log = LoggerFactory.getLogger(Minfraud.class);
 
     String accountIdDecrypted;
     try {
-      accountIdDecrypted = RuntimeSecrets.interpretSecret(accountId, null);
+      accountIdDecrypted = RuntimeSecrets.interpretSecret(accountId, project);
     } catch (IOException exc) {
       throw new RuntimeException(exc.getMessage());
     }
 
     String licenseKeyDecrypted;
     try {
-      licenseKeyDecrypted = RuntimeSecrets.interpretSecret(licenseKey, null);
+      licenseKeyDecrypted = RuntimeSecrets.interpretSecret(licenseKey, project);
     } catch (IOException exc) {
       throw new RuntimeException(exc.getMessage());
     }
@@ -198,6 +203,9 @@ public class Minfraud implements Serializable {
     licensekey.setRequired(true);
     options.addOption(licensekey);
 
+    Option project = new Option("p", "project", true, "GCP Project name (if using RuntimeSecrets)");
+    options.addOption(project);
+
     Option email = new Option("e", "email", true, "email to lookup");
     options.addOption(email);
 
@@ -215,7 +223,11 @@ public class Minfraud implements Serializable {
       System.exit(1);
     }
 
-    Minfraud mf = new Minfraud(cmd.getOptionValue("accountid"), cmd.getOptionValue("licensekey"));
+    Minfraud mf =
+        new Minfraud(
+            cmd.getOptionValue("accountid"),
+            cmd.getOptionValue("licensekey"),
+            cmd.getOptionValue("project"));
     InsightsResponse resp =
         mf.getInsights(cmd.getOptionValue("ip", null), cmd.getOptionValue("email", null));
     System.out.println(resp);
