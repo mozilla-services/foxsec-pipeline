@@ -165,7 +165,15 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                       }
                       seenAddr.add(remoteAddress);
 
-                      StateCursor cur = state.newCursor();
+                      StateCursor cur;
+                      try {
+                        cur = state.newCursor();
+                      } catch (StateException exc) {
+                        // Experimental, so log this as info for now. This could be expanded to
+                        // error in the future.
+                        log.info("error initializing state cursor: {}", exc.getMessage());
+                        return;
+                      }
 
                       AuthStateModel sm = null;
                       try {
@@ -174,7 +182,9 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                           sm = new AuthStateModel(uid);
                         }
                       } catch (StateException exc) {
-                        log.error("error reading from state: {}", exc.getMessage());
+                        // Experimental, so log this as info for now. This could be expanded to
+                        // error in the future.
+                        log.info("error reading from state: {}", exc.getMessage());
                         return;
                       }
 
@@ -191,7 +201,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                         try {
                           sm.set(cur, new PruningStrategyLatest());
                         } catch (StateException exc) {
-                          log.error("error updating state: {}", exc.getMessage());
+                          log.info("error updating state: {}", exc.getMessage());
                           return;
                         }
                         continue;
@@ -253,7 +263,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                       try {
                         sm.set(cur, new PruningStrategyLatest());
                       } catch (StateException exc) {
-                        log.error("error updating state: {}", exc.getMessage());
+                        log.info("error updating state: {}", exc.getMessage());
                       }
                     }
                   }

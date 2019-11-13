@@ -56,7 +56,7 @@ public class State {
    *
    * @return {@link StateCursor}
    */
-  public StateCursor newCursor() {
+  public StateCursor newCursor() throws StateException {
     return si.newCursor();
   }
 

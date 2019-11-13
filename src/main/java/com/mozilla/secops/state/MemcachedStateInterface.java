@@ -11,7 +11,7 @@ public class MemcachedStateInterface implements StateInterface {
   private final int memcachedPort;
   private MemcachedClient memclient;
 
-  public StateCursor newCursor() {
+  public StateCursor newCursor() throws StateException {
     return new MemcachedStateCursor(memclient);
   }
 

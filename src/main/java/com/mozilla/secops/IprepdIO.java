@@ -622,6 +622,8 @@ public class IprepdIO {
    * <p>This variant allows specification of a project ID, for cases where the datastore instance
    * lives in another GCP project.
    *
+   * <p>If for some reason the whitelist state lookup fails, an {@link IOException} will be thrown.
+   *
    * @param obj Object to check (usually an IP or email)
    * @param type Type of object (usually "ip" or "email")
    * @param a Alert to add metadata to
