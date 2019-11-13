@@ -12,5 +12,5 @@ public interface StateInterface {
   public void initialize() throws StateException;
 
   /** Allocate new state cursor */
-  public StateCursor newCursor();
+  public StateCursor newCursor() throws StateException;
 }

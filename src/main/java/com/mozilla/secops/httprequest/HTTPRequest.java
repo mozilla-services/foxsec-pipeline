@@ -170,6 +170,8 @@ public class HTTPRequest implements Serializable {
     private final Boolean enableIprepdDatastoreWhitelist;
     private final String iprepdDatastoreWhitelistProject;
 
+    private Logger log;
+
     /**
      * Static initializer for {@link ErrorRateAnalysis}
      *
@@ -185,6 +187,7 @@ public class HTTPRequest implements Serializable {
       monitoredResource = toggles.getMonitoredResource();
       this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
       this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      log = LoggerFactory.getLogger(ErrorRateAnalysis.class);
     }
 
     public String getTransformDoc() {
@@ -244,6 +247,7 @@ public class HTTPRequest implements Serializable {
                           IprepdIO.addMetadataIfIpWhitelisted(
                               c.element().getKey(), a, iprepdDatastoreWhitelistProject);
                         } catch (IOException exc) {
+                          log.error("error checking whitelist: {}", exc.getMessage());
                           return;
                         }
                       }
@@ -360,6 +364,7 @@ public class HTTPRequest implements Serializable {
                                   c.element().getKey(), a, iprepdDatastoreWhitelistProject);
                             }
                           } catch (IOException exc) {
+                            log.error("error checking whitelist: {}", exc.getMessage());
                             return;
                           }
 
@@ -499,6 +504,7 @@ public class HTTPRequest implements Serializable {
                                   saddr, a, iprepdDatastoreWhitelistProject);
                             }
                           } catch (IOException exc) {
+                            log.error("error checking whitelist: {}", exc.getMessage());
                             return;
                           }
 
@@ -738,6 +744,7 @@ public class HTTPRequest implements Serializable {
                               remoteAddress, a, iprepdDatastoreWhitelistProject);
                         }
                       } catch (IOException exc) {
+                        log.error("error checking whitelist: {}", exc.getMessage());
                         return;
                       }
 
@@ -940,6 +947,7 @@ public class HTTPRequest implements Serializable {
                                     c.element().getKey(), a, iprepdDatastoreWhitelistProject);
                               }
                             } catch (IOException exc) {
+                              log.error("error checking whitelist: {}", exc.getMessage());
                               return;
                             }
 

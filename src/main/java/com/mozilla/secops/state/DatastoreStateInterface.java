@@ -2,6 +2,7 @@ package com.mozilla.secops.state;
 
 import com.google.cloud.NoCredentials;
 import com.google.cloud.datastore.Datastore;
+import com.google.cloud.datastore.DatastoreException;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.KeyFactory;
@@ -17,8 +18,12 @@ public class DatastoreStateInterface implements StateInterface {
   private KeyFactory keyFactory;
   private String project;
 
-  public StateCursor newCursor() {
-    return new DatastoreStateCursor(datastore, namespace, kind);
+  public StateCursor newCursor() throws StateException {
+    try {
+      return new DatastoreStateCursor(datastore, namespace, kind);
+    } catch (DatastoreException exc) {
+      throw new StateException(exc.getMessage());
+    }
   }
 
   public void done() {}

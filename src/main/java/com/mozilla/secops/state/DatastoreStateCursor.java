@@ -23,13 +23,17 @@ public class DatastoreStateCursor extends StateCursor {
     }
   }
 
-  public String getObject(String s) {
-    Key nk = keyFactory.newKey(s);
-    Entity e = tx.get(nk);
-    if (e == null) {
-      return null;
+  public String getObject(String s) throws StateException {
+    try {
+      Key nk = keyFactory.newKey(s);
+      Entity e = tx.get(nk);
+      if (e == null) {
+        return null;
+      }
+      return e.getString("state");
+    } catch (DatastoreException exc) {
+      throw new StateException(exc.getMessage());
     }
-    return e.getString("state");
   }
 
   public void saveObject(String s, String v) throws StateException {
