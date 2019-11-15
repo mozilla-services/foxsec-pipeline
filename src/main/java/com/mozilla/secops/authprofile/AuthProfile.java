@@ -535,7 +535,7 @@ public class AuthProfile implements Serializable {
         } else if (identity.shouldNotifyViaEmail()) {
           a.addMetadata("notify_email_direct", identity.getNotify().getEmail());
         } else {
-          log.error("No notification method set for {}", identityKey);
+          log.info("no notification method set for {}", identityKey);
         }
       } else {
         if (identity.getEscalateTo() != null) {
@@ -547,7 +547,7 @@ public class AuthProfile implements Serializable {
         } else if (identity.shouldAlertViaEmail()) {
           a.addMetadata("notify_email_direct", identity.getAlert().getEmail());
         } else {
-          log.error("No alerting method set for {}", identityKey);
+          log.info("no alerting method set for {}", identityKey);
         }
       }
     }
@@ -1022,6 +1022,13 @@ public class AuthProfile implements Serializable {
     PCollectionList<Alert> alertList = PCollectionList.empty(input.getPipeline());
 
     PCollection<Event> events = input.apply("parse", new Parse(options));
+
+    // Log any warnings related to the identity manager here during graph construction
+    try {
+      IdentityManager.load(options.getIdentityManagerPath()).logWarnings();
+    } catch (IOException exc) {
+      throw new IllegalArgumentException(exc.getMessage());
+    }
 
     if (options.getEnableStateAnalysis()) {
       alertList =

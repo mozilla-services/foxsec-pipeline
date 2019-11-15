@@ -45,6 +45,18 @@ public class IdentityManager {
   }
 
   /**
+   * Analyze the loaded identity manager configuration, logging warnings if required
+   *
+   * <p>Review identity manager configuration and log any possible issues with the configuration as
+   * warnings. Purely informational and will not throw exceptions if misconfigurations exist.
+   */
+  public void logWarnings() {
+    for (Map.Entry<String, Identity> entry : identities.entrySet()) {
+      entry.getValue().logWarnings(entry.getKey());
+    }
+  }
+
+  /**
    * Get AWS account map
    *
    * @return Map of AWS account identifiers to descriptive names
