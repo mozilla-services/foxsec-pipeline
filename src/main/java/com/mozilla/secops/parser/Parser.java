@@ -410,7 +410,7 @@ public class Parser {
                 cls.getConstructor(String.class, Event.class, ParserState.class)
                     .newInstance(input, e, state));
       } catch (ReflectiveOperationException exc) {
-        log.warn(exc.getMessage());
+        log.error(exc.getMessage());
       }
       break;
     }
