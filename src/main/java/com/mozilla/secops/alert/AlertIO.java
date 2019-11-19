@@ -190,7 +190,7 @@ public class AlertIO {
       log.info("processing alert: {}", raw);
 
       if (!a.hasCorrectFields()) {
-        log.warn("dropping incorrectly formatted alert: {}", raw);
+        log.error("dropping incorrectly formatted alert: {}", raw);
         return;
       }
 

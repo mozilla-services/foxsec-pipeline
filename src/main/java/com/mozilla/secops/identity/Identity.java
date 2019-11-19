@@ -3,6 +3,8 @@ package com.mozilla.secops.identity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Represents a single identity */
 public class Identity {
@@ -10,6 +12,25 @@ public class Identity {
   private NotificationPreferences notify;
   private NotificationPreferences alert;
   private String escalateTo;
+
+  private Logger log = LoggerFactory.getLogger(Identity.class);
+
+  /**
+   * Analyze identity, logging warnings if required
+   *
+   * <p>Review identity configuration and log any possible issues with the configuration as
+   * warnings. Purely informational and will not throw exceptions if misconfigurations exist.
+   *
+   * @param identity The identity key associated with this identity
+   */
+  public void logWarnings(String identity) {
+    if ((!shouldNotifyViaSlack()) && (!shouldNotifyViaEmail())) {
+      log.warn("{}: warning, no notification configuration for identity", identity);
+    }
+    if ((!shouldAlertViaSlack()) && (!shouldAlertViaEmail())) {
+      log.warn("{}: warning, no alerting configuration for identity", identity);
+    }
+  }
 
   /**
    * Get escalate to email address
