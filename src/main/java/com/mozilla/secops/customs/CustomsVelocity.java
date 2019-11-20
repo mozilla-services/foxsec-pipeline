@@ -49,7 +49,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   public String getTransformDoc() {
     return String.format(
         "Alert based on applying location velocity analysis to FxA events,"
-            + " using a maximum KM/s of %.2f",
+            + " using a maximum KM/s of %.2f (Experimental)",
         maxKilometersPerSecond);
   }
 

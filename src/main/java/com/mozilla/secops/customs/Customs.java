@@ -60,12 +60,9 @@ public class Customs implements Serializable {
       extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
-    private final String monitoredResource;
     private final int sessionGapSeconds = 1800;
-    private final Integer sessionCreationLimit;
-    private final int distanceThreshold;
-    private final Double distanceRatio;
-    private final Integer accountAbuseSuppressRecovery;
+    private final CustomsAccountCreation creationFn;
+    private final CustomsAccountCreationDist creationDistFn;
 
     /**
      * Initialize account creation abuse
@@ -73,11 +70,8 @@ public class Customs implements Serializable {
      * @param options Pipeline options
      */
     public AccountCreationAbuse(CustomsOptions options) {
-      monitoredResource = options.getMonitoredResourceIndicator();
-      sessionCreationLimit = options.getAccountCreationSessionLimit();
-      distanceThreshold = options.getAccountCreationDistanceThreshold();
-      distanceRatio = options.getAccountCreationDistanceRatio();
-      accountAbuseSuppressRecovery = options.getAccountAbuseSuppressRecovery();
+      creationFn = new CustomsAccountCreation(options);
+      creationDistFn = new CustomsAccountCreationDist(options);
     }
 
     @Override
@@ -104,13 +98,7 @@ public class Customs implements Serializable {
                           .withAllowedLateness(Duration.ZERO)
                           .accumulatingFiredPanes())
                   .apply("account creation gbk", GroupByKey.<String, Event>create())
-                  .apply(
-                      "account creation",
-                      ParDo.of(
-                          new CustomsAccountCreation(
-                              monitoredResource,
-                              sessionCreationLimit,
-                              accountAbuseSuppressRecovery)))
+                  .apply("account creation", ParDo.of(creationFn))
                   .apply(
                       "account creation global windows", new GlobalTriggers<KV<String, Alert>>(5))
                   .apply(
@@ -143,11 +131,7 @@ public class Customs implements Serializable {
                       "account creation dist fixed windows",
                       Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(30))))
                   .apply("account creation dist gbk", GroupByKey.<String, Event>create())
-                  .apply(
-                      "account creation dist",
-                      ParDo.of(
-                          new CustomsAccountCreationDist(
-                              monitoredResource, distanceThreshold, distanceRatio)))
+                  .apply("account creation dist", ParDo.of(creationDistFn))
                   .apply("account creation dist global windows", new GlobalTriggers<Alert>(5)));
 
       return resultsList.apply("account creation flatten output", Flatten.<Alert>pCollections());
@@ -389,17 +373,9 @@ public class Customs implements Serializable {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
 
     if (options.getEnableAccountCreationAbuseDetector()) {
-      b.withTransformDoc(
-          new CustomsAccountCreation(
-              options.getMonitoredResourceIndicator(),
-              options.getAccountCreationSessionLimit(),
-              options.getAccountAbuseSuppressRecovery()));
+      b.withTransformDoc(new CustomsAccountCreation(options));
 
-      b.withTransformDoc(
-          new CustomsAccountCreationDist(
-              options.getMonitoredResourceIndicator(),
-              options.getAccountCreationDistanceThreshold(),
-              options.getAccountCreationDistanceRatio()));
+      b.withTransformDoc(new CustomsAccountCreationDist(options));
     }
 
     if (options.getEnableSourceLoginFailureDetector()) {

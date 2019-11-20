@@ -30,6 +30,7 @@ public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PColl
 
   private final String monitoredResource;
   private final Integer threshold;
+  private final boolean escalate;
 
   /**
    * Initialize new SourceLoginFailureDist
@@ -39,13 +40,15 @@ public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PColl
   public SourceLoginFailureDist(Customs.CustomsOptions options) {
     this.monitoredResource = options.getMonitoredResourceIndicator();
     threshold = options.getSourceLoginFailureDistributedThreshold();
+    escalate = options.getEscalateSourceLoginFailureDistributed();
   }
 
   public String getTransformDoc() {
+    String experimental = escalate ? "" : " (Experimental)";
     return String.format(
         "Alert on login failures for a particular account from %d different source addresses "
-            + "in a %d second fixed window.",
-        threshold, windowSizeSeconds);
+            + "in a %d second fixed window.%s",
+        threshold, windowSizeSeconds, experimental);
   }
 
   @Override

@@ -25,12 +25,14 @@ public class CustomsPasswordResetAbuse extends PTransform<PCollection<Event>, PC
   private static final int windowMinutes = 10;
   private final String monitoredResource;
   private final Integer thresholdPerIp;
+  private boolean escalate;
 
   public String getTransformDoc() {
+    String experimental = escalate ? "" : " (Experimental)";
     return String.format(
         "Alert of single source requests password reset for at least %d distinct accounts "
-            + "within %d minute fixed window.",
-        thresholdPerIp, windowMinutes);
+            + "within %d minute fixed window.%s",
+        thresholdPerIp, windowMinutes, experimental);
   }
 
   /**
@@ -41,6 +43,7 @@ public class CustomsPasswordResetAbuse extends PTransform<PCollection<Event>, PC
   public CustomsPasswordResetAbuse(Customs.CustomsOptions options) {
     monitoredResource = options.getMonitoredResourceIndicator();
     thresholdPerIp = options.getPasswordResetAbuseWindowThresholdPerIp();
+    escalate = options.getEscalatePasswordResetAbuse();
   }
 
   @Override

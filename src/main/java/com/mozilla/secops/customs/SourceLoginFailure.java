@@ -30,6 +30,7 @@ public class SourceLoginFailure extends PTransform<PCollection<Event>, PCollecti
 
   private final String monitoredResource;
   private final Integer threshold;
+  private final boolean escalate;
 
   /**
    * Initialize new SourceLoginFailure
@@ -39,12 +40,14 @@ public class SourceLoginFailure extends PTransform<PCollection<Event>, PCollecti
   public SourceLoginFailure(Customs.CustomsOptions options) {
     this.monitoredResource = options.getMonitoredResourceIndicator();
     threshold = options.getSourceLoginFailureThreshold();
+    escalate = options.getEscalateSourceLoginFailure();
   }
 
   public String getTransformDoc() {
+    String experimental = escalate ? "" : " (Experimental)";
     return String.format(
-        "Alert on %d login failures from a single source in a %d second window.",
-        threshold, windowSizeSeconds);
+        "Alert on %d login failures from a single source in a %d second window.%s",
+        threshold, windowSizeSeconds, experimental);
   }
 
   @Override

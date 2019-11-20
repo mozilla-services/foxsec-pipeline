@@ -3,6 +3,7 @@ package com.mozilla.secops.customs;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.StringDistance;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.customs.Customs.CustomsOptions;
 import com.mozilla.secops.parser.Event;
 import java.util.ArrayList;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -16,26 +17,26 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
   private final int ratioAlertCount;
   private final Double ratioConsiderationUpper;
   private final String monitoredResource;
+  private final boolean escalate;
 
   /**
    * Create new CustomsAccountCreationDist
    *
-   * @param monitoredResource Monitored resource indicator
-   * @param ratioAlertCount Alert if matching similar account count meets or exceeds value
-   * @param ratioConsiderationUpper Upper bounds for string distance comparison alerting
+   * @param options Pipeline options
    */
-  public CustomsAccountCreationDist(
-      String monitoredResource, Integer ratioAlertCount, Double ratioConsiderationUpper) {
-    this.monitoredResource = monitoredResource;
-    this.ratioAlertCount = ratioAlertCount;
-    this.ratioConsiderationUpper = ratioConsiderationUpper;
+  public CustomsAccountCreationDist(CustomsOptions options) {
+    this.monitoredResource = options.getMonitoredResourceIndicator();
+    this.ratioAlertCount = options.getAccountCreationDistanceThreshold();
+    this.ratioConsiderationUpper = options.getAccountCreationDistanceRatio();
+    this.escalate = options.getEscalateAccountCreationDistributed();
   }
 
   public String getTransformDoc() {
+    String experimental = escalate ? "" : " (Experimental)";
     return String.format(
         "Alert if at least %s accounts are created from different source addresses in a 30 "
-            + "minute time frame and the similarity index of the accounts is all below %.2f.",
-        ratioAlertCount, ratioConsiderationUpper);
+            + "minute time frame and the similarity index of the accounts is all below %.2f.%s",
+        ratioAlertCount, ratioConsiderationUpper, experimental);
   }
 
   @ProcessElement
