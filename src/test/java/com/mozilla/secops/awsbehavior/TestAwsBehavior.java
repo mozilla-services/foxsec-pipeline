@@ -1,4 +1,4 @@
-package com.mozilla.secops.customs;
+package com.mozilla.secops.awsbehavior;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -6,7 +6,6 @@ import static org.junit.Assert.fail;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
-import com.mozilla.secops.awsbehavior.AwsBehavior;
 import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserTest;

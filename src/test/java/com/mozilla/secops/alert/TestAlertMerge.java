@@ -1,11 +1,9 @@
-package com.mozilla.secops.customs;
+package com.mozilla.secops.alert;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-import com.mozilla.secops.alert.Alert;
-import com.mozilla.secops.alert.AlertIO;
 import java.util.ArrayList;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
