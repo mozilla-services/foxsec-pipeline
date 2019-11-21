@@ -1,4 +1,4 @@
-package com.mozilla.secops.customs;
+package com.mozilla.secops.awsbehavior;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
