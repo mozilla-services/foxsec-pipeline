@@ -1,6 +1,5 @@
 package com.mozilla.secops.customs;
 
-import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.StringDistance;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.customs.Customs.CustomsOptions;
@@ -11,7 +10,7 @@ import org.apache.beam.sdk.values.KV;
 
 /** {@link DoFn} for analysis of distributed account creation abuse */
 public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>, Alert>
-    implements DocumentingTransform {
+    implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final int ratioAlertCount;
@@ -31,12 +30,11 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
     this.escalate = options.getEscalateAccountCreationDistributed();
   }
 
-  public String getTransformDoc() {
-    String experimental = escalate ? "" : " (Experimental)";
+  public String getTransformDocDescription() {
     return String.format(
         "Alert if at least %s accounts are created from different source addresses in a 30 "
-            + "minute time frame and the similarity index of the accounts is all below %.2f.%s",
-        ratioAlertCount, ratioConsiderationUpper, experimental);
+            + "minute time frame and the similarity index of the accounts is all below %.2f.",
+        ratioAlertCount, ratioConsiderationUpper);
   }
 
   @ProcessElement
@@ -93,5 +91,10 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
         c.output(alert);
       }
     }
+  }
+
+  @Override
+  public boolean isExperimental() {
+    return !escalate;
   }
 }

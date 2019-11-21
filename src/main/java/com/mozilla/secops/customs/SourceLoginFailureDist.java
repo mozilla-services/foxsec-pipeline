@@ -1,6 +1,5 @@
 package com.mozilla.secops.customs;
 
-import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
@@ -23,7 +22,7 @@ import org.joda.time.Duration;
  * window of time.
  */
 public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PCollection<Alert>>
-    implements DocumentingTransform {
+    implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private static final int windowSizeSeconds = 600;
@@ -43,12 +42,11 @@ public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PColl
     escalate = options.getEscalateSourceLoginFailureDistributed();
   }
 
-  public String getTransformDoc() {
-    String experimental = escalate ? "" : " (Experimental)";
+  public String getTransformDocDescription() {
     return String.format(
         "Alert on login failures for a particular account from %d different source addresses "
-            + "in a %d second fixed window.%s",
-        threshold, windowSizeSeconds, experimental);
+            + "in a %d second fixed window.",
+        threshold, windowSizeSeconds);
   }
 
   @Override
@@ -131,5 +129,9 @@ public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PColl
                   }
                 }))
         .apply("source login failure dist global windows", new GlobalTriggers<Alert>(5));
+  }
+
+  public boolean isExperimental() {
+    return !escalate;
   }
 }

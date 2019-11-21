@@ -1,6 +1,5 @@
 package com.mozilla.secops.customs;
 
-import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.customs.Customs.CustomsOptions;
@@ -15,13 +14,13 @@ import org.apache.beam.sdk.values.PCollection;
 
 /** {@link DoFn} for analysis of account creation abuse applied to sessions */
 public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV<String, Alert>>
-    implements DocumentingTransform {
+    implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final int sessionCreationLimit;
   private final String monitoredResource;
   private final Integer accountAbuseSuppressRecovery;
-  private boolean escalate;
+  private final boolean escalate;
 
   /**
    * Create new CustomsAccountCreation
@@ -35,12 +34,11 @@ public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV
     this.escalate = options.getEscalateAccountCreation();
   }
 
-  public String getTransformDoc() {
-    String experimental = escalate ? "" : " (Experimental)";
+  public String getTransformDocDescription() {
     return String.format(
         "Alert if single source address creates %d or more accounts in one session, where a session"
-            + " ends after 30 minutes of inactivity.%s",
-        sessionCreationLimit, experimental);
+            + " ends after 30 minutes of inactivity.",
+        sessionCreationLimit);
   }
 
   /**
@@ -145,5 +143,9 @@ public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV
       IprepdIO.addMetadataSuppressRecovery(accountAbuseSuppressRecovery, alert);
     }
     c.output(KV.of(remoteAddress, alert));
+  }
+
+  public boolean isExperimental() {
+    return !escalate;
   }
 }
