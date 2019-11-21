@@ -1,4 +1,4 @@
-package com.mozilla.secops.alert;
+package com.mozilla.secops.customs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
