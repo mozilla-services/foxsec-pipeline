@@ -1,8 +1,8 @@
 package com.mozilla.secops.customs;
 
-import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.customs.Customs.CustomsOptions;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
 import com.mozilla.secops.parser.Parser;
@@ -14,30 +14,27 @@ import org.apache.beam.sdk.values.PCollection;
 
 /** {@link DoFn} for analysis of account creation abuse applied to sessions */
 public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV<String, Alert>>
-    implements DocumentingTransform {
+    implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private final int sessionCreationLimit;
   private final String monitoredResource;
   private final Integer accountAbuseSuppressRecovery;
+  private final boolean escalate;
 
   /**
    * Create new CustomsAccountCreation
    *
-   * @param monitoredResource Monitored resource indicator
-   * @param sessionCreationLimit Number of creations after which an alert is generated
-   * @param accountAbuseSuppressRecovery Optional recovery suppression metadata to add for IprepdIO
+   * @param options Pipeline options
    */
-  public CustomsAccountCreation(
-      String monitoredResource,
-      Integer sessionCreationLimit,
-      Integer accountAbuseSuppressRecovery) {
-    this.monitoredResource = monitoredResource;
-    this.sessionCreationLimit = sessionCreationLimit;
-    this.accountAbuseSuppressRecovery = accountAbuseSuppressRecovery;
+  public CustomsAccountCreation(CustomsOptions options) {
+    this.monitoredResource = options.getMonitoredResourceIndicator();
+    this.sessionCreationLimit = options.getAccountCreationSessionLimit();
+    this.accountAbuseSuppressRecovery = options.getAccountAbuseSuppressRecovery();
+    this.escalate = options.getEscalateAccountCreation();
   }
 
-  public String getTransformDoc() {
+  public String getTransformDocDescription() {
     return String.format(
         "Alert if single source address creates %d or more accounts in one session, where a session"
             + " ends after 30 minutes of inactivity.",
@@ -146,5 +143,9 @@ public class CustomsAccountCreation extends DoFn<KV<String, Iterable<Event>>, KV
       IprepdIO.addMetadataSuppressRecovery(accountAbuseSuppressRecovery, alert);
     }
     c.output(KV.of(remoteAddress, alert));
+  }
+
+  public boolean isExperimental() {
+    return !escalate;
   }
 }

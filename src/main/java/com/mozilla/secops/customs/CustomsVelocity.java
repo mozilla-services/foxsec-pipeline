@@ -1,6 +1,5 @@
 package com.mozilla.secops.customs;
 
-import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.authstate.AuthStateModel;
@@ -29,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 /** Customs location velocity analysis */
 public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<Alert>>
-    implements DocumentingTransform {
+    implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   public static final String VELOCITY_KIND = "customs_velocity";
@@ -46,7 +45,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   private final String maxmindCityDbPath;
   private final String maxmindIspDbPath;
 
-  public String getTransformDoc() {
+  public String getTransformDocDescription() {
     return String.format(
         "Alert based on applying location velocity analysis to FxA events,"
             + " using a maximum KM/s of %.2f",
@@ -269,5 +268,9 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                   }
                 }))
         .apply("velocity global windows", new GlobalTriggers<Alert>(5));
+  }
+
+  public boolean isExperimental() {
+    return true;
   }
 }

@@ -1,6 +1,5 @@
 package com.mozilla.secops.customs;
 
-import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
@@ -19,14 +18,15 @@ import org.joda.time.Duration;
 
 /** Abuse of FxA password reset endpoints */
 public class CustomsPasswordResetAbuse extends PTransform<PCollection<Event>, PCollection<Alert>>
-    implements DocumentingTransform {
+    implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private static final int windowMinutes = 10;
   private final String monitoredResource;
   private final Integer thresholdPerIp;
+  private boolean escalate;
 
-  public String getTransformDoc() {
+  public String getTransformDocDescription() {
     return String.format(
         "Alert of single source requests password reset for at least %d distinct accounts "
             + "within %d minute fixed window.",
@@ -41,6 +41,7 @@ public class CustomsPasswordResetAbuse extends PTransform<PCollection<Event>, PC
   public CustomsPasswordResetAbuse(Customs.CustomsOptions options) {
     monitoredResource = options.getMonitoredResourceIndicator();
     thresholdPerIp = options.getPasswordResetAbuseWindowThresholdPerIp();
+    escalate = options.getEscalatePasswordResetAbuse();
   }
 
   @Override
@@ -120,5 +121,9 @@ public class CustomsPasswordResetAbuse extends PTransform<PCollection<Event>, PC
                   }
                 }))
         .apply("password reset global windows", new GlobalTriggers<Alert>(5));
+  }
+
+  public boolean isExperimental() {
+    return !escalate;
   }
 }

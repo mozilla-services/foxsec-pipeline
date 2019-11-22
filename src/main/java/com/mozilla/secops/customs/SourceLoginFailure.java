@@ -1,6 +1,5 @@
 package com.mozilla.secops.customs;
 
-import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
@@ -23,13 +22,14 @@ import org.joda.time.Duration;
  * <p>The fixed window size is hardcoded to 5 minutes.
  */
 public class SourceLoginFailure extends PTransform<PCollection<Event>, PCollection<Alert>>
-    implements DocumentingTransform {
+    implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
   private static final int windowSizeSeconds = 300;
 
   private final String monitoredResource;
   private final Integer threshold;
+  private final boolean escalate;
 
   /**
    * Initialize new SourceLoginFailure
@@ -39,9 +39,10 @@ public class SourceLoginFailure extends PTransform<PCollection<Event>, PCollecti
   public SourceLoginFailure(Customs.CustomsOptions options) {
     this.monitoredResource = options.getMonitoredResourceIndicator();
     threshold = options.getSourceLoginFailureThreshold();
+    escalate = options.getEscalateSourceLoginFailure();
   }
 
-  public String getTransformDoc() {
+  public String getTransformDocDescription() {
     return String.format(
         "Alert on %d login failures from a single source in a %d second window.",
         threshold, windowSizeSeconds);
@@ -121,5 +122,9 @@ public class SourceLoginFailure extends PTransform<PCollection<Event>, PCollecti
                   }
                 }))
         .apply("source login failure global windows", new GlobalTriggers<Alert>(5));
+  }
+
+  public boolean isExperimental() {
+    return !escalate;
   }
 }
