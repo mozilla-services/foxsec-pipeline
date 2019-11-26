@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
@@ -49,6 +50,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +66,37 @@ public class AuthProfile implements Serializable {
   private static final String EMAIL_TEMPLATE = "email/authprofile.ftlh";
   private static final String SLACK_TEMPLATE = "slack/authprofile.ftlh";
   private static final String[] ALERT_TEMPLATES = new String[] {EMAIL_TEMPLATE, SLACK_TEMPLATE};
+
+  private static IdentityManager globalIdm;
+  private static Instant globalIdmLoaded;
+  private static ReentrantLock globalIdmLock = new ReentrantLock();
+  private static final Duration globalIdmRefresh = Duration.standardMinutes(5);
+
+  /**
+   * Load a process shared version of the identity manager
+   *
+   * <p>Requests the current identity manager for use. In an attempt to be as consistent as possible
+   * across worker threads, the identity manager is shared. If the identity manager is more than 5
+   * minutes old, a new version is requested from storage.
+   *
+   * <p>This function will pick up a mutex on entry which is released on return.
+   *
+   * @param path Identity manager path
+   * @return IdentityManager
+   */
+  public static IdentityManager getIdentityManager(String path) throws IOException {
+    globalIdmLock.lock();
+    try {
+      if ((globalIdmLoaded == null)
+          || (new Instant().isAfter(globalIdmLoaded.plus(globalIdmRefresh)))) {
+        globalIdmLoaded = new Instant();
+        globalIdm = IdentityManager.load(path);
+      }
+      return globalIdm;
+    } finally {
+      globalIdmLock.unlock();
+    }
+  }
 
   /**
    * Parse input strings returning applicable authentication events.
@@ -217,7 +251,6 @@ public class AuthProfile implements Serializable {
 
     private final String idmanagerPath;
     private final Boolean ignoreUnknownIdentities;
-    private IdentityManager idmanager;
     private Logger log;
 
     /**
@@ -233,13 +266,19 @@ public class AuthProfile implements Serializable {
     @Setup
     public void setup() throws IOException {
       log = LoggerFactory.getLogger(ExtractIdentity.class);
-      idmanager = IdentityManager.load(idmanagerPath);
     }
 
     @ProcessElement
     public void processElement(ProcessContext c) {
       Event e = c.element();
       Normalized n = e.getNormalized();
+      IdentityManager idmanager;
+
+      try {
+        idmanager = AuthProfile.getIdentityManager(idmanagerPath);
+      } catch (IOException exc) {
+        throw new RuntimeException(exc.getMessage());
+      }
 
       if (n.getSubjectUser() == null) {
         return;
@@ -461,7 +500,6 @@ public class AuthProfile implements Serializable {
     private final Double maxKilometersStatic;
     private final String gcpProject;
     private CidrUtil cidrGcp;
-    private IdentityManager idmanager;
     private Logger log;
     private State state;
     private Minfraud minfraud;
@@ -492,8 +530,6 @@ public class AuthProfile implements Serializable {
     public void setup() throws StateException, IOException {
       log = LoggerFactory.getLogger(StateAnalyze.class);
 
-      idmanager = IdentityManager.load(idmanagerPath);
-
       cidrGcp = new CidrUtil();
       cidrGcp.loadGcpSubnets();
 
@@ -518,7 +554,7 @@ public class AuthProfile implements Serializable {
       state.done();
     }
 
-    private String getEntryKey(String ipAddr) {
+    private String getEntryKey(String ipAddr, IdentityManager idmanager) {
       String ret = idmanager.lookupNamedSubnet(ipAddr);
       if (ret != null) {
         return ret;
@@ -645,6 +681,13 @@ public class AuthProfile implements Serializable {
     public void processElement(ProcessContext c) throws StateException {
       Iterable<Event> events = c.element().getValue();
       String userIdentity = c.element().getKey();
+      IdentityManager idmanager;
+
+      try {
+        idmanager = AuthProfile.getIdentityManager(idmanagerPath);
+      } catch (IOException exc) {
+        throw new RuntimeException(exc.getMessage());
+      }
       Identity identity = idmanager.getIdentity(userIdentity);
 
       ArrayList<String> seenKnownAddresses = new ArrayList<>();
@@ -698,7 +741,7 @@ public class AuthProfile implements Serializable {
             sm = new AuthStateModel(userIdentity);
           }
 
-          String entryKey = getEntryKey(e.getNormalized().getSourceAddress());
+          String entryKey = getEntryKey(e.getNormalized().getSourceAddress(), idmanager);
           if (!entryKey.equals(e.getNormalized().getSourceAddress())) {
             a.addMetadata("entry_key", entryKey);
           }
