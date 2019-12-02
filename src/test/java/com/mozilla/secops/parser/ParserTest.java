@@ -2244,4 +2244,57 @@ public class ParserTest {
     Auth0 promptsContainsEmptyArrayPayload = e.getPayload();
     assertNull(promptsContainsEmptyArrayPayload.getUsername());
   }
+
+  @Test
+  public void testApiGatewayWithCloudWatchLogEvent() throws Exception {
+    Event e;
+    Parser p = getTestParser();
+    assertNotNull(p);
+
+    String data =
+        "{\"id\":\"3612062629821359815568546405119323624381468695710007296\","
+            + "\"timestamp\":1574863350331,\"message\":\"requestId: d2d284c1-af50-457c-a0f8-5116dc789211, "
+            + "ip: 54.68.203.164, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
+            + "httpMethod: DELETE, resourcePath: /sub/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}";
+    e = p.parse(data);
+
+    assertEquals(Payload.PayloadType.APIGATEWAY, e.getPayloadType());
+
+    ApiGateway ag = e.getPayload();
+
+    assertEquals("d2d284c1-af50-457c-a0f8-5116dc789211", ag.getRequestId());
+    assertEquals("54.68.203.164", ag.getIp());
+    assertNull(ag.getCaller());
+    assertNull(ag.getUser());
+    assertEquals("DELETE", ag.getHttpMethod());
+    assertEquals(Integer.valueOf(404), ag.getStatus());
+    assertEquals("HTTP/1.1", ag.getProtocol());
+    assertEquals(Integer.valueOf(43), ag.getResponseLength());
+  }
+
+  @Test
+  public void testApiGatewayAccessLog() throws Exception {
+    Event e;
+    Parser p = getTestParser();
+    assertNotNull(p);
+
+    String data =
+        "\"requestId: d2d284c1-af50-457c-a0f8-5116dc789211, "
+            + "ip: 54.68.203.164, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
+            + "httpMethod: DELETE, resourcePath: /sub/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"";
+    e = p.parse(data);
+
+    assertEquals(Payload.PayloadType.APIGATEWAY, e.getPayloadType());
+
+    ApiGateway ag = e.getPayload();
+
+    assertEquals("d2d284c1-af50-457c-a0f8-5116dc789211", ag.getRequestId());
+    assertEquals("54.68.203.164", ag.getIp());
+    assertNull(ag.getCaller());
+    assertNull(ag.getUser());
+    assertEquals("DELETE", ag.getHttpMethod());
+    assertEquals(Integer.valueOf(404), ag.getStatus());
+    assertEquals("HTTP/1.1", ag.getProtocol());
+    assertEquals(Integer.valueOf(43), ag.getResponseLength());
+  }
 }

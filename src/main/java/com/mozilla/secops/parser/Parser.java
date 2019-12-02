@@ -14,6 +14,7 @@ import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
+import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -333,6 +334,21 @@ public class Parser {
     return input;
   }
 
+  private String stripCloudWatchLog(Event e, String input, ParserState state) {
+    try {
+      CloudWatchLogEvent cwle = mapper.readValue(input, CloudWatchLogEvent.class);
+      if (cwle.getId() == null || cwle.getTimestamp() == null || cwle.getMessage() == null) {
+        return input;
+      }
+      state.setCloudwatchLogEvent(cwle);
+      return mapper.writeValueAsString(cwle.getMessage());
+    } catch (IOException exc) {
+      // pass
+    }
+    // If the input data could not be converted into a CloudWatch Log Event just return it as is
+    return input;
+  }
+
   private String stripEncapsulation(Event e, String input, ParserState state) {
     input = stripStackdriverEncapsulation(e, input, state);
     // If stripping the encapsulation returns null, just return null here to ignore the event. This
@@ -340,6 +356,7 @@ public class Parser {
     if (input == null) {
       return null;
     }
+<<<<<<< HEAD
 
     // If we know no other encapsulation will be present for a given log type we can just
     // return here.
@@ -358,6 +375,11 @@ public class Parser {
     if (!cfg.getDisableMozlogStrip()) {
       input = stripMozlog(e, input, state);
     }
+=======
+    input = stripCloudWatch(e, input, state);
+    input = stripCloudWatchLog(e, input, state);
+    input = stripMozlog(e, input, state);
+>>>>>>> add support for cloudwatch log events + api gateway logs
     return input;
   }
 
@@ -497,6 +519,7 @@ public class Parser {
     payloads.add(new ETDBeta());
     payloads.add(new CfgTick());
     payloads.add(new Auth0());
+    payloads.add(new ApiGateway());
     payloads.add(new Raw());
 
     if (cfg.getIdentityManagerPath() != null) {
