@@ -16,8 +16,8 @@ public class TestSourceLoginFailureDist {
     String expected =
         String.format(
             "Alert on login failures for a particular account from %d different source addresses "
-                + "in a %d second fixed window.",
-            options.getSourceLoginFailureDistributedThreshold(), 600);
+                + "in a 10 minute fixed window.",
+            options.getSourceLoginFailureDistributedThreshold());
     assertEquals(expected, doc);
   }
 
@@ -30,8 +30,8 @@ public class TestSourceLoginFailureDist {
     String expected =
         String.format(
             "Alert on login failures for a particular account from %d different source addresses "
-                + "in a %d second fixed window. (Experimental)",
-            options.getSourceLoginFailureDistributedThreshold(), 600);
+                + "in a 10 minute fixed window. (Experimental)",
+            options.getSourceLoginFailureDistributedThreshold());
     assertEquals(expected, doc);
   }
 }

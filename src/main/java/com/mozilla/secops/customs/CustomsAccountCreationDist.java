@@ -4,16 +4,29 @@ import com.mozilla.secops.StringDistance;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.customs.Customs.CustomsOptions;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.FxaAuth;
+import com.mozilla.secops.window.GlobalTriggers;
 import java.util.ArrayList;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.PTransform;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
 
-/** {@link DoFn} for analysis of distributed account creation abuse */
-public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>, Alert>
+/**
+ * Abusive distributed account creation
+ *
+ * <p>Analysis of distributed account creation where accounts created meet a certain similarity
+ * index.
+ *
+ * <p>Assumed to operate on fixed 10 minute windows.
+ */
+public class CustomsAccountCreationDist
+    extends PTransform<PCollection<KV<String, CustomsFeatures>>, PCollection<Alert>>
     implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
-  private final int ratioAlertCount;
+  private final int threshold;
   private final Double ratioConsiderationUpper;
   private final String monitoredResource;
   private final boolean escalate;
@@ -25,72 +38,94 @@ public class CustomsAccountCreationDist extends DoFn<KV<String, Iterable<Event>>
    */
   public CustomsAccountCreationDist(CustomsOptions options) {
     this.monitoredResource = options.getMonitoredResourceIndicator();
-    this.ratioAlertCount = options.getAccountCreationDistanceThreshold();
-    this.ratioConsiderationUpper = options.getAccountCreationDistanceRatio();
+    this.threshold = options.getAccountCreationDistributedThreshold();
+    this.ratioConsiderationUpper = options.getAccountCreationDistributedDistanceRatio();
     this.escalate = options.getEscalateAccountCreationDistributed();
   }
 
   public String getTransformDocDescription() {
     return String.format(
-        "Alert if at least %s accounts are created from different source addresses in a 30 "
-            + "minute time frame and the similarity index of the accounts is all below %.2f.",
-        ratioAlertCount, ratioConsiderationUpper);
+        "Alert if at least %d accounts are created from different source addresses in a 10 "
+            + "minute fixed window and the similarity index of the accounts is all below %.2f.",
+        threshold, ratioConsiderationUpper);
   }
 
-  @ProcessElement
-  public void processElement(ProcessContext c) {
-    String domain = c.element().getKey();
-    Iterable<Event> events = c.element().getValue();
+  @Override
+  public PCollection<Alert> expand(PCollection<KV<String, CustomsFeatures>> col) {
+    return col.apply(
+            "account creation distributed analyze",
+            ParDo.of(
+                new DoFn<KV<String, CustomsFeatures>, Alert>() {
+                  private static final long serialVersionUID = 1L;
 
-    for (Event e : events) {
-      String email = CustomsUtil.authGetEmail(e);
-      String remoteAddress = CustomsUtil.authGetSourceAddress(e);
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    CustomsFeatures cf = c.element().getValue();
 
-      Boolean addrVariance = false;
-      ArrayList<String> cand = new ArrayList<>();
-      for (Event f : events) {
-        String candEmail = CustomsUtil.authGetEmail(f);
-        if (candEmail.equals(email)) {
-          continue;
-        }
-        if (StringDistance.ratio(email.split("@")[0], candEmail.split("@")[0])
-            <= ratioConsiderationUpper) {
-          if (!remoteAddress.equals(CustomsUtil.authGetSourceAddress(f))) {
-            addrVariance = true;
-          }
-          cand.add(candEmail);
-        }
-      }
+                    if (cf.getTotalAccountCreateSuccess() < threshold) {
+                      return;
+                    }
 
-      // No variance in the source address we are done
-      if (!addrVariance) {
-        return;
-      }
+                    String domain = c.element().getKey();
+                    ArrayList<Event> events =
+                        cf.getEventsOfType(FxaAuth.EventSummary.ACCOUNT_CREATE_SUCCESS);
 
-      if (cand.size() >= ratioAlertCount) {
-        Alert alert = new Alert();
-        alert.setCategory("customs");
-        alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
-        alert.addMetadata("customs_category", Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
-        alert.addMetadata("count", Integer.toString(cand.size() + 1));
-        alert.addMetadata("sourceaddress", remoteAddress);
-        alert.setSummary(
-            String.format(
-                "%s suspicious distributed account creation, %s %d",
-                monitoredResource, remoteAddress, cand.size() + 1));
-        alert.addMetadata("email", email);
-        String buf = "";
-        for (String s : cand) {
-          if (buf.isEmpty()) {
-            buf = s;
-          } else {
-            buf += ", " + s;
-          }
-        }
-        alert.addMetadata("email_similar", buf);
-        c.output(alert);
-      }
-    }
+                    for (Event e : events) {
+                      String email = CustomsUtil.authGetEmail(e);
+                      String remoteAddress = CustomsUtil.authGetSourceAddress(e);
+                      if (email == null || remoteAddress == null) {
+                        continue;
+                      }
+
+                      boolean addrVariance = false;
+                      ArrayList<String> cand = new ArrayList<>();
+                      for (Event f : events) {
+                        String candEmail = CustomsUtil.authGetEmail(f);
+                        if (candEmail == null || candEmail.equals(email)) {
+                          continue;
+                        }
+                        if (StringDistance.ratio(email.split("@")[0], candEmail.split("@")[0])
+                            <= ratioConsiderationUpper) {
+                          if (!remoteAddress.equals(CustomsUtil.authGetSourceAddress(f))) {
+                            addrVariance = true;
+                          }
+                          cand.add(candEmail);
+                        }
+                      }
+
+                      // No variance in the source address we are done
+                      if (!addrVariance) {
+                        return;
+                      }
+
+                      if (cand.size() >= threshold) {
+                        Alert alert = new Alert();
+                        alert.setCategory("customs");
+                        alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
+                        alert.addMetadata(
+                            "customs_category", Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
+                        alert.addMetadata("count", Integer.toString(cand.size() + 1));
+                        alert.addMetadata("sourceaddress", remoteAddress);
+                        alert.setSummary(
+                            String.format(
+                                "%s suspicious distributed account creation, %s %d",
+                                monitoredResource, remoteAddress, cand.size() + 1));
+                        alert.addMetadata("email", email);
+                        String buf = "";
+                        for (String s : cand) {
+                          if (buf.isEmpty()) {
+                            buf = s;
+                          } else {
+                            buf += ", " + s;
+                          }
+                        }
+                        alert.addMetadata("email_similar", buf);
+                        c.output(alert);
+                      }
+                    }
+                  }
+                }))
+        .apply("account creation distributed global", new GlobalTriggers<Alert>(5));
   }
 
   @Override

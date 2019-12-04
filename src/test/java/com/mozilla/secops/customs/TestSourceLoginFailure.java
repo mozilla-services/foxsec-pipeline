@@ -15,8 +15,8 @@ public class TestSourceLoginFailure {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert on %d login failures from a single source in a %d second window.",
-            options.getSourceLoginFailureThreshold(), 300);
+            "Alert on %d login failures from a single source in a 10 minute window.",
+            options.getSourceLoginFailureThreshold());
     assertEquals(expected, doc);
   }
 
@@ -28,8 +28,8 @@ public class TestSourceLoginFailure {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert on %d login failures from a single source in a %d second window. (Experimental)",
-            options.getSourceLoginFailureThreshold(), 300);
+            "Alert on %d login failures from a single source in a 10 minute window. (Experimental)",
+            options.getSourceLoginFailureThreshold());
     assertEquals(expected, doc);
   }
 }

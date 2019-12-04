@@ -132,6 +132,12 @@ public class CustomsFeatures implements Serializable {
         case ACCOUNT_CREATE_SUCCESS:
           totalAccountCreateSuccess++;
           break;
+        case PASSWORD_FORGOT_SEND_CODE_SUCCESS:
+          totalPasswordForgotSendCodeSuccess++;
+          break;
+        case PASSWORD_FORGOT_SEND_CODE_FAILURE:
+          totalPasswordForgotSendCodeFailure++;
+          break;
       }
     }
 

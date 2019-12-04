@@ -16,9 +16,8 @@ public class TestCustomsAccountCreation {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert if single source address creates %d or more accounts in one session, where a session"
-                + " ends after 30 minutes of inactivity.",
-            options.getAccountCreationSessionLimit());
+            "Alert if single source address creates %d or more accounts within 10 minute fixed window.",
+            options.getAccountCreationThreshold());
     assertEquals(expected, doc);
   }
 
@@ -30,9 +29,9 @@ public class TestCustomsAccountCreation {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert if single source address creates %d or more accounts in one session, where a session"
-                + " ends after 30 minutes of inactivity. (Experimental)",
-            options.getAccountCreationSessionLimit());
+            "Alert if single source address creates %d or more accounts within 10 minute fixed "
+                + "window. (Experimental)",
+            options.getAccountCreationThreshold());
     assertEquals(expected, doc);
   }
 }

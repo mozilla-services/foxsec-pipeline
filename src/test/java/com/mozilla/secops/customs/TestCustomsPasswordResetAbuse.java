@@ -15,9 +15,9 @@ public class TestCustomsPasswordResetAbuse {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert of single source requests password reset for at least %d distinct accounts "
-                + "within %d minute fixed window.",
-            options.getPasswordResetAbuseWindowThresholdPerIp(), 10);
+            "Alert if single source requests password reset for at least %d distinct accounts "
+                + "within 10 minute fixed window.",
+            options.getPasswordResetAbuseThreshold());
     assertEquals(expected, doc);
   }
 
@@ -29,9 +29,9 @@ public class TestCustomsPasswordResetAbuse {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert of single source requests password reset for at least %d distinct accounts "
-                + "within %d minute fixed window. (Experimental)",
-            options.getPasswordResetAbuseWindowThresholdPerIp(), 10);
+            "Alert if single source requests password reset for at least %d distinct accounts "
+                + "within 10 minute fixed window. (Experimental)",
+            options.getPasswordResetAbuseThreshold());
     assertEquals(expected, doc);
   }
 }

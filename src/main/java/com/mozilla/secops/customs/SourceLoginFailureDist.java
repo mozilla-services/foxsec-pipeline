@@ -8,20 +8,17 @@ import com.mozilla.secops.parser.Parser;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.ArrayList;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.FixedWindows;
-import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.joda.time.Duration;
 
 /**
  * Detect login failures for a single account occuring from multiple source addresses in a fixed
  * window of time.
  */
-public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PCollection<Alert>>
+public class SourceLoginFailureDist
+    extends PTransform<PCollection<KV<String, CustomsFeatures>>, PCollection<Alert>>
     implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
@@ -45,45 +42,33 @@ public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PColl
   public String getTransformDocDescription() {
     return String.format(
         "Alert on login failures for a particular account from %d different source addresses "
-            + "in a %d second fixed window.",
-        threshold, windowSizeSeconds);
+            + "in a 10 minute fixed window.",
+        threshold);
   }
 
   @Override
-  public PCollection<Alert> expand(PCollection<Event> col) {
+  public PCollection<Alert> expand(PCollection<KV<String, CustomsFeatures>> col) {
     return col.apply(
-            "source login failure dist key for email",
-            ParDo.of(
-                new DoFn<Event, KV<String, Event>>() {
-                  private static final long serialVersionUID = 1L;
-
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    Event e = c.element();
-                    FxaAuth.EventSummary s = CustomsUtil.authGetEventSummary(e);
-                    if ((s == null) || (!s.equals(FxaAuth.EventSummary.LOGIN_FAILURE))) {
-                      return;
-                    }
-                    c.output(KV.of(CustomsUtil.authGetEmail(c.element()), e));
-                  }
-                }))
-        .apply(
-            "source login failure dist fixed windows",
-            Window.<KV<String, Event>>into(
-                FixedWindows.of(Duration.standardSeconds(windowSizeSeconds))))
-        .apply("source login failure dist gbk", GroupByKey.<String, Event>create())
-        .apply(
             "source login failure dist analysis",
             ParDo.of(
-                new DoFn<KV<String, Iterable<Event>>, Alert>() {
+                new DoFn<KV<String, CustomsFeatures>, Alert>() {
                   private static final long serialVersionUID = 1L;
 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
+                    CustomsFeatures cf = c.element().getValue();
+
+                    // If the total login failures is less than our threshold we don't need to
+                    // continue with the analysis
+                    if (cf.getTotalLoginFailureCount() < threshold) {
+                      return;
+                    }
+
                     int cnt = 0;
 
                     String email = c.element().getKey();
-                    Iterable<Event> events = c.element().getValue();
+                    ArrayList<Event> events =
+                        cf.getEventsOfType(FxaAuth.EventSummary.LOGIN_FAILURE);
                     ArrayList<String> source = new ArrayList<>();
 
                     for (Event i : events) {

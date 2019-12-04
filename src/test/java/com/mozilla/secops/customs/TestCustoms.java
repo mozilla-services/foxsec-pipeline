@@ -96,7 +96,7 @@ public class TestCustoms {
 
     Customs.CustomsOptions options = getTestOptions();
     options.setEnableAccountCreationAbuseDetector(true);
-    options.setAccountCreationSessionLimit(3);
+    options.setAccountCreationThreshold(3);
     options.setXffAddressSelector("127.0.0.1/32");
     options.setGenerateConfigurationTicksInterval(1);
     options.setGenerateConfigurationTicksMaximum(5L);
@@ -144,8 +144,8 @@ public class TestCustoms {
     options.setXffAddressSelector("127.0.0.1/32");
     // Increase session creation limit here so we don't trip an alert for that as part of
     // the same address component of the test
-    options.setAccountCreationSessionLimit(10);
-    options.setAccountCreationDistanceThreshold(5);
+    options.setAccountCreationThreshold(10);
+    options.setAccountCreationDistributedThreshold(5);
 
     PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
 
@@ -217,7 +217,7 @@ public class TestCustoms {
                   assertEquals("source_login_failure", a.getMetadataValue("notify_merge"));
                   assertEquals("source_login_failure", a.getMetadataValue("customs_category"));
                   assertEquals(
-                      "test source login failure threshold exceeded, 216.160.83.56 10 in 300 seconds",
+                      "test source login failure threshold exceeded, 216.160.83.56 10 in 10 minutes",
                       a.getSummary());
                   lfCnt++;
                 } else if (a.getMetadataValue("customs_category").equals("summary")) {
