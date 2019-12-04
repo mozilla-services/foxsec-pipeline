@@ -22,55 +22,38 @@ public class CloudWatchLogTransform extends PTransform<PCollection<String>, PCol
   @Override
   public PCollection<String> expand(PCollection<String> input) {
     return input
-        .apply(ParDo.of(new SerializeSubscription()))
-        .apply(ParDo.of(new DataMessageFilter()))
-        .apply(ParDo.of(new ExtractLogEvents()));
+        .apply(ParDo.of(new NormalizeCloudWatchLogEvents()));
   }
 
-  class SerializeSubscription extends DoFn<String, CloudWatchLogSubscription> {
+  class NormalizeCloudWatchLogEvents extends DoFn<String, String> {
     private static final long serialVersionUID = 1L;
 
     @ProcessElement
     public void processElement(ProcessContext c) {
-      String json = c.element();
+      String input = c.element();
 
       try {
         CloudWatchLogSubscription cws =
-            objectMapper.readValue(json, CloudWatchLogSubscription.class);
-        c.output(cws);
-      } catch (IOException e) {
-        // pass
-      }
-    }
-  }
+            objectMapper.readValue(input, CloudWatchLogSubscription.class);
 
-  class DataMessageFilter extends DoFn<CloudWatchLogSubscription, CloudWatchLogSubscription> {
-    private static final long serialVersionUID = 1L;
-
-    @ProcessElement
-    public void ProcessElement(ProcessContext c) {
-      CloudWatchLogSubscription cws = c.element();
-      if (cws.isDataMessage()) {
-        c.output(cws);
-      }
-    }
-  }
-
-  class ExtractLogEvents extends DoFn<CloudWatchLogSubscription, String> {
-    private static final long serialVersionUID = 1L;
-
-    @ProcessElement
-    public void ProcessElement(ProcessContext c) {
-      CloudWatchLogSubscription cws = c.element();
-      ArrayList<Object> logEvents = cws.getLogEvents();
-      for (Object logEvent : logEvents) {
-        try {
-          String event = objectMapper.writeValueAsString(logEvent);
-          c.output(event);
-        } catch (JsonProcessingException e) {
-          // pass
+        //TODO check fields all populated
+        if (cws.isDataMessage()) {
+          ArrayList<Object> logEvents = cws.getLogEvents();
+          for (Object logEvent : logEvents) {
+          try {
+            String event = objectMapper.writeValueAsString(logEvent);
+            c.output(event);
+          } catch (JsonProcessingException e) {
+            // pass
+          }
+          }
         }
+      } catch (IOException e) {
+        // 
+        c.output(input);
       }
+
     }
   }
+
 }

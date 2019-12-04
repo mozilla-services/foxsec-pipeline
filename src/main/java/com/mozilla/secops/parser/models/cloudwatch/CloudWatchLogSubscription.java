@@ -11,6 +11,7 @@ import java.util.ArrayList;
 public class CloudWatchLogSubscription implements Serializable {
   private static final long serialVersionUID = 1L;
 
+
   private MessageType messageType;
   private String owner;
   private String logGroup;
