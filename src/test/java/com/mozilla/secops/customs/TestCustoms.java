@@ -237,7 +237,7 @@ public class TestCustoms {
                       "source_login_failure_distributed", a.getMetadataValue("customs_category"));
                   assertEquals(
                       "test distributed source login failure threshold exceeded for single "
-                          + "account, 10 addresses in 600 seconds",
+                          + "account, 10 addresses in 10 minutes",
                       a.getSummary());
                   lfdCnt++;
                 } else {

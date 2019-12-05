@@ -22,8 +22,6 @@ public class SourceLoginFailureDist
     implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
 
-  private static final int windowSizeSeconds = 600;
-
   private final String monitoredResource;
   private final Integer threshold;
   private final boolean escalate;
@@ -99,8 +97,8 @@ public class SourceLoginFailureDist
                     alert.setSummary(
                         String.format(
                             "%s distributed source login failure threshold exceeded for single account"
-                                + ", %d addresses in %d seconds",
-                            monitoredResource, cnt, windowSizeSeconds));
+                                + ", %d addresses in 10 minutes",
+                            monitoredResource, cnt));
                     String buf = "";
                     for (String s : source) {
                       if (buf.isEmpty()) {
