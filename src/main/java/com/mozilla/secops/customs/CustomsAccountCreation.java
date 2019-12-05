@@ -83,6 +83,10 @@ public class CustomsAccountCreation
                       return;
                     }
 
+                    if (cf.nominalVariance()) {
+                      return;
+                    }
+
                     Alert alert = new Alert();
                     alert.setTimestamp(Parser.getLatestTimestamp(events));
                     alert.setCategory("customs");

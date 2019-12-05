@@ -76,9 +76,15 @@ public class SourceLoginFailure
                       }
                       cnt++;
                     }
+
                     if (cnt < threshold) {
                       return;
                     }
+
+                    if (cf.nominalVariance()) {
+                      return;
+                    }
+
                     Alert alert = new Alert();
                     alert.setCategory("customs");
                     alert.setTimestamp(Parser.getLatestTimestamp(events));
