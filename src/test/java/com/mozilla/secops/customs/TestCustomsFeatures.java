@@ -1,6 +1,8 @@
 package com.mozilla.secops.customs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.mozilla.secops.TestUtil;
@@ -126,6 +128,7 @@ public class TestCustomsFeatures implements Serializable {
                   assertEquals(1, col.getUniquePathRequestCount().size());
                   assertEquals(0, col.getUniquePathSuccessfulRequestCount().size());
                   assertEquals(12, (int) col.getUniquePathRequestCount().get("/v1/account/login"));
+                  assertEquals(0, col.getVarianceIndex());
                 } else if (v.getKey().equals("spock@mozilla.com")) {
                   assertEquals(12, col.getEvents().size());
                   assertEquals(10, col.getTotalLoginFailureCount());
@@ -141,6 +144,57 @@ public class TestCustomsFeatures implements Serializable {
                   assertEquals(1, col.getUniquePathRequestCount().size());
                   assertEquals(0, col.getUniquePathSuccessfulRequestCount().size());
                   assertEquals(12, (int) col.getUniquePathRequestCount().get("/v1/account/login"));
+                  assertEquals(0, col.getVarianceIndex());
+                } else {
+                  fail("unexpected key");
+                }
+                tcnt++;
+              }
+              assertEquals(2, tcnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void testCustomsFeaturesVariance() throws Exception {
+    PCollection<String> input = TestUtil.getTestInput("/testdata/customs_variance1.txt", p);
+
+    ParserCfg parserCfg = new ParserCfg();
+    parserCfg.setXffAddressSelector(new ArrayList<>(Arrays.asList(new String[] {"127.0.0.1/32"})));
+
+    PCollection<KV<String, CustomsFeatures>> res =
+        input
+            .apply(ParDo.of(new ParserDoFn().withConfiguration(parserCfg)))
+            .apply(
+                ParDo.of(
+                    new DoFn<Event, KV<String, Event>>() {
+                      private static final long serialVersionUID = 1L;
+
+                      @ProcessElement
+                      public void processElement(ProcessContext c) {
+                        if (!c.element().getPayloadType().equals(Payload.PayloadType.FXAAUTH)) {
+                          return;
+                        }
+                        c.output(KV.of(CustomsUtil.authGetSourceAddress(c.element()), c.element()));
+                      }
+                    }))
+            .apply(new CustomsFeaturesCombiner());
+
+    PAssert.that(res)
+        .satisfies(
+            x -> {
+              int tcnt = 0;
+
+              for (KV<String, CustomsFeatures> v : x) {
+                CustomsFeatures col = v.getValue();
+                if (v.getKey().equals("10.0.0.1")) {
+                  assertEquals(55, col.getVarianceIndex());
+                  assertTrue(col.nominalVariance());
+                } else if (v.getKey().equals("10.0.0.2")) {
+                  assertEquals(24, col.getVarianceIndex());
+                  assertFalse(col.nominalVariance());
                 } else {
                   fail("unexpected key");
                 }

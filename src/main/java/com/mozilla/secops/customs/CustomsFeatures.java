@@ -11,6 +11,9 @@ import java.util.Map;
 public class CustomsFeatures implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  /** Considered norminal variance index on point-in-time feature calculation */
+  public static final int NOMINAL_VARIANCE_INDEX = 33;
+
   private ArrayList<Event> events;
 
   private HashMap<String, Integer> sourceAddressEventCount;
@@ -26,6 +29,8 @@ public class CustomsFeatures implements Serializable {
   private HashMap<FxaAuth.EventSummary, Integer> summarizedEventCounters;
   private int unknownEventCounter;
 
+  private int varianceIndex;
+
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof CustomsFeatures)) {
@@ -38,6 +43,41 @@ public class CustomsFeatures implements Serializable {
   @Override
   public int hashCode() {
     return events.hashCode();
+  }
+
+  /**
+   * Return true if calculated variance index meets or exceeds nominal index value
+   *
+   * @return boolean
+   */
+  public boolean nominalVariance() {
+    return varianceIndex >= NOMINAL_VARIANCE_INDEX;
+  }
+
+  /** Force recalculation of point-in-time statistics */
+  public void recalculate() {
+    recalculateVariance();
+  }
+
+  private void recalculateVariance() {
+    // Start at 0
+    varianceIndex = 0;
+
+    // If we have more than one unique path, for each unique path increment the
+    // index by 1.
+    if (uniquePathRequestCount.size() > 1) {
+      varianceIndex += uniquePathRequestCount.size();
+    }
+
+    // If we have more than one successful path, for each successful path increment
+    // the index by 10.
+    if (uniquePathRequestCount.size() > 1) {
+      varianceIndex += uniquePathSuccessfulRequestCount.size() * 10;
+    }
+
+    if (varianceIndex > 100) {
+      varianceIndex = 100; // clamp at 100
+    }
   }
 
   /**
@@ -87,6 +127,17 @@ public class CustomsFeatures implements Serializable {
       summarizedEventCounters.put(entry.getKey(), cur + entry.getValue());
     }
     unknownEventCounter += cf.getUnknownEventCounter();
+
+    recalculate();
+  }
+
+  /**
+   * Get variance index
+   *
+   * @return int
+   */
+  public int getVarianceIndex() {
+    return varianceIndex;
   }
 
   /**
@@ -273,6 +324,9 @@ public class CustomsFeatures implements Serializable {
 
   CustomsFeatures() {
     events = new ArrayList<Event>();
+
+    // Default to 100 if not calculated
+    varianceIndex = 100;
 
     sourceAddressEventCount = new HashMap<String, Integer>();
     uniquePathRequestCount = new HashMap<String, Integer>();

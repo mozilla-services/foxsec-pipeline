@@ -58,6 +58,7 @@ public class CustomsFeaturesCombiner
 
     @Override
     public CustomsFeatures extractOutput(CustomsFeatures col) {
+      col.recalculate();
       return col;
     }
 
