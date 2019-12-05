@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.FxaAuth;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.parser.Payload;
@@ -60,6 +61,11 @@ public class TestCustomsFeatures implements Serializable {
                 CustomsFeatures col = v.getValue();
                 if (v.getKey().equals("10.0.0.1")) {
                   assertEquals(5, col.getEvents().size());
+                  assertEquals(1, col.getUniquePathRequestCount().size());
+                  assertEquals(1, col.getUniquePathSuccessfulRequestCount().size());
+                  assertEquals(
+                      5,
+                      (int) col.getUniquePathRequestCount().get("/v1/password/forgot/send_code"));
                 } else if (v.getKey().equals("10.0.0.2")) {
                   assertEquals(4, col.getEvents().size());
                 } else {
@@ -112,12 +118,29 @@ public class TestCustomsFeatures implements Serializable {
                   assertEquals(12, col.getTotalLoginFailureCount());
                   assertEquals(0, col.getTotalLoginSuccessCount());
                   assertEquals(10, col.getSourceAddressEventCount().size());
+                  assertEquals(0, col.getUnknownEventCounter());
+                  assertEquals(
+                      12,
+                      (int)
+                          col.getSummarizedEventCounters().get(FxaAuth.EventSummary.LOGIN_FAILURE));
+                  assertEquals(1, col.getUniquePathRequestCount().size());
+                  assertEquals(0, col.getUniquePathSuccessfulRequestCount().size());
+                  assertEquals(12, (int) col.getUniquePathRequestCount().get("/v1/account/login"));
                 } else if (v.getKey().equals("spock@mozilla.com")) {
                   assertEquals(12, col.getEvents().size());
                   assertEquals(10, col.getTotalLoginFailureCount());
                   assertEquals(0, col.getTotalLoginSuccessCount());
                   assertEquals(12, (int) col.getSourceAddressEventCount().get("216.160.83.56"));
                   assertEquals(1, col.getSourceAddressEventCount().size());
+                  // Will be 2 since two blocked requests will not be summarized
+                  assertEquals(2, col.getUnknownEventCounter());
+                  assertEquals(
+                      10,
+                      (int)
+                          col.getSummarizedEventCounters().get(FxaAuth.EventSummary.LOGIN_FAILURE));
+                  assertEquals(1, col.getUniquePathRequestCount().size());
+                  assertEquals(0, col.getUniquePathSuccessfulRequestCount().size());
+                  assertEquals(12, (int) col.getUniquePathRequestCount().get("/v1/account/login"));
                 } else {
                   fail("unexpected key");
                 }

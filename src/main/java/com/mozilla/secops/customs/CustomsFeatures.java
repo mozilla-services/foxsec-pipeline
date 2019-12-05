@@ -14,12 +14,17 @@ public class CustomsFeatures implements Serializable {
   private ArrayList<Event> events;
 
   private HashMap<String, Integer> sourceAddressEventCount;
+  private HashMap<String, Integer> uniquePathRequestCount;
+  private HashMap<String, Integer> uniquePathSuccessfulRequestCount;
 
   private int totalLoginFailureCount;
   private int totalLoginSuccessCount;
   private int totalAccountCreateSuccess;
   private int totalPasswordForgotSendCodeSuccess;
   private int totalPasswordForgotSendCodeFailure;
+
+  private HashMap<FxaAuth.EventSummary, Integer> summarizedEventCounters;
+  private int unknownEventCounter;
 
   @Override
   public boolean equals(Object o) {
@@ -56,6 +61,68 @@ public class CustomsFeatures implements Serializable {
               : 0;
       sourceAddressEventCount.put(entry.getKey(), cur + entry.getValue());
     }
+
+    for (Map.Entry<String, Integer> entry : cf.getUniquePathRequestCount().entrySet()) {
+      Integer cur =
+          uniquePathRequestCount.containsKey(entry.getKey())
+              ? uniquePathRequestCount.get(entry.getKey())
+              : 0;
+      uniquePathRequestCount.put(entry.getKey(), cur + entry.getValue());
+    }
+
+    for (Map.Entry<String, Integer> entry : cf.getUniquePathSuccessfulRequestCount().entrySet()) {
+      Integer cur =
+          uniquePathSuccessfulRequestCount.containsKey(entry.getKey())
+              ? uniquePathSuccessfulRequestCount.get(entry.getKey())
+              : 0;
+      uniquePathSuccessfulRequestCount.put(entry.getKey(), cur + entry.getValue());
+    }
+
+    for (Map.Entry<FxaAuth.EventSummary, Integer> entry :
+        cf.getSummarizedEventCounters().entrySet()) {
+      Integer cur =
+          summarizedEventCounters.containsKey(entry.getKey())
+              ? summarizedEventCounters.get(entry.getKey())
+              : 0;
+      summarizedEventCounters.put(entry.getKey(), cur + entry.getValue());
+    }
+    unknownEventCounter += cf.getUnknownEventCounter();
+  }
+
+  /**
+   * Get unknown event counter
+   *
+   * @return int
+   */
+  public int getUnknownEventCounter() {
+    return unknownEventCounter;
+  }
+
+  /**
+   * Get summarized event counters
+   *
+   * @return HashMap
+   */
+  public HashMap<FxaAuth.EventSummary, Integer> getSummarizedEventCounters() {
+    return summarizedEventCounters;
+  }
+
+  /**
+   * Get unique path request count
+   *
+   * @return HashMap
+   */
+  public HashMap<String, Integer> getUniquePathRequestCount() {
+    return uniquePathRequestCount;
+  }
+
+  /**
+   * Get unique path request count for successful requests
+   *
+   * @return HashMap
+   */
+  public HashMap<String, Integer> getUniquePathSuccessfulRequestCount() {
+    return uniquePathSuccessfulRequestCount;
   }
 
   /**
@@ -139,12 +206,32 @@ public class CustomsFeatures implements Serializable {
           totalPasswordForgotSendCodeFailure++;
           break;
       }
+
+      Integer cnt = summarizedEventCounters.containsKey(s) ? summarizedEventCounters.get(s) : 0;
+      summarizedEventCounters.put(s, cnt + 1);
+    } else {
+      unknownEventCounter++;
     }
 
     String sa = CustomsUtil.authGetSourceAddress(e);
     if (sa != null) {
       Integer cnt = sourceAddressEventCount.containsKey(sa) ? sourceAddressEventCount.get(sa) : 0;
       sourceAddressEventCount.put(sa, cnt + 1);
+    }
+
+    sa = CustomsUtil.authGetPath(e);
+    if (sa != null) {
+      Integer cnt = uniquePathRequestCount.containsKey(sa) ? uniquePathRequestCount.get(sa) : 0;
+      uniquePathRequestCount.put(sa, cnt + 1);
+    }
+    Integer status = CustomsUtil.authGetStatus(e);
+    if (status != null && status.equals(200)) {
+      // Reuse path from previous step here
+      Integer cnt =
+          uniquePathSuccessfulRequestCount.containsKey(sa)
+              ? uniquePathSuccessfulRequestCount.get(sa)
+              : 0;
+      uniquePathSuccessfulRequestCount.put(sa, cnt + 1);
     }
   }
 
@@ -188,11 +275,16 @@ public class CustomsFeatures implements Serializable {
     events = new ArrayList<Event>();
 
     sourceAddressEventCount = new HashMap<String, Integer>();
+    uniquePathRequestCount = new HashMap<String, Integer>();
+    uniquePathSuccessfulRequestCount = new HashMap<String, Integer>();
 
     totalLoginFailureCount = 0;
     totalLoginSuccessCount = 0;
     totalAccountCreateSuccess = 0;
     totalPasswordForgotSendCodeSuccess = 0;
     totalPasswordForgotSendCodeFailure = 0;
+
+    summarizedEventCounters = new HashMap<FxaAuth.EventSummary, Integer>();
+    unknownEventCounter = 0;
   }
 }
