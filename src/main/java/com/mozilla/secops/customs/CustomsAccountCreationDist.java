@@ -125,7 +125,7 @@ public class CustomsAccountCreationDist
                     }
                   }
                 }))
-        .apply("account creation distributed global", new GlobalTriggers<Alert>(5));
+        .apply("account creation distributed global windows", new GlobalTriggers<Alert>(5));
   }
 
   @Override

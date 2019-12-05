@@ -371,25 +371,25 @@ public class Customs implements Serializable {
       sourceWindowed =
           ci.sourceKey
               .apply(
-                  "fixed ten minute windows for source",
+                  "fixed ten source address",
                   Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10))))
-              .apply("combine for source", new CustomsFeaturesCombiner());
+              .apply("fixed ten source address features", new CustomsFeaturesCombiner());
     }
     if (options.getEnableSourceLoginFailureDetector()) {
       emailWindowed =
           ci.emailKey
               .apply(
-                  "fixed ten minute windows for email",
+                  "fixed ten email",
                   Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10))))
-              .apply("combine for email", new CustomsFeaturesCombiner());
+              .apply("fixed ten email features", new CustomsFeaturesCombiner());
     }
     if (options.getEnableAccountCreationAbuseDetector()) {
       domainWindowed =
           ci.domainKey
               .apply(
-                  "fixed ten minute windows for domain",
+                  "fixed ten domain",
                   Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10))))
-              .apply("combine for domain", new CustomsFeaturesCombiner());
+              .apply("fixed ten domain features", new CustomsFeaturesCombiner());
     }
 
     if (options.getEnablePasswordResetAbuseDetector()) {
@@ -409,7 +409,7 @@ public class Customs implements Serializable {
           ret.and(sourceWindowed.apply("account creation", new CustomsAccountCreation(options)))
               .and(
                   domainWindowed.apply(
-                      "account creation dist", new CustomsAccountCreationDist(options)));
+                      "account creation distributed", new CustomsAccountCreationDist(options)));
     }
 
     return ret;

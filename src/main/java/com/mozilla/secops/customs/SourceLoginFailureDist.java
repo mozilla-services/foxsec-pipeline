@@ -49,7 +49,7 @@ public class SourceLoginFailureDist
   @Override
   public PCollection<Alert> expand(PCollection<KV<String, CustomsFeatures>> col) {
     return col.apply(
-            "source login failure dist analysis",
+            "source login failure distributed analyze",
             ParDo.of(
                 new DoFn<KV<String, CustomsFeatures>, Alert>() {
                   private static final long serialVersionUID = 1L;
@@ -113,7 +113,7 @@ public class SourceLoginFailureDist
                     c.output(alert);
                   }
                 }))
-        .apply("source login failure dist global windows", new GlobalTriggers<Alert>(5));
+        .apply("source login failure distributed global windows", new GlobalTriggers<Alert>(5));
   }
 
   public boolean isExperimental() {
