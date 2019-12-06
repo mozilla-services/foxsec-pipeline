@@ -447,9 +447,11 @@ public class Customs implements Serializable {
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, CustomsOptions options) throws IOException {
     PCollection<Event> events =
-        input.apply(
-            "parse",
-            ParDo.of(new ParserDoFn().withConfiguration(ParserCfg.fromInputOptions(options))));
+        input
+            .apply(
+                "parse",
+                ParDo.of(new ParserDoFn().withConfiguration(ParserCfg.fromInputOptions(options))))
+            .apply("prefilter", new CustomsPreFilter());
 
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
     CollectionInfo ci = new CollectionInfo();
