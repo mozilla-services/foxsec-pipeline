@@ -15,6 +15,7 @@ import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -56,6 +57,26 @@ public class Customs implements Serializable {
     public PCollection<KV<String, Event>> sourceKey;
     public PCollection<KV<String, Event>> emailKey;
     public PCollection<KV<String, Event>> domainKey;
+  }
+
+  /**
+   * Return an array of EventSummary values that indicate which events should be stored during
+   * feature extraction
+   *
+   * <p>Any EventSummary values returned here will indicate that an event of that type should be
+   * stored during feature extraction. This is required if the underlying analysis transform needs
+   * to operate on the events themselves.
+   *
+   * @return ArrayList
+   */
+  public static ArrayList<FxaAuth.EventSummary> featureSummaryRegistration() {
+    ArrayList<FxaAuth.EventSummary> ret = new ArrayList<>();
+    ret.add(FxaAuth.EventSummary.ACCOUNT_CREATE_SUCCESS);
+    ret.add(FxaAuth.EventSummary.PASSWORD_FORGOT_SEND_CODE_SUCCESS);
+    ret.add(FxaAuth.EventSummary.PASSWORD_FORGOT_SEND_CODE_FAILURE);
+    ret.add(FxaAuth.EventSummary.LOGIN_FAILURE);
+    ret.add(FxaAuth.EventSummary.LOGIN_SUCCESS);
+    return ret;
   }
 
   /**
