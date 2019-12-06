@@ -88,10 +88,10 @@ public class TestCustoms {
         TestStream.create(StringUtf8Coder.of())
             .advanceWatermarkTo(new Instant(0L))
             .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
-            .advanceProcessingTime(Duration.standardSeconds(60))
+            .advanceProcessingTime(Duration.standardSeconds(5))
             // Add some unrelated elements for the second component
             .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
-            .advanceProcessingTime(Duration.standardSeconds(60))
+            .advanceProcessingTime(Duration.standardSeconds(5))
             .advanceWatermarkToInfinity();
 
     Customs.CustomsOptions options = getTestOptions();

@@ -26,6 +26,8 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
+import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
@@ -393,7 +395,14 @@ public class Customs implements Serializable {
           ci.sourceKey
               .apply(
                   "fixed ten source address",
-                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10))))
+                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10)))
+                      .triggering(
+                          AfterWatermark.pastEndOfWindow()
+                              .withEarlyFirings(
+                                  AfterProcessingTime.pastFirstElementInPane()
+                                      .plusDelayOf(Duration.standardSeconds(30))))
+                      .withAllowedLateness(Duration.ZERO)
+                      .accumulatingFiredPanes())
               .apply("fixed ten source address features", new CustomsFeaturesCombiner());
     }
     if (options.getEnableSourceLoginFailureDetector()) {
@@ -401,7 +410,14 @@ public class Customs implements Serializable {
           ci.emailKey
               .apply(
                   "fixed ten email",
-                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10))))
+                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10)))
+                      .triggering(
+                          AfterWatermark.pastEndOfWindow()
+                              .withEarlyFirings(
+                                  AfterProcessingTime.pastFirstElementInPane()
+                                      .plusDelayOf(Duration.standardSeconds(30))))
+                      .withAllowedLateness(Duration.ZERO)
+                      .accumulatingFiredPanes())
               .apply("fixed ten email features", new CustomsFeaturesCombiner());
     }
     if (options.getEnableAccountCreationAbuseDetector()) {
@@ -409,7 +425,14 @@ public class Customs implements Serializable {
           ci.domainKey
               .apply(
                   "fixed ten domain",
-                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10))))
+                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10)))
+                      .triggering(
+                          AfterWatermark.pastEndOfWindow()
+                              .withEarlyFirings(
+                                  AfterProcessingTime.pastFirstElementInPane()
+                                      .plusDelayOf(Duration.standardSeconds(30))))
+                      .withAllowedLateness(Duration.ZERO)
+                      .accumulatingFiredPanes())
               .apply("fixed ten domain features", new CustomsFeaturesCombiner());
     }
 
