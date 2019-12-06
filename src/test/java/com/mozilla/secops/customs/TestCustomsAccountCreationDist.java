@@ -16,10 +16,10 @@ public class TestCustomsAccountCreationDist {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert if at least %s accounts are created from different source addresses in a 30 "
-                + "minute time frame and the similarity index of the accounts is all below %.2f.",
-            options.getAccountCreationDistanceThreshold(),
-            options.getAccountCreationDistanceRatio());
+            "Alert if at least %d accounts are created from different source addresses in "
+                + "a 10 minute fixed window and the similarity index of the accounts is all below %.2f.",
+            options.getAccountCreationDistributedThreshold(),
+            options.getAccountCreationDistributedDistanceRatio());
     assertEquals(expected, doc);
   }
 
@@ -31,10 +31,11 @@ public class TestCustomsAccountCreationDist {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert if at least %s accounts are created from different source addresses in a 30 "
-                + "minute time frame and the similarity index of the accounts is all below %.2f. (Experimental)",
-            options.getAccountCreationDistanceThreshold(),
-            options.getAccountCreationDistanceRatio());
+            "Alert if at least %d accounts are created from different source addresses in "
+                + "a 10 minute fixed window and the similarity index of the accounts is all "
+                + "below %.2f. (Experimental)",
+            options.getAccountCreationDistributedThreshold(),
+            options.getAccountCreationDistributedDistanceRatio());
     assertEquals(expected, doc);
   }
 }

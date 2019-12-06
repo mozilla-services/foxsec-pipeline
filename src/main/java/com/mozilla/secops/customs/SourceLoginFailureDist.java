@@ -8,24 +8,19 @@ import com.mozilla.secops.parser.Parser;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.ArrayList;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.FixedWindows;
-import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.joda.time.Duration;
 
 /**
  * Detect login failures for a single account occuring from multiple source addresses in a fixed
  * window of time.
  */
-public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PCollection<Alert>>
+public class SourceLoginFailureDist
+    extends PTransform<PCollection<KV<String, CustomsFeatures>>, PCollection<Alert>>
     implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
-
-  private static final int windowSizeSeconds = 600;
 
   private final String monitoredResource;
   private final Integer threshold;
@@ -45,45 +40,33 @@ public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PColl
   public String getTransformDocDescription() {
     return String.format(
         "Alert on login failures for a particular account from %d different source addresses "
-            + "in a %d second fixed window.",
-        threshold, windowSizeSeconds);
+            + "in a 10 minute fixed window.",
+        threshold);
   }
 
   @Override
-  public PCollection<Alert> expand(PCollection<Event> col) {
+  public PCollection<Alert> expand(PCollection<KV<String, CustomsFeatures>> col) {
     return col.apply(
-            "source login failure dist key for email",
+            "source login failure distributed analyze",
             ParDo.of(
-                new DoFn<Event, KV<String, Event>>() {
+                new DoFn<KV<String, CustomsFeatures>, Alert>() {
                   private static final long serialVersionUID = 1L;
 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
-                    Event e = c.element();
-                    FxaAuth.EventSummary s = CustomsUtil.authGetEventSummary(e);
-                    if ((s == null) || (!s.equals(FxaAuth.EventSummary.LOGIN_FAILURE))) {
+                    CustomsFeatures cf = c.element().getValue();
+
+                    // If the total login failures is less than our threshold we don't need to
+                    // continue with the analysis
+                    if (cf.getTotalLoginFailureCount() < threshold) {
                       return;
                     }
-                    c.output(KV.of(CustomsUtil.authGetEmail(c.element()), e));
-                  }
-                }))
-        .apply(
-            "source login failure dist fixed windows",
-            Window.<KV<String, Event>>into(
-                FixedWindows.of(Duration.standardSeconds(windowSizeSeconds))))
-        .apply("source login failure dist gbk", GroupByKey.<String, Event>create())
-        .apply(
-            "source login failure dist analysis",
-            ParDo.of(
-                new DoFn<KV<String, Iterable<Event>>, Alert>() {
-                  private static final long serialVersionUID = 1L;
 
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
                     int cnt = 0;
 
                     String email = c.element().getKey();
-                    Iterable<Event> events = c.element().getValue();
+                    ArrayList<Event> events =
+                        cf.getEventsOfType(FxaAuth.EventSummary.LOGIN_FAILURE);
                     ArrayList<String> source = new ArrayList<>();
 
                     for (Event i : events) {
@@ -114,8 +97,8 @@ public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PColl
                     alert.setSummary(
                         String.format(
                             "%s distributed source login failure threshold exceeded for single account"
-                                + ", %d addresses in %d seconds",
-                            monitoredResource, cnt, windowSizeSeconds));
+                                + ", %d addresses in 10 minutes",
+                            monitoredResource, cnt));
                     String buf = "";
                     for (String s : source) {
                       if (buf.isEmpty()) {
@@ -128,7 +111,7 @@ public class SourceLoginFailureDist extends PTransform<PCollection<Event>, PColl
                     c.output(alert);
                   }
                 }))
-        .apply("source login failure dist global windows", new GlobalTriggers<Alert>(5));
+        .apply("source login failure distributed global windows", new GlobalTriggers<Alert>(5));
   }
 
   public boolean isExperimental() {
