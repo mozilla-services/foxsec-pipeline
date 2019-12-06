@@ -13,6 +13,8 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abusive account creation from a single source address
@@ -28,6 +30,8 @@ public class CustomsAccountCreation
   private final String monitoredResource;
   private final Integer accountAbuseSuppressRecovery;
   private final boolean escalate;
+
+  private final Logger log = LoggerFactory.getLogger(CustomsAccountCreation.class);
 
   /**
    * Create new CustomsAccountCreation
@@ -84,6 +88,10 @@ public class CustomsAccountCreation
                     }
 
                     if (cf.nominalVariance()) {
+                      log.info(
+                          "{}: skipping notification, variance index {}",
+                          remoteAddress,
+                          cf.getVarianceIndex());
                       return;
                     }
 

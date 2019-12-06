@@ -11,6 +11,8 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple detection of excessive login failures per-source across fixed window
@@ -25,6 +27,8 @@ public class SourceLoginFailure
   private final String monitoredResource;
   private final Integer threshold;
   private final boolean escalate;
+
+  private final Logger log = LoggerFactory.getLogger(CustomsAccountCreation.class);
 
   /**
    * Initialize new SourceLoginFailure
@@ -82,6 +86,10 @@ public class SourceLoginFailure
                     }
 
                     if (cf.nominalVariance()) {
+                      log.info(
+                          "{}: skipping notification, variance index {}",
+                          addr,
+                          cf.getVarianceIndex());
                       return;
                     }
 

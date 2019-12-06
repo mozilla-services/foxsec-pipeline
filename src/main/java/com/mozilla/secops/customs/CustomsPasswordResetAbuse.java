@@ -11,6 +11,8 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abuse of FxA password reset endpoints from a single source address
@@ -25,6 +27,8 @@ public class CustomsPasswordResetAbuse
   private final String monitoredResource;
   private final Integer threshold;
   private boolean escalate;
+
+  private final Logger log = LoggerFactory.getLogger(CustomsAccountCreation.class);
 
   public String getTransformDocDescription() {
     return String.format(
@@ -84,6 +88,10 @@ public class CustomsPasswordResetAbuse
                     }
 
                     if (cf.nominalVariance()) {
+                      log.info(
+                          "{}: skipping notification, variance index {}",
+                          addr,
+                          cf.getVarianceIndex());
                       return;
                     }
 
