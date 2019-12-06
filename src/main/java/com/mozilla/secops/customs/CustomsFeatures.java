@@ -130,8 +130,6 @@ public class CustomsFeatures implements Serializable {
       summarizedEventCounters.put(entry.getKey(), cur + entry.getValue());
     }
     unknownEventCounter += cf.getUnknownEventCounter();
-
-    recalculate();
   }
 
   /**
