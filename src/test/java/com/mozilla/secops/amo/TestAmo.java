@@ -61,8 +61,9 @@ public class TestAmo {
 
     Amo.AmoOptions options = getTestOptions();
 
-    // Simulate recorded bad reputation for email address
+    // Simulate recorded bad reputation for two email addresses and an IP
     TestIprepdIO.putReputation("email", "kurn@mozilla.com", 0);
+    TestIprepdIO.putReputation("email", "locutus@mozilla.com", 0);
     TestIprepdIO.putReputation("ip", "255.255.25.25", 25);
 
     TestStream<String> s =
@@ -97,39 +98,65 @@ public class TestAmo {
         .apply(OutputOptions.compositeOutput(getTestOptions()));
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(15L);
+    PAssert.that(count).containsInAnyOrder(16L);
 
     PAssert.that(alerts)
         .satisfies(
             x -> {
+              int cntNewVersionLogin = 0;
+              int cntRestriction = 0;
+              int cntNewVersionBanPattern = 0;
+              int cntAbuseAlias = 0;
+              int cntMatchedAddon = 0;
+              int cntMultiMatch = 0;
+              int cntMultiSubmit = 0;
+              int cntIpLogin = 0;
+              int cntNewVersionSubmission = 0;
               for (Alert a : x) {
                 if (a.getCategory().equals("amo")) {
                   if (a.getMetadataValue("amo_category")
                       .equals("fxa_account_abuse_new_version_login")) {
-                    assertEquals("fxa_account_abuse_new_version_login", a.getNotifyMergeKey());
-                    assertEquals("kurn@mozilla.com", a.getMetadataValue("email"));
-                    assertEquals("255.255.25.26", a.getMetadataValue("sourceaddress"));
-                    assertEquals(
-                        "test login to amo from suspected fraudulent account, kurn@mozilla.com "
-                            + "from 255.255.25.26",
-                        a.getSummary());
+                    if (a.getMetadataValue("email").equals("kurn@mozilla.com")) {
+                      assertEquals("fxa_account_abuse_new_version_login", a.getNotifyMergeKey());
+                      assertEquals("kurn@mozilla.com", a.getMetadataValue("email"));
+                      assertEquals("255.255.25.26", a.getMetadataValue("sourceaddress"));
+                      assertEquals(
+                          "test login to amo from suspected fraudulent account, kurn@mozilla.com "
+                              + "from 255.255.25.26",
+                          a.getSummary());
+                    } else if (a.getMetadataValue("email").equals("locutus@mozilla.com")) {
+                      assertEquals("fxa_account_abuse_new_version_login", a.getNotifyMergeKey());
+                      assertEquals("locutus@mozilla.com", a.getMetadataValue("email"));
+                      assertEquals("255.255.25.30", a.getMetadataValue("sourceaddress"));
+                      assertEquals(
+                          "test login to amo from suspected fraudulent account, locutus@mozilla.com "
+                              + "from 255.255.25.30",
+                          a.getSummary());
+                    } else {
+                      fail("unexpected email address");
+                    }
+                    cntNewVersionLogin++;
                   } else if (a.getMetadataValue("amo_category").equals("amo_restriction")) {
                     assertEquals("amo_restriction", a.getNotifyMergeKey());
                     assertEquals("kurn@mozilla.com", a.getMetadataValue("restricted_value"));
                     assertEquals(
                         "test request to amo from kurn@mozilla.com restricted based on reputation",
                         a.getSummary());
+                    cntRestriction++;
                   } else if (a.getMetadataValue("amo_category")
                       .equals("fxa_account_abuse_new_version_login_banpattern")) {
                     assertEquals(
                         "fxa_account_abuse_new_version_login_banpattern", a.getNotifyMergeKey());
                     assertEquals("locutus@mozilla.com", a.getMetadataValue("email"));
+                    assertEquals("255.255.25.30", a.getMetadataValue("sourceaddress"));
+                    cntNewVersionBanPattern++;
                   } else if (a.getMetadataValue("amo_category").equals("fxa_account_abuse_alias")) {
                     assertEquals("fxa_account_abuse_alias", a.getNotifyMergeKey());
                     assertEquals("6", a.getMetadataValue("count"));
                     assertEquals(
                         "test possible alias abuse in amo, laforge@mozilla.com has 6 aliases",
                         a.getSummary());
+                    cntAbuseAlias++;
                   } else if (a.getMetadataValue("amo_category").equals("amo_abuse_matched_addon")) {
                     assertEquals("amo_abuse_matched_addon", a.getNotifyMergeKey());
                     assertEquals("216.160.83.63", a.getMetadataValue("sourceaddress"));
@@ -141,15 +168,18 @@ public class TestAmo {
                     assertEquals(
                         "test suspected malicious addon submission from 216.160.83.63, lwaxana@mozilla.com",
                         a.getSummary());
+                    cntMatchedAddon++;
                   } else if (a.getMetadataValue("amo_category").equals("amo_abuse_multi_match")) {
                     assertEquals("amo_abuse_multi_match", a.getNotifyMergeKey());
                     assertEquals("test addon abuse multi match, 10", a.getSummary());
                     assertEquals("10", a.getMetadataValue("count"));
                     assertEquals("x.xpi", a.getMetadataValue("addon_filename"));
+                    cntMultiMatch++;
                   } else if (a.getMetadataValue("amo_category").equals("amo_abuse_multi_submit")) {
                     assertEquals("amo_abuse_multi_submit", a.getNotifyMergeKey());
                     assertEquals("test addon abuse multi submit, 10000 11", a.getSummary());
                     assertEquals("11", a.getMetadataValue("count"));
+                    cntMultiSubmit++;
                   } else if (a.getMetadataValue("amo_category")
                       .equals("amo_abuse_multi_ip_login")) {
                     assertEquals("amo_abuse_multi_ip_login", a.getNotifyMergeKey());
@@ -158,6 +188,7 @@ public class TestAmo {
                             + "ies, 2 source address",
                         a.getSummary());
                     assertEquals("2", a.getMetadataValue("count"));
+                    cntIpLogin++;
                   } else {
                     assertEquals("255.255.25.25", a.getMetadataValue("sourceaddress"));
                     if (a.getMetadataValue("addon_version") != null) {
@@ -179,6 +210,7 @@ public class TestAmo {
                               + "suspected fraudulent account, 255.255.25.25",
                           a.getSummary());
                     }
+                    cntNewVersionSubmission++;
                   }
                 } else if (a.getCategory().equals("amo-cfgtick")) {
                   assertEquals(
@@ -206,6 +238,15 @@ public class TestAmo {
                   fail("unexpected category");
                 }
               }
+              assertEquals("cntNewVersionLogin", 2, cntNewVersionLogin);
+              assertEquals("cntRestriction", 1, cntRestriction);
+              assertEquals("cntNewVersionBanPattern", 1, cntNewVersionBanPattern);
+              assertEquals("cntAbuseAlias", 1, cntAbuseAlias);
+              assertEquals("cntMatchedAddon", 1, cntMatchedAddon);
+              assertEquals("cntMultiMatch", 1, cntMultiMatch);
+              assertEquals("cntMultiSubmit", 1, cntMultiSubmit);
+              assertEquals("cntIpLogin", 1, cntIpLogin);
+              assertEquals("cntNewVersionSubmission", 2, cntNewVersionSubmission);
               return null;
             });
 
@@ -224,7 +265,7 @@ public class TestAmo {
             .getCounters();
     int cnt = 0;
     for (MetricResult<Long> x : vWrites) {
-      assertEquals(35L, (long) x.getCommitted());
+      assertEquals(36L, (long) x.getCommitted());
       cnt++;
     }
     assertEquals(1, cnt);
