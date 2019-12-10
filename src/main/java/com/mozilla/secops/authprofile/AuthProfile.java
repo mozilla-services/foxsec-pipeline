@@ -222,7 +222,8 @@ public class AuthProfile implements Serializable {
 
                         // Auto-ignore GCP audit records for accounts prefixed with
                         // system:serviceaccount:
-                        if (n.getSubjectUser().startsWith("system:serviceaccount:")) {
+                        if (n.getSubjectUser().startsWith("system:serviceaccount:")
+                            || n.getSubjectUser().startsWith("system:node:")) {
                           log.info(
                               "{}: ignoring GCP system service account entry", n.getSubjectUser());
                           return;
