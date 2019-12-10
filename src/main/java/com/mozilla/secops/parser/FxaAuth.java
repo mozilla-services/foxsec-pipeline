@@ -1,9 +1,7 @@
 package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -110,18 +108,13 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     return null;
   }
 
-  private ObjectMapper getObjectMapper() {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new JodaModule());
-    mapper.configure(
-        com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
-    return mapper;
+  private ObjectMapper getObjectMapper(ParserState state) {
+    return state.getObjectMapper();
   }
 
   @Override
   public Boolean matcher(String input, ParserState state) {
-    ObjectMapper mapper = getObjectMapper();
+    ObjectMapper mapper = getObjectMapper(state);
     com.mozilla.secops.parser.models.fxaauth.FxaAuth d;
     try {
       d = mapper.readValue(input, com.mozilla.secops.parser.models.fxaauth.FxaAuth.class);
@@ -383,7 +376,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
    * @param state State
    */
   public FxaAuth(String input, Event e, ParserState state) {
-    ObjectMapper mapper = getObjectMapper();
+    ObjectMapper mapper = getObjectMapper(state);
     try {
       fxaAuthData = mapper.readValue(input, com.mozilla.secops.parser.models.fxaauth.FxaAuth.class);
       if (fxaAuthData == null) {
