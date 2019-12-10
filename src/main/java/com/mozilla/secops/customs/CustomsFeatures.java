@@ -15,11 +15,13 @@ public class CustomsFeatures implements Serializable {
   public static final int NOMINAL_VARIANCE_INDEX = 33;
 
   private ArrayList<Event> events;
+  private ArrayList<FxaAuth.EventSummary> collectEvents;
 
   private HashMap<String, Integer> sourceAddressEventCount;
   private HashMap<String, Integer> uniquePathRequestCount;
   private HashMap<String, Integer> uniquePathSuccessfulRequestCount;
 
+  private int totalEvents;
   private int totalLoginFailureCount;
   private int totalLoginSuccessCount;
   private int totalAccountCreateSuccess;
@@ -88,6 +90,7 @@ public class CustomsFeatures implements Serializable {
   public void merge(CustomsFeatures cf) {
     events.addAll(cf.getEvents());
 
+    totalEvents += cf.getTotalEvents();
     totalLoginFailureCount += cf.getTotalLoginFailureCount();
     totalLoginSuccessCount += cf.getTotalLoginSuccessCount();
     totalAccountCreateSuccess += cf.getTotalAccountCreateSuccess();
@@ -127,8 +130,18 @@ public class CustomsFeatures implements Serializable {
       summarizedEventCounters.put(entry.getKey(), cur + entry.getValue());
     }
     unknownEventCounter += cf.getUnknownEventCounter();
+  }
 
-    recalculate();
+  /**
+   * Get total event count
+   *
+   * <p>Return the total of all events in the collection, including those that could not be
+   * summarized or were not explicitly registered for raw event storage.
+   *
+   * @return int
+   */
+  public int getTotalEvents() {
+    return totalEvents;
   }
 
   /**
@@ -236,7 +249,7 @@ public class CustomsFeatures implements Serializable {
    * @param e Event
    */
   public void addEvent(Event e) {
-    events.add(e);
+    totalEvents++;
 
     FxaAuth.EventSummary s = CustomsUtil.authGetEventSummary(e);
     if (s != null) {
@@ -256,6 +269,11 @@ public class CustomsFeatures implements Serializable {
         case PASSWORD_FORGOT_SEND_CODE_FAILURE:
           totalPasswordForgotSendCodeFailure++;
           break;
+      }
+      // This is something we have a summary for, if it's registered for storage add it
+      // to the event collection.
+      if (collectEvents.contains(s)) {
+        events.add(e);
       }
 
       Integer cnt = summarizedEventCounters.containsKey(s) ? summarizedEventCounters.get(s) : 0;
@@ -324,6 +342,7 @@ public class CustomsFeatures implements Serializable {
 
   CustomsFeatures() {
     events = new ArrayList<Event>();
+    collectEvents = Customs.featureSummaryRegistration();
 
     // Default to 100 if not calculated
     varianceIndex = 100;
@@ -332,6 +351,7 @@ public class CustomsFeatures implements Serializable {
     uniquePathRequestCount = new HashMap<String, Integer>();
     uniquePathSuccessfulRequestCount = new HashMap<String, Integer>();
 
+    totalEvents = 0;
     totalLoginFailureCount = 0;
     totalLoginSuccessCount = 0;
     totalAccountCreateSuccess = 0;

@@ -15,6 +15,7 @@ import com.mozilla.secops.parser.ParserDoFn;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -25,6 +26,8 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
+import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
@@ -56,6 +59,26 @@ public class Customs implements Serializable {
     public PCollection<KV<String, Event>> sourceKey;
     public PCollection<KV<String, Event>> emailKey;
     public PCollection<KV<String, Event>> domainKey;
+  }
+
+  /**
+   * Return an array of EventSummary values that indicate which events should be stored during
+   * feature extraction
+   *
+   * <p>Any EventSummary values returned here will indicate that an event of that type should be
+   * stored during feature extraction. This is required if the underlying analysis transform needs
+   * to operate on the events themselves.
+   *
+   * @return ArrayList
+   */
+  public static ArrayList<FxaAuth.EventSummary> featureSummaryRegistration() {
+    ArrayList<FxaAuth.EventSummary> ret = new ArrayList<>();
+    ret.add(FxaAuth.EventSummary.ACCOUNT_CREATE_SUCCESS);
+    ret.add(FxaAuth.EventSummary.PASSWORD_FORGOT_SEND_CODE_SUCCESS);
+    ret.add(FxaAuth.EventSummary.PASSWORD_FORGOT_SEND_CODE_FAILURE);
+    ret.add(FxaAuth.EventSummary.LOGIN_FAILURE);
+    ret.add(FxaAuth.EventSummary.LOGIN_SUCCESS);
+    return ret;
   }
 
   /**
@@ -372,7 +395,14 @@ public class Customs implements Serializable {
           ci.sourceKey
               .apply(
                   "fixed ten source address",
-                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10))))
+                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10)))
+                      .triggering(
+                          AfterWatermark.pastEndOfWindow()
+                              .withEarlyFirings(
+                                  AfterProcessingTime.pastFirstElementInPane()
+                                      .plusDelayOf(Duration.standardSeconds(30))))
+                      .withAllowedLateness(Duration.ZERO)
+                      .accumulatingFiredPanes())
               .apply("fixed ten source address features", new CustomsFeaturesCombiner());
     }
     if (options.getEnableSourceLoginFailureDetector()) {
@@ -380,7 +410,14 @@ public class Customs implements Serializable {
           ci.emailKey
               .apply(
                   "fixed ten email",
-                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10))))
+                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10)))
+                      .triggering(
+                          AfterWatermark.pastEndOfWindow()
+                              .withEarlyFirings(
+                                  AfterProcessingTime.pastFirstElementInPane()
+                                      .plusDelayOf(Duration.standardSeconds(30))))
+                      .withAllowedLateness(Duration.ZERO)
+                      .accumulatingFiredPanes())
               .apply("fixed ten email features", new CustomsFeaturesCombiner());
     }
     if (options.getEnableAccountCreationAbuseDetector()) {
@@ -388,7 +425,14 @@ public class Customs implements Serializable {
           ci.domainKey
               .apply(
                   "fixed ten domain",
-                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10))))
+                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10)))
+                      .triggering(
+                          AfterWatermark.pastEndOfWindow()
+                              .withEarlyFirings(
+                                  AfterProcessingTime.pastFirstElementInPane()
+                                      .plusDelayOf(Duration.standardSeconds(30))))
+                      .withAllowedLateness(Duration.ZERO)
+                      .accumulatingFiredPanes())
               .apply("fixed ten domain features", new CustomsFeaturesCombiner());
     }
 
@@ -426,9 +470,11 @@ public class Customs implements Serializable {
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, CustomsOptions options) throws IOException {
     PCollection<Event> events =
-        input.apply(
-            "parse",
-            ParDo.of(new ParserDoFn().withConfiguration(ParserCfg.fromInputOptions(options))));
+        input
+            .apply(
+                "parse",
+                ParDo.of(new ParserDoFn().withConfiguration(ParserCfg.fromInputOptions(options))))
+            .apply("prefilter", new CustomsPreFilter());
 
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
     CollectionInfo ci = new CollectionInfo();

@@ -117,6 +117,7 @@ public class TestCustomsFeatures implements Serializable {
                 CustomsFeatures col = v.getValue();
                 if (v.getKey().equals("kirk@mozilla.com")) {
                   assertEquals(12, col.getEvents().size());
+                  assertEquals(12, col.getTotalEvents());
                   assertEquals(12, col.getTotalLoginFailureCount());
                   assertEquals(0, col.getTotalLoginSuccessCount());
                   assertEquals(10, col.getSourceAddressEventCount().size());
@@ -130,7 +131,8 @@ public class TestCustomsFeatures implements Serializable {
                   assertEquals(12, (int) col.getUniquePathRequestCount().get("/v1/account/login"));
                   assertEquals(0, col.getVarianceIndex());
                 } else if (v.getKey().equals("spock@mozilla.com")) {
-                  assertEquals(12, col.getEvents().size());
+                  assertEquals(10, col.getEvents().size());
+                  assertEquals(12, col.getTotalEvents());
                   assertEquals(10, col.getTotalLoginFailureCount());
                   assertEquals(0, col.getTotalLoginSuccessCount());
                   assertEquals(12, (int) col.getSourceAddressEventCount().get("216.160.83.56"));
