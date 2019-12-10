@@ -387,6 +387,7 @@ public class Parser {
 
     ParserState state = new ParserState(this);
     state.setGoogleJacksonFactory(googleJacksonFactory);
+    state.setObjectMapper(mapper);
 
     if (input == null) {
       input = "";
