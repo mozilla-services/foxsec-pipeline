@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 
@@ -10,6 +11,7 @@ class ParserState {
   private CloudWatchEvent cloudwatchEvent;
   private Mozlog mozLogHint;
   private com.google.api.client.json.jackson2.JacksonFactory googleJacksonFactory;
+  private ObjectMapper mapper;
 
   /**
    * Get LogEntry hint
@@ -82,6 +84,24 @@ class ParserState {
    */
   public com.google.api.client.json.jackson2.JacksonFactory getGoogleJacksonFactory() {
     return googleJacksonFactory;
+  }
+
+  /**
+   * Set ObjectMapper
+   *
+   * @param mapper ObjectMapper
+   */
+  public void setObjectMapper(ObjectMapper mapper) {
+    this.mapper = mapper;
+  }
+
+  /**
+   * Get ObjectMapper
+   *
+   * @return ObjectMapper, or null if unset
+   */
+  public ObjectMapper getObjectMapper() {
+    return mapper;
   }
 
   /**
