@@ -273,6 +273,7 @@ public class ParserCfg implements Serializable {
    *
    * @param disableCloudwatchStrip Boolean
    */
+  @JsonProperty("disable_cloudwatch_strip")
   public void setDisableCloudwatchStrip(boolean disableCloudwatchStrip) {
     this.disableCloudwatchStrip = disableCloudwatchStrip;
   }
@@ -294,6 +295,7 @@ public class ParserCfg implements Serializable {
    *
    * @param disableMozlogStrip Boolean
    */
+  @JsonProperty("disable_mozlog_strip")
   public void setDisableMozlogStrip(boolean disableMozlogStrip) {
     this.disableMozlogStrip = disableMozlogStrip;
   }
