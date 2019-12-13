@@ -108,16 +108,14 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     return null;
   }
 
-  private ObjectMapper getObjectMapper(ParserState state) {
-    return state.getObjectMapper();
-  }
-
   @Override
   public Boolean matcher(String input, ParserState state) {
-    ObjectMapper mapper = getObjectMapper(state);
     com.mozilla.secops.parser.models.fxaauth.FxaAuth d;
     try {
-      d = mapper.readValue(input, com.mozilla.secops.parser.models.fxaauth.FxaAuth.class);
+      d =
+          state
+              .getObjectMapper()
+              .readValue(input, com.mozilla.secops.parser.models.fxaauth.FxaAuth.class);
     } catch (IOException exc) {
       return false;
     }
@@ -376,9 +374,12 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
    * @param state State
    */
   public FxaAuth(String input, Event e, ParserState state) {
-    ObjectMapper mapper = getObjectMapper(state);
+    ObjectMapper mapper = state.getObjectMapper();
     try {
-      fxaAuthData = mapper.readValue(input, com.mozilla.secops.parser.models.fxaauth.FxaAuth.class);
+      fxaAuthData =
+          state
+              .getObjectMapper()
+              .readValue(input, com.mozilla.secops.parser.models.fxaauth.FxaAuth.class);
       if (fxaAuthData == null) {
         return;
       }
