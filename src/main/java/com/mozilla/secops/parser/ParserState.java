@@ -12,6 +12,25 @@ class ParserState {
   private Mozlog mozLogHint;
   private com.google.api.client.json.jackson2.JacksonFactory googleJacksonFactory;
   private ObjectMapper mapper;
+  private String stackdriverTypeValue;
+
+  /**
+   * Set Stackdriver type value
+   *
+   * @param stackdriverTypeValue String
+   */
+  public void setStackdriverTypeValue(String stackdriverTypeValue) {
+    this.stackdriverTypeValue = stackdriverTypeValue;
+  }
+
+  /**
+   * Get Stackdriver type value
+   *
+   * @return String, or null if unset
+   */
+  public String getStackdriverTypeValue() {
+    return stackdriverTypeValue;
+  }
 
   /**
    * Get LogEntry hint

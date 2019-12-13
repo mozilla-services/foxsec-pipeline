@@ -45,6 +45,15 @@ public class Parser {
 
   public static final String SYSLOG_TS_RE = "\\S{3} {1,2}\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}";
 
+  /**
+   * If a Stackdriver log message contains any strings present in this array in the @type field, we
+   * assume no other encapsulation is present in the parser
+   */
+  public static final String[] onlyStackdriverTypes =
+      new String[] {"type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry"};
+
+  private static final DateTimeFormatter isoFormatter = ISODateTimeFormat.dateTimeParser();
+
   private IdentityManager idmanager;
 
   /**
@@ -129,9 +138,8 @@ public class Parser {
    * @return Parsed {@link DateTime}, null if string could not be parsed
    */
   public static DateTime parseISO8601(String in) {
-    DateTimeFormatter fmt = ISODateTimeFormat.dateTimeParser();
     try {
-      return fmt.parseDateTime(in);
+      return isoFormatter.parseDateTime(in);
     } catch (IllegalArgumentException exc) {
       return null;
     }
@@ -260,6 +268,9 @@ public class Parser {
         jret = entry.getProtoPayload();
       }
       if (jret != null) {
+        // Pull @type off the event if it exists to optimize downstream code paths
+        state.setStackdriverTypeValue((String) jret.get("@type"));
+
         // XXX Serialize the Stackdriver JSON data and emit a string for use in the
         // matchers. This is inefficient and we could probably look at changing this
         // to return a different type to avoid having to deserialize the data twice.
@@ -330,8 +341,24 @@ public class Parser {
     if (input == null) {
       return null;
     }
-    input = stripCloudWatch(e, input, state);
-    input = stripMozlog(e, input, state);
+
+    // If we know no other encapsulation will be present for a given log type we can just
+    // return here.
+    String t = state.getStackdriverTypeValue();
+    if (t != null) {
+      for (String i : onlyStackdriverTypes) {
+        if (i.equals(t)) {
+          return input;
+        }
+      }
+    }
+
+    if (!cfg.getDisableCloudwatchStrip()) {
+      input = stripCloudWatch(e, input, state);
+    }
+    if (!cfg.getDisableMozlogStrip()) {
+      input = stripMozlog(e, input, state);
+    }
     return input;
   }
 
