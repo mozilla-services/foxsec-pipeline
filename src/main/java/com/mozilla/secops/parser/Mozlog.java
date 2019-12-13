@@ -116,8 +116,7 @@ public class Mozlog implements Serializable {
    * @return Fields as JSON
    */
   @JsonIgnore
-  public String getFieldsAsJson() {
-    ObjectMapper mapper = new ObjectMapper();
+  public String getFieldsAsJson(ObjectMapper mapper) {
     mapper.configure(
         com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     try {

@@ -218,9 +218,8 @@ public class Parser {
       return new String[0];
     }
     String[] v = in.split(", ?");
-    InetAddressValidator iav = new InetAddressValidator();
     for (String t : v) {
-      if (!(iav.isValid(t))) {
+      if (!(InetAddressValidator.getInstance().isValid(t))) {
         return null;
       }
     }
@@ -305,7 +304,7 @@ public class Parser {
         if (m != null) {
           e.setMozlog(m);
           state.setMozlogHint(m);
-          return m.getFieldsAsJson();
+          return m.getFieldsAsJson(mapper);
         }
       }
     }
@@ -314,7 +313,7 @@ public class Parser {
     if (m != null) {
       e.setMozlog(m);
       state.setMozlogHint(m);
-      return m.getFieldsAsJson();
+      return m.getFieldsAsJson(mapper);
     }
     return input;
   }
@@ -483,12 +482,12 @@ public class Parser {
     payloads = new ArrayList<PayloadBase>();
     payloads.add(new GLB());
     payloads.add(new Nginx());
+    payloads.add(new FxaAuth());
     payloads.add(new Cloudtrail());
     payloads.add(new GcpAudit());
     payloads.add(new ApacheCombined());
     payloads.add(new BmoAudit());
     payloads.add(new IPrepdLog());
-    payloads.add(new FxaAuth());
     payloads.add(new Taskcluster());
     payloads.add(new AmoDocker());
     payloads.add(new OpenSSH());
