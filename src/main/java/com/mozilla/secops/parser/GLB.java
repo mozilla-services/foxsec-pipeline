@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Map;
 import org.joda.time.DateTime;
 
 /** Payload parser for Google Load Balancer log data. */
@@ -26,29 +25,10 @@ public class GLB extends PayloadBase implements Serializable {
 
   @Override
   public Boolean matcher(String input, ParserState state) {
-    try {
-      LogEntry entry = state.getLogEntryHint();
-      if (entry == null) {
-        JsonParser jp = jfmatcher.createJsonParser(input);
-        entry = jp.parse(LogEntry.class);
-        jp.close();
-      }
-
-      Map<String, Object> m = entry.getJsonPayload();
-      if (m == null) {
-        return false;
-      }
-      String eType = (String) m.get("@type");
-      if (eType != null) {
-        if (eType.equals(
-            "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry")) {
-          return true;
-        }
-      }
-    } catch (IOException exc) {
-      // pass
-    } catch (IllegalArgumentException exc) {
-      // pass
+    String t = state.getStackdriverTypeValue();
+    if (t != null
+        && t.equals("type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry")) {
+      return true;
     }
     return false;
   }
@@ -90,18 +70,21 @@ public class GLB extends PayloadBase implements Serializable {
           throw new RuntimeException(jexc.getMessage());
         }
       }
+
+      // Since we didn't have a LogEntry hint, try to set the event timestamp from the LogEntry
+      // here. Normally this occurs as part of stripping the encapsulation, so only do it if we
+      // didn't have the hint value for some reason.
+      String ets = entry.getTimestamp();
+      if (ets != null) {
+        DateTime d = Parser.parseISO8601(ets);
+        if (d != null) {
+          e.setTimestamp(d);
+        }
+      }
     }
     HttpRequest h = entry.getHttpRequest();
     if (h == null) {
       return;
-    }
-
-    String ets = entry.getTimestamp();
-    if (ets != null) {
-      DateTime d = Parser.parseISO8601(ets);
-      if (d != null) {
-        e.setTimestamp(d);
-      }
     }
 
     sourceAddress = h.getRemoteIp();

@@ -129,7 +129,7 @@ public class Nginx extends PayloadBase implements Serializable {
 
     String pbuf = null;
     try {
-      ObjectMapper mapper = new ObjectMapper();
+      ObjectMapper mapper = state.getObjectMapper();
       pbuf = mapper.writeValueAsString(m);
     } catch (JsonProcessingException exc) {
       return;
@@ -141,7 +141,7 @@ public class Nginx extends PayloadBase implements Serializable {
     if (matchesStackdriverVariant1(m)) {
       com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriverVariant1 nginxs;
       try {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = state.getObjectMapper();
         nginxs =
             mapper.readValue(
                 pbuf,
@@ -164,7 +164,7 @@ public class Nginx extends PayloadBase implements Serializable {
     } else if (matchesStackdriverVariant2(m)) {
       com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriverVariant2 nginxs;
       try {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = state.getObjectMapper();
         nginxs =
             mapper.readValue(
                 pbuf,

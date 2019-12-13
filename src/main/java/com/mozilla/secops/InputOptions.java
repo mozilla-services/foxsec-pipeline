@@ -26,6 +26,20 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
 
   void setStackdriverLabelFilters(String[] value);
 
+  @Description(
+      "If true, the parser will assume no Mozlog encapsulated messages are present (increased performance)")
+  @Default.Boolean(false)
+  Boolean getDisableMozlogStrip();
+
+  void setDisableMozlogStrip(Boolean value);
+
+  @Description(
+      "If true, the parser will assume no Cloudwatch encapsulated messages are present (increased performance)")
+  @Default.Boolean(false)
+  Boolean getDisableCloudwatchStrip();
+
+  void setDisableCloudwatchStrip(Boolean value);
+
   @Description("Read from Pubsub (multiple allowed); Pubsub topic")
   String[] getInputPubsub();
 

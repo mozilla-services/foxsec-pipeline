@@ -24,6 +24,9 @@ public class ParserCfg implements Serializable {
   private Boolean useEventTimestamp;
   private Integer maxTimestampDifference;
 
+  private Boolean disableCloudwatchStrip;
+  private Boolean disableMozlogStrip;
+
   private String stackdriverProjectFilter;
   private String[] stackdriverLabelFilters;
 
@@ -49,6 +52,8 @@ public class ParserCfg implements Serializable {
     cfg.setStackdriverProjectFilter(options.getStackdriverProjectFilter());
     cfg.setStackdriverLabelFilters(options.getStackdriverLabelFilters());
     cfg.setMaxTimestampDifference(options.getMaxAllowableTimestampDifference());
+    cfg.setDisableMozlogStrip(options.getDisableMozlogStrip());
+    cfg.setDisableCloudwatchStrip(options.getDisableCloudwatchStrip());
     return cfg;
   }
 
@@ -256,6 +261,50 @@ public class ParserCfg implements Serializable {
   /** Construct default parser configuration */
   public ParserCfg() {
     useEventTimestamp = false;
+    disableCloudwatchStrip = false;
+    disableMozlogStrip = false;
+  }
+
+  /**
+   * Set disable Cloudwatch strip
+   *
+   * <p>If it is known ahead of time the parser will never have to strip cloudwatch encapsulation
+   * off an event, this flag can be enabled which will increase parser performance.
+   *
+   * @param disableCloudwatchStrip Boolean
+   */
+  public void setDisableCloudwatchStrip(boolean disableCloudwatchStrip) {
+    this.disableCloudwatchStrip = disableCloudwatchStrip;
+  }
+
+  /**
+   * Get disable Cloudwatch strip flag
+   *
+   * @return Boolean
+   */
+  public Boolean getDisableCloudwatchStrip() {
+    return disableCloudwatchStrip;
+  }
+
+  /**
+   * Set disable Mozlog strip
+   *
+   * <p>If it is known ahead of time the parser will never have to strip mozlog encapsulation off an
+   * event, this flag can be enabled which will increase parser performance.
+   *
+   * @param disableMozlogStrip Boolean
+   */
+  public void setDisableMozlogStrip(boolean disableMozlogStrip) {
+    this.disableMozlogStrip = disableMozlogStrip;
+  }
+
+  /**
+   * Get disable Mozlog strip flag
+   *
+   * @return Boolean
+   */
+  public Boolean getDisableMozlogStrip() {
+    return disableMozlogStrip;
   }
 
   /**
