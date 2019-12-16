@@ -25,6 +25,7 @@ public class ParserCfg implements Serializable {
   private Integer maxTimestampDifference;
 
   private Boolean disableCloudwatchStrip;
+  private Boolean disableCloudWatchLogStrip;
   private Boolean disableMozlogStrip;
 
   private String stackdriverProjectFilter;
@@ -54,6 +55,7 @@ public class ParserCfg implements Serializable {
     cfg.setMaxTimestampDifference(options.getMaxAllowableTimestampDifference());
     cfg.setDisableMozlogStrip(options.getDisableMozlogStrip());
     cfg.setDisableCloudwatchStrip(options.getDisableCloudwatchStrip());
+    cfg.setDisableCloudwatchLogStrip(options.getDisableCloudwatchLogStrip());
     return cfg;
   }
 
@@ -263,6 +265,7 @@ public class ParserCfg implements Serializable {
     useEventTimestamp = false;
     disableCloudwatchStrip = false;
     disableMozlogStrip = false;
+    disableCloudWatchLogStrip = false;
   }
 
   /**
@@ -285,6 +288,28 @@ public class ParserCfg implements Serializable {
    */
   public Boolean getDisableCloudwatchStrip() {
     return disableCloudwatchStrip;
+  }
+
+    /**
+   * Set disable Cloudwatch strip
+   *
+   * <p>If it is known ahead of time the parser will never have to strip cloudwatch encapsulation
+   * off an event, this flag can be enabled which will increase parser performance.
+   *
+   * @param disableCloudwatchStrip Boolean
+   */
+  @JsonProperty("disable_cloudwatchlog_strip")
+  public void setDisableCloudwatchLogStrip(boolean disableCloudwatchLogStrip) {
+    this.disableCloudWatchLogStrip = disableCloudwatchLogStrip;
+  }
+
+  /**
+   * Get disable Cloudwatch strip flag
+   *
+   * @return Boolean
+   */
+  public Boolean getDisableCloudwatchLogStrip() {
+    return disableCloudWatchLogStrip;
   }
 
   /**

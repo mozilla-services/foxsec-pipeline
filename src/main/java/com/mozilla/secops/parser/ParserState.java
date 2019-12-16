@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogEvent;
+import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogSubscription;
 
 /** Stores per-event state of parser */
 class ParserState {
@@ -11,6 +12,7 @@ class ParserState {
   private LogEntry logEntryHint;
   private CloudWatchEvent cloudwatchEvent;
   private CloudWatchLogEvent cloudwatchLogEvent;
+  private CloudWatchLogSubscription cloudwatchLogSubscription;
   private Mozlog mozLogHint;
   private com.google.api.client.json.jackson2.JacksonFactory googleJacksonFactory;
   private ObjectMapper mapper;
@@ -159,5 +161,23 @@ class ParserState {
    */
   public void setCloudwatchLogEvent(CloudWatchLogEvent cwle) {
     this.cloudwatchLogEvent = cwle;
+  }
+
+    /**
+   * Get cloudwatch log event value
+   *
+   * @return {@link CloudWatchEvent} value or null if not available
+   */
+  public CloudWatchLogSubscription getCloudwatchLogSubscription() {
+    return cloudwatchLogSubscription;
+  }
+
+  /**
+   * Set cloudwatch log event hint
+   *
+   * @param cwle CloudWatchLogEvent to store as hint
+   */
+  public void setCloudwatchLogSubscription(CloudWatchLogSubscription cwls) {
+    this.cloudwatchLogSubscription = cwls;
   }
 }

@@ -16,6 +16,7 @@ import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogEvent;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogSubscription;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -338,17 +339,14 @@ public class Parser {
   private String stripCloudWatchLog(Event e, String input, ParserState state) {
     try {
       CloudWatchLogSubscription cwls = mapper.readValue(input, CloudWatchLogSubscription.class);
-
-      if (cwls.getLogGroup() == null
-          || cwls.getLogStream() == null
-          || cwls.getLogEvents() == null) {
+      if (cwls.getLogGroup() == null || cwls.getOwner() == null || cwls.getLogStream() == null ||
+      cwls.getSubscriptionFilters() == null) {
         return input;
       }
+      state.setCloudwatchLogSubscription(cwls);
       e.setCloudWatchLogGroup(cwls.getLogGroup());
-      // there _should_ be only one log event per cloudwatch encapsulation
+      // all log subscription events should have been normalized to have only one event
       CloudWatchLogEvent cwle = cwls.getLogEvents().get(0);
-
-      // CloudWatchLogEvent cwle = mapper.readValue(input, CloudWatchLogEvent.class);
       if (cwle.getId() == null || cwle.getTimestamp() == null || cwle.getMessage() == null) {
         return input;
       }
@@ -368,7 +366,6 @@ public class Parser {
     if (input == null) {
       return null;
     }
-<<<<<<< HEAD
 
     // If we know no other encapsulation will be present for a given log type we can just
     // return here.
@@ -384,14 +381,13 @@ public class Parser {
     if (!cfg.getDisableCloudwatchStrip()) {
       input = stripCloudWatch(e, input, state);
     }
+    if (!cfg.getDisableCloudwatchLogStrip()) {
+      input = stripCloudWatchLog(e, input, state);
+    }
     if (!cfg.getDisableMozlogStrip()) {
       input = stripMozlog(e, input, state);
     }
-=======
-    input = stripCloudWatch(e, input, state);
-    input = stripCloudWatchLog(e, input, state);
-    input = stripMozlog(e, input, state);
->>>>>>> add support for cloudwatch log events + api gateway logs
+ 
     return input;
   }
 

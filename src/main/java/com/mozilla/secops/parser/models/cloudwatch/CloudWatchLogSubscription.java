@@ -101,7 +101,6 @@ public class CloudWatchLogSubscription implements Serializable {
               cwls.logStream,
               cwls.subscriptionFilters);
       normalized.logEvents.add(logEvent);
-
       singleEventLogs.add(normalized);
     }
     return singleEventLogs;
