@@ -242,9 +242,9 @@ public class Event implements Serializable {
   /**
    * Get Cloudwatch log group
    *
-   * @return Stackdriver project name, or null if was not present
+   * @return Cloudwatch log group name, or null if was not present
    */
-  @JsonProperty("cloudwatchLogGroup")
+  @JsonProperty("cloudwatch_log_group")
   public String getCloudWatchLogGroup() {
     return cloudwatchLogGroup;
   }

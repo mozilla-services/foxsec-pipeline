@@ -18,7 +18,7 @@ import org.apache.commons.io.IOUtils;
 public class KinesisDataDecodingTransform
     extends PTransform<PCollection<String>, PCollection<String>> {
   private static final long serialVersionUID = 1L;
-  ObjectMapper objectMapper = new ObjectMapper();
+  private ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
   public PCollection<String> expand(PCollection<String> input) {

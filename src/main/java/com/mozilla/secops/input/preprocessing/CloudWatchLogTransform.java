@@ -16,7 +16,7 @@ import org.apache.beam.sdk.values.PCollection;
 public class CloudWatchLogTransform extends PTransform<PCollection<String>, PCollection<String>> {
 
   private static final long serialVersionUID = 1L;
-  ObjectMapper objectMapper = new ObjectMapper();
+  private ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
   public PCollection<String> expand(PCollection<String> input) {

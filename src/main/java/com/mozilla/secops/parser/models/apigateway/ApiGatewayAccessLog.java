@@ -19,7 +19,7 @@ public class ApiGatewayAccessLog implements Serializable {
   private String protocol;
   private Integer responseLength;
 
-  @JsonProperty("requestId")
+  @JsonProperty("request_id")
   public String getRequestId() {
     return requestId;
   }
@@ -39,17 +39,17 @@ public class ApiGatewayAccessLog implements Serializable {
     return user;
   }
 
-  @JsonProperty("requestTime")
+  @JsonProperty("request_time")
   public String getRequestTime() {
     return requestTime;
   }
 
-  @JsonProperty("httpMethod")
+  @JsonProperty("http_method")
   public String getHttpMethod() {
     return httpMethod;
   }
 
-  @JsonProperty("resourcePath")
+  @JsonProperty("resource_path")
   public String getResourcePath() {
     return resourcePath;
   }
@@ -64,7 +64,7 @@ public class ApiGatewayAccessLog implements Serializable {
     return protocol;
   }
 
-  @JsonProperty("responseLength")
+  @JsonProperty("response_length")
   public Integer getResponseLength() {
     return responseLength;
   }
