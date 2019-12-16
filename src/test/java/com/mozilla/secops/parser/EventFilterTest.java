@@ -579,4 +579,29 @@ public class EventFilterTest {
     filter = mapper.readValue(buf, EventFilter.class);
     assertEquals(buf, mapper.writeValueAsString(filter));
   }
+
+  @Test
+  public void TestEventFilterCloudWatchLogGroup() throws Exception {
+    Parser p = new Parser();
+    assertNotNull(p);
+
+    String data =
+        "{\"messageType\":\"DATA_MESSAGE\",\"owner\":\"111\","
+            + "\"logGroup\":\"/test/log/group\",\"logStream\":\"123\","
+            + "\"subscriptionFilters\":[\"LambdaStream_lambda-to-sns\"],\"logEvents\":["
+            + "{\"id\":\"12345\","
+            + "\"timestamp\":1574863350330,\"message\":\"requestId: 77fa2b02-99d5-42d7-b315-777fdab08e05, "
+            + "ip: 10.0.0.1, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
+            + "httpMethod: DELETE, resourcePath: /test/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}]}";
+    Event e = p.parse(data);
+    assertNotNull(e);
+
+    EventFilter filter = new EventFilter();
+    filter.addRule(new EventFilterRule().wantCloudWatchLogGroup("/test/log/group"));
+    assertTrue(reload(filter).matches(e));
+
+    filter = new EventFilter();
+    filter.addRule(new EventFilterRule().wantCloudWatchLogGroup("/test/log/group2"));
+    assertFalse(reload(filter).matches(e));
+  }
 }

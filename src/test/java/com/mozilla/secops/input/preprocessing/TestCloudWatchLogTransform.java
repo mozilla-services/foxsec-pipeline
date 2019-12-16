@@ -14,21 +14,18 @@ public class TestCloudWatchLogTransform {
 
   @Test
   public void testSingleLogEvent() throws Exception {
+    // If there is only one event in logEvents, the same log entry is returned
     String expected =
-        "{\"id\":\"3512062629821359815568546405119323624381468695710007296\","
-            + "\"timestamp\":1574863350330,\"message\":\"requestId: c2c284c1-af50-457c-a0f8-5116dc789211, "
-            + "ip: 54.68.203.164, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
-            + "httpMethod: DELETE, resourcePath: /sub/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}";
+        "{\"messageType\":\"DATA_MESSAGE\",\"owner\":\"12345\","
+            + "\"logGroup\":\"/test/group\",\"logStream\":\"123\","
+            + "\"subscriptionFilters\":[\"filter\"],\"logEvents\":["
+            + "{\"id\":\"123\","
+            + "\"timestamp\":1574863350330,\"message\":\"requestId: 77fa2b02-99d5-42d7-b315-777fdab08e05, "
+            + "ip: 10.0.0.1, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
+            + "httpMethod: DELETE, resourcePath: /test/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}]}";
 
     ArrayList<String> buf = new ArrayList<>();
-    buf.add(
-        "{\"messageType\": \"DATA_MESSAGE\", \"owner\": \"903937621340\","
-            + "\"logGroup\": \"/aws/api-gateway/fxa-prod\", \"logStream\": \"a0590fb0feea74476b5c8dde497ec695\","
-            + "\"subscriptionFilters\": [\"LambdaStream_lambda-to-sns\"], \"logEvents\": ["
-            + "{\"id\": \"3512062629821359815568546405119323624381468695710007296\","
-            + "\"timestamp\": 1574863350330,\"message\": \"requestId: c2c284c1-af50-457c-a0f8-5116dc789211, "
-            + "ip: 54.68.203.164, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
-            + "httpMethod: DELETE, resourcePath: /sub/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}]}");
+    buf.add(expected);
     PCollection<String> input = pipeline.apply(Create.of(buf));
     PCollection<String> output = input.apply(new CloudWatchLogTransform());
     PAssert.that(output).containsInAnyOrder(expected);
@@ -38,31 +35,39 @@ public class TestCloudWatchLogTransform {
 
   @Test
   public void testMultipleLogEvents() throws Exception {
+    // If there are multiple logEvents in an entry, we get multiple
+    // log entries where each contains a single event in logEvents
     String expected1 =
-        "{\"id\":\"3512062629821359815568546405119323624381468695710007296\","
-            + "\"timestamp\":1574863350330,\"message\":\"requestId: c2c284c1-af50-457c-a0f8-5116dc789211, "
-            + "ip: 54.68.203.164, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
-            + "httpMethod: DELETE, resourcePath: /sub/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}";
+        "{\"messageType\":\"DATA_MESSAGE\",\"owner\":\"12345\","
+            + "\"logGroup\":\"/test/group\",\"logStream\":\"123\","
+            + "\"subscriptionFilters\":[\"filter\"],\"logEvents\":["
+            + "{\"id\":\"123\","
+            + "\"timestamp\":1574863350330,\"message\":\"requestId: 77fa2b02-99d5-42d7-b315-777fdab08e05, "
+            + "ip: 10.0.0.1, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
+            + "httpMethod: DELETE, resourcePath: /test/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}]}";
 
     String expected2 =
-        "{\"id\":\"3612062629821359815568546405119323624381468695710007296\","
-            + "\"timestamp\":1574863350331,\"message\":\"requestId: d2d284c1-af50-457c-a0f8-5116dc789211, "
-            + "ip: 54.68.203.164, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
-            + "httpMethod: DELETE, resourcePath: /sub/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}";
+        "{\"messageType\":\"DATA_MESSAGE\",\"owner\":\"12345\","
+            + "\"logGroup\":\"/test/group\",\"logStream\":\"123\","
+            + "\"subscriptionFilters\":[\"filter\"],\"logEvents\":["
+            + "{\"id\":\"124\","
+            + "\"timestamp\":1574863350331,\"message\":\"requestId: 7185692c-0db8-473f-b900-aac759713333, "
+            + "ip: 10.0.0.1, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
+            + "httpMethod: DELETE, resourcePath: /test/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}]}";
 
     ArrayList<String> buf = new ArrayList<>();
     buf.add(
-        "{\"messageType\": \"DATA_MESSAGE\", \"owner\": \"903937621340\","
-            + "\"logGroup\": \"/aws/api-gateway/fxa-prod\", \"logStream\": \"a0590fb0feea74476b5c8dde497ec695\","
-            + "\"subscriptionFilters\": [\"LambdaStream_lambda-to-sns\"], \"logEvents\": ["
-            + "{\"id\": \"3512062629821359815568546405119323624381468695710007296\","
-            + "\"timestamp\": 1574863350330,\"message\": \"requestId: c2c284c1-af50-457c-a0f8-5116dc789211, "
-            + "ip: 54.68.203.164, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
-            + "httpMethod: DELETE, resourcePath: /sub/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"},"
-            + "{\"id\": \"3612062629821359815568546405119323624381468695710007296\","
-            + "\"timestamp\": 1574863350331,\"message\": \"requestId: d2d284c1-af50-457c-a0f8-5116dc789211, "
-            + "ip: 54.68.203.164, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
-            + "httpMethod: DELETE, resourcePath: /sub/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}]}");
+        "{\"messageType\": \"DATA_MESSAGE\", \"owner\": \"12345\","
+            + "\"logGroup\": \"/test/group\", \"logStream\": \"123\","
+            + "\"subscriptionFilters\": [\"filter\"], \"logEvents\": ["
+            + "{\"id\": \"123\","
+            + "\"timestamp\": 1574863350330,\"message\": \"requestId: 77fa2b02-99d5-42d7-b315-777fdab08e05, "
+            + "ip: 10.0.0.1, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
+            + "httpMethod: DELETE, resourcePath: /test/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"},"
+            + "{\"id\": \"124\","
+            + "\"timestamp\": 1574863350331,\"message\": \"requestId: 7185692c-0db8-473f-b900-aac759713333, "
+            + "ip: 10.0.0.1, caller: -, user: -, requestTime: 27/Nov/2019:14:02:30 +0000, "
+            + "httpMethod: DELETE, resourcePath: /test/{proxy+}, status: 404, protocol: HTTP/1.1, responseLength: 43\"}]}");
     PCollection<String> input = pipeline.apply(Create.of(buf));
     PCollection<String> output = input.apply(new CloudWatchLogTransform());
     PAssert.that(output).containsInAnyOrder(expected1, expected2);
@@ -72,14 +77,27 @@ public class TestCloudWatchLogTransform {
 
   @Test
   public void testFilterControlMessages() {
+    // We exclude non data messages as these do not have meaningful events
     ArrayList<String> buf = new ArrayList<>();
     buf.add(
-        "{\"messageType\": \"CONTROL_MESSAGE\", \"owner\": \"903937621340\","
-            + "\"logGroup\": \"/aws/api-gateway/fxa-prod\", \"logStream\": \"a0590fb0feea74476b5c8dde497ec695\","
-            + "\"subscriptionFilters\": [\"LambdaStream_lambda-to-sns\"], \"logEvents\": []}");
+        "{\"messageType\": \"CONTROL_MESSAGE\", \"owner\": \"123\","
+            + "\"logGroup\": \"/test/log/grpi[\", \"logStream\": \"123\","
+            + "\"subscriptionFilters\": [\"filter\"], \"logEvents\": []}");
     PCollection<String> input = pipeline.apply(Create.of(buf));
     PCollection<String> output = input.apply(new CloudWatchLogTransform());
     PAssert.that(output).empty();
+    pipeline.run().waitUntilFinish();
+  }
+
+  @Test
+  public void testNonCloudWatchLogMessagesAreNotModified() {
+    // Non CloudWatch logs are not modified and are passed on
+    String expected = "{\"owner\": \"1234567890\"}";
+    ArrayList<String> buf = new ArrayList<>();
+    buf.add(expected);
+    PCollection<String> input = pipeline.apply(Create.of(buf));
+    PCollection<String> output = input.apply(new CloudWatchLogTransform());
+    PAssert.that(output).containsInAnyOrder(expected);
     pipeline.run().waitUntilFinish();
   }
 }

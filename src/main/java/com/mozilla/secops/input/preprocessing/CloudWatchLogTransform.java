@@ -1,6 +1,5 @@
 package com.mozilla.secops.input.preprocessing;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogSubscription;
 import java.io.IOException;
@@ -21,8 +20,7 @@ public class CloudWatchLogTransform extends PTransform<PCollection<String>, PCol
 
   @Override
   public PCollection<String> expand(PCollection<String> input) {
-    return input
-        .apply(ParDo.of(new NormalizeCloudWatchLogEvents()));
+    return input.apply(ParDo.of(new NormalizeCloudWatchLogEvents()));
   }
 
   class NormalizeCloudWatchLogEvents extends DoFn<String, String> {
@@ -36,24 +34,28 @@ public class CloudWatchLogTransform extends PTransform<PCollection<String>, PCol
         CloudWatchLogSubscription cws =
             objectMapper.readValue(input, CloudWatchLogSubscription.class);
 
-        //TODO check fields all populated
-        if (cws.isDataMessage()) {
-          ArrayList<Object> logEvents = cws.getLogEvents();
-          for (Object logEvent : logEvents) {
-          try {
-            String event = objectMapper.writeValueAsString(logEvent);
-            c.output(event);
-          } catch (JsonProcessingException e) {
-            // pass
-          }
+        if (cws.getLogGroup() == null
+            || cws.getLogStream() == null
+            || cws.getOwner() == null
+            || cws.getSubscriptionFilters() == null) {
+          // if fields weren't populated output the original message
+          c.output(input);
+        } else {
+          // if this is a data message with log events:
+          // normalize the message so we have only one event per log message
+          if (cws.isDataMessage() && cws.getLogEvents() != null) {
+            ArrayList<CloudWatchLogSubscription> events =
+                CloudWatchLogSubscription.makeSingleEventLogs(cws);
+            for (CloudWatchLogSubscription event : events) {
+
+              String normalized = objectMapper.writeValueAsString(event);
+              c.output(normalized);
+            }
           }
         }
-      } catch (IOException e) {
-        // 
+      } catch (IOException exc) {
         c.output(input);
       }
-
     }
   }
-
 }

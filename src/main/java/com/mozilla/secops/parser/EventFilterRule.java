@@ -18,6 +18,7 @@ public class EventFilterRule implements Serializable {
   private Payload.PayloadType wantSubtype;
   private Normalized.Type wantNormalizedType;
   private String wantStackdriverProject;
+  private String wantCloudWatchLogGroup;
   private Map<String, String> wantStackdriverLabel;
   private ArrayList<EventFilterPayloadInterface> payloadFilters;
 
@@ -49,6 +50,12 @@ public class EventFilterRule implements Serializable {
         if (!(hasValue.equals(wantValue))) {
           return false;
         }
+      }
+    }
+    if (wantCloudWatchLogGroup != null) {
+      String lg = e.getCloudWatchLogGroup();
+      if ((lg == null) || !(lg.equals(wantCloudWatchLogGroup))) {
+        return false;
       }
     }
     if (wantSubtype != null) {
@@ -220,6 +227,26 @@ public class EventFilterRule implements Serializable {
    */
   public Map<String, String> getWantStackdriverLabels() {
     return wantStackdriverLabel;
+  }
+
+  /**
+   * Get cloudwatch log group
+   *
+   * @return Cloudwatch LogGroup or null if unset
+   */
+  public String getWantCloudWatchLogGroup() {
+    return wantCloudWatchLogGroup;
+  }
+
+  /**
+   * Set CloudWatch LogGroup filter
+   *
+   * @param logGroup Cloudwatch LogGroup string
+   */
+  @JsonProperty("cloudwatch_loggroup")
+  public EventFilterRule wantCloudWatchLogGroup(String logGroup) {
+    this.wantCloudWatchLogGroup = logGroup;
+    return this;
   }
 
   /**

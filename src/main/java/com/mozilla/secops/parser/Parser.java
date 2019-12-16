@@ -15,6 +15,7 @@ import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogEvent;
+import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogSubscription;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -336,7 +337,18 @@ public class Parser {
 
   private String stripCloudWatchLog(Event e, String input, ParserState state) {
     try {
-      CloudWatchLogEvent cwle = mapper.readValue(input, CloudWatchLogEvent.class);
+      CloudWatchLogSubscription cwls = mapper.readValue(input, CloudWatchLogSubscription.class);
+
+      if (cwls.getLogGroup() == null
+          || cwls.getLogStream() == null
+          || cwls.getLogEvents() == null) {
+        return input;
+      }
+      e.setCloudWatchLogGroup(cwls.getLogGroup());
+      // there _should_ be only one log event per cloudwatch encapsulation
+      CloudWatchLogEvent cwle = cwls.getLogEvents().get(0);
+
+      // CloudWatchLogEvent cwle = mapper.readValue(input, CloudWatchLogEvent.class);
       if (cwle.getId() == null || cwle.getTimestamp() == null || cwle.getMessage() == null) {
         return input;
       }

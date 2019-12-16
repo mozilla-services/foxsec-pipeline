@@ -9,7 +9,7 @@ public class CloudWatchLogEvent implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String id;
-  private String timestamp;
+  private Long timestamp;
   private Object message;
 
   /**
@@ -28,7 +28,7 @@ public class CloudWatchLogEvent implements Serializable {
    * @return String
    */
   @JsonProperty("timestamp")
-  public String getTimestamp() {
+  public Long getTimestamp() {
     return timestamp;
   }
 

@@ -33,6 +33,7 @@ public class Event implements Serializable {
   private Mozlog mozlog;
   private String stackdriverProject;
   private Map<String, String> stackdriverLabels;
+  private String cloudwatchLogGroup;
 
   /**
    * Create a new {@link Event} object.
@@ -227,6 +228,25 @@ public class Event implements Serializable {
         com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     mapper.setSerializationInclusion(Include.NON_NULL);
     return mapper;
+  }
+
+  /**
+   * Set the CloudWatch log group
+   *
+   * @param project log group string
+   */
+  public void setCloudWatchLogGroup(String logGroup) {
+    cloudwatchLogGroup = logGroup;
+  }
+
+  /**
+   * Get Cloudwatch log group
+   *
+   * @return Stackdriver project name, or null if was not present
+   */
+  @JsonProperty("cloudwatchLogGroup")
+  public String getCloudWatchLogGroup() {
+    return cloudwatchLogGroup;
   }
 
   /**
