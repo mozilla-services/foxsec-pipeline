@@ -45,5 +45,4 @@ public class TestKinesisDataDecodingTransform {
     PAssert.that(output).containsInAnyOrder(expected);
     pipeline.run().waitUntilFinish();
   }
-
 }

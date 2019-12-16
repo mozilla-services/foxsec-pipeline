@@ -290,7 +290,7 @@ public class ParserCfg implements Serializable {
     return disableCloudwatchStrip;
   }
 
-    /**
+  /**
    * Set disable Cloudwatch strip
    *
    * <p>If it is known ahead of time the parser will never have to strip cloudwatch encapsulation

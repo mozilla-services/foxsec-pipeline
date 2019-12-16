@@ -5,7 +5,6 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionIn
 import com.mozilla.secops.crypto.RuntimeSecrets;
 import com.mozilla.secops.input.preprocessing.CloudWatchLogTransform;
 import com.mozilla.secops.input.preprocessing.KinesisDataDecodingTransform;
-
 import java.io.IOException;
 import java.io.Serializable;
 import org.apache.beam.sdk.io.kinesis.KinesisIO;

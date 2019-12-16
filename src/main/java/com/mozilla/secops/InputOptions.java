@@ -41,11 +41,11 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   void setDisableCloudwatchStrip(Boolean value);
 
   @Description(
-    "If true, the parser will assume no CloudwatchLog encapsulated messages are present (increased performance)")
-@Default.Boolean(false)
-Boolean getDisableCloudwatchLogStrip();
+      "If true, the parser will assume no CloudwatchLog encapsulated messages are present (increased performance)")
+  @Default.Boolean(false)
+  Boolean getDisableCloudwatchLogStrip();
 
-void setDisableCloudwatchLogStrip(Boolean value);
+  void setDisableCloudwatchLogStrip(Boolean value);
 
   @Description("Read from Pubsub (multiple allowed); Pubsub topic")
   String[] getInputPubsub();

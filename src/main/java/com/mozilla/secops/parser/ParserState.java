@@ -163,7 +163,7 @@ class ParserState {
     this.cloudwatchLogEvent = cwle;
   }
 
-    /**
+  /**
    * Get cloudwatch log event value
    *
    * @return {@link CloudWatchEvent} value or null if not available

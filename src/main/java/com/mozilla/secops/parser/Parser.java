@@ -16,7 +16,6 @@ import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogEvent;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchLogSubscription;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -339,8 +338,10 @@ public class Parser {
   private String stripCloudWatchLog(Event e, String input, ParserState state) {
     try {
       CloudWatchLogSubscription cwls = mapper.readValue(input, CloudWatchLogSubscription.class);
-      if (cwls.getLogGroup() == null || cwls.getOwner() == null || cwls.getLogStream() == null ||
-      cwls.getSubscriptionFilters() == null) {
+      if (cwls.getLogGroup() == null
+          || cwls.getOwner() == null
+          || cwls.getLogStream() == null
+          || cwls.getSubscriptionFilters() == null) {
         return input;
       }
       state.setCloudwatchLogSubscription(cwls);
@@ -387,7 +388,7 @@ public class Parser {
     if (!cfg.getDisableMozlogStrip()) {
       input = stripMozlog(e, input, state);
     }
- 
+
     return input;
   }
 
