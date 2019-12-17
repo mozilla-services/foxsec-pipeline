@@ -29,6 +29,8 @@ public class TestCritObject {
     ret.setCritObjects(new String[] {"^projects/test$"});
     ret.setCriticalNotificationEmail("section31@mozilla.com");
     ret.setIgnoreUserRegex(new String[] {"^riker@mozilla.com$"});
+    ret.setContactEmail("test@localhost");
+    ret.setDocLink("https://localhost");
     return ret;
   }
 
@@ -83,7 +85,7 @@ public class TestCritObject {
                         tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
                     assertEquals(
                         TestAuthProfile.renderTestTemplate(
-                            "/testdata/templateoutput/authprof_critobj.html", a),
+                            "/testdata/templateoutput/email/authprof_critobj.html", a),
                         templateOutput);
                   } catch (Exception exc) {
                     fail(exc.getMessage());

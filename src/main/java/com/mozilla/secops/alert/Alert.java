@@ -217,6 +217,30 @@ public class Alert implements Serializable {
   }
 
   /**
+   * Change an existing metadata value
+   *
+   * <p>If the key does not exist, it will be added. Note that if multiple entries exist with the
+   * same key, this method will only change the first encountered.
+   *
+   * @param key Key to set
+   * @param value Value to set for key
+   */
+  public void setMetadataValue(String key, String value) {
+    metaLock.lock();
+    try {
+      for (AlertMeta m : metadata) {
+        if (m.getKey().equals(key)) {
+          m.setValue(value);
+          return;
+        }
+      }
+      metadata.add(new AlertMeta(key, value));
+    } finally {
+      metaLock.unlock();
+    }
+  }
+
+  /**
    * Get alert metadata
    *
    * @return Alert metadata

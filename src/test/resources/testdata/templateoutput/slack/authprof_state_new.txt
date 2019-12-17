@@ -1,0 +1,7 @@
+An authentication event for user riker was detected to access emit-bastion from 216.160.83.56 [Milton/US].
+
+This event occurred at DATESTAMP.
+
+If you have any questions about this alert, please refer to our user guide: https://localhost
+
+alert id: ALERTID
