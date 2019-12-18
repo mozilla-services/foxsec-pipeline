@@ -87,6 +87,8 @@ public class TestAuthProfile {
     ret.setDatastoreKind("authprofile");
     ret.setIdentityManagerPath("/testdata/identitymanager.json");
     ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
+    ret.setContactEmail("test@localhost");
+    ret.setDocLink("https://localhost");
     return ret;
   }
 
@@ -178,8 +180,9 @@ public class TestAuthProfile {
                       String templateOutput =
                           tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
                       assertEquals(
+                          "known ip",
                           renderTestTemplate(
-                              "/testdata/templateoutput/authprof_state_known.html", a),
+                              "/testdata/templateoutput/email/authprof_state_known.html", a),
                           templateOutput);
                     } catch (Exception exc) {
                       fail(exc.getMessage());
@@ -209,7 +212,9 @@ public class TestAuthProfile {
                       String templateOutput =
                           tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
                       assertEquals(
-                          renderTestTemplate("/testdata/templateoutput/authprof_state_new.html", a),
+                          "new ip",
+                          renderTestTemplate(
+                              "/testdata/templateoutput/email/authprof_state_new.html", a),
                           templateOutput);
                     } catch (Exception exc) {
                       fail(exc.getMessage());
@@ -709,5 +714,138 @@ public class TestAuthProfile {
             });
 
     p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void templateRender() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"eca99844-96ac-4a44-adba-48ce3c593157\","
+            + "\"summary\":\"authentication event observed riker [wriker@mozilla.com] "
+            + "to emit-bastion, 216.160.83.56 [Milton/US]\",\"category\":\"authprofile"
+            + "\",\"payload\":\"An authentication event for user riker was detected to"
+            + " access emit-bastion from 216.160.83.56 [Milton/US]. This occurred from "
+            + "a known source address.\\n\\nIf this was not you, or you have any question"
+            + "s about this alert, email us at secops@mozilla.com with the alert id.\","
+            + "\"timestamp\":\"2019-12-17T19:48:18.680Z\",\"metadata\":[{\"key\":\"obje"
+            + "ct\",\"value\":\"emit-bastion\"},{\"key\":\"username\",\"value\":\"riker"
+            + "\"},{\"key\":\"sourceaddress\",\"value\":\"216.160.83.56\"},{\"key\":\"e"
+            + "mail_contact\",\"value\":\"test@localhost\"},{\"key\":\"doc_link\",\"val"
+            + "ue\":\"https://localhost\"},{\"key\":\"template_name_email\",\"value\":"
+            + "\"email/authprofile.ftlh\"},{\"key\":\"template_name_slack\",\"value\":"
+            + "\"slack/authprofile.ftlh\"},{\"key\":\"sourceaddress_city\",\"value\":\""
+            + "Milton\"},{\"key\":\"sourceaddress_country\",\"value\":\"US\"},{\"key\":"
+            + "\"sourceaddress_timezone\",\"value\":\"America/Los_Angeles\"},{\"key\":"
+            + "\"auth_alert_type\",\"value\":\"auth\"},{\"key\":\"event_timestamp\",\""
+            + "value\":\"2018-09-18T22:15:38.000Z\"},{\"key\":\"event_timestamp_source"
+            + "_local\",\"value\":\"2018-09-18T15:15:38.000-07:00\"},{\"key\":\"catego"
+            + "ry\",\"value\":\"state_analyze\"},{\"key\":\"identity_key\",\"value\":"
+            + "\"wriker@mozilla.com\"},{\"key\":\"state_action_type\",\"value\":\"known_ip\"}]}";
+
+    Alert a = Alert.fromJSON(buf);
+    assertNotNull(a);
+
+    AlertConfiguration alertCfg = new AlertConfiguration();
+    alertCfg.registerTemplate("email/authprofile.ftlh");
+    alertCfg.registerTemplate("slack/authprofile.ftlh");
+    TemplateManager tmgr = new TemplateManager(alertCfg);
+    tmgr.validate();
+    String templateOutput =
+        tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "known ip",
+        renderTestTemplate("/testdata/templateoutput/email/authprof_state_known.html", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
+    templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip no geo",
+        renderTestTemplate("/testdata/templateoutput/email/authprof_state_new.html", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_WITHIN_GEO.toString());
+    templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip within geo",
+        renderTestTemplate("/testdata/templateoutput/email/authprof_state_new_within_geo.html", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_OUTSIDE_GEO.toString());
+    templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip outside geo",
+        renderTestTemplate("/testdata/templateoutput/email/authprof_state_new_outside_geo.html", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_HOSTING_PROVIDER.toString());
+    templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip hosting",
+        renderTestTemplate("/testdata/templateoutput/email/authprof_state_new_hosting.html", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_ANON_NETWORK.toString());
+    templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip anon",
+        renderTestTemplate("/testdata/templateoutput/email/authprof_state_new_anon.html", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_WITHIN_GEO.toString());
+    a.setMetadataValue("alert_notification_type", "slack_notification");
+    templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip within geo slack",
+        renderTestTemplate("/testdata/templateoutput/slack/authprof_state_new_within_geo.txt", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_OUTSIDE_GEO.toString());
+    a.setMetadataValue("alert_notification_type", "slack_confirmation");
+    templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip outside geo slack",
+        renderTestTemplate("/testdata/templateoutput/slack/authprof_state_new_outside_geo.txt", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_HOSTING_PROVIDER.toString());
+    templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip hosting slack",
+        renderTestTemplate("/testdata/templateoutput/slack/authprof_state_new_hosting.txt", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_ANON_NETWORK.toString());
+    templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip anon slack",
+        renderTestTemplate("/testdata/templateoutput/slack/authprof_state_new_anon.txt", a),
+        templateOutput);
+
+    a.setMetadataValue(
+        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
+    templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
+    assertEquals(
+        "unknown ip no geo slack",
+        renderTestTemplate("/testdata/templateoutput/slack/authprof_state_new.txt", a),
+        templateOutput);
   }
 }

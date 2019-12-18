@@ -22,11 +22,20 @@ public class AlertMeta implements Serializable {
   }
 
   /**
+   * Set metadata value
+   *
+   * @param value Value to set
+   */
+  @JsonProperty("value")
+  public void setValue(String value) {
+    this.value = value;
+  }
+
+  /**
    * Get metadata value
    *
    * @return Value string
    */
-  @JsonProperty("value")
   public String getValue() {
     return value;
   }

@@ -40,6 +40,7 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
@@ -313,6 +314,8 @@ public class AuthProfile implements Serializable {
 
     private final String[] critObjects;
     private final String critNotifyEmail;
+    private final String contactEmail;
+    private final String docLink;
 
     private Logger log;
     private Pattern[] critObjectPat;
@@ -325,6 +328,8 @@ public class AuthProfile implements Serializable {
     public CritObjectAnalyze(AuthProfileOptions options) {
       critObjects = options.getCritObjects();
       critNotifyEmail = options.getCriticalNotificationEmail();
+      contactEmail = options.getContactEmail();
+      docLink = options.getDocLink();
     }
 
     public String getTransformDoc() {
@@ -413,7 +418,7 @@ public class AuthProfile implements Serializable {
           "escalating critical object alert for {} {}",
           e.getNormalized().getSubjectUser(),
           e.getNormalized().getObject());
-      Alert a = AuthProfile.createBaseAlert(e);
+      Alert a = AuthProfile.createBaseAlert(e, contactEmail, docLink);
       a.addMetadata("category", "critical_object_analyze");
       a.setSeverity(Alert.AlertSeverity.CRITICAL);
       buildAlertSummary(e, a);
@@ -500,6 +505,8 @@ public class AuthProfile implements Serializable {
     private final String maxmindLicenseKey;
     private final Double maxKilometersStatic;
     private final String gcpProject;
+    private final String contactEmail;
+    private final String docLink;
     private CidrUtil cidrGcp;
     private Logger log;
     private State state;
@@ -521,6 +528,8 @@ public class AuthProfile implements Serializable {
       maxmindAccountId = options.getMaxmindAccountId();
       maxmindLicenseKey = options.getMaxmindLicenseKey();
       gcpProject = options.getProject();
+      contactEmail = options.getContactEmail();
+      docLink = options.getDocLink();
     }
 
     public String getTransformDoc() {
@@ -694,7 +703,7 @@ public class AuthProfile implements Serializable {
       ArrayList<String> seenKnownAddresses = new ArrayList<>();
 
       for (Event e : events) {
-        Alert a = AuthProfile.createBaseAlert(e);
+        Alert a = AuthProfile.createBaseAlert(e, contactEmail, docLink);
         a.addMetadata("category", "state_analyze");
 
         // If the address is already in the known address list, we have already processed it
@@ -934,21 +943,37 @@ public class AuthProfile implements Serializable {
     Double getMaximumKilometersFromLastLogin();
 
     void setMaximumKilometersFromLastLogin(Double value);
+
+    @Description("General contact address used in alert templates; email address")
+    @Validation.Required
+    String getContactEmail();
+
+    void setContactEmail(String value);
+
+    @Description("URL to documentation link used in alert templates; URL")
+    @Validation.Required
+    String getDocLink();
+
+    void setDocLink(String value);
   }
 
   /**
    * Create a base authprofile {@link Alert} using information from the event
    *
    * @param e Event
+   * @param contactEmail General contact email address to set in alert metadata
+   * @param docLink URL to documentation link to set in alert metadata
    * @return Base alert object
    */
-  public static Alert createBaseAlert(Event e) {
+  public static Alert createBaseAlert(Event e, String contactEmail, String docLink) {
     Alert a = new Alert();
 
     Normalized n = e.getNormalized();
     a.addMetadata("object", n.getObject());
     a.addMetadata("username", n.getSubjectUser());
     a.addMetadata("sourceaddress", n.getSourceAddress());
+    a.addMetadata("email_contact", contactEmail);
+    a.addMetadata("doc_link", docLink);
     a.setCategory("authprofile");
 
     a.setEmailTemplate(EMAIL_TEMPLATE);
