@@ -53,7 +53,7 @@ public class GLB extends PayloadBase implements Serializable {
     if (entry == null) {
       // Reuse JacksonFactory from parser state
       JacksonFactory jf = state.getGoogleJacksonFactory();
-      JsonParser jp;
+      JsonParser jp = null;
       try {
         jp = jf.createJsonParser(input);
       } catch (IOException exc) {
@@ -65,7 +65,9 @@ public class GLB extends PayloadBase implements Serializable {
         return;
       } finally {
         try {
-          jp.close();
+          if (jp != null) {
+            jp.close();
+          }
         } catch (IOException jexc) {
           throw new RuntimeException(jexc.getMessage());
         }
