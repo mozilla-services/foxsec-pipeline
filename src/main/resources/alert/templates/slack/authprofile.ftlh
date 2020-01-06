@@ -22,6 +22,10 @@ The source address appears to be associated with a hosting provider.
 The source address appears to be associated with a known anonymity network.
 </#if>
 </#if>
+<#if event_timestamp_source_local??>
+
+Timestamp for event based on source address time zone was ${event_timestamp_source_local}.
+</#if>
 <#if alert_notification_type??>
 <#if alert_notification_type == "slack_confirmation">
 

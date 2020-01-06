@@ -4,6 +4,8 @@ This event occurred at DATESTAMP.
 
 The source address appears to be associated with a known anonymity network.
 
+Timestamp for event based on source address time zone was DATELOCALSTAMP.
+
 If you have any questions about this alert, please refer to our user guide: https://localhost
 
 alert id: ALERTID
