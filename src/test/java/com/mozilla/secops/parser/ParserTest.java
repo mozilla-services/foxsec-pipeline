@@ -142,7 +142,9 @@ public class ParserTest {
     Event e = p.parse(buf);
     assertNotNull(e);
     assertEquals(Payload.PayloadType.OPENSSH, e.getPayloadType());
-    assertEquals("2019-09-18T22:15:38.000Z", e.getTimestamp().toString());
+    assertEquals(
+        String.format("%d-09-18T22:15:38.000Z", new DateTime().getYear()),
+        e.getTimestamp().toString());
     OpenSSH o = e.getPayload();
     assertNotNull(o);
     assertEquals("riker", o.getUser());
