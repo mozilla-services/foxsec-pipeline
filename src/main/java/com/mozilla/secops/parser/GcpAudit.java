@@ -77,10 +77,11 @@ public class GcpAudit extends SourcePayloadBase implements Serializable {
 
   @Override
   public Boolean matcher(String input, ParserState state) {
+    JsonParser jp = null;
     try {
       LogEntry entry = state.getLogEntryHint();
       if (entry == null) {
-        JsonParser jp = jfmatcher.createJsonParser(input);
+        jp = jfmatcher.createJsonParser(input);
         entry = jp.parse(LogEntry.class);
       }
 
@@ -98,6 +99,14 @@ public class GcpAudit extends SourcePayloadBase implements Serializable {
       // pass
     } catch (IllegalArgumentException exc) {
       // pass
+    } finally {
+      if (jp != null) {
+        try {
+          jp.close();
+        } catch (IOException exc) {
+          throw new RuntimeException(exc.getMessage());
+        }
+      }
     }
     return false;
   }
@@ -126,11 +135,20 @@ public class GcpAudit extends SourcePayloadBase implements Serializable {
       // Use method local JacksonFactory as the object is not serializable, and this event
       // may be passed around
       JacksonFactory jf = new JacksonFactory();
+      JsonParser jp = null;
       try {
-        JsonParser jp = jf.createJsonParser(input);
+        jp = jf.createJsonParser(input);
         entry = jp.parse(LogEntry.class);
       } catch (IOException exc) {
         return;
+      } finally {
+        if (jp != null) {
+          try {
+            jp.close();
+          } catch (IOException exc) {
+            throw new RuntimeException(exc.getMessage());
+          }
+        }
       }
     }
 
@@ -145,10 +163,20 @@ public class GcpAudit extends SourcePayloadBase implements Serializable {
       return;
     }
     AuditLog auditLog;
+    JsonParser jp = null;
     try {
-      auditLog = (new JacksonFactory()).createJsonParser(pbuf).parse(AuditLog.class);
+      jp = new JacksonFactory().createJsonParser(pbuf);
+      auditLog = jp.parse(AuditLog.class);
     } catch (IOException exc) {
       return;
+    } finally {
+      if (jp != null) {
+        try {
+          jp.close();
+        } catch (IOException exc) {
+          throw new RuntimeException(exc.getMessage());
+        }
+      }
     }
 
     Normalized n = e.getNormalized();

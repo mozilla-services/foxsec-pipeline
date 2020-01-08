@@ -242,8 +242,9 @@ public class Parser {
   }
 
   private String stripStackdriverEncapsulation(Event e, String input, ParserState state) {
+    JsonParser jp = null;
     try {
-      JsonParser jp = jf.createJsonParser(input);
+      jp = jf.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
 
       e.setStackdriverProject(getStackdriverProject(entry));
@@ -279,6 +280,14 @@ public class Parser {
       // pass
     } catch (IllegalArgumentException exc) {
       // pass
+    } finally {
+      if (jp != null) {
+        try {
+          jp.close();
+        } catch (IOException exc) {
+          throw new RuntimeException(exc.getMessage());
+        }
+      }
     }
     // If the input data could not be converted into a Stackdriver LogEntry just return
     // it as is.

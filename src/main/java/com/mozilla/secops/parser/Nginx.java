@@ -56,13 +56,14 @@ public class Nginx extends PayloadBase implements Serializable {
 
   @Override
   public Boolean matcher(String input, ParserState state) {
+    JsonParser jp = null;
     try {
       // XXX We only support processing Stackdriver encapsulated nginx log entries
       // that are present in jsonPayload right now. This needs to be adjusted to support
       // for example raw nginx log entries.
       LogEntry entry = state.getLogEntryHint();
       if (entry == null) {
-        JsonParser jp = jfmatcher.createJsonParser(input);
+        jp = jfmatcher.createJsonParser(input);
         entry = jp.parse(LogEntry.class);
       }
 
@@ -81,6 +82,14 @@ public class Nginx extends PayloadBase implements Serializable {
       // pass
     } catch (IllegalArgumentException exc) {
       // pass
+    } finally {
+      if (jp != null) {
+        try {
+          jp.close();
+        } catch (IOException exc) {
+          throw new RuntimeException(exc.getMessage());
+        }
+      }
     }
     return false;
   }
@@ -106,11 +115,20 @@ public class Nginx extends PayloadBase implements Serializable {
       // Use method local JacksonFactory as the object is not serializable, and this event
       // may be passed around
       JacksonFactory jf = state.getGoogleJacksonFactory();
+      JsonParser jp = null;
       try {
-        JsonParser jp = jf.createJsonParser(input);
+        jp = jf.createJsonParser(input);
         entry = jp.parse(LogEntry.class);
       } catch (IOException exc) {
         return;
+      } finally {
+        if (jp != null) {
+          try {
+            jp.close();
+          } catch (IOException exc) {
+            throw new RuntimeException(exc.getMessage());
+          }
+        }
       }
     }
 

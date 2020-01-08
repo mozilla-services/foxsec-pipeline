@@ -168,9 +168,10 @@ public class Auth0 extends SourcePayloadBase implements Serializable {
   }
 
   private LogEvent parseInput(String input) throws IOException {
+    JsonParser jp = null;
     try {
       JacksonFactory jfmatcher = new JacksonFactory();
-      JsonParser jp = jfmatcher.createJsonParser(input);
+      jp = jfmatcher.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
       Map<String, Object> m = entry.getJsonPayload();
       if (m != null) {
@@ -182,6 +183,10 @@ public class Auth0 extends SourcePayloadBase implements Serializable {
       // pass
     } catch (IllegalArgumentException exc) {
       // pass
+    } finally {
+      if (jp != null) {
+        jp.close();
+      }
     }
 
     try {
