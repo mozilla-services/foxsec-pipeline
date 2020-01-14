@@ -45,6 +45,24 @@ public class State {
   }
 
   /**
+   * Perform a get all fetch operation with no intended follow up modification and update of any
+   * value. For operations involving a fetch, update, and store a new cursor should be allocated by
+   * the caller instead.
+   *
+   * @param cls Class to deserialize state data into
+   * @return Returns an array containing the state data for all keys of the kind in {@link
+   *     DatastoreStateInterface}, null if none are found.
+   */
+  public <T> T[] getAll(Class<T> cls) throws StateException {
+    StateCursor c = newCursor();
+    try {
+      return c.getAll(cls);
+    } finally {
+      c.commit();
+    }
+  }
+
+  /**
    * Allocate new state cursor for a set of operations
    *
    * <p>In cases where the underlying {@link StateInterface} supports transactions, allocating a new
