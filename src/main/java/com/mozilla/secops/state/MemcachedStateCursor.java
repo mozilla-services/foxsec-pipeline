@@ -21,6 +21,10 @@ public class MemcachedStateCursor extends StateCursor {
     }
   }
 
+  public String[] getAllObjects() throws StateException {
+    throw new StateException("getAllObjects not implemented for memcached");
+  }
+
   public void saveObject(String s, String v) throws StateException {
     try {
       memclient.set(s, 0, v);

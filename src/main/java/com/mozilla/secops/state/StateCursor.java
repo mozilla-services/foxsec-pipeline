@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,13 @@ public abstract class StateCursor {
    * @return Value
    */
   public abstract String getObject(String s) throws StateException;
+
+  /**
+   * Low level state object fetch all operation
+   *
+   * <p>Most uses should prefer {@link #getAll}.
+   */
+  public abstract String[] getAllObjects() throws StateException;
 
   /**
    * Low level state object save operation
@@ -66,6 +74,31 @@ public abstract class StateCursor {
 
     try {
       return mapper.readValue(lv, cls);
+    } catch (IOException exc) {
+      throw new StateException(exc.getMessage());
+    }
+  }
+
+  /**
+   * Get all state values of the specified kind (specific to Datastore)
+   *
+   * @param cls Class to deserialize state data into
+   * @return Returns an array containing the state data for all keys of the kind in {@link
+   *     DatastoreStateInterface}, null if none are found.
+   */
+  public <T> T[] getAll(Class<T> cls) throws StateException {
+    String[] lv = getAllObjects();
+    if (lv == null) {
+      return null;
+    }
+
+    try {
+      @SuppressWarnings("unchecked")
+      T[] results = (T[]) Array.newInstance(cls, lv.length);
+      for (int i = 0; i < lv.length; i++) {
+        results[i] = mapper.readValue(lv[i], cls);
+      }
+      return results;
     } catch (IOException exc) {
       throw new StateException(exc.getMessage());
     }

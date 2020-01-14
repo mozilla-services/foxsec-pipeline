@@ -5,11 +5,16 @@ import com.google.cloud.datastore.DatastoreException;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.KeyFactory;
+import com.google.cloud.datastore.Query;
+import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StringValue;
 import com.google.cloud.datastore.Transaction;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Datastore state cursor implementation */
 public class DatastoreStateCursor extends StateCursor {
+  private Datastore datastore;
   private String namespace;
   private String kind;
   private KeyFactory keyFactory;
@@ -31,6 +36,26 @@ public class DatastoreStateCursor extends StateCursor {
         return null;
       }
       return e.getString("state");
+    } catch (DatastoreException exc) {
+      throw new StateException(exc.getMessage());
+    }
+  }
+
+  public String[] getAllObjects() throws StateException {
+    try {
+      Query<Entity> query =
+          Query.newEntityQueryBuilder().setNamespace(namespace).setKind(kind).build();
+      QueryResults<Entity> results = datastore.run(query);
+      if (results == null) {
+        return null;
+      }
+      List<String> entities = new ArrayList<String>();
+      while (results.hasNext()) {
+        Entity e = results.next();
+        entities.add(e.getString("state"));
+      }
+      String[] arr = new String[entities.size()];
+      return entities.toArray(arr);
     } catch (DatastoreException exc) {
       throw new StateException(exc.getMessage());
     }
@@ -60,6 +85,7 @@ public class DatastoreStateCursor extends StateCursor {
    * @param d Initialized {@link Datastore} object
    */
   public DatastoreStateCursor(Datastore d, String namespace, String kind) {
+    this.datastore = d;
     this.namespace = namespace;
     this.kind = kind;
     keyFactory = d.newKeyFactory().setNamespace(namespace).setKind(kind);
