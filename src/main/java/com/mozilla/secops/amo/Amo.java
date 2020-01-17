@@ -206,7 +206,7 @@ public class Amo implements Serializable {
 
     @Description(
         "For multi IP login, when country count exceeded, specify distinct IP count that must also be met")
-    @Default.Integer(4)
+    @Default.Integer(10)
     Integer getAddonMultiIpLoginAlertOnIp();
 
     void setAddonMultiIpLoginAlertOnIp(Integer value);
