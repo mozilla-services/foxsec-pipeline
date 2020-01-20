@@ -2246,4 +2246,45 @@ public class ParserTest {
     Auth0 promptsContainsEmptyArrayPayload = e.getPayload();
     assertNull(promptsContainsEmptyArrayPayload.getUsername());
   }
+
+  @Test
+  public void testPhabricatorAudit() throws Exception {
+    String buf =
+        "{\"textPayload\":\"[Mon, 20 Jan 2020 16:12:49 +0000]\\t4664\\tip.us-west-2.comput"
+            + "e.internal\\t216.160.83.56\\tphab-user\\tPhabricatorConduitAPIController\\tfeed.que"
+            + "ry_id\\t/api/feed.query_id\\t-\\t200\\t96256\",\"insertId\":\"000000000000000\",\"r"
+            + "esource\":{\"type\":\"aws_ec2_instance\",\"labels\":{\"instance_id\":\"i-08\",\""
+            + "project_id\":\"phabricator\",\"aws_account\":\"000000000000\",\"region\":\"aws:u"
+            + "s-west-2b\"}},\"timestamp\":\"2020-01-20T16:12:49.479690845Z\",\"labels\":{\"app"
+            + "lication\":\"mozphab\",\"type\":\"webhead\",\"env\":\"devsvc\",\"ec2.amazonaws.c"
+            + "om/resource_name\":\"ip.us-west-2.compute.internal\",\"stack\":\"mozphab-phabhos"
+            + "t-webhead\"},\"logName\":\"projects/phabricator-prod\",\"receiveTimestamp\":\"20"
+            + "20-01-20T16:12:50.459265709Z\"}";
+    Parser p = getTestParser();
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.PHABRICATOR_AUDIT, e.getPayloadType());
+
+    Phabricator d = e.getPayload();
+    assertNotNull(d);
+    assertEquals("phab-user", d.getUser());
+    assertEquals("216.160.83.56", d.getSourceAddress());
+    assertEquals("Milton", d.getSourceAddressCity());
+    assertEquals("US", d.getSourceAddressCountry());
+    assertEquals(47.25, d.getSourceAddressLatitude(), 0.5);
+    assertEquals(-122.31, d.getSourceAddressLongitude(), 0.5);
+    assertEquals("/api/feed.query_id", d.getPath());
+    assertEquals("PhabricatorConduitAPIController", d.getController());
+    assertEquals("feed.query_id", d.getFunction());
+    assertNull(d.getReferer());
+    assertEquals(200, (int) d.getStatus());
+    assertEquals(1579536769000L, e.getTimestamp().getMillis());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH_SESSION));
+    assertEquals("phab-user", n.getSubjectUser());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("phabricator", n.getObject());
+  }
 }

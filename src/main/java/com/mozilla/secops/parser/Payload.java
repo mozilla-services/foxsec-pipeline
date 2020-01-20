@@ -48,6 +48,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     CFGTICK,
     /** Auth0 log event */
     AUTH0,
+    /** Phabricator audit log */
+    PHABRICATOR_AUDIT,
     /** Raw */
     RAW
   }
