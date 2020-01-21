@@ -23,6 +23,7 @@ import org.apache.beam.sdk.values.PDone;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
@@ -330,6 +331,15 @@ public class IprepdIO {
     private String[] iprepdSpecs;
     private String project;
 
+    /** Writer initial connection timeout */
+    public final int WRITER_TIMEOUT_CONNECTION = 5000;
+
+    /** Writer connection manager connection request timeout */
+    public final int WRITER_TIMEOUT_CONNECTION_REQUEST = 5000;
+
+    /** Writer socket timeout */
+    public final int WRITER_TIMEOUT_SOCKET = 5000;
+
     private Counter violationWrites = Metrics.counter(METRICS_NAMESPACE, VIOLATION_WRITES_METRIC);
 
     private static HashMap<String, String> decrypted = new HashMap<String, String>();
@@ -343,7 +353,13 @@ public class IprepdIO {
     public void setup() throws IOException {
       log = LoggerFactory.getLogger(WriteFn.class);
       log.info("creating new HTTP client for iprepd submission");
-      httpClient = HttpClientBuilder.create().build();
+      RequestConfig rc =
+          RequestConfig.custom()
+              .setConnectTimeout(WRITER_TIMEOUT_CONNECTION)
+              .setConnectionRequestTimeout(WRITER_TIMEOUT_CONNECTION_REQUEST)
+              .setSocketTimeout(WRITER_TIMEOUT_SOCKET)
+              .build();
+      httpClient = HttpClientBuilder.create().setDefaultRequestConfig(rc).build();
 
       project = wTransform.getProject();
       iprepdSpecs = wTransform.getIprepdSpecs();
