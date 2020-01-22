@@ -506,6 +506,7 @@ public class Parser {
     payloads.add(new ETDBeta());
     payloads.add(new CfgTick());
     payloads.add(new Auth0());
+    payloads.add(new Phabricator());
     payloads.add(new Raw());
 
     if (cfg.getIdentityManagerPath() != null) {
