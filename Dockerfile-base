@@ -1,3 +1,12 @@
+# Dockerfile used to build the foxsec-pipeline-base image.
+#
+# The base image contains the required daemons/emulators for running tests
+# but does not contain any source code or compiled pipeline classes.
+#
+# The base image is intended to work in conjunction with bin/m and is used
+# for development/testing. The base image also forms the basis for the complete
+# image which is self-contained.
+
 FROM maven:3-jdk-8
 
 RUN export CLOUD_SDK_REPO="cloud-sdk-stretch" && \
@@ -18,4 +27,6 @@ RUN curl -OL https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz && \
 COPY docker/iprepd.yaml /etc/iprepd/iprepd.yaml
 
 COPY docker-entrypoint.sh /
+WORKDIR /root/project
+ENV FOXSEC_PIPELINE_IMAGE base
 ENTRYPOINT ["/docker-entrypoint.sh"]

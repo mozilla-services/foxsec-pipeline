@@ -1,0 +1,13 @@
+# Dockerfile used to build the foxsec-pipeline image.
+#
+# This is the complete image, based off the base image but also containing
+# source code and compiled classes.
+
+FROM foxsec-pipeline-base:latest
+
+COPY . /root/project
+
+RUN mvn compile
+
+ENV FOXSEC_PIPELINE_IMAGE complete
+ENTRYPOINT ["/docker-entrypoint.sh"]
