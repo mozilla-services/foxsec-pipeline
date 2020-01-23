@@ -1,0 +1,23 @@
+version: 2
+jobs:
+  build-test-push:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build base pipeline image
+          command: docker build -f Dockerfile-base -t foxsec-pipeline-base:latest .
+      - run:
+          name: Spotless check
+          command: bin/m spotless:check
+      - run:
+          name: Build complete pipeline image
+          command: docker build -f Dockerfile-complete -t foxsec-pipeline:latest .
+      - run:
+          name: Test complete pipeline image
+          command: docker run -ti --rm foxsec-pipeline:latest mvn test
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build-test-push
