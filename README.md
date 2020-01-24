@@ -1,6 +1,6 @@
 # foxsec-pipeline
 
-[![Build Status](https://travis-ci.org/mozilla-services/foxsec-pipeline.svg?branch=master)](https://travis-ci.org/mozilla-services/foxsec-pipeline)
+[![Build Status](https://circleci.com/gh/mozilla-services/foxsec-pipeline/tree/master.svg?style=svg)](https://circleci.com/gh/mozilla-services/foxsec-pipeline/tree/master)
 [![Documentation](https://img.shields.io/badge/documentation-link-purple.svg)](https://mozilla-services.github.io/foxsec-pipeline/secops-beam/)
 
 [Apache Beam](https://beam.apache.org/) pipelines for analyzing log data.
@@ -12,14 +12,14 @@ Tests can be executed locally using Docker.
 ### Run all tests
 
 ```bash
-docker build -t foxsec-pipeline:latest .
+docker build -f Dockerfile-base -t foxsec-pipeline-base:latest .
 bin/m test
 ```
 
 ### Run a specific test
 
 ```bash
-docker build -t foxsec-pipeline:latest .
+docker build -f Dockerfile-base -t foxsec-pipeline-base:latest .
 bin/m test -Dtest=ParserTest
 ```
 
