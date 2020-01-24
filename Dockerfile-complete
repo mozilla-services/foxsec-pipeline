@@ -8,6 +8,7 @@ FROM foxsec-pipeline-base:latest
 COPY . /root/project
 
 RUN mvn compile
+RUN mkdir -p /app && cp version.json /app/version.json
 
 ENV FOXSEC_PIPELINE_IMAGE complete
 ENTRYPOINT ["/docker-entrypoint.sh"]

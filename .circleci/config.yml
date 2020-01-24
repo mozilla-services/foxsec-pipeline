@@ -12,6 +12,9 @@ jobs:
           name: Spotless check
           command: bin/m spotless:check
       - run:
+          name: Generate version.json
+          command: bin/write_version_json.sh
+      - run:
           name: Build complete pipeline image
           command: docker build -f Dockerfile-complete -t foxsec-pipeline:latest .
       - run:
