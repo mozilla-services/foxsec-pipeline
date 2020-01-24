@@ -24,4 +24,7 @@ workflows:
   version: 2
   main:
     jobs:
-      - build-test-push
+      - build-test-push:
+          filters:
+            tags:
+              only: /.*/
