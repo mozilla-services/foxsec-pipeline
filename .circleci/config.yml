@@ -1,0 +1,34 @@
+version: 2
+jobs:
+  build-test-push:
+    machine:
+      docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          name: Build base pipeline image
+          command: docker build -f Dockerfile-base -t foxsec-pipeline-base:latest .
+      - run:
+          name: Spotless check
+          command: bin/m spotless:check
+      - run:
+          name: Generate version.json
+          command: bin/write_version_json.sh
+      - run:
+          name: Build complete pipeline image
+          command: docker build -f Dockerfile-complete -t foxsec-pipeline:latest .
+      - run:
+          name: Test complete pipeline image
+          command: docker run -ti --rm foxsec-pipeline:latest mvn test
+      - run:
+          name: Push to Dockerhub
+          command: |
+            if [[ "${CIRCLE_BRANCH}" == "master" || -n "${CIRCLE_TAG}" ]]; then bin/docker_push.sh; fi
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build-test-push:
+          filters:
+            tags:
+              only: /.*/

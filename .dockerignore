@@ -1,0 +1,4 @@
+*.json
+!version.json
+.git
+target
