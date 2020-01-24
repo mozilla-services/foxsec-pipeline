@@ -16,6 +16,10 @@ jobs:
       - run:
           name: Test complete pipeline image
           command: docker run -ti --rm foxsec-pipeline:latest mvn test
+      - run:
+          name: Push to Dockerhub
+          command: |
+            if [[ "${CIRCLE_BRANCH}" == "master" || -n "${CIRCLE_TAG}" ]]; then bin/docker_push.sh; fi
 workflows:
   version: 2
   main:
