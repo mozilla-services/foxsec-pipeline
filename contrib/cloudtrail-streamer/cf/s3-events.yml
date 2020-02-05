@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'cloudtrail-streamer dev template for s3 events'
+Parameters:
+  LambdaBucket:
+    Description: 'S3 bucket with Lambda code'
+    Type: String
+  LambdaKey:
+    Description: 'S3 bucket key with Lambda code'
+    Type: String
+Resources:
+  CTStreamerRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - 's3:GetObject'
+                Resource: "arn:aws:s3:::ctstreamer-dev-s3/*" # Hardcoded to avoid circular dependencies
+                Effect: 'Allow'
+          PolicyName: CTStreamer-GetCloudtrailLogs
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - 'kinesis:*'
+                Resource: !Sub ${KinesisStream.Arn}
+                Effect: 'Allow'
+          PolicyName: CTStreamer-Kinesis
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+                Effect: 'Allow'
+          PolicyName: CTStreamer-Logs
+
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DependsOn:
+      - CTStreamerFunction
+      - PermissionForS3BucketToInvokeLambda
+    Properties:
+      BucketName: 'ctstreamer-dev-s3'
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Function: !Sub ${CTStreamerFunction.Arn}
+            Event: 's3:ObjectCreated:*'
+
+  KinesisStream:
+    Type: 'AWS::Kinesis::Stream'
+    Properties:
+      Name: 'ctstreamer-dev-s3'
+      ShardCount: 1
+
+  PermissionForS3BucketToInvokeLambda:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      SourceArn: "arn:aws:s3:::ctstreamer-dev-s3" # Hardcoded to avoid circular dependencies
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref CTStreamerFunction
+      Principal: s3.amazonaws.com
+
+  CTStreamerFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Description: cloudtrail-streamer Lambda function
+      FunctionName: ctstreamer-dev-s3
+      Handler: cloudtrail-streamer
+      Role: !Sub ${CTStreamerRole.Arn}
+      Runtime: go1.x
+      Timeout: 60
+      Code:
+        S3Key: !Ref LambdaKey
+        S3Bucket: !Ref LambdaBucket
+      Environment:
+        Variables:
+          CT_DEBUG_LOGGING: '1' # Set debug logging for dev Lambda deployment
+          CT_KINESIS_STREAM: !Ref KinesisStream
+          CT_KINESIS_REGION: !Ref AWS::Region
