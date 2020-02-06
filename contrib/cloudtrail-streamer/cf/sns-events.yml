@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'cloudtrail-streamer dev template for sns events'
+Parameters:
+  LambdaBucket:
+    Description: 'S3 bucket with Lambda code'
+    Type: String
+  LambdaKey:
+    Description: 'S3 bucket key with Lambda code'
+    Type: String
+Resources:
+  CTStreamerRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - 's3:GetObject'
+                Resource: "arn:aws:s3:::ctstreamer-dev-sns/*" # Hardcoded to avoid circular dependencies
+                Effect: 'Allow'
+          PolicyName: CTStreamer-GetCloudtrailLogs
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - 'kinesis:*'
+                Resource: !Sub ${KinesisStream.Arn}
+                Effect: 'Allow'
+          PolicyName: CTStreamer-Kinesis
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+                Effect: 'Allow'
+          PolicyName: CTStreamer-Logs
+
+  SNSTopic:
+    Type: "AWS::SNS::Topic"
+    DependsOn: CTStreamerFunction
+    Properties:
+      DisplayName: "ctstreamer"
+      TopicName: "cloud-streamer"
+      Subscription:
+        - Endpoint: !Sub ${CTStreamerFunction.Arn}
+          Protocol: 'lambda'
+
+  SNSTopicPolicy:
+    Type: "AWS::SNS::TopicPolicy"
+    Properties:
+      Topics:
+        - !Ref SNSTopic
+      PolicyDocument:
+        Statement:
+          - Action:
+              - "sns:Publish"
+            Effect: "Allow"
+            Principal:
+              AWS: '*'
+            Resource: !Ref SNSTopic
+            Condition:
+              ArnLike:
+                aws:SourceArn: "arn:aws:s3:::ctstreamer-dev-sns" # Hardcoded to avoid circular dependencies
+
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DependsOn: SNSTopic
+    Properties:
+      BucketName: 'ctstreamer-dev-sns'
+      NotificationConfiguration:
+        TopicConfigurations:
+          - Topic: !Ref SNSTopic
+            Event: 's3:ObjectCreated:*'
+
+  KinesisStream:
+    Type: 'AWS::Kinesis::Stream'
+    Properties:
+      Name: 'ctstreamer-dev-sns'
+      ShardCount: 1
+
+  PermissionForSNSTopicToInvokeLambda:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      SourceArn: !Ref SNSTopic
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref CTStreamerFunction
+      Principal: sns.amazonaws.com
+
+  CTStreamerFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Description: cloudtrail-streamer Lambda function
+      FunctionName: ctstreamer-dev-sns
+      Handler: cloudtrail-streamer
+      Role: !Sub ${CTStreamerRole.Arn}
+      Runtime: go1.x
+      Timeout: 60
+      Code:
+        S3Key: !Ref LambdaKey
+        S3Bucket: !Ref LambdaBucket
+      Environment:
+        Variables:
+          CT_DEBUG_LOGGING: '1' # Set debug logging for dev Lambda deployment
+          CT_KINESIS_STREAM: !Ref KinesisStream
+          CT_KINESIS_REGION: !Ref AWS::Region
+          CT_EVENT_TYPE: 'SNS'

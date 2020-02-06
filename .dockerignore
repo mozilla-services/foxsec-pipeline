@@ -1,4 +1,6 @@
 *.json
 !version.json
 .git
+.m2
+.gomod
 target

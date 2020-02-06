@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Wrapper script for executing contrib/ tests via docker, but interacting
+# with the local filesystem. Useful for local development and testing.
+#
+# Makes use of foxsec-pipeline-base:latest and assumes it has been
+# built.
+#
+# docker build -f Dockerfile-base -t foxsec-pipeline-base:latest .
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+CACHEFLAGS=''
+if [[ `uname` == 'Darwin' ]]; then
+	CACHEFLAGS=':cached'
+fi
+
+NETFLAGS=''
+if [[ ! -z "$DOCKER_HOST_NETWORK" ]]; then
+	NETFLAGS='--network=host'
+fi
+
+# If using WSL, the developer is likely using a symlink to a directory
+# on the Windows fs.
+if [[ `uname -a` == *"Microsoft"* ]]; then
+	PWD=`pwd -P`
+fi
+
+mkdir -p .gomod
+
+docker run -it --rm \
+    $NETFLAGS \
+    -v $PWD/.gomod:/root/go/pkg/mod${CACHEFLAGS} \
+    -v $PWD:/root/project${CACHEFLAGS} \
+    foxsec-pipeline-base:latest \
+    /root/project/bin/run_contrib_tests.sh

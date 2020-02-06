@@ -18,8 +18,11 @@ jobs:
           name: Build complete pipeline image
           command: docker build -f Dockerfile-complete -t foxsec-pipeline:latest .
       - run:
-          name: Test complete pipeline image
+          name: Test pipeline in complete pipeline image
           command: docker run -ti --rm foxsec-pipeline:latest mvn test
+      - run:
+          name: Test contrib in complete pipeline image
+          command: docker run -ti --rm foxsec-pipeline:latest bin/run_contrib_tests.sh
       - run:
           name: Push to Dockerhub
           command: |
