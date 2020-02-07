@@ -1,6 +1,7 @@
 package com.mozilla.secops.parser;
 
 import com.maxmind.geoip2.model.CityResponse;
+import com.maxmind.geoip2.model.IspResponse;
 import java.io.Serializable;
 
 /**
@@ -18,6 +19,10 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
   private Double sourceAddressLatitude;
   private Double sourceAddressLongitude;
   private String sourceTimeZone;
+
+  private String sourceAddressIsp;
+  private Integer sourceAddressAsn;
+  private String sourceAddressAsOrg;
 
   /**
    * Set source address field
@@ -55,6 +60,13 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
           }
         }
       }
+
+      IspResponse ir = state.getParser().geoIpIsp(sourceAddress);
+      if (ir != null) {
+        sourceAddressIsp = ir.getIsp();
+        sourceAddressAsn = ir.getAutonomousSystemNumber();
+        sourceAddressAsOrg = ir.getAutonomousSystemOrganization();
+      }
     }
 
     // If our normalized event is non-null, also set information there
@@ -65,6 +77,9 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
       n.setSourceAddressLatitude(sourceAddressLatitude);
       n.setSourceAddressLongitude(sourceAddressLongitude);
       n.setSourceAddressTimeZone(sourceTimeZone);
+      n.setSourceAddressIsp(sourceAddressIsp);
+      n.setSourceAddressAsn(sourceAddressAsn);
+      n.setSourceAddressAsOrg(sourceAddressAsOrg);
     }
   }
 
@@ -129,5 +144,32 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
    */
   public String getSourceAddressTimeZone() {
     return sourceTimeZone;
+  }
+
+  /**
+   * Get source address ISP
+   *
+   * @return ISP or null if unset
+   */
+  public String getSourceAddressIsp() {
+    return sourceAddressIsp;
+  }
+
+  /**
+   * Get source address ASN
+   *
+   * @return ASN or null if unset
+   */
+  public Integer getSourceAddressAsn() {
+    return sourceAddressAsn;
+  }
+
+  /**
+   * Get source address AS organization
+   *
+   * @return AS organization or null if unset
+   */
+  public String getSourceAddressAsOrg() {
+    return sourceAddressAsOrg;
   }
 }

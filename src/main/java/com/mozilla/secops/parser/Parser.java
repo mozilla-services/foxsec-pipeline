@@ -11,6 +11,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.maxmind.geoip2.model.CityResponse;
+import com.maxmind.geoip2.model.IspResponse;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
@@ -383,6 +384,22 @@ public class Parser {
       return null;
     }
     return geoip.lookupCity(ip);
+  }
+
+  /**
+   * Resolve GeoIP ISP information from IP address string
+   *
+   * <p>GeoIP resolution must be enabled in the parser with the ISP database, or this function will
+   * always return null.
+   *
+   * @param ip IP address string
+   * @return MaxmindDB {@link IspResponse}, or null if lookup fails
+   */
+  public IspResponse geoIpIsp(String ip) {
+    if (geoip == null) {
+      return null;
+    }
+    return geoip.lookupIsp(ip);
   }
 
   /**

@@ -310,6 +310,8 @@ public class ParserTest {
     assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
     assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
     assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
+    assertEquals("Century Link", n.getSourceAddressIsp());
+    assertEquals(209, (int) n.getSourceAddressAsn());
   }
 
   @Test
@@ -1523,6 +1525,8 @@ public class ParserTest {
     assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
     assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
     assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
+    assertEquals("Century Link", n.getSourceAddressIsp());
+    assertEquals(209, (int) n.getSourceAddressAsn());
   }
 
   @Test
@@ -1571,6 +1575,8 @@ public class ParserTest {
     assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
     assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
     assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
+    assertEquals("Century Link", n.getSourceAddressIsp());
+    assertEquals(209, (int) n.getSourceAddressAsn());
   }
 
   @Test
@@ -1796,9 +1802,7 @@ public class ParserTest {
         "\"216.160.83.56\" - - [19/Mar/2019:14:52:39 -0500] \"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"
             + " 3697 \"https://mozilla.org/item/10\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:"
             + "65.0) Gecko/20100101 Firefox/65.0\"";
-    ParserCfg cfg = new ParserCfg();
-    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
-    Parser p = new Parser(cfg);
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -1835,6 +1839,8 @@ public class ParserTest {
     assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
     assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
     assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
+    assertEquals("Century Link", n.getSourceAddressIsp());
+    assertEquals(209, (int) n.getSourceAddressAsn());
   }
 
   @Test
