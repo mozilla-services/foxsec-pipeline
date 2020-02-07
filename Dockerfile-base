@@ -9,7 +9,16 @@
 
 FROM maven:3-jdk-8
 
-RUN export CLOUD_SDK_REPO="cloud-sdk-stretch" && \
+RUN apt-get update -y && \
+    apt-get install -y lsb-release equivs
+
+# The image already contains a JDK, so we don't want to install another one.
+# Install a fake openjdk-8-jdk to satisfy the required dependencies of the
+# gcloud emulator packages we need.
+COPY docker/openjdk-8-jdk /root/openjdk-8-jdk
+RUN (cd /root && equivs-build openjdk-8-jdk && dpkg -i openjdk-8-jdk*deb)
+
+RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
     apt-get update -y && apt-get install google-cloud-sdk -y
