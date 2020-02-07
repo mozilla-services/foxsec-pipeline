@@ -11,7 +11,7 @@ import java.net.URL;
 import org.joda.time.DateTime;
 
 /** Payload parser for Google Load Balancer log data. */
-public class GLB extends PayloadBase implements Serializable {
+public class GLB extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private static final JacksonFactory jfmatcher = new JacksonFactory();
@@ -19,7 +19,6 @@ public class GLB extends PayloadBase implements Serializable {
   private String requestMethod;
   private String userAgent;
   private String requestUrl;
-  private String sourceAddress;
   private Integer status;
   private URL parsedUrl;
 
@@ -89,7 +88,6 @@ public class GLB extends PayloadBase implements Serializable {
       return;
     }
 
-    sourceAddress = h.getRemoteIp();
     requestUrl = h.getRequestUrl();
     userAgent = h.getUserAgent();
     requestMethod = h.getRequestMethod();
@@ -105,7 +103,7 @@ public class GLB extends PayloadBase implements Serializable {
 
     Normalized n = e.getNormalized();
     n.addType(Normalized.Type.HTTP_REQUEST);
-    n.setSourceAddress(sourceAddress);
+    setSourceAddress(h.getRemoteIp(), state, n);
     n.setUserAgent(userAgent);
     n.setRequestMethod(requestMethod);
     n.setRequestStatus(status);
@@ -173,15 +171,6 @@ public class GLB extends PayloadBase implements Serializable {
    */
   public String getRequestMethod() {
     return requestMethod;
-  }
-
-  /**
-   * Get source address.
-   *
-   * @return Source address string.
-   */
-  public String getSourceAddress() {
-    return sourceAddress;
   }
 
   /**

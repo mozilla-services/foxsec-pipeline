@@ -121,4 +121,13 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
   public Double getSourceAddressLongitude() {
     return sourceAddressLongitude;
   }
+
+  /**
+   * Get source address time zone
+   *
+   * @return Time zone or null if unset
+   */
+  public String getSourceAddressTimeZone() {
+    return sourceTimeZone;
+  }
 }

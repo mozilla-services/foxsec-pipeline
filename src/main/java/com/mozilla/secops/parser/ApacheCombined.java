@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Payload parser for Apache combined log format */
-public class ApacheCombined extends PayloadBase implements Serializable {
+public class ApacheCombined extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private final String matchRe =
@@ -13,7 +13,6 @@ public class ApacheCombined extends PayloadBase implements Serializable {
           + "[^\\]]+)\\] \"([^\"]+)\" (\\d+) (\\d+|-) \"([^\"]+)\" \"([^\"]+)\"$";
   private Pattern pattRe;
 
-  private String remoteAddr;
   private String userAgent;
   private String referrer;
   private String request;
@@ -58,13 +57,16 @@ public class ApacheCombined extends PayloadBase implements Serializable {
       return;
     }
 
-    remoteAddr = mat.group(1);
+    String remoteAddr = mat.group(1);
     if (remoteAddr != null) {
       if (remoteAddr.equals("-")) {
         remoteAddr = null;
       } else {
         remoteAddr = state.getParser().applyXffAddressSelector(remoteAddr);
       }
+    }
+    if (remoteAddr != null) {
+      setSourceAddress(remoteAddr, state, e.getNormalized());
     }
 
     remoteUser = mat.group(2);
@@ -110,7 +112,6 @@ public class ApacheCombined extends PayloadBase implements Serializable {
 
     Normalized n = e.getNormalized();
     n.addType(Normalized.Type.HTTP_REQUEST);
-    n.setSourceAddress(remoteAddr);
     n.setUserAgent(userAgent);
     n.setRequestMethod(requestMethod);
     n.setRequestStatus(status);
@@ -152,15 +153,6 @@ public class ApacheCombined extends PayloadBase implements Serializable {
    */
   public String getRequest() {
     return request;
-  }
-
-  /**
-   * Get source address.
-   *
-   * @return Source address string.
-   */
-  public String getSourceAddress() {
-    return remoteAddr;
   }
 
   /**
