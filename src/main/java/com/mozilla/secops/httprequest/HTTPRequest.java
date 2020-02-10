@@ -23,9 +23,12 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -972,6 +975,328 @@ public class HTTPRequest implements Serializable {
     }
   }
 
+  /**
+   * Transform for detection of a single source making a sequence of requests at a speed faster than
+   * what we expect from a normal user.
+   *
+   * <p>Generates alerts where the request profile violates path thresholds specified in the
+   * endpointAbusePath pipeline option configuration.
+   */
+  public static class EndpointSequenceAbuse
+      extends PTransform<PCollection<Event>, PCollection<Alert>> implements DocumentingTransform {
+    private static final long serialVersionUID = 1L;
+
+    private Logger log;
+
+    private final EndpointSequenceAbuseTimingInfo[] endpointSequences;
+    private final String monitoredResource;
+    private final Boolean enableIprepdDatastoreWhitelist;
+    private final String iprepdDatastoreWhitelistProject;
+    private final Integer suppressRecovery;
+    private PCollectionView<Map<String, Boolean>> natView = null;
+
+    /** Internal class for configured endpoints in EPA */
+    public static class EndpointSequenceAbuseTimingInfo implements Serializable {
+      private static final long serialVersionUID = 1L;
+
+      public Integer threshold;
+
+      public String firstMethod;
+      public String firstPath;
+
+      public Integer deltaMs;
+
+      public String secondMethod;
+      public String secondPath;
+
+      public String toString() {
+        return String.format(
+            "%d:%s:%s:%d:%s:%s",
+            threshold, firstMethod, firstPath, deltaMs, secondMethod, secondPath);
+      }
+    }
+
+    /**
+     * Static initializer for {@link EndpointAbuseAnalysis}
+     *
+     * @param toggles {@link HTTPRequestToggles}
+     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
+     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param natView Use {@link DetectNat} view, or null to disable
+     */
+    public EndpointSequenceAbuse(
+        HTTPRequestToggles toggles,
+        Boolean enableIprepdDatastoreWhitelist,
+        String iprepdDatastoreWhitelistProject,
+        PCollectionView<Map<String, Boolean>> natView) {
+      log = LoggerFactory.getLogger(EndpointSequenceAbuse.class);
+      monitoredResource = toggles.getMonitoredResource();
+      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
+      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      suppressRecovery = toggles.getEndpointSequenceAbuseSuppressRecovery();
+      this.natView = natView;
+
+      String[] cfgEndpoints = toggles.getEndpointSequenceAbusePatterns();
+      endpointSequences = new EndpointSequenceAbuseTimingInfo[cfgEndpoints.length];
+      for (int i = 0; i < cfgEndpoints.length; i++) {
+        String[] parts = cfgEndpoints[i].split(":");
+        if (parts.length != 6) {
+          throw new IllegalArgumentException(
+              "invalid format for abuse endpoint timing, must be <int>:<method>:<path>:<int>:<method>:<path>");
+        }
+        EndpointSequenceAbuseTimingInfo ninfo = new EndpointSequenceAbuseTimingInfo();
+        ninfo.threshold = Integer.parseInt(parts[0]);
+        ninfo.firstMethod = parts[1];
+        ninfo.firstPath = parts[2];
+        ninfo.deltaMs = Integer.parseInt(parts[3]);
+        ninfo.secondMethod = parts[4];
+        ninfo.secondPath = parts[5];
+        endpointSequences[i] = ninfo;
+      }
+    }
+
+    public String getTransformDoc() {
+      String buf = null;
+      for (int i = 0; i < endpointSequences.length; i++) {
+        String x =
+            String.format(
+                "%d %s %s requests within %d ms of last %s %s request.",
+                endpointSequences[i].threshold,
+                endpointSequences[i].secondMethod,
+                endpointSequences[i].secondPath,
+                endpointSequences[i].deltaMs,
+                endpointSequences[i].firstMethod,
+                endpointSequences[i].firstPath);
+        if (buf == null) {
+          buf = x;
+        } else {
+          buf += " " + x;
+        }
+      }
+      return String.format(
+          "An alert is generated when a client (identified by ip) makes requests for a sequence of endpoints within a configurable delta thought to be atypical of a normal user. %s",
+          buf);
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<Event> input) {
+      if (natView == null) {
+        // If natView was not set then we just create an empty view for use as the side input
+        natView = DetectNat.getEmptyView(input.getPipeline());
+      }
+      return input
+          .apply(
+              "filter events and key by ip",
+              ParDo.of(
+                      new DoFn<Event, KV<String, Event>>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @ProcessElement
+                        public void processElement(ProcessContext c, BoundedWindow w) {
+                          Event event = c.element();
+                          Normalized n = event.getNormalized();
+                          String sourceAddress = n.getSourceAddress();
+                          String method = n.getRequestMethod();
+                          String path = n.getUrlRequestPath();
+                          if (sourceAddress == null || method == null || path == null) {
+                            return;
+                          }
+                          Map<String, Boolean> nv = c.sideInput(natView);
+                          Boolean isNat = nv.get(sourceAddress);
+                          if (isNat != null && isNat) {
+                            log.info(
+                                "{}: detectnat: skipping result emission for {}",
+                                w.toString(),
+                                sourceAddress);
+                            return;
+                          }
+                          // only output events if they belong to one of our sequences
+                          if (belongsToSequence(method, path)) {
+                            c.output(KV.of(sourceAddress, event));
+                          }
+                        }
+                      })
+                  .withSideInputs(natView))
+          .apply(GroupByKey.<String, Event>create())
+          .apply(
+              "analyze per-client",
+              ParDo.of(
+                  new DoFn<KV<String, Iterable<Event>>, Alert>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c, BoundedWindow w) {
+                      String remoteAddress = c.element().getKey();
+                      Iterable<Event> events = c.element().getValue();
+
+                      // sort events by timestamp
+                      List<Event> eventList =
+                          StreamSupport.stream(events.spliterator(), false)
+                              .sorted((e1, e2) -> e1.getTimestamp().compareTo(e2.getTimestamp()))
+                              .collect(Collectors.toList());
+
+                      int[] endpointSequenceCounter = new int[endpointSequences.length];
+                      Instant[] lastViolationTimestamp = new Instant[endpointSequences.length];
+                      String[] lastViolationUserAgent = new String[endpointSequences.length];
+
+                      // used to track last time we saw the first part of each
+                      // request sequence used for timing analysis
+                      Instant[] lastFirstRequest = new Instant[endpointSequences.length];
+
+                      // for each path
+                      for (Event event : eventList) {
+                        Normalized n = event.getNormalized();
+
+                        // check if its a first item in an endpoint sequence
+                        ArrayList<Integer> indices =
+                            findFirstHalfPatternMatches(
+                                n.getRequestMethod(), n.getUrlRequestPath());
+
+                        // for any sequence its a part of update the latest timestamp for it
+                        for (Integer m : indices) {
+                          lastFirstRequest[m] = Instant.parse(event.getTimestamp().toString());
+                        }
+
+                        // check if its a second item in an endpoint sequence
+                        ArrayList<Integer> secondIndices =
+                            findSecondHalfPatternMatches(
+                                n.getRequestMethod(), n.getUrlRequestPath());
+
+                        // for any sequence its the second part of, check the delta and increase
+                        // count if it is
+                        for (Integer m : secondIndices) {
+                          Instant ts = Instant.parse(event.getTimestamp().toString());
+                          if (lastFirstRequest[m] != null) {
+                            if (ts.isBefore(
+                                lastFirstRequest[m].plus(endpointSequences[m].deltaMs))) {
+                              lastViolationUserAgent[m] =
+                                  n.getUserAgent() == null ? "" : n.getUserAgent();
+                              lastViolationTimestamp[m] = ts;
+                              endpointSequenceCounter[m]++;
+                            }
+                          }
+                        }
+                      }
+
+                      // identify if any monitored endpoints have
+                      // exceeded the threshold and use the one with
+                      // the highest count
+                      Integer abmaxIndex = null;
+                      int count = -1;
+                      for (int i = 0; i < endpointSequences.length; i++) {
+                        if (endpointSequences[i].threshold <= endpointSequenceCounter[i]) {
+                          if (abmaxIndex == null) {
+                            abmaxIndex = i;
+                            count = endpointSequenceCounter[i];
+                          } else {
+                            if (count < endpointSequenceCounter[i]) {
+                              abmaxIndex = i;
+                              count = endpointSequenceCounter[i];
+                            }
+                          }
+                        }
+                      }
+
+                      if (abmaxIndex == null) {
+                        // No requests exceeded threshold
+                        return;
+                      }
+
+                      log.info("{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
+
+                      String compareFirstMethod = endpointSequences[abmaxIndex].firstMethod;
+                      String compareFirstPath = endpointSequences[abmaxIndex].firstPath;
+
+                      Integer compareDelta = endpointSequences[abmaxIndex].deltaMs;
+
+                      String compareSecondMethod = endpointSequences[abmaxIndex].secondMethod;
+                      String compareSecondPath = endpointSequences[abmaxIndex].secondPath;
+
+                      Alert a = new Alert();
+                      a.setTimestamp(lastViolationTimestamp[abmaxIndex].toDateTime());
+                      a.setSummary(
+                          String.format(
+                              "%s httprequest endpoint_sequence_abuse %s %s:%s:%d:%s:%s %d",
+                              monitoredResource,
+                              remoteAddress,
+                              compareFirstMethod,
+                              compareFirstPath,
+                              compareDelta,
+                              compareSecondMethod,
+                              compareSecondPath,
+                              count));
+                      a.setCategory("httprequest");
+                      a.addMetadata("category", "endpoint_sequence_abuse");
+                      a.addMetadata("sourceaddress", remoteAddress);
+
+                      try {
+                        if (enableIprepdDatastoreWhitelist) {
+                          IprepdIO.addMetadataIfIpWhitelisted(
+                              remoteAddress, a, iprepdDatastoreWhitelistProject);
+                        }
+                      } catch (IOException exc) {
+                        log.error("error checking whitelist: {}", exc.getMessage());
+                        return;
+                      }
+
+                      if (suppressRecovery != null) {
+                        IprepdIO.addMetadataSuppressRecovery(suppressRecovery, a);
+                      }
+
+                      a.addMetadata("endpoint_pattern", endpointSequences[abmaxIndex].toString());
+                      a.addMetadata("count", Integer.toString(count));
+                      a.addMetadata("useragent", lastViolationUserAgent[abmaxIndex]);
+                      a.setNotifyMergeKey(
+                          String.format("%s endpoint_sequence_abuse", monitoredResource));
+                      a.addMetadata(
+                          "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                      if (!a.hasCorrectFields()) {
+                        throw new IllegalArgumentException("alert has invalid field configuration");
+                      }
+                      c.output(a);
+                    }
+                  }));
+    }
+
+    /**
+     * Returns the indices of the endpoint sequences that the given method/path match the first part
+     * of the pattern
+     */
+    private ArrayList<Integer> findFirstHalfPatternMatches(String method, String path) {
+      ArrayList<Integer> indices = new ArrayList<Integer>();
+      for (int i = 0; i < endpointSequences.length; i++) {
+        if ((endpointSequences[i].firstMethod.equals(method))
+            && (endpointSequences[i].firstPath.equals(path))) {
+          indices.add(i);
+        }
+      }
+      return indices;
+    }
+
+    /**
+     * Returns the indices of the endpoint sequences that the given method/path match the second
+     * part of the pattern
+     */
+    private ArrayList<Integer> findSecondHalfPatternMatches(String method, String path) {
+      ArrayList<Integer> indices = new ArrayList<Integer>();
+      for (int i = 0; i < endpointSequences.length; i++) {
+        if ((endpointSequences[i].secondMethod.equals(method))
+            && (endpointSequences[i].secondPath.equals(path))) {
+          indices.add(i);
+        }
+      }
+      return indices;
+    }
+
+    /**
+     * Returns true if the method/path combination is part of any sequence (regardless of position)
+     */
+    private Boolean belongsToSequence(String method, String path) {
+      return !(findFirstHalfPatternMatches(method, path).isEmpty()
+          && findSecondHalfPatternMatches(method, path).isEmpty());
+    }
+  }
+
   private static class HTTPRequestAnalysis
       extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
@@ -1016,7 +1341,8 @@ public class HTTPRequest implements Serializable {
       if (toggles.getEnableThresholdAnalysis()
           || toggles.getEnableErrorRateAnalysis()
           || toggles.getEnableHardLimitAnalysis()
-          || toggles.getEnableUserAgentBlacklistAnalysis()) {
+          || toggles.getEnableUserAgentBlacklistAnalysis()
+          || toggles.getEnableEndpointSequenceAbuseAnalysis()) {
         PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
 
         PCollectionView<Map<String, Boolean>> natView = null;
@@ -1079,8 +1405,21 @@ public class HTTPRequest implements Serializable {
                       .apply(
                           "ua blacklist analysis global triggers", new GlobalTriggers<Alert>(5)));
         }
+        if (toggles.getEnableEndpointSequenceAbuseAnalysis()) {
+          resultsList =
+              resultsList.and(
+                  fwEvents
+                      .apply(
+                          "endpoint abuse timing analysis",
+                          new EndpointSequenceAbuse(
+                              toggles,
+                              enableIprepdDatastoreWhitelist,
+                              iprepdDatastoreWhitelistProject,
+                              natView))
+                      .apply(
+                          "endpoint sequence abuse global triggers", new GlobalTriggers<Alert>(5)));
+        }
       }
-
       if (toggles.getEnableEndpointAbuseAnalysis()) {
         resultsList =
             resultsList.and(
@@ -1146,6 +1485,12 @@ public class HTTPRequest implements Serializable {
     Boolean getEnableEndpointAbuseAnalysis();
 
     void setEnableEndpointAbuseAnalysis(Boolean value);
+
+    @Description("Enable endpoint sequence abuse analysis")
+    @Default.Boolean(false)
+    Boolean getEnableEndpointSequenceAbuseAnalysis();
+
+    void setEnableEndpointSequenceAbuseAnalysis(Boolean value);
 
     @Description("Enable hard limit analysis")
     @Default.Boolean(false)
@@ -1230,6 +1575,18 @@ public class HTTPRequest implements Serializable {
     Integer getEndpointAbuseSuppressRecovery();
 
     void setEndpointAbuseSuppressRecovery(Integer value);
+
+    @Description(
+        "In endpoint sequence abuse analysis, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getEndpointSequenceAbuseSuppressRecovery();
+
+    void setEndpointSequenceAbuseSuppressRecovery(Integer value);
+
+    @Description(
+        "Endpoint sequence patterns for monitoring (multiple allowed); e.g., threshold:method:/path:delta:method:/path")
+    String[] getEndpointSequenceAbusePatterns();
+
+    void setEndpointSequenceAbusePatterns(String[] value);
 
     @Description(
         "Filter requests that result in a non-4xx status for path before analysis; e.g., method:/path")
@@ -1341,6 +1698,14 @@ public class HTTPRequest implements Serializable {
     }
     if (toggles.getEnableSourceCorrelator()) {
       b.withTransformDoc(new SourceCorrelation.SourceCorrelator(toggles));
+    }
+    if (toggles.getEnableEndpointSequenceAbuseAnalysis()) {
+      b.withTransformDoc(
+          new EndpointSequenceAbuse(
+              toggles,
+              options.getOutputIprepdEnableDatastoreWhitelist(),
+              options.getOutputIprepdDatastoreWhitelistProject(),
+              null));
     }
 
     return b.build();
