@@ -11,5 +11,8 @@ export PATH
 
 cd /root/project/contrib
 go test -v ./...
+(cd auth0pull && go test -v)
+(cd cloudtrail-streamer && go test -v)
 (cd duopull && go test -v)
 (cd slackbot-background && go test -v)
+(cd slackbot-http && go test -v)
