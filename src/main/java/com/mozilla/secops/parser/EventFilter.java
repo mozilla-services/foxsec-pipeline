@@ -75,6 +75,7 @@ public class EventFilter implements Serializable {
     }
     if (wantUTC) {
       if (!(e.getTimestamp().getZone().getID().equals("Etc/UTC")
+          || e.getTimestamp().getZone().getID().equals("Etc/GMT")
           || e.getTimestamp().getZone().getID().equals("UTC"))) {
         return false;
       }

@@ -8,8 +8,6 @@ export GO111MODULE=on
 # we need to run tests. WITHOUT_DAEMONS should be non-null if the image is
 # being executed to for example deploy pipelines for production.
 if [[ -z "$WITHOUT_DAEMONS" ]]; then
-	gcloud config set project foxsec-pipeline
-
 	# Environment variables required to run tests for contrib/
 	export DATASTORE_EMULATOR_HOST=localhost:8081
 	export DUOPULL_HOST="test"

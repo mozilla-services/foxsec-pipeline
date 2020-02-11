@@ -6,9 +6,6 @@
 
 set -e
 
-PATH=$PATH:/usr/local/go/bin
-export PATH
-
 cd /root/project/contrib
 go test -v ./...
 (cd auth0pull && go test -v)
