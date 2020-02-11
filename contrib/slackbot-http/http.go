@@ -21,9 +21,15 @@ var (
 	globalConfig Config
 	KEYNAME      string
 	PROJECT_ID   string
+
+	// dirty hack to disable init in unit tests
+	_testing = false
 )
 
 func init() {
+	if _testing {
+		return
+	}
 	mozlogrus.Enable("slackbot-http")
 	KEYNAME = os.Getenv("KMS_KEYNAME")
 	PROJECT_ID = os.Getenv("GCP_PROJECT")

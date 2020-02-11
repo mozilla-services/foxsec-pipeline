@@ -8,6 +8,7 @@ set -e
 
 PATH=$PATH:/usr/local/go/bin
 export PATH
+$(gcloud beta emulators pubsub env-init)
 
 cd /root/project/contrib
 go test -v ./...

@@ -16,7 +16,7 @@ require (
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
-	github.com/mozilla-services/yaml v0.0.0-20180922153656-28ffe5d0cafb
+	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/nlopes/slack v0.6.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2 // indirect
