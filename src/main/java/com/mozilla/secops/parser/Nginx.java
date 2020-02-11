@@ -16,13 +16,12 @@ import org.joda.time.DateTime;
  * <p>This parser currently only supports nginx log data that has been encapsulated in the
  * jsonPayload section of a Stackdriver LogEntry.
  */
-public class Nginx extends PayloadBase implements Serializable {
+public class Nginx extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private static final JacksonFactory jfmatcher = new JacksonFactory();
 
   private String xForwardedProto;
-  private String remoteAddr;
   private String userAgent;
   private String referrer;
   private String request;
@@ -156,6 +155,7 @@ public class Nginx extends PayloadBase implements Serializable {
       return;
     }
 
+    String remoteAddr = null;
     if (matchesStackdriverVariant1(m)) {
       com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriverVariant1 nginxs;
       try {
@@ -212,6 +212,9 @@ public class Nginx extends PayloadBase implements Serializable {
     // If an XFF address selector was configured in the parser, apply it to obtain the
     // correct client address
     remoteAddr = state.getParser().applyXffAddressSelector(remoteAddr);
+    if (remoteAddr != null) {
+      setSourceAddress(remoteAddr, state, e.getNormalized());
+    }
 
     if (request != null) {
       String[] parts = request.split(" ");
@@ -236,7 +239,6 @@ public class Nginx extends PayloadBase implements Serializable {
     n.setRequestStatus(status);
     n.setRequestUrl(requestUrl);
     n.setUrlRequestPath(requestPath);
-    n.setSourceAddress(remoteAddr);
   }
 
   @Override
@@ -302,15 +304,6 @@ public class Nginx extends PayloadBase implements Serializable {
    */
   public String getRequest() {
     return request;
-  }
-
-  /**
-   * Get source address.
-   *
-   * @return Source address string.
-   */
-  public String getSourceAddress() {
-    return remoteAddr;
   }
 
   /**

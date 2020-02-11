@@ -15,12 +15,14 @@ import org.junit.Test;
 
 public class ParserTest {
   public static final String TEST_GEOIP_DBPATH = "/testdata/GeoIP2-City-Test.mmdb";
+  public static final String TEST_ISP_DBPATH = "/testdata/GeoIP2-ISP-Test.mmdb";
 
   public ParserTest() {}
 
   private Parser getTestParser() {
     ParserCfg cfg = new ParserCfg();
     cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
+    cfg.setMaxmindIspDbPath(TEST_ISP_DBPATH);
     return new Parser(cfg);
   }
 
@@ -255,7 +257,7 @@ public class ParserTest {
   public void testGLB() throws Exception {
     String buf =
         "{\"httpRequest\":{\"referer\":\"https://send.firefox.com/\",\"remoteIp\":"
-            + "\"127.0.0.1\",\"requestMethod\":\"GET\",\"requestSize\":\"43\",\"requestUrl\":\"htt"
+            + "\"216.160.83.56\",\"requestMethod\":\"GET\",\"requestSize\":\"43\",\"requestUrl\":\"htt"
             + "ps://send.firefox.com/public/locales/en-US/send.js?test=test\",\"responseSize\":\"2692\","
             + "\"serverIp\":\"10.8.0.3\",\"status\":200,\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel M"
             + "ac OS X 10_13_3)"
@@ -278,7 +280,12 @@ public class ParserTest {
     GLB g = e.getPayload();
     assertNotNull(g);
     assertEquals("GET", g.getRequestMethod());
-    assertEquals("127.0.0.1", g.getSourceAddress());
+    assertEquals("216.160.83.56", g.getSourceAddress());
+    assertEquals("Milton", g.getSourceAddressCity());
+    assertEquals("US", g.getSourceAddressCountry());
+    assertEquals("America/Los_Angeles", g.getSourceAddressTimeZone());
+    assertEquals(47.25, g.getSourceAddressLatitude(), 0.1);
+    assertEquals(-122.31, g.getSourceAddressLongitude(), 0.1);
     assertEquals("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3)", g.getUserAgent());
     assertEquals(
         "https://send.firefox.com/public/locales/en-US/send.js?test=test", g.getRequestUrl());
@@ -297,6 +304,14 @@ public class ParserTest {
         "https://send.firefox.com/public/locales/en-US/send.js?test=test", n.getRequestUrl());
     assertEquals("/public/locales/en-US/send.js", n.getUrlRequestPath());
     assertEquals("send.firefox.com", n.getUrlRequestHost());
+    assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
+    assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
+    assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
+    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
+    assertEquals("Century Link", n.getSourceAddressIsp());
+    assertEquals(209, (int) n.getSourceAddressAsn());
   }
 
   @Test
@@ -1490,6 +1505,12 @@ public class ParserTest {
     assertEquals("POST", d.getRequestMethod());
     assertEquals("/test/endpoint?t=t", d.getRequestUrl());
     assertEquals("/test/endpoint", d.getRequestPath());
+    assertEquals("216.160.83.56", d.getSourceAddress());
+    assertEquals("Milton", d.getSourceAddressCity());
+    assertEquals("US", d.getSourceAddressCountry());
+    assertEquals("America/Los_Angeles", d.getSourceAddressTimeZone());
+    assertEquals(47.25, d.getSourceAddressLatitude(), 0.1);
+    assertEquals(-122.31, d.getSourceAddressLongitude(), 0.1);
 
     Normalized n = e.getNormalized();
     assertNotNull(n);
@@ -1499,6 +1520,13 @@ public class ParserTest {
     assertEquals("/test/endpoint?t=t", n.getRequestUrl());
     assertEquals("/test/endpoint", n.getUrlRequestPath());
     assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
+    assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
+    assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
+    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
+    assertEquals("Century Link", n.getSourceAddressIsp());
+    assertEquals(209, (int) n.getSourceAddressAsn());
   }
 
   @Test
@@ -1527,6 +1555,12 @@ public class ParserTest {
     assertEquals("POST", d.getRequestMethod());
     assertEquals("/rest/bug_user_last_visit/000000?t=t", d.getRequestUrl());
     assertEquals("/rest/bug_user_last_visit/000000", d.getRequestPath());
+    assertEquals("216.160.83.56", d.getSourceAddress());
+    assertEquals("Milton", d.getSourceAddressCity());
+    assertEquals("US", d.getSourceAddressCountry());
+    assertEquals("America/Los_Angeles", d.getSourceAddressTimeZone());
+    assertEquals(47.25, d.getSourceAddressLatitude(), 0.1);
+    assertEquals(-122.31, d.getSourceAddressLongitude(), 0.1);
 
     Normalized n = e.getNormalized();
     assertNotNull(n);
@@ -1536,6 +1570,13 @@ public class ParserTest {
     assertEquals("/rest/bug_user_last_visit/000000?t=t", n.getRequestUrl());
     assertEquals("/rest/bug_user_last_visit/000000", n.getUrlRequestPath());
     assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
+    assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
+    assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
+    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
+    assertEquals("Century Link", n.getSourceAddressIsp());
+    assertEquals(209, (int) n.getSourceAddressAsn());
   }
 
   @Test
@@ -1576,6 +1617,11 @@ public class ParserTest {
     assertEquals("/rest/bug_user_last_visit/000000?t=t", n.getRequestUrl());
     assertEquals("/rest/bug_user_last_visit/000000", n.getUrlRequestPath());
     assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
+    assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
+    assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
+    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
   }
 
   @Test
@@ -1756,9 +1802,7 @@ public class ParserTest {
         "\"216.160.83.56\" - - [19/Mar/2019:14:52:39 -0500] \"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"
             + " 3697 \"https://mozilla.org/item/10\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:"
             + "65.0) Gecko/20100101 Firefox/65.0\"";
-    ParserCfg cfg = new ParserCfg();
-    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
-    Parser p = new Parser(cfg);
+    Parser p = getTestParser();
     assertNotNull(p);
     Event e = p.parse(buf);
     assertNotNull(e);
@@ -1775,6 +1819,12 @@ public class ParserTest {
     assertEquals(
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:65.0) Gecko/20100101 Firefox/65.0",
         d.getUserAgent());
+    assertEquals("216.160.83.56", d.getSourceAddress());
+    assertEquals("Milton", d.getSourceAddressCity());
+    assertEquals("US", d.getSourceAddressCountry());
+    assertEquals("America/Los_Angeles", d.getSourceAddressTimeZone());
+    assertEquals(47.25, d.getSourceAddressLatitude(), 0.1);
+    assertEquals(-122.31, d.getSourceAddressLongitude(), 0.1);
 
     Normalized n = e.getNormalized();
     assertNotNull(n);
@@ -1784,6 +1834,13 @@ public class ParserTest {
     assertEquals("/assets/scripts/main.js?t=t", n.getRequestUrl());
     assertEquals("/assets/scripts/main.js", n.getUrlRequestPath());
     assertEquals("216.160.83.56", n.getSourceAddress());
+    assertEquals("Milton", n.getSourceAddressCity());
+    assertEquals("US", n.getSourceAddressCountry());
+    assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
+    assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
+    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
+    assertEquals("Century Link", n.getSourceAddressIsp());
+    assertEquals(209, (int) n.getSourceAddressAsn());
   }
 
   @Test

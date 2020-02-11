@@ -78,17 +78,19 @@ public class GeoIP {
   }
 
   private static synchronized void initialize(String cityPath, String ispPath) throws IOException {
-    if (cityInitialized.get() || ispInitialized.get()) {
-      return;
+    if (cityPath != null && !cityInitialized.get()) {
+      if (!cityInitialized.get()) {
+        geoipCityDb = getDatabaseFromPath(cityPath);
+        if (geoipCityDb != null) {
+          cityInitialized.set(true);
+        }
+      }
     }
-
-    geoipCityDb = getDatabaseFromPath(cityPath);
-    if (geoipCityDb != null) {
-      cityInitialized.set(true);
-    }
-    geoipIspDb = getDatabaseFromPath(ispPath);
-    if (geoipIspDb != null) {
-      ispInitialized.set(true);
+    if (ispPath != null && !ispInitialized.get()) {
+      geoipIspDb = getDatabaseFromPath(ispPath);
+      if (geoipIspDb != null) {
+        ispInitialized.set(true);
+      }
     }
   }
 

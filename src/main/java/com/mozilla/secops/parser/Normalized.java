@@ -28,6 +28,9 @@ public class Normalized implements Serializable {
   private Double sourceAddressLatitude;
   private Double sourceAddressLongitude;
   private String sourceAddressTimeZone;
+  private String sourceAddressIsp;
+  private Integer sourceAddressAsn;
+  private String sourceAddressAsOrg;
   private Double sourceAddressRiskScore;
   private Boolean sourceAddressIsAnonymous;
   private Boolean sourceAddressIsAnonymousVpn;
@@ -277,6 +280,60 @@ public class Normalized implements Serializable {
    */
   void setSourceAddressLongitude(Double sourceAddressLongitude) {
     this.sourceAddressLongitude = sourceAddressLongitude;
+  }
+
+  /**
+   * Set source address ISP
+   *
+   * @param sourceAddressIsp ISP
+   */
+  public void setSourceAddressIsp(String sourceAddressIsp) {
+    this.sourceAddressIsp = sourceAddressIsp;
+  }
+
+  /**
+   * Get source address ISP
+   *
+   * @return ISP string or null if unset
+   */
+  public String getSourceAddressIsp() {
+    return sourceAddressIsp;
+  }
+
+  /**
+   * Set source address ASN
+   *
+   * @param sourceAddressAsn ASN integer
+   */
+  public void setSourceAddressAsn(Integer sourceAddressAsn) {
+    this.sourceAddressAsn = sourceAddressAsn;
+  }
+
+  /**
+   * Get source address ASN
+   *
+   * @return ASN integer or null if unset
+   */
+  public Integer getSourceAddressAsn() {
+    return sourceAddressAsn;
+  }
+
+  /**
+   * Set source address AS organization
+   *
+   * @param sourceAddressAsOrg AS organization string
+   */
+  public void setSourceAddressAsOrg(String sourceAddressAsOrg) {
+    this.sourceAddressAsOrg = sourceAddressAsOrg;
+  }
+
+  /**
+   * Get source address AS organization
+   *
+   * @return AS organization string or null if unset
+   */
+  public String getSourceAddressAsOrg() {
+    return sourceAddressAsOrg;
   }
 
   /**
