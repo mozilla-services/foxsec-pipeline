@@ -43,8 +43,8 @@ public class TestPostProcessing {
   private PostProcessing.PostProcessingOptions getTestOptions() {
     PostProcessing.PostProcessingOptions ret =
         PipelineOptionsFactory.as(PostProcessing.PostProcessingOptions.class);
-    ret.setDatastoreNamespace("testpostprocessing");
-    ret.setDatastoreKind("postprocessing");
+    ret.setWarningSeverityEmail("picard@enterprise.com");
+    ret.setCriticalSeverityEmail("pagerduty@enterprise.com");
     return ret;
   }
 
@@ -59,7 +59,7 @@ public class TestPostProcessing {
     Watchlist.WatchlistEntry ipe = new Watchlist.WatchlistEntry();
     ipe.setType("ip");
     ipe.setObject("127.0.0.1");
-    ipe.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
+    ipe.setSeverity(Alert.AlertSeverity.CRITICAL);
     ipe.setCreatedBy("picard");
     ipe.setExpiresAt(new DateTime());
     c = is.newCursor();
@@ -118,10 +118,14 @@ public class TestPostProcessing {
                     assertEquals("email", a.getMetadataValue("matched_type"));
                     assertEquals("username", a.getMetadataValue("matched_metadata_key"));
                     assertEquals(
+                        "picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+                    assertEquals(
                         "example@enterprise.com", a.getMetadataValue("matched_metadata_value"));
                   } else if (a.getMetadataValue("matched_type").equals("ip")) {
                     ipCnt++;
-                    assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
+                    assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
+                    assertEquals(
+                        "pagerduty@enterprise.com", a.getMetadataValue("notify_email_direct"));
                     assertEquals("ip", a.getMetadataValue("matched_type"));
                     assertEquals("sourceaddress", a.getMetadataValue("matched_metadata_key"));
                     assertEquals("127.0.0.1", a.getMetadataValue("matched_metadata_value"));
@@ -129,11 +133,9 @@ public class TestPostProcessing {
                 } else if (a.getMetadataValue("category").equals("cfgtick")) {
                   cfgTickCnt++;
                   assertEquals("postprocessing-cfgtick", a.getCategory());
-                  assertEquals("testpostprocessing", a.getMetadataValue("datastoreNamespace"));
                   assertEquals(
                       "./target/test-classes/testdata/watchlist_analyze_buffer1.txt",
                       a.getMetadataValue("inputFile"));
-                  assertEquals("postprocessing", a.getMetadataValue("datastoreKind"));
                   assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
                 } else {
                   fail("unexpected category");
