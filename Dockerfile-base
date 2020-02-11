@@ -9,35 +9,27 @@
 
 FROM maven:3-jdk-8
 
+ENV FOXSEC_PIPELINE_IMAGE=base \
+	PATH="/root/google-cloud-sdk/bin:/usr/local/go/bin:${PATH}" \
+	GOPATH=/root/go
+
 RUN apt-get update -y && \
-    apt-get install -y lsb-release equivs
-
-# The image already contains a JDK, so we don't want to install another one.
-# Install a fake openjdk-8-jdk to satisfy the required dependencies of the
-# gcloud emulator packages we need.
-COPY docker/openjdk-8-jdk /root/openjdk-8-jdk
-RUN (cd /root && equivs-build openjdk-8-jdk && dpkg -i openjdk-8-jdk*deb)
-
-RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
-    echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    apt-get update -y && apt-get install google-cloud-sdk -y
-
-RUN apt-get install google-cloud-sdk-datastore-emulator memcached \
-	net-tools netcat google-cloud-sdk-pubsub-emulator redis-server \
-	build-essential -y
-
-ENV GOPATH /root/go
-RUN curl -OL https://dl.google.com/go/go1.13.7.linux-amd64.tar.gz && \
-	tar -C /usr/local -zxf go1.13.7.linux-amd64.tar.gz && \
-	mkdir -p /root/go && \
-	/usr/local/go/bin/go get -u go.mozilla.org/iprepd && \
-	/usr/local/go/bin/go install go.mozilla.org/iprepd/cmd/iprepd && \
+	apt-get upgrade -y && \
+	apt-get install netcat redis-server build-essential \
+	memcached --no-install-recommends -y && \
+	curl -L https://dl.google.com/go/go1.13.7.linux-amd64.tar.gz | \
+	(cd /usr/local && tar -zxf -) && \
+	curl -sSL https://sdk.cloud.google.com | \
+	CLOUDSDK_CORE_DISABLE_PROMPTS=1 bash && \
+	gcloud config set project foxsec-pipeline && \
+	CLOUDSDK_CORE_DISABLE_PROMPTS=1 gcloud components install cloud-datastore-emulator \
+	pubsub-emulator beta && \
+	go get go.mozilla.org/iprepd && \
+	go install go.mozilla.org/iprepd/cmd/iprepd && \
 	mkdir -p /etc/iprepd
 
 COPY docker/iprepd.yaml /etc/iprepd/iprepd.yaml
-
 COPY docker-entrypoint.sh /
+
 WORKDIR /root/project
-ENV FOXSEC_PIPELINE_IMAGE base
 ENTRYPOINT ["/docker-entrypoint.sh"]
