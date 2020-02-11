@@ -142,12 +142,6 @@ github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/go-wordwrap v1.0.0 h1:6GlHJ/LTGMrIJbwgdqdl2eEH8o+Exx/0m8ir9Gns0u4=
 github.com/mitchellh/go-wordwrap v1.0.0/go.mod h1:ZXFpozHsX6DPmq2I0TCekCxypsnAUbP2oI0UX1GXzOo=
-github.com/mozilla-services/foxsec-pipeline-contrib v0.0.0-20190222235941-fd054c98f0b1/go.mod h1:rNuiuSF+Mvo60Lk9dSqDlY//wG+cccacGSqkf1sQ+hA=
-github.com/mozilla-services/foxsec-pipeline-contrib v0.0.0-20190422180541-854a65bd9948 h1:glC6TRDP4w0a+sxXjZxobtiYJtX+dZnFJK0wQVXnC6w=
-github.com/mozilla-services/foxsec-pipeline-contrib/foxsec-slack-bot v0.0.0-20190326204815-5ba8ada479e9/go.mod h1:OZUCjOaglCNHkIJy2452aY3pm7bgeBooVaDAH9+1nzo=
-github.com/mozilla-services/foxsec-pipeline-contrib/foxsec-slack-bot v0.0.0-20190422180541-854a65bd9948 h1:mp2dm3yuEMt5EUmKafqzV7KlaGxw8vLkc1JvvPy6dVE=
-github.com/mozilla-services/foxsec-pipeline-contrib/foxsec-slack-bot v0.0.0-20190422180541-854a65bd9948/go.mod h1:I273/M8+nadU9Cn6JCTM0H2P8sbj64d3XMDUu8H0HHw=
-github.com/mozilla-services/foxsec-pipeline-contrib/scheduled-tasks/whitelisted-ips-purger v0.0.0-20190409172407-29117fc6a2f6/go.mod h1:CSwIQM5ScA8T6/vWKzJmjxtkHEbzQ3TfTBouFDJP/i0=
 github.com/mozilla-services/yaml v0.0.0-20180922153656-28ffe5d0cafb h1:wj4n5+b4t84Qze8N/n0PKpaBTlbA7g7nTYG01h16mh0=
 github.com/mozilla-services/yaml v0.0.0-20180922153656-28ffe5d0cafb/go.mod h1:Is/Ucts/yU/mWyGR8yELRoO46mejouKsJfQLAIfTR18=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=

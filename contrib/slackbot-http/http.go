@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/mozilla-services/foxsec-pipeline-contrib/common"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/common"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/nlopes/slack"

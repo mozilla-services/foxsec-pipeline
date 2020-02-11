@@ -8,7 +8,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/mozilla-services/foxsec-pipeline-contrib/common"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/common"
 
 	"cloud.google.com/go/datastore"
 	stackdriver "cloud.google.com/go/logging"

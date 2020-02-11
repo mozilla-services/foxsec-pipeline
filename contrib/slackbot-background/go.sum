@@ -135,8 +135,6 @@ github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/go-wordwrap v1.0.0 h1:6GlHJ/LTGMrIJbwgdqdl2eEH8o+Exx/0m8ir9Gns0u4=
 github.com/mitchellh/go-wordwrap v1.0.0/go.mod h1:ZXFpozHsX6DPmq2I0TCekCxypsnAUbP2oI0UX1GXzOo=
-github.com/mozilla-services/foxsec-pipeline-contrib v0.0.0-20190425174807-036b23f46b2b h1:+7Mgjr6JKlHCW27E6jh5/k2YxxKKL8yx0qgGCf/KZBU=
-github.com/mozilla-services/foxsec-pipeline-contrib v0.0.0-20190509171250-a99ae9291b22 h1:pMuXg89JmBN0kp8IkzkZBUYPWw4FDXlaQ0TH9QUE0dw=
 github.com/mozilla-services/yaml v0.0.0-20180922153656-28ffe5d0cafb h1:wj4n5+b4t84Qze8N/n0PKpaBTlbA7g7nTYG01h16mh0=
 github.com/mozilla-services/yaml v0.0.0-20180922153656-28ffe5d0cafb/go.mod h1:Is/Ucts/yU/mWyGR8yELRoO46mejouKsJfQLAIfTR18=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=

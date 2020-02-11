@@ -1,4 +1,4 @@
-module github.com/mozilla-services/cloudtrail-streamer
+module github.com/mozilla-services/foxsec-pipeline/contrib/cloudtrail-streamer
 
 go 1.13
 

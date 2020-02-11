@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/mozilla-services/foxsec-pipeline-contrib/common"
-	"github.com/mozilla-services/foxsec-pipeline-contrib/common/persons_api"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/common"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/common/persons_api"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/nlopes/slack"
