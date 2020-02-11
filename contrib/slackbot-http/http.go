@@ -129,7 +129,7 @@ func SlackbotHTTP(w http.ResponseWriter, r *http.Request) {
 		data = &common.TriggerData{
 			Action: common.Interaction,
 			Interaction: common.InteractionData{
-				ActionName:  callback.Actions[0].Name,
+				ActionName:  callback.ActionCallback.AttachmentActions[0].Name,
 				CallbackID:  callback.CallbackID,
 				ResponseURL: callback.ResponseURL,
 			},
