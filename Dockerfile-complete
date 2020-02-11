@@ -9,13 +9,13 @@ COPY . /root/project
 
 RUN mvn compile
 RUN cd contrib && GO111MODULE=on GOPROXY=https://proxy.golang.org \
-	/usr/local/go/bin/go get ./... && \
-	/usr/local/go/bin/go mod vendor && \
-	(cd auth0pull && /usr/local/go/bin/go mod vendor && /usr/local/go/bin/go build) && \
-	(cd cloudtrail-streamer && /usr/local/go/bin/go mod vendor && /usr/local/go/bin/go build) && \
-	(cd duopull && /usr/local/go/bin/go mod vendor && /usr/local/go/bin/go build) && \
-	(cd slackbot-background && /usr/local/go/bin/go mod vendor && /usr/local/go/bin/go build) && \
-	(cd slackbot-http && /usr/local/go/bin/go mod vendor && /usr/local/go/bin/go build)
+	go get ./... && \
+	go mod vendor && \
+	(cd auth0pull && go mod vendor && go build) && \
+	(cd cloudtrail-streamer && go mod vendor && go build) && \
+	(cd duopull && go mod vendor && go build) && \
+	(cd slackbot-background && go mod vendor && go build) && \
+	(cd slackbot-http && go mod vendor && go build)
 RUN mkdir -p /app && cp version.json /app/version.json
 
 ENV FOXSEC_PIPELINE_IMAGE complete
