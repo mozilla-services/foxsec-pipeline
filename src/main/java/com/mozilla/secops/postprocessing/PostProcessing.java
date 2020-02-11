@@ -79,11 +79,16 @@ public class PostProcessing implements Serializable {
     private static final long serialVersionUID = 1L;
     private Logger log;
     private Watchlist wl;
+    private String warningEmail;
+    private String criticalEmail;
 
     private static final String[] emailKeys = new String[] {"email", "username"};
     private static final String[] ipKeys = new String[] {"sourceaddress", "sourceaddress_previous"};
 
-    public WatchlistAnalyze(PostProcessingOptions options) {}
+    public WatchlistAnalyze(PostProcessingOptions options) {
+      warningEmail = options.getWarningSeverityEmail();
+      criticalEmail = options.getCriticalSeverityEmail();
+    }
 
     public String getTransformDoc() {
       return "Alert on matched watchlist entries in incoming alerts from other pipelines.";
@@ -148,6 +153,14 @@ public class PostProcessing implements Serializable {
                   "matched watchlist object found in alert %s", sourceAlert.getAlertId()));
           a.setSeverity(entry.getSeverity());
 
+          // Add escalation metadata
+          if (entry.getSeverity() == Alert.AlertSeverity.WARNING) {
+            a.addMetadata("notify_email_direct", warningEmail);
+          }
+          if (entry.getSeverity() == Alert.AlertSeverity.CRITICAL) {
+            a.addMetadata("notify_email_direct", criticalEmail);
+          }
+
           a.addMetadata("source_alert", sourceAlert.getAlertId().toString());
           a.addMetadata("matched_metadata_key", key);
           // This may seem redundant with the below `matched_object`, but trying to
@@ -171,26 +184,15 @@ public class PostProcessing implements Serializable {
 
     void setEnableWatchlistAnalysis(Boolean value);
 
-    @Description("Use memcached state; hostname of memcached server")
-    String getMemcachedHost();
+    @Description("Email address to send warning level alerts to")
+    String getWarningSeverityEmail();
 
-    void setMemcachedHost(String value);
+    void setWarningSeverityEmail(String value);
 
-    @Description("Use memcached state; port of memcached server")
-    @Default.Integer(11211)
-    Integer getMemcachedPort();
+    @Description("Email address to send critical level alerts to")
+    String getCriticalSeverityEmail();
 
-    void setMemcachedPort(Integer value);
-
-    @Description("Use Datastore state; namespace for entities")
-    String getDatastoreNamespace();
-
-    void setDatastoreNamespace(String value);
-
-    @Description("Use Datastore state; kind for entities")
-    String getDatastoreKind();
-
-    void setDatastoreKind(String value);
+    void setCriticalSeverityEmail(String value);
   }
 
   /**
