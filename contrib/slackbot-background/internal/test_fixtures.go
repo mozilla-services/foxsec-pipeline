@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/mozilla-services/foxsec-pipeline-contrib/common"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/common"
 )
 
 // FakeTransport is a roundtripper that can used with httpclient to write unit tests

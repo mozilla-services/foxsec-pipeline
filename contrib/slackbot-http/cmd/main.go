@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/mozilla-services/foxsec-pipeline-contrib/slackbot-http"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/slackbot-http"
 )
 
 func main() {

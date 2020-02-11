@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/mozilla-services/foxsec-pipeline-contrib/duopull"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/duopull"
 )
 
 func main() {

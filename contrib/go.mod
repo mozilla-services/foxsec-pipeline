@@ -1,4 +1,4 @@
-module github.com/mozilla-services/foxsec-pipeline-contrib
+module github.com/mozilla-services/foxsec-pipeline/contrib
 
 go 1.12
 

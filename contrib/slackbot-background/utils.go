@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mozilla-services/foxsec-pipeline-contrib/common"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/common"
 
 	"github.com/nlopes/slack"
 	log "github.com/sirupsen/logrus"

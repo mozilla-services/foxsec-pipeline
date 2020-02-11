@@ -135,7 +135,6 @@ github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/go-wordwrap v1.0.0 h1:6GlHJ/LTGMrIJbwgdqdl2eEH8o+Exx/0m8ir9Gns0u4=
 github.com/mitchellh/go-wordwrap v1.0.0/go.mod h1:ZXFpozHsX6DPmq2I0TCekCxypsnAUbP2oI0UX1GXzOo=
-github.com/mozilla-services/foxsec-pipeline-contrib v0.0.0-20190425174807-036b23f46b2b h1:+7Mgjr6JKlHCW27E6jh5/k2YxxKKL8yx0qgGCf/KZBU=
 github.com/mozilla-services/yaml v0.0.0-20180922153656-28ffe5d0cafb h1:wj4n5+b4t84Qze8N/n0PKpaBTlbA7g7nTYG01h16mh0=
 github.com/mozilla-services/yaml v0.0.0-20180922153656-28ffe5d0cafb/go.mod h1:Is/Ucts/yU/mWyGR8yELRoO46mejouKsJfQLAIfTR18=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
@@ -143,6 +142,7 @@ github.com/neelance/astrewrite v0.0.0-20160511093645-99348263ae86/go.mod h1:kHJE
 github.com/neelance/sourcemap v0.0.0-20151028013722-8c68805598ab/go.mod h1:Qr6/a/Q4r9LP1IltGz7tA7iOK1WonHEYhu1HRBA7ZiM=
 github.com/nlopes/slack v0.5.0 h1:NbIae8Kd0NpqaEI3iUrsuS0KbcEDhzhc939jLW5fNm0=
 github.com/nlopes/slack v0.5.0/go.mod h1:jVI4BBK3lSktibKahxBF74txcK2vyvkza1z/+rRnVAM=
+github.com/nlopes/slack v0.6.0 h1:jt0jxVQGhssx1Ib7naAOZEZcGdtIhTzkP0nopK0AsRA=
 github.com/nlopes/slack v0.6.0/go.mod h1:JzQ9m3PMAqcpeCam7UaHSuBuupz7CmpjehYMayT6YOk=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
@@ -210,6 +210,7 @@ go.mozilla.org/mozlog v0.0.0-20170222151521-4bb13139d403 h1:rKyWXYDfrVOpMFBion4P
 go.mozilla.org/mozlog v0.0.0-20170222151521-4bb13139d403/go.mod h1:jHoPAGnDrCy6kaI2tAze5Prf0Nr0w/oNkROt2lw3n3o=
 go.mozilla.org/mozlogrus v1.0.0 h1:8FWASFDozt1q1B+j6EoSBt62YN4k7nMWFLb3VyawXzA=
 go.mozilla.org/mozlogrus v1.0.0/go.mod h1:bg4v22liQ+tLlQ6nI56e5C7Xe8AqEU4xDdEpWoCzQ6M=
+go.mozilla.org/mozlogrus v2.0.0+incompatible h1:V8aAmJPN07RQuTJZfsroehGglIERIpbj/C5ClwE6fao=
 go.mozilla.org/mozlogrus v2.0.0+incompatible/go.mod h1:bg4v22liQ+tLlQ6nI56e5C7Xe8AqEU4xDdEpWoCzQ6M=
 go.mozilla.org/sops v0.0.0-20190611200209-e9e1e87723c8 h1:RGVnXInLdDvAWF8mT1gAl4M/6g4GyIRB0ltFPV7PtT4=
 go.mozilla.org/sops v0.0.0-20190611200209-e9e1e87723c8/go.mod h1:njv+SYMHy9urU/V330aYWmWAP6EwAfN0WaRafSBgwfs=

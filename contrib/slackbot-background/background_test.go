@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/mozilla-services/foxsec-pipeline-contrib/slackbot-background/internal"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/slackbot-background/internal"
 	"github.com/nlopes/slack"
 	"github.com/stretchr/testify/assert"
 )
