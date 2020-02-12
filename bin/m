@@ -37,5 +37,6 @@ docker run -it --rm \
     -v $PWD/.m2:/root/.m2${CACHEFLAGS} \
     -v $PWD:/root/project${CACHEFLAGS} \
     -e GOOGLE_APPLICATION_CREDENTIALS \
+    -e WITHOUT_DAEMONS \
     foxsec-pipeline-base:latest \
     mvn "$@"
