@@ -80,7 +80,7 @@ public class PostProcessing implements Serializable {
     private Logger log;
     private Watchlist wl;
 
-    private static final String[] emailKeys = new String[] {"email", "username"};
+    private static final String[] emailKeys = new String[] {"email", "username", "identity_key"};
     private static final String[] ipKeys = new String[] {"sourceaddress", "sourceaddress_previous"};
 
     public WatchlistAnalyze(PostProcessingOptions options) {}

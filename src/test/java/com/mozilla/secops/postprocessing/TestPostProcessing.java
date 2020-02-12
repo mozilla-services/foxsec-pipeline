@@ -116,7 +116,7 @@ public class TestPostProcessing {
                     emailCnt++;
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                     assertEquals("email", a.getMetadataValue("matched_type"));
-                    assertEquals("username", a.getMetadataValue("matched_metadata_key"));
+                    assertEquals("identity_key", a.getMetadataValue("matched_metadata_key"));
                     assertEquals(
                         "example@enterprise.com", a.getMetadataValue("matched_metadata_value"));
                   } else if (a.getMetadataValue("matched_type").equals("ip")) {
