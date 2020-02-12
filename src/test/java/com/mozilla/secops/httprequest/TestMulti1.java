@@ -13,7 +13,6 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
-import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
@@ -44,17 +43,7 @@ public class TestMulti1 implements Serializable {
     PCollection<Alert> results =
         HTTPRequest.expandInputMap(
                 p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options)
-            .apply(ParDo.of(new AlertFormatter(options)))
-            .apply(
-                ParDo.of(
-                    new DoFn<String, Alert>() {
-                      private static final long serialVersionUID = 1L;
-
-                      @ProcessElement
-                      public void processElement(ProcessContext c) {
-                        c.output(Alert.fromJSON(c.element()));
-                      }
-                    }));
+            .apply(ParDo.of(new AlertFormatter(options)));
 
     PCollection<Long> resultCount =
         results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());

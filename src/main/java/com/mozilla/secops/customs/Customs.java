@@ -24,6 +24,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
@@ -523,7 +524,9 @@ public class Customs implements Serializable {
     PCollection<Alert> alerts = executePipeline(p, input, options);
 
     PCollection<String> fmt =
-        alerts.apply("alert formatter", ParDo.of(new AlertFormatter(options)));
+        alerts
+            .apply("alert formatter", ParDo.of(new AlertFormatter(options)))
+            .apply("alert conversion", MapElements.via(new AlertFormatter.AlertToString()));
     fmt.apply("output", OutputOptions.compositeOutput(options));
 
     // If the customs notification topic is set, wire the alerts up to this output transform

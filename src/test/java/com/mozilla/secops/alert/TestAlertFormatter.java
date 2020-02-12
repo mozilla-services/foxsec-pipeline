@@ -11,6 +11,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
@@ -32,7 +33,10 @@ public class TestAlertFormatter {
   public void runFormatter() {
     IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
     options.setMonitoredResourceIndicator("test");
-    PCollection<String> res = getTestInput(p).apply(ParDo.of(new AlertFormatter(options)));
+    PCollection<String> res =
+        getTestInput(p)
+            .apply(ParDo.of(new AlertFormatter(options)))
+            .apply(MapElements.via(new AlertFormatter.AlertToString()));
 
     PAssert.that(res)
         .satisfies(
@@ -56,7 +60,10 @@ public class TestAlertFormatter {
     options.setMonitoredResourceIndicator("formatter_test");
     options.setAlertAddressFields(new String[] {"sourceaddress"});
 
-    PCollection<String> res = getTestInput(p).apply(ParDo.of(new AlertFormatter(options)));
+    PCollection<String> res =
+        getTestInput(p)
+            .apply(ParDo.of(new AlertFormatter(options)))
+            .apply(MapElements.via(new AlertFormatter.AlertToString()));
 
     PAssert.that(res)
         .satisfies(

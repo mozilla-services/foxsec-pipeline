@@ -15,6 +15,7 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
@@ -123,6 +124,7 @@ public class GatekeeperPipeline implements Serializable {
 
     executePipeline(p, input, options)
         .apply("output format", ParDo.of(new AlertFormatter(options)))
+        .apply("output convert", MapElements.via(new AlertFormatter.AlertToString()))
         .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();
