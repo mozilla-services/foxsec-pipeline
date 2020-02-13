@@ -5,6 +5,19 @@
 
 [Apache Beam](https://beam.apache.org/) pipelines for analyzing log data.
 
+## Documentation
+
+* [secops-beam Java documentation](https://mozilla-services.github.io/foxsec-pipeline/secops-beam/)
+
+javadoc documentation is currently updated manually and although should be up to date, may not be current
+with master.
+
+## Introduction to Beam
+
+To get familiar with developing pipelines in Beam, this repository also contains a small workshop that
+provides some guidance on building basic pipelines. The introduction document can be found
+[here](docs/beam-intro/INTRO.md).
+
 ## Tests
 
 Tests can be executed locally using Docker.
@@ -93,20 +106,6 @@ INFO: Closing state interface com.mozilla.secops.state.DatastoreStateInterface
 Successfully submitted watchlist entry to foxsec-pipeline-nonprod
 {"type":"ip","severity":"info","expires_at":"2020-02-26T17:41:43.919Z","created_by":"example@example.com","object":"127.0.0.1"}
 ```
-
-
-## Documentation
-
-* [secops-beam Java documentation](https://mozilla-services.github.io/foxsec-pipeline/secops-beam/)
-
-javadoc documentation is currently updated manually and although should be up to date, may not be current
-with master.
-
-## Introduction to Beam
-
-To get familiar with developing pipelines in Beam, this repository also contains a small workshop that
-provides some guidance on building basic pipelines. The introduction document can be found
-[here](docs/beam-intro/INTRO.md).
 
 ## Contributing
 
