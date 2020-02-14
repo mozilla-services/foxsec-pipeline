@@ -5,14 +5,10 @@ import com.maxmind.geoip2.model.IspResponse;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.parser.GeoIP;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.SimpleFunction;
 
-/**
- * {@link DoFn} for conversion of {@link Alert} objects into JSON strings
- *
- * <p>This DoFn also supplements the alert with a metadata entry with the monitored resource
- * indicator value, which is a required value in {@link com.mozilla.secops.OutputOptions}.
- */
-public class AlertFormatter extends DoFn<Alert, String> {
+/** {@link DoFn} for normalization and supplemental enrichment of {@Alert} objects */
+public class AlertFormatter extends DoFn<Alert, Alert> {
   private static final long serialVersionUID = 1L;
 
   private String monitoredResourceIndicator;
@@ -21,11 +17,49 @@ public class AlertFormatter extends DoFn<Alert, String> {
   private String maxmindIspDbPath;
   private GeoIP geoip;
 
+  /**
+   * SimpleFunction for conversion of {@link Alert} objects to JSON string
+   *
+   * <p>Intended for use with MapElements.
+   */
+  public static class AlertToString extends SimpleFunction<Alert, String> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public String apply(Alert input) {
+      return input.toJSON();
+    }
+  }
+
+  /**
+   * Initialize new AlertFormatter
+   *
+   * @param options IOOptions
+   */
   public AlertFormatter(IOOptions options) {
     monitoredResourceIndicator = options.getMonitoredResourceIndicator();
     addressFields = options.getAlertAddressFields();
     maxmindCityDbPath = options.getMaxmindCityDbPath();
     maxmindIspDbPath = options.getMaxmindIspDbPath();
+  }
+
+  /**
+   * Initialize new AlertFormatter
+   *
+   * @param monitoredResourceIndicator Monitored resource indicator
+   * @param addressFields Array of address fields
+   * @param maxmindCityDbPath Path to Maxmind City DB
+   * @param maxmindIspDbPath Path to Maxmind ISP DB
+   */
+  public AlertFormatter(
+      String monitoredResourceIndicator,
+      String[] addressFields,
+      String maxmindCityDbPath,
+      String maxmindIspDbPath) {
+    this.monitoredResourceIndicator = monitoredResourceIndicator;
+    this.addressFields = addressFields;
+    this.maxmindCityDbPath = maxmindCityDbPath;
+    this.maxmindIspDbPath = maxmindIspDbPath;
   }
 
   /**
@@ -91,6 +125,6 @@ public class AlertFormatter extends DoFn<Alert, String> {
     }
 
     addGeoIPData(a, addressFields, geoip);
-    c.output(a.toJSON());
+    c.output(a);
   }
 }

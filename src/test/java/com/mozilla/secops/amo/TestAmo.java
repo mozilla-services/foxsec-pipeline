@@ -24,6 +24,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.testing.TestStream;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Instant;
@@ -95,6 +96,7 @@ public class TestAmo {
     // in the tests
     alerts
         .apply(ParDo.of(new AlertFormatter(getTestOptions())))
+        .apply(MapElements.via(new AlertFormatter.AlertToString()))
         .apply(OutputOptions.compositeOutput(getTestOptions()));
 
     PCollection<Long> count = alerts.apply(Count.globally());

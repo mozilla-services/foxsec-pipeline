@@ -6,6 +6,7 @@ import com.mozilla.secops.FileUtil;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.OutputOptions;
+import com.mozilla.secops.SourceCorrelation;
 import com.mozilla.secops.Stats;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
@@ -34,6 +35,7 @@ import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Values;
@@ -974,9 +976,15 @@ public class HTTPRequest implements Serializable {
       extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
 
-    private final HTTPRequestToggles toggles;
+    private final transient HTTPRequestToggles toggles;
     private final Boolean enableIprepdDatastoreWhitelist;
     private final String iprepdDatastoreWhitelistProject;
+    private final int sourceCorrelatorMinimumAddresses;
+    private final double sourceCorrelatorAlertPercentage;
+    private final String monitoredResource;
+    private final String[] addressFields;
+    private final String maxmindCityDbPath;
+    private final String maxmindIspDbPath;
 
     /**
      * Create new HTTPRequestAnalysis
@@ -989,6 +997,12 @@ public class HTTPRequest implements Serializable {
 
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
+      sourceCorrelatorMinimumAddresses = options.getSourceCorrelatorMinimumAddresses();
+      sourceCorrelatorAlertPercentage = options.getSourceCorrelatorAlertPercentage();
+      monitoredResource = toggles.getMonitoredResource();
+      addressFields = options.getAlertAddressFields();
+      maxmindCityDbPath = options.getMaxmindCityDbPath();
+      maxmindIspDbPath = options.getMaxmindIspDbPath();
     }
 
     @Override
@@ -1084,7 +1098,32 @@ public class HTTPRequest implements Serializable {
                             iprepdDatastoreWhitelistProject)));
       }
 
-      return resultsList.apply("flatten analysis output", Flatten.<Alert>pCollections());
+      PCollection<Alert> allAlerts =
+          resultsList
+              .apply("flatten analysis output", Flatten.<Alert>pCollections())
+              .apply(
+                  "output format",
+                  ParDo.of(
+                      new AlertFormatter(
+                          monitoredResource, addressFields, maxmindCityDbPath, maxmindIspDbPath)));
+
+      if (toggles.getEnableSourceCorrelator()) {
+        // Wire up source correlation
+        PCollection<SourceCorrelation.SourceData> sourceData =
+            PCollectionList.of(
+                    events
+                        .apply(new GlobalTriggers<Event>(5))
+                        .apply(ParDo.of(new SourceCorrelation.EventSourceExtractor())))
+                .and(allAlerts.apply(ParDo.of(new SourceCorrelation.AlertSourceExtractor())))
+                .apply("flatten source data", Flatten.<SourceCorrelation.SourceData>pCollections());
+
+        allAlerts =
+            PCollectionList.of(allAlerts)
+                .and(sourceData.apply(new SourceCorrelation.SourceCorrelator(toggles)))
+                .apply("flatten with source correlation", Flatten.<Alert>pCollections());
+      }
+
+      return allAlerts;
     }
   }
 
@@ -1230,6 +1269,24 @@ public class HTTPRequest implements Serializable {
     String getPipelineMultimodeConfiguration();
 
     void setPipelineMultimodeConfiguration(String value);
+
+    @Description("Enable source correlator")
+    @Default.Boolean(false)
+    Boolean getEnableSourceCorrelator();
+
+    void setEnableSourceCorrelator(Boolean value);
+
+    @Description("Minimum distinct addresses for given ISP for source correlator consideration")
+    @Default.Integer(250)
+    Integer getSourceCorrelatorMinimumAddresses();
+
+    void setSourceCorrelatorMinimumAddresses(Integer value);
+
+    @Description("Percentage of addresses that created alert to result in source correlator alert")
+    @Default.Double(90.00)
+    Double getSourceCorrelatorAlertPercentage();
+
+    void setSourceCorrelatorAlertPercentage(Double value);
   }
 
   /**
@@ -1280,6 +1337,9 @@ public class HTTPRequest implements Serializable {
               toggles,
               options.getOutputIprepdEnableDatastoreWhitelist(),
               options.getOutputIprepdDatastoreWhitelistProject()));
+    }
+    if (toggles.getEnableSourceCorrelator()) {
+      b.withTransformDoc(new SourceCorrelation.SourceCorrelator(toggles));
     }
 
     return b.build();
@@ -1433,6 +1493,7 @@ public class HTTPRequest implements Serializable {
   private static void standardOutput(PCollection<Alert> alerts, HTTPRequestOptions options) {
     alerts
         .apply("output format", ParDo.of(new AlertFormatter(options)))
+        .apply("output convert", MapElements.via(new AlertFormatter.AlertToString()))
         .apply("output", OutputOptions.compositeOutput(options));
   }
 

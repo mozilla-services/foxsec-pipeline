@@ -18,6 +18,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.DateTime;
@@ -77,6 +78,7 @@ public class TestHardLimit1 {
     // in the tests
     results
         .apply(ParDo.of(new AlertFormatter(options)))
+        .apply(MapElements.via(new AlertFormatter.AlertToString()))
         .apply(OutputOptions.compositeOutput(options));
 
     PCollection<Long> resultCount =
@@ -171,6 +173,7 @@ public class TestHardLimit1 {
     // in the tests
     results
         .apply(ParDo.of(new AlertFormatter(options)))
+        .apply(MapElements.via(new AlertFormatter.AlertToString()))
         .apply(OutputOptions.compositeOutput(options));
 
     PCollection<Long> resultCount =

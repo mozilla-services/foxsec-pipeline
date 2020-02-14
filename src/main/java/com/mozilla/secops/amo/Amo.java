@@ -22,6 +22,7 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
@@ -295,6 +296,7 @@ public class Amo implements Serializable {
 
     alerts
         .apply("alert formatter", ParDo.of(new AlertFormatter(options)))
+        .apply("alert conversion", MapElements.via(new AlertFormatter.AlertToString()))
         .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();

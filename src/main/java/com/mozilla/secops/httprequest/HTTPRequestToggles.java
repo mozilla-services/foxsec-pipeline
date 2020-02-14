@@ -21,6 +21,7 @@ public class HTTPRequestToggles {
   private Boolean enableHardLimitAnalysis;
   private Boolean enableUserAgentBlacklistAnalysis;
   private Boolean enableNatDetection;
+  private Boolean enableSourceCorrelator;
 
   // Hard limit settings
   private Long hardLimitRequestCount;
@@ -43,6 +44,10 @@ public class HTTPRequestToggles {
   private String[] endpointAbuseCustomVarianceSubstrings;
   private Integer endpointAbuseSuppressRecovery;
   private Long sessionGapDurationMinutes;
+
+  // Source correlator settings
+  private Integer sourceCorrelatorMinimumAddresses;
+  private Double sourceCorrelatorAlertPercentage;
 
   // Filtering settings
   private String[] filterRequestPath;
@@ -511,6 +516,63 @@ public class HTTPRequestToggles {
   }
 
   /**
+   * Set enable source correlator
+   *
+   * @param enableSourceCorrelator Boolean
+   */
+  @JsonProperty("enable_source_correlator")
+  void setEnableSourceCorrelator(Boolean enableSourceCorrelator) {
+    this.enableSourceCorrelator = enableSourceCorrelator;
+  }
+
+  /**
+   * Get enable source correlator
+   *
+   * @return Boolean
+   */
+  public Boolean getEnableSourceCorrelator() {
+    return enableSourceCorrelator;
+  }
+
+  /**
+   * Set source correlator minimum addresses
+   *
+   * @param sourceCorrelatorMinimumAddresses Integer
+   */
+  @JsonProperty("source_correlator_minimum_addresses")
+  public void setSourceCorrelatorMinimumAddresses(Integer sourceCorrelatorMinimumAddresses) {
+    this.sourceCorrelatorMinimumAddresses = sourceCorrelatorMinimumAddresses;
+  }
+
+  /**
+   * Get source correlator minimum addresses
+   *
+   * @return Integer
+   */
+  public Integer getSourceCorrelatorMinimumAddresses() {
+    return sourceCorrelatorMinimumAddresses;
+  }
+
+  /**
+   * Set source correlator alert percentage
+   *
+   * @param sourceCorrelatorAlertPercentage Double
+   */
+  @JsonProperty("source_correlator_alert_percentage")
+  public void setSourceCorrelatorAlertPercentage(Double sourceCorrelatorAlertPercentage) {
+    this.sourceCorrelatorAlertPercentage = sourceCorrelatorAlertPercentage;
+  }
+
+  /**
+   * Get source correlator alert percentage
+   *
+   * @return Double
+   */
+  public Double getSourceCorrelatorAlertPercentage() {
+    return sourceCorrelatorAlertPercentage;
+  }
+
+  /**
    * Convert the toggles to a standard EventFilter for use in HTTPRequest
    *
    * <p>Note that this filter does not apply any form of address exclusion if indicated in the
@@ -618,6 +680,10 @@ public class HTTPRequestToggles {
     ret.setIgnoreCloudProviderRequests(o.getIgnoreCloudProviderRequests());
     ret.setIgnoreInternalRequests(o.getIgnoreInternalRequests());
 
+    ret.setEnableSourceCorrelator(o.getEnableSourceCorrelator());
+    ret.setSourceCorrelatorMinimumAddresses(o.getSourceCorrelatorMinimumAddresses());
+    ret.setSourceCorrelatorAlertPercentage(o.getSourceCorrelatorAlertPercentage());
+
     return ret;
   }
 
@@ -643,5 +709,9 @@ public class HTTPRequestToggles {
 
     ignoreCloudProviderRequests = true;
     ignoreInternalRequests = true;
+
+    enableSourceCorrelator = false;
+    sourceCorrelatorMinimumAddresses = 250;
+    sourceCorrelatorAlertPercentage = 90.00;
   }
 }

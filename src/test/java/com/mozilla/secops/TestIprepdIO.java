@@ -12,6 +12,7 @@ import java.util.StringJoiner;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -110,6 +111,7 @@ public class TestIprepdIO implements Serializable {
                   }
                 }))
         .apply(ParDo.of(new AlertFormatter(options)))
+        .apply(MapElements.via(new AlertFormatter.AlertToString()))
         .apply(OutputOptions.compositeOutput(options));
 
     assertEquals(100, (int) r.getReputation("ip", "127.0.0.1"));
@@ -152,6 +154,7 @@ public class TestIprepdIO implements Serializable {
                   }
                 }))
         .apply(ParDo.of(new AlertFormatter(options)))
+        .apply(MapElements.via(new AlertFormatter.AlertToString()))
         .apply(OutputOptions.compositeOutput(options));
 
     assertEquals(100, (int) r.getReputation("ip", "127.0.0.1"));
@@ -188,6 +191,7 @@ public class TestIprepdIO implements Serializable {
                   }
                 }))
         .apply(ParDo.of(new AlertFormatter(options)))
+        .apply(MapElements.via(new AlertFormatter.AlertToString()))
         .apply(OutputOptions.compositeOutput(options));
 
     p.run().waitUntilFinish();

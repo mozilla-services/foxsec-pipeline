@@ -28,6 +28,7 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
@@ -261,6 +262,7 @@ public class PostProcessing implements Serializable {
     }
     processInput(input, options)
         .apply("output format", ParDo.of(new AlertFormatter(options)))
+        .apply("output convert", MapElements.via(new AlertFormatter.AlertToString()))
         .apply("output", OutputOptions.compositeOutput(options));
 
     p.run();
