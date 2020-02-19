@@ -13,11 +13,16 @@ import com.github.seratch.jslack.api.model.Action;
 import com.github.seratch.jslack.api.model.Attachment;
 import com.github.seratch.jslack.api.model.Confirmation;
 import com.github.seratch.jslack.api.model.User;
+import com.github.seratch.jslack.common.http.SlackHttpClient;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import okhttp3.ConnectionSpec;
+import okhttp3.OkHttpClient;
+import okhttp3.TlsVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +30,13 @@ public class SlackManager {
   private String apiToken;
   private Slack slack;
   private final Logger log;
+
+  private ConnectionSpec getConnectionSpec() {
+    return new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+        .tlsVersions(TlsVersion.TLS_1_2)
+        .allEnabledCipherSuites()
+        .build();
+  }
 
   /**
    * Construct new slack manager object
@@ -34,7 +46,11 @@ public class SlackManager {
   public SlackManager(String apiToken) {
     log = LoggerFactory.getLogger(SlackManager.class);
     this.apiToken = apiToken;
-    slack = Slack.getInstance();
+    OkHttpClient okc =
+        new OkHttpClient.Builder()
+            .connectionSpecs(Collections.singletonList(getConnectionSpec()))
+            .build();
+    slack = Slack.getInstance(new SlackHttpClient(okc));
   }
 
   /**
