@@ -201,6 +201,7 @@ public class PostProcessing implements Serializable {
    *
    * @param options Pipeline options
    * @return String
+   * @throws IOException IOException
    */
   public static String buildConfigurationTick(PostProcessingOptions options) throws IOException {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
@@ -272,6 +273,7 @@ public class PostProcessing implements Serializable {
    * Entry point for Beam pipeline.
    *
    * @param args Runtime arguments.
+   * @throws Exception Exception
    */
   public static void main(String[] args) throws Exception {
     PipelineOptionsFactory.register(PostProcessingOptions.class);

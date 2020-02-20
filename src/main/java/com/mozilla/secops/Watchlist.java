@@ -178,7 +178,7 @@ public class Watchlist {
   /**
    * Return a new watchlist interface for fetching watchlist entries
    *
-   * @return Watchlist
+   * @throws StateException StateException
    */
   public Watchlist() throws StateException {
     log = LoggerFactory.getLogger(Watchlist.class);
@@ -195,7 +195,7 @@ public class Watchlist {
    * <p>Supports specifiying a GCP project name where the watchlist entries are stored in Datastore
    *
    * @param datastoreProject GCP project name that contains the watchlist entries
-   * @return Watchlist
+   * @throws StateException StateException
    */
   public Watchlist(String datastoreProject) throws StateException {
     log = LoggerFactory.getLogger(Watchlist.class);
@@ -288,7 +288,12 @@ public class Watchlist {
     emailState.done();
   }
 
-  /** main routine used to create watchlist entries. */
+  /**
+   * main routine used to create watchlist entries.
+   *
+   * @param args Command line arguments
+   * @throws Exception Exception
+   */
   public static void main(String[] args) throws Exception {
     Options options = new Options();
 

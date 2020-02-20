@@ -85,6 +85,7 @@ public class AuthProfile implements Serializable {
    *
    * @param path Identity manager path
    * @return IdentityManager
+   * @throws IOException IOException
    */
   public static IdentityManager getIdentityManager(String path) throws IOException {
     globalIdmLock.lock();
@@ -1064,6 +1065,7 @@ public class AuthProfile implements Serializable {
    *
    * @param options Pipeline options
    * @return String
+   * @throws IOException IOException
    */
   public static String buildConfigurationTick(AuthProfileOptions options) throws IOException {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
@@ -1159,6 +1161,7 @@ public class AuthProfile implements Serializable {
    * Entry point for Beam pipeline.
    *
    * @param args Runtime arguments.
+   * @throws Exception Exception
    */
   public static void main(String[] args) throws Exception {
     PipelineOptionsFactory.register(AuthProfileOptions.class);

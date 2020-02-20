@@ -29,6 +29,7 @@ public class AlertIO {
   /**
    * Return {@link PTransform} to handle alerting output
    *
+   * @param cfg AlertConfiguration
    * @return IO transform
    */
   public static Write write(AlertConfiguration cfg) {

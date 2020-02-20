@@ -61,6 +61,8 @@ public class SlackManager {
    * @param channelId Slack channel id
    * @param message Message to be sent
    * @return Message response object
+   * @throws IOException IOException
+   * @throws SlackApiException SlackApiException
    */
   public ChatPostMessageResponse sendMessageToChannel(String channelId, String message)
       throws IOException, SlackApiException {
@@ -73,6 +75,8 @@ public class SlackManager {
    *
    * @param email User's email
    * @return User's slack user id
+   * @throws IOException IOException
+   * @throws SlackApiException SlackApiException
    */
   public String lookupUserIdByEmail(String email) throws IOException, SlackApiException {
     UsersLookupByEmailResponse resp =
@@ -91,6 +95,8 @@ public class SlackManager {
    * Get map where the key is user's emails and the corresponding value is their slack id.
    *
    * @return HashMap for email to slack id
+   * @throws IOException IOException
+   * @throws SlackApiException SlackApiException
    */
   public HashMap<String, String> getEmailToUserIdMapping() throws IOException, SlackApiException {
     List<User> users = getUserList();
@@ -105,6 +111,8 @@ public class SlackManager {
    * Get list of all Slack users
    *
    * @return List of Slack user objects
+   * @throws IOException IOException
+   * @throws SlackApiException SlackApiException
    */
   public List<User> getUserList() throws IOException, SlackApiException {
     ArrayList<User> users = new ArrayList<User>();
@@ -143,6 +151,8 @@ public class SlackManager {
    * @param alertId Alert id to include in button callback
    * @param message Message to be sent
    * @return Message response object
+   * @throws IOException IOException
+   * @throws SlackApiException SlackApiException
    */
   public ChatPostMessageResponse sendConfirmationRequestToUser(
       String userId, String alertId, String message) throws IOException, SlackApiException {

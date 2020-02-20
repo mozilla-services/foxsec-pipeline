@@ -114,7 +114,7 @@ public class IprepdIO {
   /**
    * Return a new reader for reading reputation from iprepd
    *
-   * <p>Specification format: <url>|<api key>
+   * <p>Specification format: url|api key
    *
    * <p>Example: "https://iprepd.example.com|secretapikey"
    *
@@ -258,7 +258,7 @@ public class IprepdIO {
   /**
    * Return {@link PTransform} to emit violations to one or more instances of iprepd
    *
-   * <p>Specification format: <url>|<api key>
+   * <p>Specification format: url|api key
    *
    * <p>Example: "https://iprepd.example.com|secretapikey"
    *
@@ -600,6 +600,7 @@ public class IprepdIO {
    *
    * @param ip IP address to check
    * @param a Alert to add metadata to
+   * @throws IOException IOException
    */
   public static void addMetadataIfIpWhitelisted(String ip, Alert a) throws IOException {
     addMetadataIfObjectWhitelisted(ip, whitelistedIpKind, a, null);
@@ -614,6 +615,7 @@ public class IprepdIO {
    * @param ip IP address to check
    * @param a Alert to add metadata to
    * @param datastoreProject If Datastore is in another project, non-null project ID
+   * @throws IOException IOException
    */
   public static void addMetadataIfIpWhitelisted(String ip, Alert a, String datastoreProject)
       throws IOException {
@@ -626,6 +628,7 @@ public class IprepdIO {
    * @param obj Object to check (usually an IP or email)
    * @param type Type of object (usually "ip" or "email")
    * @param a Alert to add metadata to
+   * @throws IOException IOException
    */
   public static void addMetadataIfObjectWhitelisted(String obj, String type, Alert a)
       throws IOException {
@@ -644,6 +647,7 @@ public class IprepdIO {
    * @param type Type of object (usually "ip" or "email")
    * @param a Alert to add metadata to
    * @param datastoreProject If Datastore is in another project, non-null project ID
+   * @throws IOException IOException
    */
   public static void addMetadataIfObjectWhitelisted(
       String obj, String type, Alert a, String datastoreProject) throws IOException {

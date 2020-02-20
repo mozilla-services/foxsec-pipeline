@@ -35,6 +35,7 @@ public abstract class PayloadBase implements Serializable {
    * Apply matcher.
    *
    * @param input Input string.
+   * @param state ParserState
    * @return True if matcher matches.
    */
   public Boolean matcher(String input, ParserState state) {

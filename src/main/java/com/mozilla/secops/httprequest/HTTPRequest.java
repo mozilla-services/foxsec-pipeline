@@ -1295,6 +1295,7 @@ public class HTTPRequest implements Serializable {
    * @param options Pipeline options
    * @param toggles Analysis toggles
    * @return String
+   * @throws IOException IOException
    */
   public static String buildConfigurationTick(
       HTTPRequestOptions options, HTTPRequestToggles toggles) throws IOException {
@@ -1354,6 +1355,7 @@ public class HTTPRequest implements Serializable {
    * @param p Pipeline
    * @param options Pipeline options
    * @return Configured Input object
+   * @throws IOException IOException
    */
   public static Input getInput(Pipeline p, HTTPRequestOptions options) throws IOException {
     // Always use a multiplexed read here, even if we will only have one element associated
@@ -1511,6 +1513,7 @@ public class HTTPRequest implements Serializable {
    * Entry point for Beam pipeline.
    *
    * @param args Runtime arguments.
+   * @throws Exception Exception
    */
   public static void main(String[] args) throws Exception {
     PipelineOptionsFactory.register(HTTPRequestOptions.class);

@@ -26,6 +26,7 @@ public class IdentityManager {
    *
    * @param path Path to load JSON file from, resource path or GCS URL
    * @return {@link IdentityManager}
+   * @throws IOException IOException
    */
   public static IdentityManager load(String path) throws IOException {
     InputStream in;

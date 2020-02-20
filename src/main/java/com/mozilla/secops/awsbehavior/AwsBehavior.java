@@ -207,6 +207,7 @@ public class AwsBehavior implements Serializable {
    * Entry point for Beam pipeline.
    *
    * @param args Runtime arguments.
+   * @throws Exception Exception
    */
   public static void main(String[] args) throws Exception {
     PipelineOptionsFactory.register(AwsBehaviorOptions.class);

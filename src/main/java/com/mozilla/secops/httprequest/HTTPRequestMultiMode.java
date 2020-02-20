@@ -22,6 +22,7 @@ public class HTTPRequestMultiMode {
    *
    * @param path Path to load JSON file from, resource path or GCS URL
    * @return {@link HTTPRequestMultiMode}
+   * @throws IOException IOException
    */
   public static HTTPRequestMultiMode load(String path) throws IOException {
     InputStream in;

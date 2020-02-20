@@ -33,6 +33,7 @@ public class StreamWriter implements Serializable {
    * Entry point for Beam pipeline.
    *
    * @param args Runtime arguments.
+   * @throws IOException IOException
    */
   public static void main(String[] args) throws IOException {
     PipelineOptionsFactory.register(StreamWriterOptions.class);

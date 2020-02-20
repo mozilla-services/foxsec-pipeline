@@ -7,7 +7,7 @@ import com.mozilla.secops.parser.GeoIP;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.SimpleFunction;
 
-/** {@link DoFn} for normalization and supplemental enrichment of {@Alert} objects */
+/** {@link DoFn} for normalization and supplemental enrichment of {@link Alert} objects */
 public class AlertFormatter extends DoFn<Alert, Alert> {
   private static final long serialVersionUID = 1L;
 

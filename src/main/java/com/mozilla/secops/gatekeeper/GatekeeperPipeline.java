@@ -97,6 +97,7 @@ public class GatekeeperPipeline implements Serializable {
    *
    * @param options Pipeline options
    * @return String
+   * @throws IOException IOException
    */
   public static String buildConfigurationTick(GatekeeperOptions options) throws IOException {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
@@ -134,6 +135,7 @@ public class GatekeeperPipeline implements Serializable {
    * Entry point for Beam pipeline.
    *
    * @param args Runtime arguments.
+   * @throws Exception Exception
    */
   public static void main(String[] args) throws Exception {
     PipelineOptionsFactory.register(GatekeeperOptions.class);

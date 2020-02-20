@@ -50,7 +50,7 @@ public class EventThreatDetectionFinding implements Serializable {
   /**
    * Get evidence object
    *
-   * @return ArrayList<{@link Evidence}>
+   * @return ArrayList{@literal <}{@link Evidence}{@literal >}
    */
   @JsonProperty("evidence")
   public ArrayList<Evidence> getEvidence() {

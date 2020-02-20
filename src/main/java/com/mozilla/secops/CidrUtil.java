@@ -222,6 +222,8 @@ public class CidrUtil {
    * Load known GCP subnets into instance of {@link CidrUtil}
    *
    * <p>This is done via SPF record queries.
+   *
+   * @throws IOException IOException
    */
   public void loadGcpSubnets() throws IOException {
     int pcnt = 0;
@@ -300,6 +302,8 @@ public class CidrUtil {
    * Load known AWS subnets into instance of {@link CidrUtil}
    *
    * <p>Utilizes information at https://ip-ranges.amazonaws.com/ip-ranges.json
+   *
+   * @throws IOException IOException
    */
   public void loadAwsSubnets() throws IOException {
     HttpClient httpClient = HttpClientBuilder.create().build();
@@ -339,6 +343,7 @@ public class CidrUtil {
    * Constructor for {@link CidrUtil} to load subnet list from resource
    *
    * @param path Resource path or GCS URL to load CIDR subnet list from
+   * @throws IOException IOException
    */
   public CidrUtil(String path) throws IOException {
     this();

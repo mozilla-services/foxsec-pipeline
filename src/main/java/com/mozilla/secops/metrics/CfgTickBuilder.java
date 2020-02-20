@@ -56,6 +56,7 @@ public class CfgTickBuilder {
    * Generate configuration tick message from builder contents
    *
    * @return JSON message string
+   * @throws IOException IOException
    */
   public String build() throws IOException {
     cfgData.put("configuration_tick", "true");
@@ -72,6 +73,7 @@ public class CfgTickBuilder {
    *
    * @param opt {@link PipelineOptions}
    * @return CfgTickBuilder
+   * @throws IOException IOException
    */
   public CfgTickBuilder includePipelineOptions(PipelineOptions opt) throws IOException {
     String jsonOpt;

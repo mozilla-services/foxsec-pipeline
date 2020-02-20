@@ -101,6 +101,7 @@ public class AlertMailer {
    * Create new {@link AlertMailer} with specified {@link AlertConfiguration}
    *
    * @param cfg {@link AlertConfiguration}
+   * @throws IOException IOException
    */
   public AlertMailer(AlertConfiguration cfg) throws IOException {
     log = LoggerFactory.getLogger(AlertMailer.class);

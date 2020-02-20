@@ -84,6 +84,8 @@ public class Input implements Serializable {
    *
    * @param options InputOptions
    * @param cfgTick Configuration tick message, null if not enabled
+   * @return PTransform
+   * @throws IOException IOException
    */
   public static PTransform<PBegin, PCollection<String>> compositeInputAdapter(
       InputOptions options, String cfgTick) throws IOException {
@@ -193,6 +195,7 @@ public class Input implements Serializable {
    * @param options Pipeline input options
    * @param cfgTickMessage Configuration tick message, null if not enabled
    * @return this for chaining
+   * @throws IOException IOException
    */
   public Input fromPipelineOptions(InputOptions options, String cfgTickMessage) throws IOException {
     if (!mode.equals(OperatingMode.SIMPLEX)) {
@@ -220,6 +223,7 @@ public class Input implements Serializable {
    *
    * @param el Input element
    * @return this for chaining
+   * @throws IOException IOException
    */
   public Input withInputElement(InputElement el) throws IOException {
     if ((mode.equals(OperatingMode.SIMPLEX)) && (elements.size() == 1)) {
@@ -249,7 +253,11 @@ public class Input implements Serializable {
     this.project = project;
   }
 
-  /** Return a transform that will ingest data, and emit raw strings in simplex mode */
+  /**
+   * Return a transform that will ingest data, and emit raw strings in simplex mode
+   *
+   * @return PTransform
+   */
   public PTransform<PBegin, PCollection<String>> simplexReadRaw() {
     return new SimplexReaderRaw(this);
   }
@@ -282,7 +290,11 @@ public class Input implements Serializable {
     }
   }
 
-  /** Return a transform that will ingest data, and emit parsed events in simplex mode */
+  /**
+   * Return a transform that will ingest data, and emit parsed events in simplex mode
+   *
+   * @return PTransform
+   */
   public PTransform<PBegin, PCollection<Event>> simplexRead() {
     return new SimplexReader(this);
   }
@@ -315,7 +327,11 @@ public class Input implements Serializable {
     }
   }
 
-  /** Return a transform that will ingest data, and emit raw events in multiplex mode */
+  /**
+   * Return a transform that will ingest data, and emit raw events in multiplex mode
+   *
+   * @return PTransform
+   */
   public PTransform<PBegin, PCollection<KV<String, String>>> multiplexReadRaw() {
     return new MultiplexReaderRaw(this);
   }
@@ -367,7 +383,11 @@ public class Input implements Serializable {
     }
   }
 
-  /** Return a transform that will ingest data, and emit parsed events in multiplex mode */
+  /**
+   * Return a transform that will ingest data, and emit parsed events in multiplex mode
+   *
+   * @return PTransform
+   */
   public PTransform<PBegin, PCollection<KV<String, Event>>> multiplexRead() {
     return new MultiplexReader(this);
   }

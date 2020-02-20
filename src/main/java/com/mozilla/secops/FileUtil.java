@@ -14,6 +14,7 @@ public class FileUtil {
    * set.
    *
    * @param path Resource path or GCS URL to read file from
+   * @throws IOException IOException
    * @return {@link ArrayList} containing line items
    */
   public static ArrayList<String> fileReadLines(String path) throws IOException {

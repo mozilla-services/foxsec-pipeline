@@ -42,6 +42,7 @@ public class RuntimeSecrets {
    * @param project Project name
    * @param ring Keyring name
    * @param keyName Key name
+   * @throws IOException IOException
    */
   public RuntimeSecrets(String project, String ring, String keyName) throws IOException {
     kmsclient = KeyManagementServiceClient.create();
@@ -82,6 +83,8 @@ public class RuntimeSecrets {
   /**
    * Indicate {@link RuntimeSecrets} object will no longer be used, must be called to shutdown
    * background threads
+   *
+   * @throws InterruptedException InterruptedException
    */
   public void done() throws InterruptedException {
     kmsclient.close();
@@ -105,6 +108,7 @@ public class RuntimeSecrets {
    * @param input Input string
    * @param project GCP project name, can be null if unapplicable
    * @return Transformed runtime secret
+   * @throws IOException IOException
    */
   public static String interpretSecret(String input, String project) throws IOException {
     if (GcsUtil.isGcsUrl(input)) {
@@ -123,7 +127,12 @@ public class RuntimeSecrets {
     return ret;
   }
 
-  /** main routine can be used to encrypt or decrypt data on the command line */
+  /**
+   * main routine can be used to encrypt or decrypt data on the command line
+   *
+   * @param args Command line arguments
+   * @throws Exception Exception
+   */
   public static void main(String[] args) throws Exception {
     Options options = new Options();
 

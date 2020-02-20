@@ -100,7 +100,7 @@ public class CloudWatchEvent implements Serializable {
   /**
    * Get event resources, typically in the form of ARNs
    *
-   * @return ArrayList<String>
+   * @return ArrayList{@literal <}String{@literal >}
    */
   @JsonProperty("resources")
   public ArrayList<String> getResources() {

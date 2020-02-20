@@ -113,6 +113,7 @@ public class Mozlog implements Serializable {
    *
    * <p>Returns the Mozlog fields as a JSON string value
    *
+   * @param mapper ObjectMapper
    * @return Fields as JSON
    */
   @JsonIgnore

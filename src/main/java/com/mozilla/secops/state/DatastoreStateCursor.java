@@ -83,6 +83,8 @@ public class DatastoreStateCursor extends StateCursor {
    * Initialize a new Datastore cursor
    *
    * @param d Initialized {@link Datastore} object
+   * @param namespace Datastore namespace
+   * @param kind Datastore kind
    */
   public DatastoreStateCursor(Datastore d, String namespace, String kind) {
     this.datastore = d;
