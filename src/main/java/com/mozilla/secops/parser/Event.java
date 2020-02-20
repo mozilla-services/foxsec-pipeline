@@ -65,6 +65,7 @@ public class Event implements Serializable {
    * Set event payload.
    *
    * @param p Payload data.
+   * @param <T> T
    */
   public <T extends PayloadBase> void setPayload(T p) {
     payload = new Payload<T>(p);
@@ -73,6 +74,7 @@ public class Event implements Serializable {
   /**
    * Get event payload.
    *
+   * @param <T> T
    * @return Payload data extending {@link PayloadBase}.
    */
   @SuppressWarnings("unchecked")

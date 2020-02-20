@@ -368,7 +368,7 @@ public class Alert implements Serializable {
   /**
    * Override generated unique ID for alert
    *
-   * <p>param id UUID for alert
+   * @param alertId Alert ID for alert
    */
   public void setAlertId(UUID alertId) {
     this.alertId = alertId;

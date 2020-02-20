@@ -21,7 +21,11 @@ public class State {
     log = LoggerFactory.getLogger(State.class);
   }
 
-  /** Flush all keys in the underlying state storage */
+  /**
+   * Flush all keys in the underlying state storage
+   *
+   * @throws StateException StateException
+   */
   public void deleteAll() throws StateException {
     si.deleteAll();
   }
@@ -33,7 +37,9 @@ public class State {
    *
    * @param s State key to fetch state for
    * @param cls Class to deserialize state data into
+   * @param <T> T
    * @return Returns an object containing state data for key, null if not found
+   * @throws StateException StateException
    */
   public <T> T get(String s, Class<T> cls) throws StateException {
     StateCursor c = newCursor();
@@ -50,8 +56,10 @@ public class State {
    * the caller instead.
    *
    * @param cls Class to deserialize state data into
+   * @param <T> T
    * @return Returns an array containing the state data for all keys of the kind in {@link
    *     DatastoreStateInterface}, null if none are found.
+   * @throws StateException StateException
    */
   public <T> T[] getAll(Class<T> cls) throws StateException {
     StateCursor c = newCursor();
@@ -73,6 +81,7 @@ public class State {
    * read and write functionality but it will not provide any form of transaction consistency.
    *
    * @return {@link StateCursor}
+   * @throws StateException StateException
    */
   public StateCursor newCursor() throws StateException {
     return si.newCursor();
@@ -83,6 +92,8 @@ public class State {
    *
    * <p>The initialize function should be called prior to reading or writing any state using the
    * {@link State} object.
+   *
+   * @throws StateException StateException
    */
   public void initialize() throws StateException {
     log.info("Initializing new state interface using {}", si.getClass().getName());

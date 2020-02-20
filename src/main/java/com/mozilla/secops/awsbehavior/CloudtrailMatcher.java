@@ -25,6 +25,8 @@ public class CloudtrailMatcher implements Serializable {
    * Converts {@link CloudtrailMatcher} into an {@link EventFilterRule} as regex matchers.
    *
    * @return {@link EventFilterRule}
+   * @throws UnknownStringPropertyException UnknownStringPropertyException
+   * @throws PatternSyntaxException PatternSyntaxException
    */
   public EventFilterRule toEventFilterRule()
       throws UnknownStringPropertyException, PatternSyntaxException {

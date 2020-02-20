@@ -72,7 +72,11 @@ public class Identity {
     return alert;
   }
 
-  /** Returns true if this identity should be notified via slack */
+  /**
+   * Returns true if this identity should be notified via slack
+   *
+   * @return Boolean
+   */
   @JsonIgnore
   public Boolean shouldNotifyViaSlack() {
     if (notify == null || notify.getMethod() == null) {
@@ -81,7 +85,11 @@ public class Identity {
     return notify.getMethod() == NotificationPreferences.Method.SLACK;
   }
 
-  /** Returns true if this identity should be notified via email */
+  /**
+   * Returns true if this identity should be notified via email
+   *
+   * @return Boolean
+   */
   @JsonIgnore
   public Boolean shouldNotifyViaEmail() {
     if (notify == null || notify.getMethod() == null) {
@@ -90,7 +98,11 @@ public class Identity {
     return notify.getMethod() == NotificationPreferences.Method.EMAIL;
   }
 
-  /** Returns true if this identity should be alerted via slack */
+  /**
+   * Returns true if this identity should be alerted via slack
+   *
+   * @return Boolean
+   */
   @JsonIgnore
   public Boolean shouldAlertViaSlack() {
     if (alert == null || alert.getMethod() == null) {
@@ -99,7 +111,11 @@ public class Identity {
     return alert.getMethod() == NotificationPreferences.Method.SLACK;
   }
 
-  /** Returns true if this identity should be alerted via email */
+  /**
+   * Returns true if this identity should be alerted via email
+   *
+   * @return Boolean
+   */
   @JsonIgnore
   public Boolean shouldAlertViaEmail() {
     if (alert == null || alert.getMethod() == null) {

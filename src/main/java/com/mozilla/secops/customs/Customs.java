@@ -312,6 +312,7 @@ public class Customs implements Serializable {
    *
    * @param options Pipeline options
    * @return String
+   * @throws IOException IOException
    */
   public static String buildConfigurationTick(CustomsOptions options) throws IOException {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
@@ -467,6 +468,7 @@ public class Customs implements Serializable {
    * @param input Input data
    * @param options CustomsOptions
    * @return {@link PCollection} containing {@link Alert} objects
+   * @throws IOException IOException
    */
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, CustomsOptions options) throws IOException {
@@ -542,6 +544,7 @@ public class Customs implements Serializable {
    * Entry point for Beam pipeline.
    *
    * @param args Runtime arguments.
+   * @throws IOException IOException
    */
   public static void main(String[] args) throws IOException {
     PipelineOptionsFactory.register(CustomsOptions.class);

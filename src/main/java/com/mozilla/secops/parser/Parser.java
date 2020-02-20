@@ -192,6 +192,8 @@ public class Parser {
    * Utility function to convert a JSON string into the desired map type
    *
    * @param input Input JSON
+   * @param <T> T
+   * @param <U> U
    * @return HashMap
    */
   public static <T, U> HashMap<T, U> convertJsonToMap(String input) {
@@ -425,6 +427,7 @@ public class Parser {
    *
    * @param input Input string
    * @return {@link Event} or null if the event should be ignored
+   * @throws EventTooOldException EventTooOldException
    */
   public Event parse(String input) throws EventTooOldException {
     String fm = cfg.getParserFastMatcher();

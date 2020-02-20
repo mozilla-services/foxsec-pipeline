@@ -75,6 +75,7 @@ public class CfgTick extends PayloadBase implements Serializable {
    *
    * @param in Input map
    * @return Converted map
+   * @throws IOException IOException
    */
   public static HashMap<String, String> flattenObjectMapToStringMap(Map<String, Object> in)
       throws IOException {

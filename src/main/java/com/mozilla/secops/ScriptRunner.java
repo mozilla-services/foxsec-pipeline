@@ -18,6 +18,7 @@ public class ScriptRunner {
    *
    * @param path Script path, resource path or GCS URL
    * @param name Name to register script with
+   * @throws IOException IOException
    */
   public void loadScript(String path, String name) throws IOException {
     InputStream in;
@@ -39,6 +40,8 @@ public class ScriptRunner {
    * @param method Method to execute
    * @param clazz Class for return type
    * @param args Arguments to method
+   * @param <T> T
+   * @return T
    */
   public <T> T invokeMethod(String name, String method, Class<T> clazz, Object... args) {
     try {

@@ -1,2 +1,2 @@
-/** Customs server generic rate limiting heuristics pipeline */
+/** Customs FxA analysis pipeline */
 package com.mozilla.secops.customs;

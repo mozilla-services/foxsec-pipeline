@@ -24,6 +24,7 @@ public class AlertSlack {
    * Construct new alert slack object
    *
    * @param cfg {@link AlertConfiguration}
+   * @throws IOException IOException
    */
   public AlertSlack(AlertConfiguration cfg) throws IOException {
     log = LoggerFactory.getLogger(AlertSlack.class);

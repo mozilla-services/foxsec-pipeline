@@ -73,6 +73,7 @@ public class Minfraud implements Serializable {
    *
    * @param ipAddress IP address
    * @param resourcePath Path to resource JSON file to use as response
+   * @throws IOException IOException
    */
   public static void cacheInsightsResource(String ipAddress, String resourcePath)
       throws IOException {
@@ -191,6 +192,9 @@ public class Minfraud implements Serializable {
   /**
    * main routine can be used to fetch minfraud insights for an ip or email (or both) from the
    * command line
+   *
+   * @param args Command line arguments
+   * @throws Exception Exception
    */
   public static void main(String[] args) throws Exception {
     Options options = new Options();

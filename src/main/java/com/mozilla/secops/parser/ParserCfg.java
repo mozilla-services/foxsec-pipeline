@@ -72,6 +72,8 @@ public class ParserCfg implements Serializable {
    *
    * <p>This option is intended to behave in a similar manner to the nginx realip module,
    * https://nginx.org/en/docs/http/ngx_http_realip_module.html.
+   *
+   * @param subnets Arraylist containing subnets
    */
   @JsonProperty("xff_address_selector")
   public void setXffAddressSelector(ArrayList<String> subnets) {

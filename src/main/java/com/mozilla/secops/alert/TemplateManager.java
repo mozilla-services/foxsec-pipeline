@@ -29,6 +29,10 @@ public class TemplateManager {
    * @param templateName Name of template file
    * @param variables Variables for template
    * @return Assembled template
+   * @throws IOException IOException
+   * @throws MalformedTemplateNameException MalformedTemplateNameException
+   * @throws TemplateException TemplateException
+   * @throws TemplateNotFoundException TemplateNotFoundException
    */
   public String processTemplate(String templateName, HashMap<String, Object> variables)
       throws IOException, MalformedTemplateNameException, TemplateException,
@@ -39,7 +43,13 @@ public class TemplateManager {
     return out.toString();
   }
 
-  /** Validate TemplateManager by checking that all registered templates can be found. */
+  /**
+   * Validate TemplateManager by checking that all registered templates can be found.
+   *
+   * @throws TemplateNotFoundException TemplateNotFoundException
+   * @throws MalformedTemplateNameException MalformedTemplateNameException
+   * @throws IOException IOException
+   */
   public void validate()
       throws TemplateNotFoundException, MalformedTemplateNameException, IOException {
     if (registeredTemplates == null) {
@@ -63,7 +73,11 @@ public class TemplateManager {
     return baTemplateLoader;
   };
 
-  /** Construct new template manager object */
+  /**
+   * Construct new template manager object
+   *
+   * @param alertCfg AlertConfiguration
+   */
   public TemplateManager(AlertConfiguration alertCfg) {
     this.alertCfg = alertCfg;
     registeredTemplates = alertCfg.getRegisteredTemplates();

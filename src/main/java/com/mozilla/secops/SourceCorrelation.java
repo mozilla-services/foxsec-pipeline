@@ -211,9 +211,7 @@ public class SourceCorrelation {
     /**
      * Initialize new SourceCorrelator
      *
-     * @param sourceMinimum Minimum number of addresses required for a given ISP
-     * @param alertPercentage Percentage of addresses which must be exceeded to generate alert
-     * @param monitoredResource Monitored resource indicator
+     * @param toggles HTTPRequestToggles
      */
     public SourceCorrelator(HTTPRequestToggles toggles) {
       this.sourceMinimum = toggles.getSourceCorrelatorMinimumAddresses();

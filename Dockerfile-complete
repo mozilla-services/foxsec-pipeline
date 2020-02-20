@@ -7,7 +7,7 @@ FROM foxsec-pipeline-base:latest
 
 COPY . /root/project
 
-RUN mvn compile
+RUN mvn javadoc:javadoc && mvn compile
 RUN cd contrib && GO111MODULE=on GOPROXY=https://proxy.golang.org \
 	go get ./... && \
 	go mod vendor && \

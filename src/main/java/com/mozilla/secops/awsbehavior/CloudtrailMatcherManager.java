@@ -17,6 +17,7 @@ public class CloudtrailMatcherManager implements Serializable {
    *
    * @param resourcePath Resource path to load JSON file from
    * @return {@link CloudtrailMatcherManager}
+   * @throws IOException IOException
    */
   public static CloudtrailMatcherManager loadFromResource(String resourcePath) throws IOException {
     InputStream in = CloudtrailMatcherManager.class.getResourceAsStream(resourcePath);

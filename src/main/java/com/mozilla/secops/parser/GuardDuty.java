@@ -70,6 +70,8 @@ public class GuardDuty extends PayloadBase implements Serializable {
    * Construct parser object.
    *
    * @param input Input string
+   * @param e Event
+   * @param s ParserState
    */
   public GuardDuty(String input, Event e, ParserState s) {
     try {

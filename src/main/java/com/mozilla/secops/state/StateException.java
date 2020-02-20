@@ -4,7 +4,11 @@ package com.mozilla.secops.state;
 public class StateException extends Exception {
   private static final long serialVersionUID = 1L;
 
-  /** Construct new {@link StateException} */
+  /**
+   * Construct new {@link StateException}
+   *
+   * @param e String
+   */
   public StateException(String e) {
     super(e);
   }

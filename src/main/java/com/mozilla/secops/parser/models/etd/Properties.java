@@ -69,7 +69,7 @@ public class Properties implements Serializable {
   /**
    * Get domain list
    *
-   * @return ArrayList<String>
+   * @return ArrayList{@literal <}String{@literal >}
    */
   @JsonProperty("domain")
   public ArrayList<String> getDomain() {

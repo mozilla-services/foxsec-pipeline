@@ -38,6 +38,7 @@ public class Amo implements Serializable {
    * @param input Input collection
    * @param options AmoOptions
    * @return Collection of Alert objects
+   * @throws IOException IOException
    */
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, AmoOptions options) throws IOException {
@@ -237,6 +238,7 @@ public class Amo implements Serializable {
    *
    * @param options Pipeline options
    * @return String
+   * @throws IOException IOException
    */
   public static String buildConfigurationTick(AmoOptions options) throws IOException {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
@@ -306,6 +308,7 @@ public class Amo implements Serializable {
    * Entry point for Beam pipeline.
    *
    * @param args Runtime arguments.
+   * @throws IOException IOException
    */
   public static void main(String[] args) throws IOException {
     PipelineOptionsFactory.register(AmoOptions.class);

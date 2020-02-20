@@ -261,7 +261,7 @@ public class AlertConfiguration implements Serializable {
   /**
    * Return a list of registered templates
    *
-   * @return ArrayList<String> registered templates
+   * @return ArrayList{@literal <}String{@literal >} registered templates
    */
   public ArrayList<String> getRegisteredTemplates() {
     return registeredTemplates;

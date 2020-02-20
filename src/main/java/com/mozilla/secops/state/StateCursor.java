@@ -20,6 +20,7 @@ public abstract class StateCursor {
    *
    * @param s Key
    * @return Value
+   * @throws StateException StateException
    */
   public abstract String getObject(String s) throws StateException;
 
@@ -27,6 +28,9 @@ public abstract class StateCursor {
    * Low level state object fetch all operation
    *
    * <p>Most uses should prefer {@link #getAll}.
+   *
+   * @return String[]
+   * @throws StateException StateException
    */
   public abstract String[] getAllObjects() throws StateException;
 
@@ -37,6 +41,7 @@ public abstract class StateCursor {
    *
    * @param s Key
    * @param v Value
+   * @throws StateException StateException
    */
   public abstract void saveObject(String s, String v) throws StateException;
 
@@ -45,6 +50,8 @@ public abstract class StateCursor {
    *
    * <p>For cursors that have an underlying interface implementation that does not support
    * transactions, commit is a noop.
+   *
+   * @throws StateException StateException
    */
   public abstract void commit() throws StateException;
 
@@ -60,7 +67,9 @@ public abstract class StateCursor {
    *
    * @param s State key to fetch state for
    * @param cls Class to deserialize state data into
+   * @param <T> T
    * @return Returns an object containing state data for key, null if not found
+   * @throws StateException StateException
    */
   public <T> T get(String s, Class<T> cls) throws StateException {
     if (!validKey(s)) {
@@ -83,8 +92,10 @@ public abstract class StateCursor {
    * Get all state values of the specified kind (specific to Datastore)
    *
    * @param cls Class to deserialize state data into
+   * @param <T> T
    * @return Returns an array containing the state data for all keys of the kind in {@link
    *     DatastoreStateInterface}, null if none are found.
+   * @throws StateException StateException
    */
   public <T> T[] getAll(Class<T> cls) throws StateException {
     String[] lv = getAllObjects();
@@ -109,6 +120,7 @@ public abstract class StateCursor {
    *
    * @param s State key to store state for
    * @param o Object containing state data to serialize into state storage
+   * @throws StateException StateException
    */
   public void set(String s, Object o) throws StateException {
     if (!validKey(s)) {

@@ -101,6 +101,7 @@ public class InputElement implements Serializable {
    *
    * @param begin Pipeline begin using {@link PBegin}
    * @param project GCP project, set if using RuntimeSecrets
+   * @return PCollection of raw events
    */
   public PCollection<String> expandElementRaw(PBegin begin, String project) {
     PCollectionList<String> list = PCollectionList.<String>empty(begin.getPipeline());
@@ -148,6 +149,7 @@ public class InputElement implements Serializable {
    *
    * @param begin Pipeline begin using {@link PBegin}
    * @param project GCP project, set if using RuntimeSecrets
+   * @return PCollection of Event objects
    */
   public PCollection<Event> expandElement(PBegin begin, String project) {
     if (parserCfg == null) {

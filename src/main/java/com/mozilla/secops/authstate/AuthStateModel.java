@@ -100,6 +100,7 @@ public class AuthStateModel {
      *
      * @param timeDifference Time difference in seconds
      * @param kmDistance Distance between points in KM
+     * @param maxKmPerSExceeded Maximum kilometers per second
      */
     public GeoVelocityResponse(Long timeDifference, Double kmDistance, Boolean maxKmPerSExceeded) {
       this.timeDifference = timeDifference;
@@ -346,7 +347,9 @@ public class AuthStateModel {
    *
    * @param user Subject name to retrieve state for
    * @param s Initialized state cursor for request
+   * @param ps Pruning strategy
    * @return User {@link AuthStateModel} or null if it does not exist
+   * @throws StateException StateException
    */
   public static AuthStateModel get(String user, StateCursor s, PruningStrategy ps)
       throws StateException {
@@ -364,6 +367,8 @@ public class AuthStateModel {
    * <p>Calling set will also commit and close the cursor.
    *
    * @param s Initialized state cursor for request
+   * @param ps Pruning strategy
+   * @throws StateException StateException
    */
   public void set(StateCursor s, PruningStrategy ps) throws StateException {
     ps.pruneState(this);
