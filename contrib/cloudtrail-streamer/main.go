@@ -25,8 +25,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/mozlogrus"
-	"go.mozilla.org/sops"
-	"go.mozilla.org/sops/decrypt"
+	sops "go.mozilla.org/sops/v3"
+	"go.mozilla.org/sops/v3/decrypt"
 )
 
 func init() {
