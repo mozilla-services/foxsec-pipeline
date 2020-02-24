@@ -5,32 +5,36 @@
 
 FROM foxsec-pipeline-base:latest
 
+# Add a set of layers to the image that act as a dependency cache; copy just
+# what is required to resolve the dependencies such that the cache will be
+# invalidated if the dependencies change.
 COPY contrib/go.* /root/project/contrib/
 COPY contrib/auth0pull/go.* /root/project/contrib/auth0pull/
 COPY contrib/cloudtrail-streamer/go.* /root/project/contrib/cloudtrail-streamer/
 COPY contrib/duopull/go.* /root/project/contrib/duopull/
 COPY contrib/slackbot-background/go.* /root/project/contrib/slackbot-background/
 COPY contrib/slackbot-http/go.* /root/project/contrib/slackbot-http/
-
-RUN cd contrib && GO111MODULE=on GOPROXY=https://proxy.golang.org \
-  go get ./... && \
-  go mod download && \
-  (cd auth0pull && go mod download) && \
-  (cd cloudtrail-streamer && go mod download) && \
-  (cd duopull && go mod download) && \
-  (cd slackbot-background && go mod download) && \
-  (cd slackbot-http && go mod download)
+COPY pom.xml /root/project/pom.xml
+RUN mvn -B dependency:resolve dependency:resolve-plugins dependency:go-offline && \
+	cd contrib && GO111MODULE=on GOPROXY=https://proxy.golang.org \
+	go get ./... && \
+	go mod download && \
+	(cd auth0pull && go mod download) && \
+	(cd cloudtrail-streamer && go mod download) && \
+	(cd duopull && go mod download) && \
+	(cd slackbot-background && go mod download) && \
+	(cd slackbot-http && go mod download)
 
 COPY . /root/project
 
-RUN mvn javadoc:javadoc && mvn compile
+RUN mvn -B javadoc:javadoc && mvn -B compile
 
 RUN cd contrib && \
-  (cd auth0pull && go build) && \
-  (cd cloudtrail-streamer && go build) && \
-  (cd duopull && go build) && \
-  (cd slackbot-background && go build) && \
-  (cd slackbot-http && go build)
+	(cd auth0pull && go build) && \
+	(cd cloudtrail-streamer && go build) && \
+	(cd duopull && go build) && \
+	(cd slackbot-background && go build) && \
+	(cd slackbot-http && go build)
 
 RUN mkdir -p /app && cp version.json /app/version.json
 
