@@ -357,9 +357,9 @@ public class Watchlist {
     // Parse severity based on text arg
     if (cmd.getOptionValue("severity").equals("info")) {
       we.setSeverity(Alert.AlertSeverity.INFORMATIONAL);
-    } else if (cmd.getOptionValue("severity").equals("info")) {
+    } else if (cmd.getOptionValue("severity").equals("warn")) {
       we.setSeverity(Alert.AlertSeverity.WARNING);
-    } else if (cmd.getOptionValue("severity").equals("info")) {
+    } else if (cmd.getOptionValue("severity").equals("crit")) {
       we.setSeverity(Alert.AlertSeverity.CRITICAL);
     } else {
       System.out.println("Got unknown severity option: " + cmd.getOptionValue("severity"));
