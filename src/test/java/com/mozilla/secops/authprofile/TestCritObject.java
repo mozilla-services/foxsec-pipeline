@@ -5,15 +5,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertConfiguration;
 import com.mozilla.secops.alert.TemplateManager;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.ParserTest;
+import java.util.Arrays;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
+import org.apache.beam.sdk.testing.TestStream;
 import org.apache.beam.sdk.values.PCollection;
+import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -31,6 +36,9 @@ public class TestCritObject {
     ret.setIgnoreUserRegex(new String[] {"^riker@mozilla.com$"});
     ret.setContactEmail("test@localhost");
     ret.setDocLink("https://localhost");
+    ret.setGenerateConfigurationTicksInterval(1);
+    ret.setGenerateConfigurationTicksMaximum(5L);
+    ret.setUseEventTimestampForAlert(true);
     return ret;
   }
 
@@ -40,16 +48,17 @@ public class TestCritObject {
   public void critObjectTest() throws Exception {
     AuthProfile.AuthProfileOptions options = getTestOptions();
 
-    // Enable configuration tick generation in the pipeline for this test, and use Input
-    options.setInputFile(new String[] {"./target/test-classes/testdata/authprof_buffer4.txt"});
-    options.setGenerateConfigurationTicksInterval(1);
-    options.setGenerateConfigurationTicksMaximum(5L);
-    PCollection<String> input =
-        p.apply(
-            "input",
-            Input.compositeInputAdapter(options, AuthProfile.buildConfigurationTick(options)));
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/authprof_critobj1.txt");
+    String[] eb2 = TestUtil.getTestInputArray("/testdata/authprof_critobj2.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
+            .advanceWatermarkToInfinity();
 
-    PCollection<Alert> res = AuthProfile.processInput(input, options);
+    Input input = TestAuthProfileUtil.wiredInputStream(options, s);
+    PCollection<Alert> res = AuthProfile.processInput(p.apply(input.simplexReadRaw()), options);
 
     PAssert.that(res)
         .satisfies(
@@ -107,7 +116,9 @@ public class TestCritObject {
                 }
               }
               assertEquals(5L, cfgTickCnt);
-              assertEquals(1L, cnt);
+              // We should have 2; 3 alerts would have been generated in total with the second one
+              // being suppressed
+              assertEquals(2L, cnt);
               return null;
             });
 
