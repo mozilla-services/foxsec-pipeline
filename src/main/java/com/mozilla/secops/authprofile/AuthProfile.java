@@ -8,6 +8,7 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertIO;
+import com.mozilla.secops.alert.AlertSuppressor;
 import com.mozilla.secops.authstate.AuthStateModel;
 import com.mozilla.secops.authstate.PruningStrategyEntryAge;
 import com.mozilla.secops.identity.Identity;
@@ -311,13 +312,15 @@ public class AuthProfile implements Serializable {
    * <p>Analyze events to determine if they are related to any objects configured as being critical
    * objects. Where identified, generate critical level alerts.
    */
-  public static class CritObjectAnalyze extends DoFn<Event, Alert> implements DocumentingTransform {
+  public static class CritObjectAnalyze extends DoFn<Event, KV<String, Alert>>
+      implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private final String[] critObjects;
     private final String critNotifyEmail;
     private final String contactEmail;
     private final String docLink;
+    private final boolean useEventTimestampForAlert;
 
     private Logger log;
     private Pattern[] critObjectPat;
@@ -332,6 +335,7 @@ public class AuthProfile implements Serializable {
       critNotifyEmail = options.getCriticalNotificationEmail();
       contactEmail = options.getContactEmail();
       docLink = options.getDocLink();
+      useEventTimestampForAlert = options.getUseEventTimestampForAlert();
     }
 
     public String getTransformDoc() {
@@ -425,8 +429,11 @@ public class AuthProfile implements Serializable {
       a.setSeverity(Alert.AlertSeverity.CRITICAL);
       buildAlertSummary(e, a);
       buildAlertPayload(e, a);
+      if (useEventTimestampForAlert) {
+        a.setTimestamp(e.getTimestamp());
+      }
       addEscalationMetadata(a);
-      c.output(a);
+      c.output(KV.of(e.getNormalized().getSubjectUser(), a));
     }
   }
 
@@ -509,6 +516,7 @@ public class AuthProfile implements Serializable {
     private final String gcpProject;
     private final String contactEmail;
     private final String docLink;
+    private final Boolean useEventTimestampForAlert;
     private CidrUtil cidrGcp;
     private Logger log;
     private State state;
@@ -532,6 +540,7 @@ public class AuthProfile implements Serializable {
       gcpProject = options.getProject();
       contactEmail = options.getContactEmail();
       docLink = options.getDocLink();
+      useEventTimestampForAlert = options.getUseEventTimestampForAlert();
     }
 
     public String getTransformDoc() {
@@ -873,6 +882,9 @@ public class AuthProfile implements Serializable {
           addEscalationMetadata(a, identity, userIdentity, onlyNotify);
         }
         buildAlertSummary(e, a);
+        if (useEventTimestampForAlert) {
+          a.setTimestamp(e.getTimestamp());
+        }
         c.output(a);
       }
     }
@@ -957,6 +969,12 @@ public class AuthProfile implements Serializable {
     String getDocLink();
 
     void setDocLink(String value);
+
+    @Description("When generating an alert, try to use the timestamp from the event for the alert")
+    @Default.Boolean(false)
+    Boolean getUseEventTimestampForAlert();
+
+    void setUseEventTimestampForAlert(Boolean value);
   }
 
   /**
@@ -1118,6 +1136,7 @@ public class AuthProfile implements Serializable {
           alertList.and(
               events
                   .apply("critical object analyze", ParDo.of(new CritObjectAnalyze(options)))
+                  .apply("critical object suppression", ParDo.of(new AlertSuppressor(1800L)))
                   .apply(
                       "critical object analyze rewindow for output", new GlobalTriggers<Alert>(5)));
     }
