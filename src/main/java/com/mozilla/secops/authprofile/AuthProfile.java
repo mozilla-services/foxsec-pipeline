@@ -472,7 +472,9 @@ public class AuthProfile implements Serializable {
       /** Unknown IP, and minFraud or GeoIP resolution failed */
       UNKNOWN_IP_MINFRAUD_GEO_FAILURE("unknown_ip_minfraud_geo_failure"),
       /** Event was GCP internal (GCP address, GCPAUDIT) */
-      GCP_INTERNAL("gcp_internal");
+      GCP_INTERNAL("gcp_internal"),
+      /** Event was TC access from GCP */
+      GCP_TASKCLUSTER("gcp_taskcluster");
 
       private String text;
 
@@ -740,6 +742,20 @@ public class AuthProfile implements Serializable {
           // logic here
           a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
           a.addMetadata(META_ACTION_TYPE, ActionType.GCP_INTERNAL.toString());
+          buildAlertSummary(e, a);
+          buildAlertPayload(e, a);
+          c.output(a);
+          continue;
+        }
+
+        // XXX Temporary AlertIO bypass for TC access from GCP, see
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1618323
+        if ((e.getPayloadType().equals(Payload.PayloadType.TASKCLUSTER))
+            && ((cidrGcp.contains(e.getNormalized().getSourceAddress())
+                || (CidrUtil.resolvedCanonicalHostMatches(
+                    e.getNormalized().getSourceAddress(), ".*\\.googleusercontent\\.com$"))))) {
+          a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
+          a.addMetadata(META_ACTION_TYPE, ActionType.GCP_TASKCLUSTER.toString());
           buildAlertSummary(e, a);
           buildAlertPayload(e, a);
           c.output(a);
