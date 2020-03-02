@@ -331,9 +331,9 @@ public class HTTPRequestToggles {
   }
 
   /**
-   * Set endpoint abuse timing analysis setting
+   * Set endpoint sequence abuse analysis
    *
-   * @param enableEndpointAbuseAnalysis Boolean
+   * @param enableEndpointSequenceAbuseAnalysis Boolean
    */
   @JsonProperty("enable_endpoint_sequence_abuse_analysis")
   public void setEnableEndpointSequenceAbuseAnalysis(Boolean enableEndpointSequenceAbuseAnalysis) {

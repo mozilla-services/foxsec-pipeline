@@ -988,7 +988,7 @@ public class HTTPRequest implements Serializable {
 
     private Logger log;
 
-    private final EndpointSequenceAbuseTimingInfo[] endpointSequences;
+    private final EndpointSequenceAbuseTimingInfo[] endpointPatterns;
     private final String monitoredResource;
     private final Boolean enableIprepdDatastoreWhitelist;
     private final String iprepdDatastoreWhitelistProject;
@@ -1037,7 +1037,7 @@ public class HTTPRequest implements Serializable {
       this.natView = natView;
 
       String[] cfgEndpoints = toggles.getEndpointSequenceAbusePatterns();
-      endpointSequences = new EndpointSequenceAbuseTimingInfo[cfgEndpoints.length];
+      endpointPatterns = new EndpointSequenceAbuseTimingInfo[cfgEndpoints.length];
       for (int i = 0; i < cfgEndpoints.length; i++) {
         String[] parts = cfgEndpoints[i].split(":");
         if (parts.length != 6) {
@@ -1051,22 +1051,22 @@ public class HTTPRequest implements Serializable {
         ninfo.deltaMs = Integer.parseInt(parts[3]);
         ninfo.secondMethod = parts[4];
         ninfo.secondPath = parts[5];
-        endpointSequences[i] = ninfo;
+        endpointPatterns[i] = ninfo;
       }
     }
 
     public String getTransformDoc() {
       String buf = null;
-      for (int i = 0; i < endpointSequences.length; i++) {
+      for (int i = 0; i < endpointPatterns.length; i++) {
         String x =
             String.format(
                 "%d %s %s requests within %d ms of last %s %s request.",
-                endpointSequences[i].threshold,
-                endpointSequences[i].secondMethod,
-                endpointSequences[i].secondPath,
-                endpointSequences[i].deltaMs,
-                endpointSequences[i].firstMethod,
-                endpointSequences[i].firstPath);
+                endpointPatterns[i].threshold,
+                endpointPatterns[i].secondMethod,
+                endpointPatterns[i].secondPath,
+                endpointPatterns[i].deltaMs,
+                endpointPatterns[i].firstMethod,
+                endpointPatterns[i].firstPath);
         if (buf == null) {
           buf = x;
         } else {
@@ -1135,13 +1135,13 @@ public class HTTPRequest implements Serializable {
                               .sorted((e1, e2) -> e1.getTimestamp().compareTo(e2.getTimestamp()))
                               .collect(Collectors.toList());
 
-                      int[] endpointSequenceCounter = new int[endpointSequences.length];
-                      Instant[] lastViolationTimestamp = new Instant[endpointSequences.length];
-                      String[] lastViolationUserAgent = new String[endpointSequences.length];
+                      int[] violationsCounter = new int[endpointPatterns.length];
+                      Instant[] lastViolationTimestamp = new Instant[endpointPatterns.length];
+                      String[] lastViolationUserAgent = new String[endpointPatterns.length];
 
                       // used to track last time we saw the first part of each
                       // request sequence used for timing analysis
-                      Instant[] lastFirstRequest = new Instant[endpointSequences.length];
+                      Instant[] lastFirstRequest = new Instant[endpointPatterns.length];
 
                       // for each path
                       for (Event event : eventList) {
@@ -1168,11 +1168,11 @@ public class HTTPRequest implements Serializable {
                           Instant ts = Instant.parse(event.getTimestamp().toString());
                           if (lastFirstRequest[m] != null) {
                             if (ts.isBefore(
-                                lastFirstRequest[m].plus(endpointSequences[m].deltaMs))) {
+                                lastFirstRequest[m].plus(endpointPatterns[m].deltaMs))) {
                               lastViolationUserAgent[m] =
                                   n.getUserAgent() == null ? "" : n.getUserAgent();
                               lastViolationTimestamp[m] = ts;
-                              endpointSequenceCounter[m]++;
+                              violationsCounter[m]++;
                             }
                           }
                         }
@@ -1183,15 +1183,15 @@ public class HTTPRequest implements Serializable {
                       // the highest count
                       Integer abmaxIndex = null;
                       int count = -1;
-                      for (int i = 0; i < endpointSequences.length; i++) {
-                        if (endpointSequences[i].threshold <= endpointSequenceCounter[i]) {
+                      for (int i = 0; i < endpointPatterns.length; i++) {
+                        if (endpointPatterns[i].threshold <= violationsCounter[i]) {
                           if (abmaxIndex == null) {
                             abmaxIndex = i;
-                            count = endpointSequenceCounter[i];
+                            count = violationsCounter[i];
                           } else {
-                            if (count < endpointSequenceCounter[i]) {
+                            if (count < violationsCounter[i]) {
                               abmaxIndex = i;
-                              count = endpointSequenceCounter[i];
+                              count = violationsCounter[i];
                             }
                           }
                         }
@@ -1204,13 +1204,13 @@ public class HTTPRequest implements Serializable {
 
                       log.info("{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
 
-                      String compareFirstMethod = endpointSequences[abmaxIndex].firstMethod;
-                      String compareFirstPath = endpointSequences[abmaxIndex].firstPath;
+                      String compareFirstMethod = endpointPatterns[abmaxIndex].firstMethod;
+                      String compareFirstPath = endpointPatterns[abmaxIndex].firstPath;
 
-                      Integer compareDelta = endpointSequences[abmaxIndex].deltaMs;
+                      Integer compareDelta = endpointPatterns[abmaxIndex].deltaMs;
 
-                      String compareSecondMethod = endpointSequences[abmaxIndex].secondMethod;
-                      String compareSecondPath = endpointSequences[abmaxIndex].secondPath;
+                      String compareSecondMethod = endpointPatterns[abmaxIndex].secondMethod;
+                      String compareSecondPath = endpointPatterns[abmaxIndex].secondPath;
 
                       Alert a = new Alert();
                       a.setTimestamp(lastViolationTimestamp[abmaxIndex].toDateTime());
@@ -1243,7 +1243,7 @@ public class HTTPRequest implements Serializable {
                         IprepdIO.addMetadataSuppressRecovery(suppressRecovery, a);
                       }
 
-                      a.addMetadata("endpoint_pattern", endpointSequences[abmaxIndex].toString());
+                      a.addMetadata("endpoint_pattern", endpointPatterns[abmaxIndex].toString());
                       a.addMetadata("count", Integer.toString(count));
                       a.addMetadata("useragent", lastViolationUserAgent[abmaxIndex]);
                       a.setNotifyMergeKey(
@@ -1264,9 +1264,9 @@ public class HTTPRequest implements Serializable {
      */
     private ArrayList<Integer> findFirstHalfPatternMatches(String method, String path) {
       ArrayList<Integer> indices = new ArrayList<Integer>();
-      for (int i = 0; i < endpointSequences.length; i++) {
-        if ((endpointSequences[i].firstMethod.equals(method))
-            && (endpointSequences[i].firstPath.equals(path))) {
+      for (int i = 0; i < endpointPatterns.length; i++) {
+        if ((endpointPatterns[i].firstMethod.equals(method))
+            && (endpointPatterns[i].firstPath.equals(path))) {
           indices.add(i);
         }
       }
@@ -1279,9 +1279,9 @@ public class HTTPRequest implements Serializable {
      */
     private ArrayList<Integer> findSecondHalfPatternMatches(String method, String path) {
       ArrayList<Integer> indices = new ArrayList<Integer>();
-      for (int i = 0; i < endpointSequences.length; i++) {
-        if ((endpointSequences[i].secondMethod.equals(method))
-            && (endpointSequences[i].secondPath.equals(path))) {
+      for (int i = 0; i < endpointPatterns.length; i++) {
+        if ((endpointPatterns[i].secondMethod.equals(method))
+            && (endpointPatterns[i].secondPath.equals(path))) {
           indices.add(i);
         }
       }
