@@ -1088,174 +1088,179 @@ public class HTTPRequest implements Serializable {
           .apply(
               "filter events and key by ip",
               ParDo.of(
-                      new DoFn<Event, KV<String, Event>>() {
-                        private static final long serialVersionUID = 1L;
-
-                        @ProcessElement
-                        public void processElement(ProcessContext c, BoundedWindow w) {
-                          Event event = c.element();
-                          Normalized n = event.getNormalized();
-                          String sourceAddress = n.getSourceAddress();
-                          String method = n.getRequestMethod();
-                          String path = n.getUrlRequestPath();
-                          if (sourceAddress == null || method == null || path == null) {
-                            return;
-                          }
-                          Map<String, Boolean> nv = c.sideInput(natView);
-                          Boolean isNat = nv.get(sourceAddress);
-                          if (isNat != null && isNat) {
-                            log.info(
-                                "{}: detectnat: skipping result emission for {}",
-                                w.toString(),
-                                sourceAddress);
-                            return;
-                          }
-                          // only output events if they belong to one of our sequences
-                          if (belongsToSequence(method, path)) {
-                            c.output(KV.of(sourceAddress, event));
-                          }
-                        }
-                      })
-                  .withSideInputs(natView))
-          .apply(GroupByKey.<String, Event>create())
-          .apply(
-              "analyze per-client",
-              ParDo.of(
-                  new DoFn<KV<String, Iterable<Event>>, Alert>() {
+                  new DoFn<Event, KV<String, Event>>() {
                     private static final long serialVersionUID = 1L;
 
                     @ProcessElement
                     public void processElement(ProcessContext c, BoundedWindow w) {
-                      String remoteAddress = c.element().getKey();
-                      Iterable<Event> events = c.element().getValue();
-
-                      // sort events by timestamp
-                      List<Event> eventList =
-                          StreamSupport.stream(events.spliterator(), false)
-                              .sorted((e1, e2) -> e1.getTimestamp().compareTo(e2.getTimestamp()))
-                              .collect(Collectors.toList());
-
-                      int[] violationsCounter = new int[endpointPatterns.length];
-                      Instant[] lastViolationTimestamp = new Instant[endpointPatterns.length];
-                      String[] lastViolationUserAgent = new String[endpointPatterns.length];
-
-                      // used to track last time we saw the first part of each
-                      // request sequence used for timing analysis
-                      Instant[] lastFirstRequest = new Instant[endpointPatterns.length];
-
-                      // for each path
-                      for (Event event : eventList) {
-                        Normalized n = event.getNormalized();
-
-                        // check if its a first item in an endpoint sequence
-                        ArrayList<Integer> indices =
-                            findFirstHalfPatternMatches(
-                                n.getRequestMethod(), n.getUrlRequestPath());
-
-                        // for any sequence its a part of update the latest timestamp for it
-                        for (Integer m : indices) {
-                          lastFirstRequest[m] = Instant.parse(event.getTimestamp().toString());
-                        }
-
-                        // check if its a second item in an endpoint sequence
-                        ArrayList<Integer> secondIndices =
-                            findSecondHalfPatternMatches(
-                                n.getRequestMethod(), n.getUrlRequestPath());
-
-                        // for any sequence its the second part of, check the delta and increase
-                        // count if it is
-                        for (Integer m : secondIndices) {
-                          Instant ts = Instant.parse(event.getTimestamp().toString());
-                          if (lastFirstRequest[m] != null) {
-                            if (ts.isBefore(
-                                lastFirstRequest[m].plus(endpointPatterns[m].deltaMs))) {
-                              lastViolationUserAgent[m] =
-                                  n.getUserAgent() == null ? "" : n.getUserAgent();
-                              lastViolationTimestamp[m] = ts;
-                              violationsCounter[m]++;
-                            }
-                          }
-                        }
-                      }
-
-                      // identify if any monitored endpoints have
-                      // exceeded the threshold and use the one with
-                      // the highest count
-                      Integer abmaxIndex = null;
-                      int count = -1;
-                      for (int i = 0; i < endpointPatterns.length; i++) {
-                        if (endpointPatterns[i].threshold <= violationsCounter[i]) {
-                          if (abmaxIndex == null) {
-                            abmaxIndex = i;
-                            count = violationsCounter[i];
-                          } else {
-                            if (count < violationsCounter[i]) {
-                              abmaxIndex = i;
-                              count = violationsCounter[i];
-                            }
-                          }
-                        }
-                      }
-
-                      if (abmaxIndex == null) {
-                        // No requests exceeded threshold
+                      Event event = c.element();
+                      Normalized n = event.getNormalized();
+                      String sourceAddress = n.getSourceAddress();
+                      String method = n.getRequestMethod();
+                      String path = n.getUrlRequestPath();
+                      if (sourceAddress == null || method == null || path == null) {
                         return;
                       }
-
-                      log.info("{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
-
-                      String compareFirstMethod = endpointPatterns[abmaxIndex].firstMethod;
-                      String compareFirstPath = endpointPatterns[abmaxIndex].firstPath;
-
-                      Integer compareDelta = endpointPatterns[abmaxIndex].deltaMs;
-
-                      String compareSecondMethod = endpointPatterns[abmaxIndex].secondMethod;
-                      String compareSecondPath = endpointPatterns[abmaxIndex].secondPath;
-
-                      Alert a = new Alert();
-                      a.setTimestamp(lastViolationTimestamp[abmaxIndex].toDateTime());
-                      a.setSummary(
-                          String.format(
-                              "%s httprequest endpoint_sequence_abuse %s %s:%s:%d:%s:%s %d",
-                              monitoredResource,
-                              remoteAddress,
-                              compareFirstMethod,
-                              compareFirstPath,
-                              compareDelta,
-                              compareSecondMethod,
-                              compareSecondPath,
-                              count));
-                      a.setCategory("httprequest");
-                      a.addMetadata("category", "endpoint_sequence_abuse");
-                      a.addMetadata("sourceaddress", remoteAddress);
-
-                      try {
-                        if (enableIprepdDatastoreWhitelist) {
-                          IprepdIO.addMetadataIfIpWhitelisted(
-                              remoteAddress, a, iprepdDatastoreWhitelistProject);
-                        }
-                      } catch (IOException exc) {
-                        log.error("error checking whitelist: {}", exc.getMessage());
-                        return;
+                      // only output events if they belong to one of our sequences
+                      if (belongsToSequence(method, path)) {
+                        c.output(KV.of(sourceAddress, event));
                       }
-
-                      if (suppressRecovery != null) {
-                        IprepdIO.addMetadataSuppressRecovery(suppressRecovery, a);
-                      }
-
-                      a.addMetadata("endpoint_pattern", endpointPatterns[abmaxIndex].toString());
-                      a.addMetadata("count", Integer.toString(count));
-                      a.addMetadata("useragent", lastViolationUserAgent[abmaxIndex]);
-                      a.setNotifyMergeKey(
-                          String.format("%s endpoint_sequence_abuse", monitoredResource));
-                      a.addMetadata(
-                          "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
-                      if (!a.hasCorrectFields()) {
-                        throw new IllegalArgumentException("alert has invalid field configuration");
-                      }
-                      c.output(a);
                     }
-                  }));
+                  }))
+          .apply(GroupByKey.<String, Event>create())
+          .apply(
+              "analyze per-client",
+              ParDo.of(
+                      new DoFn<KV<String, Iterable<Event>>, Alert>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @ProcessElement
+                        public void processElement(ProcessContext c, BoundedWindow w) {
+                          String remoteAddress = c.element().getKey();
+                          Iterable<Event> events = c.element().getValue();
+
+                          // sort events by timestamp
+                          List<Event> eventList =
+                              StreamSupport.stream(events.spliterator(), false)
+                                  .sorted(
+                                      (e1, e2) -> e1.getTimestamp().compareTo(e2.getTimestamp()))
+                                  .collect(Collectors.toList());
+
+                          int[] violationsCounter = new int[endpointPatterns.length];
+                          Instant[] lastViolationTimestamp = new Instant[endpointPatterns.length];
+                          String[] lastViolationUserAgent = new String[endpointPatterns.length];
+
+                          // used to track last time we saw the first part of each
+                          // request sequence used for timing analysis
+                          Instant[] lastFirstRequest = new Instant[endpointPatterns.length];
+
+                          // for each path
+                          for (Event event : eventList) {
+                            Normalized n = event.getNormalized();
+
+                            // check if its a first item in an endpoint sequence
+                            ArrayList<Integer> indices =
+                                findFirstHalfPatternMatches(
+                                    n.getRequestMethod(), n.getUrlRequestPath());
+
+                            // for any sequence its a part of update the latest timestamp for it
+                            for (Integer m : indices) {
+                              lastFirstRequest[m] = Instant.parse(event.getTimestamp().toString());
+                            }
+
+                            // check if its a second item in an endpoint sequence
+                            ArrayList<Integer> secondIndices =
+                                findSecondHalfPatternMatches(
+                                    n.getRequestMethod(), n.getUrlRequestPath());
+
+                            // for any sequence its the second part of, check the delta and increase
+                            // count if it is
+                            for (Integer m : secondIndices) {
+                              Instant ts = Instant.parse(event.getTimestamp().toString());
+                              if (lastFirstRequest[m] != null) {
+                                if (ts.isBefore(
+                                    lastFirstRequest[m].plus(endpointPatterns[m].deltaMs))) {
+                                  lastViolationUserAgent[m] =
+                                      n.getUserAgent() == null ? "" : n.getUserAgent();
+                                  lastViolationTimestamp[m] = ts;
+                                  violationsCounter[m]++;
+                                }
+                              }
+                            }
+                          }
+
+                          // identify if any monitored endpoints have
+                          // exceeded the threshold and use the one with
+                          // the highest count
+                          Integer abmaxIndex = null;
+                          int count = -1;
+                          for (int i = 0; i < endpointPatterns.length; i++) {
+                            if (endpointPatterns[i].threshold <= violationsCounter[i]) {
+                              if (abmaxIndex == null) {
+                                abmaxIndex = i;
+                                count = violationsCounter[i];
+                              } else {
+                                if (count < violationsCounter[i]) {
+                                  abmaxIndex = i;
+                                  count = violationsCounter[i];
+                                }
+                              }
+                            }
+                          }
+
+                          if (abmaxIndex == null) {
+                            // No requests exceeded threshold
+                            return;
+                          }
+
+                          Map<String, Boolean> nv = c.sideInput(natView);
+                          Boolean isNat = nv.get(remoteAddress);
+                          if (isNat != null && isNat) {
+                            log.info(
+                                "{}: detectnat: skipping result emission for {}",
+                                w.toString(),
+                                remoteAddress);
+                            return;
+                          }
+
+                          log.info(
+                              "{}: emitting alert for {} {}", w.toString(), remoteAddress, count);
+
+                          String compareFirstMethod = endpointPatterns[abmaxIndex].firstMethod;
+                          String compareFirstPath = endpointPatterns[abmaxIndex].firstPath;
+
+                          Integer compareDelta = endpointPatterns[abmaxIndex].deltaMs;
+
+                          String compareSecondMethod = endpointPatterns[abmaxIndex].secondMethod;
+                          String compareSecondPath = endpointPatterns[abmaxIndex].secondPath;
+
+                          Alert a = new Alert();
+                          a.setTimestamp(lastViolationTimestamp[abmaxIndex].toDateTime());
+                          a.setSummary(
+                              String.format(
+                                  "%s httprequest endpoint_sequence_abuse %s %s:%s:%d:%s:%s %d",
+                                  monitoredResource,
+                                  remoteAddress,
+                                  compareFirstMethod,
+                                  compareFirstPath,
+                                  compareDelta,
+                                  compareSecondMethod,
+                                  compareSecondPath,
+                                  count));
+                          a.setCategory("httprequest");
+                          a.addMetadata("category", "endpoint_sequence_abuse");
+                          a.addMetadata("sourceaddress", remoteAddress);
+
+                          try {
+                            if (enableIprepdDatastoreWhitelist) {
+                              IprepdIO.addMetadataIfIpWhitelisted(
+                                  remoteAddress, a, iprepdDatastoreWhitelistProject);
+                            }
+                          } catch (IOException exc) {
+                            log.error("error checking whitelist: {}", exc.getMessage());
+                            return;
+                          }
+
+                          if (suppressRecovery != null) {
+                            IprepdIO.addMetadataSuppressRecovery(suppressRecovery, a);
+                          }
+
+                          a.addMetadata(
+                              "endpoint_pattern", endpointPatterns[abmaxIndex].toString());
+                          a.addMetadata("count", Integer.toString(count));
+                          a.addMetadata("useragent", lastViolationUserAgent[abmaxIndex]);
+                          a.setNotifyMergeKey(
+                              String.format("%s endpoint_sequence_abuse", monitoredResource));
+                          a.addMetadata(
+                              "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                          if (!a.hasCorrectFields()) {
+                            throw new IllegalArgumentException(
+                                "alert has invalid field configuration");
+                          }
+                          c.output(a);
+                        }
+                      })
+                  .withSideInputs(natView));
     }
 
     /**
