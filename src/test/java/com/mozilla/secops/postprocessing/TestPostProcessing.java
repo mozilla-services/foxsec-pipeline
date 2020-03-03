@@ -9,6 +9,11 @@ import com.mozilla.secops.input.Input;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateCursor;
+import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.metrics.DistributionResult;
+import org.apache.beam.sdk.metrics.MetricNameFilter;
+import org.apache.beam.sdk.metrics.MetricResult;
+import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -149,6 +154,24 @@ public class TestPostProcessing {
               return null;
             });
 
-    p.run().waitUntilFinish();
+    PipelineResult pResult = p.run();
+    pResult.waitUntilFinish();
+
+    Iterable<MetricResult<DistributionResult>> alertTimes =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            PostProcessing.METRICS_NAMESPACE,
+                            PostProcessing.WATCHLIST_ALERT_PROCESSING_TIME_METRIC))
+                    .build())
+            .getDistributions();
+
+    for (MetricResult<DistributionResult> x : alertTimes) {
+      DistributionResult dr = x.getCommitted();
+      assertEquals(3, dr.getCount());
+    }
   }
 }

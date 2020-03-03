@@ -9,6 +9,7 @@ import com.google.cloud.datastore.KeyFactory;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery;
+import com.google.cloud.http.HttpTransportOptions;
 
 /** Utilize GCP Datastore for centralized state storage */
 public class DatastoreStateInterface implements StateInterface {
@@ -17,6 +18,7 @@ public class DatastoreStateInterface implements StateInterface {
   private final String namespace;
   private KeyFactory keyFactory;
   private String project;
+  private HttpTransportOptions transportOpts;
 
   public StateCursor newCursor() throws StateException {
     try {
@@ -37,11 +39,17 @@ public class DatastoreStateInterface implements StateInterface {
       b.setHost(emulatorHost);
       b.setProjectId(emulatorProject);
       b.setCredentials(NoCredentials.getInstance());
+      if (transportOpts != null) {
+        b.setTransportOptions(transportOpts);
+      }
       datastore = b.build().getService();
     } else {
       DatastoreOptions.Builder b = DatastoreOptions.getDefaultInstance().toBuilder();
       if (project != null) {
         b.setProjectId(project);
+      }
+      if (transportOpts != null) {
+        b.setTransportOptions(transportOpts);
       }
       datastore = b.build().getService();
     }
@@ -70,6 +78,19 @@ public class DatastoreStateInterface implements StateInterface {
   }
 
   /**
+   * Initialize a Datastore state interface with transport options
+   *
+   * @param kind kind value to use for stored objects
+   * @param namespace Datastore namespace
+   * @param opts HttpTransportOptions for datastore client
+   */
+  public DatastoreStateInterface(String kind, String namespace, HttpTransportOptions opts) {
+    this.kind = kind;
+    this.namespace = namespace;
+    this.transportOpts = opts;
+  }
+
+  /**
    * Initialize a Datastore state interface using datastore in another project
    *
    * @param kind kind value to use for stored objects
@@ -78,6 +99,21 @@ public class DatastoreStateInterface implements StateInterface {
    */
   public DatastoreStateInterface(String kind, String namespace, String project) {
     this(kind, namespace);
+    this.project = project;
+  }
+
+  /**
+   * Initialize a Datastore state interface using datastore in another project with transport
+   * options
+   *
+   * @param kind kind value to use for stored objects
+   * @param namespace Datastore namespace
+   * @param project Project identifier
+   * @param opts HttpTransportOptions for datastore client
+   */
+  public DatastoreStateInterface(
+      String kind, String namespace, String project, HttpTransportOptions opts) {
+    this(kind, namespace, opts);
     this.project = project;
   }
 }
