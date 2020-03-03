@@ -18,6 +18,7 @@ public class HTTPRequestToggles {
   private Boolean enableThresholdAnalysis;
   private Boolean enableErrorRateAnalysis;
   private Boolean enableEndpointAbuseAnalysis;
+  private Boolean enableEndpointSequenceAbuseAnalysis;
   private Boolean enableHardLimitAnalysis;
   private Boolean enableUserAgentBlacklistAnalysis;
   private Boolean enableNatDetection;
@@ -48,6 +49,10 @@ public class HTTPRequestToggles {
   // Source correlator settings
   private Integer sourceCorrelatorMinimumAddresses;
   private Double sourceCorrelatorAlertPercentage;
+
+  // Endpoint Abuse timing settings
+  private String[] endpointSequenceAbusePatterns;
+  private Integer endpointSequenceAbuseTimingSuppressRecovery;
 
   // Filtering settings
   private String[] filterRequestPath;
@@ -323,6 +328,63 @@ public class HTTPRequestToggles {
    */
   public Long getSessionGapDurationMinutes() {
     return sessionGapDurationMinutes;
+  }
+
+  /**
+   * Set endpoint sequence abuse analysis
+   *
+   * @param enableEndpointSequenceAbuseAnalysis Boolean
+   */
+  @JsonProperty("enable_endpoint_sequence_abuse_analysis")
+  public void setEnableEndpointSequenceAbuseAnalysis(Boolean enableEndpointSequenceAbuseAnalysis) {
+    this.enableEndpointSequenceAbuseAnalysis = enableEndpointSequenceAbuseAnalysis;
+  }
+
+  /**
+   * Get endpoint abuse analysis setting
+   *
+   * @return Boolean
+   */
+  public Boolean getEnableEndpointSequenceAbuseAnalysis() {
+    return enableEndpointSequenceAbuseAnalysis;
+  }
+
+  /**
+   * Set endpoint abuse path
+   *
+   * @param value String[]
+   */
+  @JsonProperty("endpoint_sequence_abuse_patterns")
+  public void setEndpointSequenceAbusePattern(String[] value) {
+    endpointSequenceAbusePatterns = value;
+  }
+
+  /**
+   * Get endpoint abuse path
+   *
+   * @return String[]
+   */
+  public String[] getEndpointSequenceAbusePatterns() {
+    return endpointSequenceAbusePatterns;
+  }
+
+  /**
+   * Set endpoint abuse timing suppress recovery
+   *
+   * @param value Integer
+   */
+  @JsonProperty("endpoint_sequence_abuse_suppress_recovery")
+  public void setEndpointSequenceAbuseSuppressRecovery(Integer value) {
+    endpointSequenceAbuseTimingSuppressRecovery = value;
+  }
+
+  /**
+   * Get endpoint abuse timing suppress recovery
+   *
+   * @return Integer
+   */
+  public Integer getEndpointSequenceAbuseSuppressRecovery() {
+    return endpointSequenceAbuseTimingSuppressRecovery;
   }
 
   /**
@@ -653,6 +715,7 @@ public class HTTPRequestToggles {
     ret.setEnableThresholdAnalysis(o.getEnableThresholdAnalysis());
     ret.setEnableErrorRateAnalysis(o.getEnableErrorRateAnalysis());
     ret.setEnableEndpointAbuseAnalysis(o.getEnableEndpointAbuseAnalysis());
+    ret.setEnableEndpointSequenceAbuseAnalysis(o.getEnableEndpointSequenceAbuseAnalysis());
     ret.setEnableHardLimitAnalysis(o.getEnableHardLimitAnalysis());
     ret.setEnableUserAgentBlacklistAnalysis(o.getEnableUserAgentBlacklistAnalysis());
     ret.setEnableNatDetection(o.getNatDetection());
@@ -674,6 +737,9 @@ public class HTTPRequestToggles {
     ret.setEndpointAbuseSuppressRecovery(o.getEndpointAbuseSuppressRecovery());
     ret.setSessionGapDurationMinutes(o.getSessionGapDurationMinutes());
 
+    ret.setEndpointSequenceAbuseSuppressRecovery(o.getEndpointSequenceAbuseSuppressRecovery());
+    ret.setEndpointSequenceAbusePattern(o.getEndpointSequenceAbusePatterns());
+
     ret.setFilterRequestPath(o.getFilterRequestPath());
     ret.setIncludeUrlHostRegex(o.getIncludeUrlHostRegex());
     ret.setCidrExclusionList(o.getCidrExclusionList());
@@ -692,6 +758,7 @@ public class HTTPRequestToggles {
     enableThresholdAnalysis = false;
     enableErrorRateAnalysis = false;
     enableEndpointAbuseAnalysis = false;
+    enableEndpointSequenceAbuseAnalysis = false;
     enableHardLimitAnalysis = false;
     enableUserAgentBlacklistAnalysis = false;
     enableNatDetection = false;
