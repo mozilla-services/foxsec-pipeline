@@ -91,7 +91,7 @@ public class BmoAudit extends SourcePayloadBase implements Serializable {
     if ((type == null) || (!(type.equals("audit")))) {
       return false;
     }
-    Map<String, String> fields = Parser.convertJsonToMap(input);
+    Map<String, String> fields = Parser.convertJsonToMap(input, state.getObjectMapper());
     if (fields == null) {
       return false;
     }
@@ -125,7 +125,7 @@ public class BmoAudit extends SourcePayloadBase implements Serializable {
    * @param state State
    */
   public BmoAudit(String input, Event e, ParserState state) {
-    Map<String, String> fields = Parser.convertJsonToMap(input);
+    Map<String, String> fields = Parser.convertJsonToMap(input, state.getObjectMapper());
     if (fields == null) {
       return;
     }

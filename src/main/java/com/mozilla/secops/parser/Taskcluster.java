@@ -17,7 +17,7 @@ public class Taskcluster extends SourcePayloadBase implements Serializable {
 
   @Override
   public Boolean matcher(String input, ParserState state) {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = state.getObjectMapper();
     com.mozilla.secops.parser.models.taskcluster.Taskcluster d;
     try {
       d = mapper.readValue(input, com.mozilla.secops.parser.models.taskcluster.Taskcluster.class);
@@ -148,7 +148,7 @@ public class Taskcluster extends SourcePayloadBase implements Serializable {
     emailPattern =
         Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = state.getObjectMapper();
     try {
       data =
           mapper.readValue(input, com.mozilla.secops.parser.models.taskcluster.Taskcluster.class);

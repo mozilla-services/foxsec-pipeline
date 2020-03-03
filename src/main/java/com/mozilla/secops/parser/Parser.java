@@ -197,7 +197,19 @@ public class Parser {
    * @return HashMap
    */
   public static <T, U> HashMap<T, U> convertJsonToMap(String input) {
-    ObjectMapper mapper = new ObjectMapper();
+    return convertJsonToMap(input, new ObjectMapper());
+  }
+
+  /**
+   * Utility function to convert a JSON string into the desired map type
+   *
+   * @param input Input JSON
+   * @param mapper ObjectMapper
+   * @param <T> T
+   * @param <U> U
+   * @return HashMap
+   */
+  public static <T, U> HashMap<T, U> convertJsonToMap(String input, ObjectMapper mapper) {
     HashMap<T, U> fields = new HashMap<T, U>();
     try {
       fields = mapper.readValue(input, new TypeReference<Map<T, U>>() {});

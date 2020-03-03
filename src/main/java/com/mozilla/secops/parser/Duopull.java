@@ -23,7 +23,7 @@ public class Duopull extends SourcePayloadBase implements Serializable {
 
   @Override
   public Boolean matcher(String input, ParserState state) {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = state.getObjectMapper();
     com.mozilla.secops.parser.models.duopull.Duopull d;
     try {
       d = mapper.readValue(input, com.mozilla.secops.parser.models.duopull.Duopull.class);
@@ -73,7 +73,7 @@ public class Duopull extends SourcePayloadBase implements Serializable {
    * @param state State
    */
   public Duopull(String input, Event e, ParserState state) {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = state.getObjectMapper();
     try {
       duoPullData = mapper.readValue(input, com.mozilla.secops.parser.models.duopull.Duopull.class);
       if (duoPullData.getEventTimestamp() != null) {

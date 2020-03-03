@@ -409,6 +409,17 @@ public class Alert implements Serializable {
     mapper.registerModule(new JodaModule());
     mapper.configure(
         com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    return fromJSON(input, mapper);
+  }
+
+  /**
+   * Return {@link Alert} from JSON string
+   *
+   * @param input Alert in JSON
+   * @param mapper ObjectMapper
+   * @return {@link Alert} object or null if deserialization fails.
+   */
+  public static Alert fromJSON(String input, ObjectMapper mapper) {
     try {
       return mapper.readValue(input, Alert.class);
     } catch (IOException exc) {
