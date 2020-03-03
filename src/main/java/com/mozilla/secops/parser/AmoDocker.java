@@ -167,7 +167,7 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
    * @param state State
    */
   public AmoDocker(String input, Event e, ParserState state) {
-    Map<String, String> fields = Parser.convertJsonToMap(input);
+    Map<String, String> fields = Parser.convertJsonToMap(input, state.getObjectMapper());
     if (fields == null) {
       return;
     }

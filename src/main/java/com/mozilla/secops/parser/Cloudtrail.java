@@ -27,7 +27,7 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
   @Override
   public Boolean matcher(String input, ParserState state) {
     try {
-      if (parseInput(input) != null) {
+      if (parseInput(input, state) != null) {
         return true;
       }
     } catch (IOException exc) {
@@ -56,7 +56,7 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
   public Cloudtrail(String input, Event e, ParserState state) {
     mapper = getObjectMapper();
     try {
-      event = parseInput(input);
+      event = parseInput(input, state);
       if (event.getEventTime() != null) {
         DateTime t = Parser.parseISO8601(event.getEventTime());
         if (t != null) {
@@ -96,10 +96,10 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
     }
   }
 
-  private CloudtrailEvent parseInput(String input) throws IOException {
+  private CloudtrailEvent parseInput(String input, ParserState state) throws IOException {
     JsonParser jp = null;
     try {
-      JacksonFactory jfmatcher = new JacksonFactory();
+      JacksonFactory jfmatcher = state.getGoogleJacksonFactory();
       jp = jfmatcher.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
       Map<String, Object> m = entry.getJsonPayload();

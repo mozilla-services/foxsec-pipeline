@@ -126,7 +126,7 @@ public class IPrepdLog extends SourcePayloadBase implements Serializable {
    * @param s State
    */
   public IPrepdLog(String input, Event e, ParserState s) {
-    Map<String, Object> fields = Parser.convertJsonToMap(input);
+    Map<String, Object> fields = Parser.convertJsonToMap(input, s.getObjectMapper());
     if (fields == null) {
       return;
     }
