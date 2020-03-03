@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.cloud.http.HttpTransportOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
@@ -23,10 +24,15 @@ import org.slf4j.LoggerFactory;
 
 /** {@link Watchlist} is used by pipelines to query watchlist entries stored within Datastore. */
 public class Watchlist {
-
   private Logger log;
   private State ipState;
   private State emailState;
+
+  /** Datastore connection timeout in ms */
+  private final int DATASTORE_CONNECT_TIMEOUT = 5000;
+
+  /** Datastore read timeout in ms */
+  private final int DATASTORE_READ_TIMEOUT = 5000;
 
   /** Namespace for watchlist entries in Datastore */
   public static final String watchlistDatastoreNamespace = "watchlist";
@@ -182,10 +188,18 @@ public class Watchlist {
    */
   public Watchlist() throws StateException {
     log = LoggerFactory.getLogger(Watchlist.class);
-    ipState = new State(new DatastoreStateInterface(watchlistIpKind, watchlistDatastoreNamespace));
+    HttpTransportOptions opts =
+        HttpTransportOptions.newBuilder()
+            .setConnectTimeout(DATASTORE_CONNECT_TIMEOUT)
+            .setReadTimeout(DATASTORE_READ_TIMEOUT)
+            .build();
+
+    ipState =
+        new State(new DatastoreStateInterface(watchlistIpKind, watchlistDatastoreNamespace, opts));
     ipState.initialize();
     emailState =
-        new State(new DatastoreStateInterface(watchlistEmailKind, watchlistDatastoreNamespace));
+        new State(
+            new DatastoreStateInterface(watchlistEmailKind, watchlistDatastoreNamespace, opts));
     emailState.initialize();
   }
 
@@ -199,15 +213,20 @@ public class Watchlist {
    */
   public Watchlist(String datastoreProject) throws StateException {
     log = LoggerFactory.getLogger(Watchlist.class);
+    HttpTransportOptions opts =
+        HttpTransportOptions.newBuilder()
+            .setConnectTimeout(DATASTORE_CONNECT_TIMEOUT)
+            .setReadTimeout(DATASTORE_READ_TIMEOUT)
+            .build();
     ipState =
         new State(
             new DatastoreStateInterface(
-                watchlistIpKind, watchlistDatastoreNamespace, datastoreProject));
+                watchlistIpKind, watchlistDatastoreNamespace, datastoreProject, opts));
     ipState.initialize();
     emailState =
         new State(
             new DatastoreStateInterface(
-                watchlistEmailKind, watchlistDatastoreNamespace, datastoreProject));
+                watchlistEmailKind, watchlistDatastoreNamespace, datastoreProject, opts));
     emailState.initialize();
   }
 
@@ -233,7 +252,7 @@ public class Watchlist {
     try {
       entry = s.get(obj, WatchlistEntry.class);
     } catch (StateException exc) {
-      log.error("Error watchlist entry of type {}: {}", type, exc.getMessage());
+      log.error("Error getting watchlist entry of type {}: {}", type, exc.getMessage());
       return null;
     }
 
