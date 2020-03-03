@@ -141,4 +141,24 @@ public class ParserBenchmark {
       assertNotNull(p.parse(buf));
     }
   }
+
+  @BenchmarkOptions(benchmarkRounds = 20, warmupRounds = 5)
+  @Test
+  public void benchmarkAlert() throws Exception {
+    String buf =
+        "{\"severity\":\"info\",\"id\":\"3ddcbcff-f334-4189-953c-14a34a2cc030\",\"summa"
+            + "ry\":\"test suspicious account creation, 216.160.83.56 3\",\"category\":\"cust"
+            + "oms\",\"timestamp\":\"1970-01-01T00:00:00.000Z\",\"metadata\":[{\"key\":\"noti"
+            + "fy_merge\",\"value\":\"account_creation_abuse\"},{\"key\":\"customs_category\""
+            + ",\"value\":\"account_creation_abuse\"},{\"key\":\"sourceaddress\",\"value\":\""
+            + "216.160.83.56\"},{\"key\":\"count\",\"value\":\"3\"},{\"key\":\"email\",\"valu"
+            + "e\":\"user@mail.com, user.1@mail.com, user.1.@mail.com\"}]}";
+    ParserCfg cfg = new ParserCfg();
+    cfg.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
+    Parser p = new Parser(cfg);
+
+    for (int i = 0; i < 5000; i++) {
+      assertNotNull(p.parse(buf));
+    }
+  }
 }

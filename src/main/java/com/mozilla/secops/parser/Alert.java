@@ -26,7 +26,7 @@ public class Alert extends PayloadBase implements Serializable {
 
   @Override
   public Boolean matcher(String input, ParserState state) {
-    Map<String, Object> fields = Parser.convertJsonToMap(input);
+    Map<String, Object> fields = Parser.convertJsonToMap(input, state.getObjectMapper());
     if (fields == null) {
       return false;
     }
@@ -58,6 +58,6 @@ public class Alert extends PayloadBase implements Serializable {
    * @param state State
    */
   public Alert(String input, Event e, ParserState state) {
-    alert = com.mozilla.secops.alert.Alert.fromJSON(input);
+    alert = com.mozilla.secops.alert.Alert.fromJSON(input, state.getObjectMapper());
   }
 }
