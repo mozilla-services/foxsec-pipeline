@@ -116,7 +116,7 @@ public class CustomsAlert implements Serializable {
         throw new RuntimeException(String.format("unexpected category type %s", a.getCategory()));
       }
     }
-    switch (a.getMetadataValue("customs_category")) {
+    switch (a.getSubcategory()) {
       case "account_creation_abuse":
         return convertAccountCreationAbuse(a);
       case "account_creation_abuse_distributed":
@@ -140,8 +140,8 @@ public class CustomsAlert implements Serializable {
     ret.setConfidence(50);
 
     // Set the heuristic and description fields based on the category metadata.
-    ret.setHeuristic(a.getMetadataValue("customs_category"));
-    String desc = heuristicDescriptions.get(a.getMetadataValue("customs_category"));
+    ret.setHeuristic(a.getSubcategory());
+    String desc = heuristicDescriptions.get(a.getSubcategory());
     if (desc == null) {
       ret.setHeuristicDescription("unknown");
     } else {

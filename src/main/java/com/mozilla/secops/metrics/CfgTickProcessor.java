@@ -13,17 +13,14 @@ public class CfgTickProcessor extends DoFn<Event, Alert> {
   private static final long serialVersionUID = 1L;
 
   private String category;
-  private String subcategory;
 
   /**
    * Initialize new {@link CfgTickProcessor}
    *
    * @param category Category field to set on alert
-   * @param subcategory Metadata category field to set to cfgtick
    */
-  public CfgTickProcessor(String category, String subcategory) {
+  public CfgTickProcessor(String category) {
     this.category = category;
-    this.subcategory = subcategory;
   }
 
   @ProcessElement
@@ -43,8 +40,8 @@ public class CfgTickProcessor extends DoFn<Event, Alert> {
 
     Alert a = new Alert();
     a.setCategory(category);
+    a.setSubcategory("cfgtick");
     a.setSummary("configuration tick");
-    a.addMetadata(subcategory, "cfgtick");
     a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
     for (Map.Entry<String, String> entry : configMap.entrySet()) {
       a.addMetadata(entry.getKey(), entry.getValue());

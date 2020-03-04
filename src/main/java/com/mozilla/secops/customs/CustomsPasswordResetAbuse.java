@@ -98,8 +98,8 @@ public class CustomsPasswordResetAbuse
                     Alert alert = new Alert();
                     alert.setTimestamp(Parser.getLatestTimestamp(events));
                     alert.setCategory("customs");
+                    alert.setSubcategory(Customs.CATEGORY_PASSWORD_RESET_ABUSE);
                     alert.setNotifyMergeKey(Customs.CATEGORY_PASSWORD_RESET_ABUSE);
-                    alert.addMetadata("customs_category", Customs.CATEGORY_PASSWORD_RESET_ABUSE);
                     alert.addMetadata("sourceaddress", addr);
                     alert.addMetadata("count", Integer.toString(cnt));
                     alert.setSummary(

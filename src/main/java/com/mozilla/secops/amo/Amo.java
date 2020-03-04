@@ -128,9 +128,7 @@ public class Amo implements Serializable {
       resultsList =
           resultsList.and(
               parsed
-                  .apply(
-                      "cfgtick processor",
-                      ParDo.of(new CfgTickProcessor("amo-cfgtick", "category")))
+                  .apply("cfgtick processor", ParDo.of(new CfgTickProcessor("amo-cfgtick")))
                   .apply(new GlobalTriggers<Alert>(5)));
     }
 

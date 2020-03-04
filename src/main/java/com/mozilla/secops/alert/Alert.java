@@ -20,6 +20,8 @@ import org.joda.time.DateTimeZone;
 public class Alert implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  public static final String ALERT_SUBCATEGORY_FIELD = "category";
+
   public enum AlertSeverity {
     /** Informational */
     @JsonProperty("info")
@@ -245,12 +247,22 @@ public class Alert implements Serializable {
    *
    * @return Alert metadata
    */
-  @JsonProperty("metadata")
   public ArrayList<AlertMeta> getMetadata() {
     if (metadata.size() == 0) {
       return null;
     }
     return metadata;
+  }
+
+  /**
+   * Set alert metadata
+   *
+   * @param metadata ArrayList
+   */
+  @JsonProperty("metadata")
+  public void setMetadata(ArrayList<AlertMeta> metadata) {
+    this.metadata = metadata;
+    AlertCompat.compatibility(this);
   }
 
   /**
@@ -325,6 +337,31 @@ public class Alert implements Serializable {
   @JsonProperty("category")
   public String getCategory() {
     return category;
+  }
+
+  /**
+   * Get alert subcategory
+   *
+   * @return String, or null if unset
+   */
+  @JsonIgnore
+  public String getSubcategory() {
+    return getMetadataValue(ALERT_SUBCATEGORY_FIELD);
+  }
+
+  /**
+   * Set alert subcategory
+   *
+   * @param subcategory Subcategory string
+   */
+  @JsonIgnore
+  public void setSubcategory(String subcategory) {
+    if (category == null) {
+      throw new IllegalArgumentException("attempt to set subcategory with no category");
+    }
+
+    addMetadata(ALERT_SUBCATEGORY_FIELD, subcategory);
+    AlertCompat.compatibility(this);
   }
 
   /**

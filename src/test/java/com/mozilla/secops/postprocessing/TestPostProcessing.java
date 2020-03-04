@@ -1,6 +1,9 @@
 package com.mozilla.secops.postprocessing;
 
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.mozilla.secops.Watchlist;
@@ -173,5 +176,128 @@ public class TestPostProcessing {
       DistributionResult dr = x.getCommitted();
       assertEquals(3, dr.getCount());
     }
+  }
+
+  @Test
+  public void testAlertSummary() throws Exception {
+    PostProcessing.PostProcessingOptions options = getTestOptions();
+    options.setEnableWatchlistAnalysis(false);
+    options.setEnableAlertSummaryAnalysis(true);
+    options.setAlertSummaryAnalysisThresholds(new String[] {"*:50:50:1"});
+    options.setUseEventTimestamp(true);
+    options.setInputFile(new String[] {"./target/test-classes/testdata/alertsummary_buffer1.txt"});
+    options.setGenerateConfigurationTicksInterval(1);
+    options.setGenerateConfigurationTicksMaximum(5L);
+    PCollection<String> input =
+        p.apply(
+            "input",
+            Input.compositeInputAdapter(options, PostProcessing.buildConfigurationTick(options)));
+
+    PCollection<Alert> res = PostProcessing.processInput(input, options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              int globalSmallIncreaseCount = 0;
+              int globalLargeIncreaseCount = 0;
+              int globalSmallDecreaseCount = 0;
+              int total = 0;
+              for (Alert a : results) {
+                total++;
+                if (a.getSummary().contains("increase, 1 -> 10 using criteria *:50:50:1")) {
+                  assertEquals("*:50:50:1", a.getMetadataValue("threshold"));
+                  assertEquals("2020-01-01T00:00:00.000Z", a.getMetadataValue("start"));
+                  assertEquals("2020-01-01T00:29:59.999Z", a.getMetadataValue("end"));
+                  assertEquals("picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+                  globalSmallIncreaseCount++;
+                } else if (a.getSummary().contains("decrease, 5 -> 1 using criteria *:50:50:1")) {
+                  assertEquals("*:50:50:1", a.getMetadataValue("threshold"));
+                  assertEquals("2020-01-01T00:45:00.000Z", a.getMetadataValue("start"));
+                  assertEquals("2020-01-01T01:14:59.999Z", a.getMetadataValue("end"));
+                  assertEquals("picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+                  globalSmallDecreaseCount++;
+                } else if (a.getSummary().contains("increase, 16 -> 41 using criteria *:50:50:1")) {
+                  assertEquals("*:50:50:1", a.getMetadataValue("threshold"));
+                  assertEquals("2020-01-01T00:00:00.000Z", a.getMetadataValue("start"));
+                  assertEquals("2020-01-01T01:59:59.999Z", a.getMetadataValue("end"));
+                  assertEquals("picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+                  globalLargeIncreaseCount++;
+                } else {
+                  // Otherwise, a configuration tick
+                  assertEquals(
+                      "Analyze alerts across windows to identify threshold violations and anomalies. "
+                          + "Applied criteria, [*:50:50:1].",
+                      a.getMetadataValue("heuristic_AlertSummary"));
+                }
+              }
+              assertEquals(1, globalSmallIncreaseCount);
+              assertEquals(1, globalSmallDecreaseCount);
+              assertEquals(1, globalLargeIncreaseCount);
+              assertEquals(8, total);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testAlertSummaryClassifiers() throws Exception {
+    PostProcessing.PostProcessingOptions options = getTestOptions();
+    options.setEnableWatchlistAnalysis(false);
+    options.setEnableAlertSummaryAnalysis(true);
+    options.setAlertSummaryAnalysisThresholds(
+        new String[] {
+          "testsdec:50:50:1",
+          "authprofile:50:50:1",
+          "*:1:1:5000",
+          "testsdec-authprofile:50:50:1",
+          "testsdec-authprofile-state_analyze:50:50:1"
+        });
+    options.setUseEventTimestamp(true);
+    options.setInputFile(new String[] {"./target/test-classes/testdata/alertsummary_buffer1.txt"});
+    PCollection<String> input =
+        p.apply(
+            "input",
+            Input.compositeInputAdapter(options, PostProcessing.buildConfigurationTick(options)));
+
+    PCollection<Alert> res = PostProcessing.processInput(input, options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              int total = 0;
+              for (Alert a : results) {
+                total++;
+                assertThat(
+                    a.getSummary(),
+                    anyOf(
+                        equalTo(
+                            "detected threshold hit increase, 5 -> 41 using criteria testsdec:50:50:1"),
+                        equalTo(
+                            "detected threshold hit increase, 5 -> 41 using criteria testsdec-authprofile:50:50:1"),
+                        equalTo(
+                            "detected threshold hit increase, 1 -> 10 using criteria authprofile:50:50:1"),
+                        equalTo(
+                            "detected threshold hit decrease, 5 -> 1 using criteria testsdec:50:50:1"),
+                        equalTo(
+                            "detected threshold hit decrease, 5 -> 1 using criteria authprofile:50:50:1"),
+                        equalTo(
+                            "detected threshold hit decrease, 5 -> 1 using criteria testsdec-authprofile:50:50:1"),
+                        equalTo(
+                            "detected threshold hit decrease, 5 -> 1 using criteria testsdec-authprofile-stat"
+                                + "e_analyze:50:50:1"),
+                        equalTo(
+                            "detected threshold hit increase, 5 -> 41 using criteria testsdec-authprofile-stat"
+                                + "e_analyze:50:50:1"),
+                        equalTo(
+                            "detected threshold hit increase, 16 -> 41 using criteria authprofile:50:50:1")));
+                assertEquals("picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+              }
+              assertEquals(9, total);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
   }
 }

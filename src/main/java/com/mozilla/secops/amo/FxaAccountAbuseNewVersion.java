@@ -138,11 +138,10 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                         if (configuredBan) {
                           Alert alert = new Alert();
                           alert.setCategory("amo");
+                          alert.setSubcategory("fxa_account_abuse_new_version_login_banpattern");
                           alert.setNotifyMergeKey("fxa_account_abuse_new_version_login_banpattern");
                           alert.addMetadata("sourceaddress", d.getRemoteIp());
                           alert.addMetadata("email", d.getFxaEmail());
-                          alert.addMetadata(
-                              "amo_category", "fxa_account_abuse_new_version_login_banpattern");
                           alert.setSummary(
                               String.format(
                                   "%s login to amo from suspected fraudulent account, %s from %s",

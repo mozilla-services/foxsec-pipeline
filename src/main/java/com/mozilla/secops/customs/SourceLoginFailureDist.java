@@ -84,10 +84,9 @@ public class SourceLoginFailureDist
                     }
                     Alert alert = new Alert();
                     alert.setCategory("customs");
+                    alert.setSubcategory(Customs.CATEGORY_SOURCE_LOGIN_FAILURE_DIST);
                     alert.setTimestamp(Parser.getLatestTimestamp(events));
                     alert.setNotifyMergeKey(Customs.CATEGORY_SOURCE_LOGIN_FAILURE_DIST);
-                    alert.addMetadata(
-                        "customs_category", Customs.CATEGORY_SOURCE_LOGIN_FAILURE_DIST);
                     // If the email address passes the validator, include it with the alert. If not
                     // we will still generate the alert, but omit including it.
                     if (MiscUtil.validEmail(email)) {

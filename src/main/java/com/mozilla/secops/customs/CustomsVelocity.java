@@ -228,9 +228,9 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                           log.info("{}: creating velocity alert", uid);
                           Alert alert = new Alert();
                           alert.setCategory("customs");
+                          alert.setSubcategory(Customs.CATEGORY_VELOCITY);
                           alert.setTimestamp(e.getTimestamp());
                           alert.setNotifyMergeKey(Customs.CATEGORY_VELOCITY);
-                          alert.addMetadata("customs_category", Customs.CATEGORY_VELOCITY);
                           alert.addMetadata("sourceaddress", remoteAddress);
                           alert.addMetadata("sourceaddress_previous", geoResp.getPreviousSource());
                           alert.addMetadata(

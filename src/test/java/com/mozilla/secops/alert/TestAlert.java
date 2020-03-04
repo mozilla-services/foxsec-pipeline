@@ -104,13 +104,13 @@ public class TestAlert {
         "{\"severity\":\"info\",\"id\":\"8c55dbae-b11f-467c-a2f6-5eafd8244cc1\",\"su"
             + "mmary\":\"test suspicious account creation, 216.160.83.56 3\",\"category\":\""
             + "customs\",\"timestamp\":\"1970-01-01T00:00:00.000Z\",\"metadata\":[{\"key\":"
-            + "\"notify_merge\",\"value\":\"account_creation_abuse\"},{\"key\":\"customs_ca"
+            + "\"notify_merge\",\"value\":\"account_creation_abuse\"},{\"key\":\"ca"
             + "tegory\",\"value\":\"account_creation_abuse\"},{\"key\":\"sourceaddress\",\""
             + "value\":\"216.160.83.56\"},{\"key\":\"count\",\"value\":\"3\"},{\"key\":\"em"
             + "ail\",\"value\":\"user@mail.com, user.1@mail.com, user.1.@mail.com\"}]}";
     Alert a = Alert.fromJSON(buf);
     assertEquals("customs", a.getCategory());
-    assertEquals("account_creation_abuse", a.getMetadataValue("customs_category"));
+    assertEquals("account_creation_abuse", a.getSubcategory());
     assertEquals("user@mail.com, user.1@mail.com, user.1.@mail.com", a.getMetadataValue("email"));
     Violation[] v = Violation.fromAlert(a);
     assertEquals(3, v.length);
@@ -208,14 +208,14 @@ public class TestAlert {
             + " from 216.160.83.56\",\"category\":\"amo\",\"timestamp\":\"2019-06-24T19:04:41"
             + ".507Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"fxa_account_abuse_"
             + "new_version_login\"},{\"key\":\"sourceaddress\",\"value\":\"216.160.83.56\"},{"
-            + "\"key\":\"email\",\"value\":\"kurn@mozilla.com\"},{\"key\":\"amo_category\",\""
+            + "\"key\":\"email\",\"value\":\"kurn@mozilla.com\"},{\"key\":\"category\",\""
             + "value\":\"fxa_account_abuse_new_version_login\"}]}";
 
     Alert a = Alert.fromJSON(buf);
     assertNotNull(a);
 
     assertEquals("amo", a.getCategory());
-    assertEquals("fxa_account_abuse_new_version_login", a.getMetadataValue("amo_category"));
+    assertEquals("fxa_account_abuse_new_version_login", a.getSubcategory());
     assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
     assertEquals(1, Violation.fromAlert(a).length);
     Violation v = Violation.fromAlert(a)[0];
@@ -234,7 +234,7 @@ public class TestAlert {
             + "ary\":\"test suspected malicious addon submission from 216.160.83.63, lwaxana"
             + "@mozilla.com\",\"category\":\"amo\",\"timestamp\":\"2019-07-11T17:47:52.915Z"
             + "\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"amo_abuse_matched_add"
-            + "on\"},{\"key\":\"amo_category\",\"value\":\"amo_abuse_matched_addon\"},{\"ke"
+            + "on\"},{\"key\":\"category\",\"value\":\"amo_abuse_matched_addon\"},{\"ke"
             + "y\":\"sourceaddress\",\"value\":\"216.160.83.63\"},{\"key\":\"email\",\"valu"
             + "e\":\"lwaxana@mozilla.com, lwaxana@mozilla.com, lwaxana@mozilla.com\"},{\"ke"
             + "y\":\"addon_filename\",\"value\":\"00000000000000000000000000000000_test_submi"
@@ -244,7 +244,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("amo", a.getCategory());
-    assertEquals("amo_abuse_matched_addon", a.getMetadataValue("amo_category"));
+    assertEquals("amo_abuse_matched_addon", a.getSubcategory());
     assertEquals("216.160.83.63", a.getMetadataValue("sourceaddress"));
     assertEquals(
         "lwaxana@mozilla.com, lwaxana@mozilla.com, lwaxana@mozilla.com",
@@ -272,7 +272,7 @@ public class TestAlert {
         "{\"severity\":\"info\",\"id\":\"5e6d23b2-59c9-4ffb-8194-7a714919afe7\",\"summ"
             + "ary\":\"test addon abuse multi match, 5\",\"category\":\"amo\",\"timestamp\":"
             + "\"2019-07-11T20:28:29.262Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value"
-            + "\":\"amo_abuse_multi_match\"},{\"key\":\"amo_category\",\"value\":\"amo_abus"
+            + "\":\"amo_abuse_multi_match\"},{\"key\":\"category\",\"value\":\"amo_abus"
             + "e_multi_match\"},{\"key\":\"email\",\"value\":\"ro5@mozilla.com, ro1@mozilla"
             + ".com, ro2@mozilla.com, ro3@mozilla.com, ro4@mozilla.com\"},{\"key\":\"count"
             + "\",\"value\":\"5\"},{\"key\":\"addon_filename\",\"value\":\"x.xpi\"}]}";
@@ -281,7 +281,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("amo", a.getCategory());
-    assertEquals("amo_abuse_multi_match", a.getMetadataValue("amo_category"));
+    assertEquals("amo_abuse_multi_match", a.getSubcategory());
     assertEquals("5", a.getMetadataValue("count"));
     Violation[] v = Violation.fromAlert(a);
     assertEquals(5, v.length);
@@ -295,7 +295,7 @@ public class TestAlert {
         "{\"severity\":\"info\",\"id\":\"169f5030-22db-4849-8421-75462b986a98\",\"summar"
             + "y\":\"test addon abuse multi submit, 10000 11\",\"category\":\"amo\",\"timestam"
             + "p\":\"2019-07-18T20:04:58.299Z\",\"metadata\":[{\"key\":\"notify_merge\",\"valu"
-            + "e\":\"amo_abuse_multi_submit\"},{\"key\":\"amo_category\",\"value\":\"amo_abuse"
+            + "e\":\"amo_abuse_multi_submit\"},{\"key\":\"category\",\"value\":\"amo_abuse"
             + "_multi_submit\"},{\"key\":\"email\",\"value\":\"ro10@mozilla.com, ro9@mozilla.c"
             + "om, ro5@mozilla.com, ro6@mozilla.com, ro1@mozilla.com, ro2@mozilla.com, ro4@moz"
             + "illa.com, lwaxana@mozilla.com, ro7@mozilla.com, ro8@mozilla.com, ro3@mozilla.com"
@@ -305,7 +305,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("amo", a.getCategory());
-    assertEquals("amo_abuse_multi_submit", a.getMetadataValue("amo_category"));
+    assertEquals("amo_abuse_multi_submit", a.getSubcategory());
     assertEquals("11", a.getMetadataValue("count"));
     Violation[] v = Violation.fromAlert(a);
     assertEquals(11, v.length);
@@ -320,7 +320,7 @@ public class TestAlert {
             + "y\":\"test addon abuse multi ip country login, sevenofnine@mozilla.net 2 countr"
             + "ies, 2 source address\",\"category\":\"amo\",\"timestamp\":\"2019-07-18T20:09:0"
             + "2.973Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"amo_abuse_multi_ip"
-            + "_login\"},{\"key\":\"amo_category\",\"value\":\"amo_abuse_multi_ip_login\"},{\""
+            + "_login\"},{\"key\":\"category\",\"value\":\"amo_abuse_multi_ip_login\"},{\""
             + "key\":\"email\",\"value\":\"sevenofnine@mozilla.net\"},{\"key\":\"count\",\"val"
             + "ue\":\"2\"}]}";
 
@@ -328,7 +328,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("amo", a.getCategory());
-    assertEquals("amo_abuse_multi_ip_login", a.getMetadataValue("amo_category"));
+    assertEquals("amo_abuse_multi_ip_login", a.getSubcategory());
     assertEquals("2", a.getMetadataValue("count"));
     Violation[] v = Violation.fromAlert(a);
     assertEquals(1, v.length);
@@ -343,7 +343,7 @@ public class TestAlert {
         "{\"severity\":\"info\",\"id\":\"8e1f668b-4fd5-46f8-ad6f-255d5b9b9729\",\"summar"
             + "y\":\"test possible alias abuse in amo, laforge@mozilla.com has 6 aliases\",\"c"
             + "ategory\":\"amo\",\"timestamp\":\"2019-07-18T20:09:02.987Z\",\"metadata\":[{\"k"
-            + "ey\":\"notify_merge\",\"value\":\"fxa_account_abuse_alias\"},{\"key\":\"amo_cat"
+            + "ey\":\"notify_merge\",\"value\":\"fxa_account_abuse_alias\"},{\"key\":\"cat"
             + "egory\",\"value\":\"fxa_account_abuse_alias\"},{\"key\":\"email\",\"value\":\"l"
             + "aforge@mozilla.com, laforge+test1@mozilla.com, laforge+test2@mozilla.com, lafor"
             + "ge+test3@mozilla.com, laforge+test4@mozilla.com, laforge+test5@mozilla.com, laf"
@@ -352,7 +352,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("amo", a.getCategory());
-    assertEquals("fxa_account_abuse_alias", a.getMetadataValue("amo_category"));
+    assertEquals("fxa_account_abuse_alias", a.getSubcategory());
     assertEquals("6", a.getMetadataValue("count"));
     Violation[] v = Violation.fromAlert(a);
     assertEquals(7, v.length); // Should have one extra violation for the normalized version
@@ -368,15 +368,14 @@ public class TestAlert {
             + " from 216.160.83.56\",\"category\":\"amo\",\"timestamp\":\"2019-06-24T19:04:41"
             + ".507Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"fxa_account_abuse_"
             + "new_version_login_banpattern\"},{\"key\":\"sourceaddress\",\"value\":\"216.160.83.56\"},{"
-            + "\"key\":\"email\",\"value\":\"kurn@mozilla.com\"},{\"key\":\"amo_category\",\""
+            + "\"key\":\"email\",\"value\":\"kurn@mozilla.com\"},{\"key\":\"category\",\""
             + "value\":\"fxa_account_abuse_new_version_login_banpattern\"}]}";
 
     Alert a = Alert.fromJSON(buf);
     assertNotNull(a);
 
     assertEquals("amo", a.getCategory());
-    assertEquals(
-        "fxa_account_abuse_new_version_login_banpattern", a.getMetadataValue("amo_category"));
+    assertEquals("fxa_account_abuse_new_version_login_banpattern", a.getSubcategory());
     assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
     assertEquals(1, Violation.fromAlert(a).length);
     Violation v = Violation.fromAlert(a)[0];
@@ -395,7 +394,7 @@ public class TestAlert {
             + "nt account, 216.160.83.56\",\"category\":\"amo\",\"timestamp\":\"2019-06-24T1"
             + "9:09:20.749Z\",\"metadata\":[{\"key\":\"notify_merge\",\"value\":\"fxa_accoun"
             + "t_abuse_new_version_submission\"},{\"key\":\"sourceaddress\",\"value\":\"216."
-            + "160.83.56\"},{\"key\":\"amo_category\",\"value\":\"fxa_account_abuse_new_vers"
+            + "160.83.56\"},{\"key\":\"category\",\"value\":\"fxa_account_abuse_new_vers"
             + "ion_submission\"},{\"key\":\"addon_id\",\"value\":\"0000001\"},{\"key\":\"add"
             + "on_version\",\"value\":\"1.0.0\"}]}";
 
@@ -403,7 +402,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("amo", a.getCategory());
-    assertEquals("fxa_account_abuse_new_version_submission", a.getMetadataValue("amo_category"));
+    assertEquals("fxa_account_abuse_new_version_submission", a.getSubcategory());
     assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
     assertEquals(1, Violation.fromAlert(a).length);
     Violation v = Violation.fromAlert(a)[0];

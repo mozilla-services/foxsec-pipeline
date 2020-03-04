@@ -40,7 +40,7 @@ public class CustomsNotification extends PTransform<PCollection<String>, PDone> 
   }
 
   private Boolean allowEscalation(Alert a) {
-    switch (a.getMetadataValue("customs_category")) {
+    switch (a.getSubcategory()) {
       case Customs.CATEGORY_ACCOUNT_CREATION_ABUSE:
         return escalateAccountCreation;
       case Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST:

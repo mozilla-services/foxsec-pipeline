@@ -59,5 +59,6 @@ public class Alert extends PayloadBase implements Serializable {
    */
   public Alert(String input, Event e, ParserState state) {
     alert = com.mozilla.secops.alert.Alert.fromJSON(input, state.getObjectMapper());
+    e.setTimestamp(alert.getTimestamp());
   }
 }

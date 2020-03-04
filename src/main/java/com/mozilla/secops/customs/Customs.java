@@ -153,7 +153,7 @@ public class Customs implements Serializable {
 
                       Alert alert = new Alert();
                       alert.setCategory("customs");
-                      alert.addMetadata("customs_category", "summary");
+                      alert.setSubcategory("summary");
                       alert.addMetadata(v.getKey(), v.getValue().toString());
                       alert.setSummary(
                           String.format(
@@ -509,9 +509,7 @@ public class Customs implements Serializable {
       resultsList =
           resultsList.and(
               events
-                  .apply(
-                      "cfgtick processor",
-                      ParDo.of(new CfgTickProcessor("customs-cfgtick", "category")))
+                  .apply("cfgtick processor", ParDo.of(new CfgTickProcessor("customs-cfgtick")))
                   .apply(new GlobalTriggers<Alert>(5)));
     }
 

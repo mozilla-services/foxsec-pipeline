@@ -57,8 +57,8 @@ public class ReportRestriction extends PTransform<PCollection<Event>, PCollectio
 
                     Alert alert = new Alert();
                     alert.setCategory("amo");
+                    alert.setSubcategory("amo_restriction");
                     alert.setNotifyMergeKey("amo_restriction");
-                    alert.addMetadata("amo_category", "amo_restriction");
                     alert.addMetadata("sourceaddress", d.getRemoteIp());
                     alert.addMetadata("restricted_value", d.getRestrictedValue());
                     alert.setSummary(
