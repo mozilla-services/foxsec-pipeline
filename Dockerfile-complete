@@ -16,9 +16,7 @@ COPY contrib/slackbot-background/go.* /root/project/contrib/slackbot-background/
 COPY contrib/slackbot-http/go.* /root/project/contrib/slackbot-http/
 COPY pom.xml /root/project/pom.xml
 RUN mvn -B dependency:resolve dependency:resolve-plugins dependency:go-offline && \
-	cd contrib && GO111MODULE=on GOPROXY=https://proxy.golang.org \
-	go get ./... && \
-	go mod download && \
+	cd contrib && go mod download && \
 	(cd auth0pull && go mod download) && \
 	(cd cloudtrail-streamer && go mod download) && \
 	(cd duopull && go mod download) && \

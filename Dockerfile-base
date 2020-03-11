@@ -17,15 +17,14 @@ RUN apt-get update -y && \
 	apt-get upgrade -y && \
 	apt-get install netcat redis-server build-essential \
 	memcached --no-install-recommends -y && \
-	curl -L https://dl.google.com/go/go1.13.7.linux-amd64.tar.gz | \
+	curl -L https://dl.google.com/go/go1.14.linux-amd64.tar.gz | \
 	(cd /usr/local && tar -zxf -) && \
 	curl -sSL https://sdk.cloud.google.com | \
 	CLOUDSDK_CORE_DISABLE_PROMPTS=1 bash && \
 	gcloud config set project foxsec-pipeline && \
 	CLOUDSDK_CORE_DISABLE_PROMPTS=1 gcloud components install cloud-datastore-emulator \
 	pubsub-emulator beta && \
-	go get go.mozilla.org/iprepd && \
-	go install go.mozilla.org/iprepd/cmd/iprepd && \
+	GO111MODULE=on go get go.mozilla.org/iprepd/cmd/iprepd && \
 	mkdir -p /etc/iprepd
 
 COPY docker/iprepd.yaml /etc/iprepd/iprepd.yaml
