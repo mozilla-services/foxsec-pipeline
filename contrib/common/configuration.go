@@ -43,6 +43,11 @@ type Configuration struct {
 	Auth0Domain       string `yaml:"auth0_domain"`
 	Auth0ClientId     string `yaml:"auth0_client_id"`
 	Auth0ClientSecret string `yaml:"auth0_client_secret"`
+
+	PagerdutyAuthToken            string `yaml:"pagerduty_auth_token"`
+	PagerdutyTicketDutyScheduleId string `yaml:"pagerduty_ticket_duty_schedule_id"`
+
+	BugzillaConfig BugzillaConfig `yaml:"bugzilla_config"`
 }
 
 type IprepdInstance struct {

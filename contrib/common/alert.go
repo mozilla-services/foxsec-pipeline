@@ -1,8 +1,11 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
+
+	"cloud.google.com/go/pubsub"
 )
 
 const (
@@ -21,6 +24,11 @@ type Alert struct {
 	Payload   string       `json:"payload"`
 	Metadata  []*AlertMeta `json:"metadata"`
 	Timestamp time.Time    `json:"timestamp"`
+}
+
+type AlertMeta struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 func (a *Alert) PrettyPrint() string {
@@ -74,7 +82,11 @@ func (a *Alert) SetMetadata(key, value string) {
 	a.Metadata = append(a.Metadata, &AlertMeta{Key: key, Value: value})
 }
 
-type AlertMeta struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+func PubSubMessageToAlerts(psmsg pubsub.Message) ([]*Alert, error) {
+	var alerts []*Alert
+	err := json.Unmarshal(psmsg.Data, &alerts)
+	if err != nil {
+		return nil, err
+	}
+	return alerts, nil
 }

@@ -132,5 +132,4 @@ func TestSlackbotHTTP(t *testing.T) {
 
 		assert.Equal(t, gotData, test.expectData)
 	}
-
 }
