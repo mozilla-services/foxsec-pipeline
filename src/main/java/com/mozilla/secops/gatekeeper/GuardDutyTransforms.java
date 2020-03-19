@@ -215,10 +215,8 @@ public class GuardDutyTransforms implements Serializable {
         return null;
       }
       return String.format(
-          "https://{}.console.aws.amazon.com/guardduty/home?region={}#/findings?fId={}",
-          f.getRegion(),
-          f.getRegion(),
-          f.getId());
+          "https://%s.console.aws.amazon.com/guardduty/home?region=%s#/findings?fId=%s",
+          f.getRegion(), f.getRegion(), f.getId());
     }
 
     private void addBaseFindingData(Alert a, Finding f, Map<String, String> awsAcctMap) {

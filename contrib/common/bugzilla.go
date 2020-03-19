@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -12,16 +13,12 @@ import (
 )
 
 type BugzillaConfig struct {
-	ApiKey            string                         `yaml:"api_key"`
-	AlertConfigs      map[string]BugzillaAlertConfig `yaml:"alert_configs"`
-	Product           string                         `yaml:"product"`
-	Component         string                         `yaml:"component"`
-	Groups            []string                       `yaml:"groups"`
-	DefaultAssignedTo string                         `yaml:"default_assigned_to"`
-}
-
-type BugzillaAlertConfig struct {
-	TrackerBugId string `yaml:"tracker_bug_id"`
+	ApiKey            string            `yaml:"api_key"`
+	CategoryToTracker map[string]string `yaml:"category_to_tracker"`
+	Product           string            `yaml:"product"`
+	Component         string            `yaml:"component"`
+	Groups            []string          `yaml:"groups"`
+	DefaultAssignedTo string            `yaml:"default_assigned_to"`
 }
 
 type BugzillaClient struct {
@@ -31,6 +28,23 @@ type BugzillaClient struct {
 
 func NewBugzillaClient(c BugzillaConfig, url string) *BugzillaClient {
 	return &BugzillaClient{c, url}
+}
+
+type BugzillaErrorResponse struct {
+	Error   bool   `json:"error,omitempty"`
+	Message string `json:"message,omitempty"`
+	Code    int    `json:"code,omitempty"`
+}
+
+func (bc *BugzillaClient) CreateDefaultBugzillaRequest(method string, url string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("User-Agent", "FoxSec-Bugzilla-Alert-Manager")
+	req.Header.Add("X-BUGZILLA-API-KEY", bc.Config.ApiKey)
+	req.Header.Add("Accept", "application/json")
+	return req, nil
 }
 
 type CreateBug struct {
@@ -43,13 +57,11 @@ type CreateBug struct {
 	Blocks      string   `json:"blocks"`
 	Type        string   `json:"type"`
 	Groups      []string `json:"groups"`
-	IsMarkdown  bool     `json:"is_markdown"`
-	ApiKey      string   `json:"api_key"`
 	Whiteboard  string   `json:"whiteboard"`
 }
 
 func (bc *BugzillaClient) CreateBugFromAlerts(assignedTo, category string, alerts []*Alert) (int, error) {
-	summary := fmt.Sprintf("%s alerts for %s", category, time.Now().Format("2012-11-01"))
+	summary := fmt.Sprintf("%s alerts for %s", category, time.Now().Format("2006-01-02"))
 
 	bugText := fmt.Sprintf("## %s alerts\n---\n", category)
 	for _, alert := range alerts {
@@ -63,20 +75,36 @@ func (bc *BugzillaClient) CreateBugFromAlerts(assignedTo, category string, alert
 		summary,
 		bugText,
 		assignedTo,
-		bc.Config.AlertConfigs[category].TrackerBugId,
+		bc.Config.CategoryToTracker[category],
 		"task",
 		bc.Config.Groups,
-		true,
-		bc.Config.ApiKey,
 		category,
 	})
 	if err != nil {
 		return 0, err
 	}
 
-	resp, err := http.Post(fmt.Sprintf("%s/rest/bug", bc.Url), "application/json", bytes.NewReader(bugJson))
+	req, err := bc.CreateDefaultBugzillaRequest(http.MethodPost, fmt.Sprintf("%s/rest/bug", bc.Url), bytes.NewReader(bugJson))
+	if err != nil {
+		log.Errorf("Error creating request: %s", err)
+		return 0, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Errorf("Error sending request to bugzilla: %s", err)
+		return 0, err
+	}
+	if resp.StatusCode > 299 {
+		log.Errorf("Got status code of %d from create bug request %s", resp.StatusCode, string(bugJson))
+
+		errResp := BugzillaErrorResponse{}
+		err = json.NewDecoder(resp.Body).Decode(&errResp)
+		if err != nil {
+			return 0, err
+		}
+		log.Errorf("Bugzilla Error Response: Message: %s | Code: %d", errResp.Message, errResp.Code)
 		return 0, err
 	}
 
@@ -93,7 +121,6 @@ func (bc *BugzillaClient) CreateBugFromAlerts(assignedTo, category string, alert
 type CreateComment struct {
 	Comment    string `json:"comment"`
 	IsMarkdown bool   `json:"is_markdown"`
-	ApiKey     string `json:"api_key"`
 }
 
 func (bc *BugzillaClient) AddAlertsToBug(bugId int, alerts []*Alert) error {
@@ -101,15 +128,23 @@ func (bc *BugzillaClient) AddAlertsToBug(bugId int, alerts []*Alert) error {
 	for _, alert := range alerts {
 		text = text + fmt.Sprintf("%s\n---\n", alert.PrettyPrint())
 	}
-	commentJson, err := json.Marshal(&CreateComment{text, true, bc.Config.ApiKey})
+	commentJson, err := json.Marshal(&CreateComment{text, true})
 	if err != nil {
 		return err
 	}
-	resp, err := http.Post(
+
+	req, err := bc.CreateDefaultBugzillaRequest(
+		http.MethodPost,
 		fmt.Sprintf("%s/rest/bug/%d/comment", bc.Url, bugId),
-		"application/json",
 		bytes.NewReader(commentJson),
 	)
+	if err != nil {
+		log.Errorf("Error creating request: %s", err)
+		return err
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Errorf("Error sending request to bugzilla: Resp: %v | Err: %s", resp, err)
 		return err
@@ -118,7 +153,6 @@ func (bc *BugzillaClient) AddAlertsToBug(bugId int, alerts []*Alert) error {
 }
 
 type SearchBug struct {
-	ApiKey     string
 	Creator    string
 	Whiteboard string
 }
@@ -149,11 +183,21 @@ type BugResp struct {
 }
 
 func (bc *BugzillaClient) SearchBugs(searchValues url.Values) (*SearchBugResponse, error) {
-	searchValues.Add("api_key", bc.Config.ApiKey)
-	resp, err := http.Get(fmt.Sprintf("%s/rest/bug?%s", bc.Url, searchValues.Encode()))
+	req, err := bc.CreateDefaultBugzillaRequest(
+		http.MethodGet,
+		fmt.Sprintf("%s/rest/bug?%s", bc.Url, searchValues.Encode()),
+		nil,
+	)
+	if err != nil {
+		log.Errorf("Error creating request: %s", err)
+		return nil, err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
+
 	searchResp := &SearchBugResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&searchResp)
 	if err != nil {

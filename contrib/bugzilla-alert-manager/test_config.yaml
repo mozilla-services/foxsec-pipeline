@@ -1,0 +1,5 @@
+pagerduty_ticket_duty_schedule_id: "1"
+bugzilla_config:
+    product: "TEST_PRODUCT"
+    category_to_tracker:
+        gatekeeper:aws: "123"
