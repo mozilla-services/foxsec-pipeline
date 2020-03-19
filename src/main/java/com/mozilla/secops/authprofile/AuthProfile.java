@@ -427,7 +427,7 @@ public class AuthProfile implements Serializable {
           e.getNormalized().getSubjectUser(),
           e.getNormalized().getObject());
       Alert a = AuthProfile.createBaseAlert(e, contactEmail, docLink);
-      a.addMetadata("category", "critical_object_analyze");
+      a.setSubcategory("critical_object_analyze");
       a.setSeverity(Alert.AlertSeverity.CRITICAL);
       buildAlertSummary(e, a);
       buildAlertPayload(e, a);
@@ -717,7 +717,7 @@ public class AuthProfile implements Serializable {
 
       for (Event e : events) {
         Alert a = AuthProfile.createBaseAlert(e, contactEmail, docLink);
-        a.addMetadata("category", "state_analyze");
+        a.setSubcategory("state_analyze");
 
         // If the address is already in the known address list, we have already processed it
         // as known so just skip the state logic
@@ -1148,9 +1148,7 @@ public class AuthProfile implements Serializable {
       alertList =
           alertList.and(
               events
-                  .apply(
-                      "cfgtick processor",
-                      ParDo.of(new CfgTickProcessor("authprofile-cfgtick", "category")))
+                  .apply("cfgtick processor", ParDo.of(new CfgTickProcessor("authprofile-cfgtick")))
                   .apply(new GlobalTriggers<Alert>(5)));
     }
 

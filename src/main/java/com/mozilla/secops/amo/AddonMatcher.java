@@ -109,8 +109,8 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
                         }
                         Alert alert = new Alert();
                         alert.setCategory("amo");
+                        alert.setSubcategory("amo_abuse_matched_addon");
                         alert.setNotifyMergeKey("amo_abuse_matched_addon");
-                        alert.addMetadata("amo_category", "amo_abuse_matched_addon");
                         alert.addMetadata("sourceaddress", d.getRemoteIp());
                         // If we got an email address with the event, add it to the alert; we also
                         // add the normalized email equivalents

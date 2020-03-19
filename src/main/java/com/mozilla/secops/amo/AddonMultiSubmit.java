@@ -135,8 +135,8 @@ public class AddonMultiSubmit extends PTransform<PCollection<Event>, PCollection
                     }
                     Alert alert = new Alert();
                     alert.setCategory("amo");
+                    alert.setSubcategory("amo_abuse_multi_submit");
                     alert.setNotifyMergeKey("amo_abuse_multi_submit");
-                    alert.addMetadata("amo_category", "amo_abuse_multi_submit");
                     alert.addMetadata("email", buf);
                     alert.addMetadata("count", Integer.toString(cnt));
                     alert.setSummary(

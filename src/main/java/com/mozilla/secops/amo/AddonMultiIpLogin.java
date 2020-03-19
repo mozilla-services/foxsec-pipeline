@@ -241,8 +241,8 @@ public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollectio
 
                     Alert alert = new Alert();
                     alert.setCategory("amo");
+                    alert.setSubcategory("amo_abuse_multi_ip_login");
                     alert.setNotifyMergeKey("amo_abuse_multi_ip_login");
-                    alert.addMetadata("amo_category", "amo_abuse_multi_ip_login");
                     alert.addMetadata("email", buf);
                     alert.addMetadata("count", Integer.toString(mCont.size()));
                     alert.setSummary(

@@ -244,7 +244,7 @@ public class HTTPRequest implements Serializable {
                               "%s httprequest error_rate %s %d",
                               monitoredResource, c.element().getKey(), c.element().getValue()));
                       a.setCategory("httprequest");
-                      a.addMetadata("category", "error_rate");
+                      a.setSubcategory("error_rate");
                       a.addMetadata("sourceaddress", c.element().getKey());
 
                       if (enableIprepdDatastoreWhitelist) {
@@ -360,7 +360,7 @@ public class HTTPRequest implements Serializable {
                                   "%s httprequest hard_limit %s %d",
                                   monitoredResource, c.element().getKey(), c.element().getValue()));
                           a.setCategory("httprequest");
-                          a.addMetadata("category", "hard_limit");
+                          a.setSubcategory("hard_limit");
                           a.addMetadata("sourceaddress", c.element().getKey());
 
                           try {
@@ -500,7 +500,7 @@ public class HTTPRequest implements Serializable {
                                   "%s httprequest useragent_blacklist %s",
                                   monitoredResource, saddr));
                           a.setCategory("httprequest");
-                          a.addMetadata("category", "useragent_blacklist");
+                          a.setSubcategory("useragent_blacklist");
                           a.addMetadata("sourceaddress", saddr);
 
                           try {
@@ -740,7 +740,7 @@ public class HTTPRequest implements Serializable {
                               "%s httprequest endpoint_abuse %s %s %s %d",
                               monitoredResource, remoteAddress, compareMethod, comparePath, count));
                       a.setCategory("httprequest");
-                      a.addMetadata("category", "endpoint_abuse");
+                      a.setSubcategory("endpoint_abuse");
                       a.addMetadata("sourceaddress", remoteAddress);
 
                       try {
@@ -943,7 +943,7 @@ public class HTTPRequest implements Serializable {
                                     c.element().getKey(),
                                     c.element().getValue()));
                             a.setCategory("httprequest");
-                            a.addMetadata("category", "threshold_analysis");
+                            a.setSubcategory("threshold_analysis");
                             a.addMetadata("sourceaddress", c.element().getKey());
 
                             try {
@@ -1228,7 +1228,7 @@ public class HTTPRequest implements Serializable {
                                   compareSecondPath,
                                   count));
                           a.setCategory("httprequest");
-                          a.addMetadata("category", "endpoint_sequence_abuse");
+                          a.setSubcategory("endpoint_sequence_abuse");
                           a.addMetadata("sourceaddress", remoteAddress);
 
                           try {
@@ -1850,7 +1850,7 @@ public class HTTPRequest implements Serializable {
                       .getValue()
                       .apply(
                           String.format("cfgtick process %s", entry.getKey()),
-                          ParDo.of(new CfgTickProcessor("httprequest-cfgtick", "category")))
+                          ParDo.of(new CfgTickProcessor("httprequest-cfgtick")))
                       .apply(
                           String.format("cfgtick tag %s", entry.getKey()),
                           ParDo.of(new HTTPRequestResourceTag(entry.getKey())))

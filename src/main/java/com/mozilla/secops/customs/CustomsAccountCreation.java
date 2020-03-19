@@ -98,8 +98,8 @@ public class CustomsAccountCreation
                     Alert alert = new Alert();
                     alert.setTimestamp(Parser.getLatestTimestamp(events));
                     alert.setCategory("customs");
+                    alert.setSubcategory(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE);
                     alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE);
-                    alert.addMetadata("customs_category", Customs.CATEGORY_ACCOUNT_CREATION_ABUSE);
                     alert.addMetadata("sourceaddress", remoteAddress);
                     alert.addMetadata("count", Integer.toString(cnt));
                     alert.setSummary(

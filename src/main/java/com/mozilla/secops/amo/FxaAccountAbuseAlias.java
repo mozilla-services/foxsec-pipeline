@@ -125,8 +125,8 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
                     }
                     Alert alert = new Alert();
                     alert.setCategory("amo");
+                    alert.setSubcategory("fxa_account_abuse_alias");
                     alert.setNotifyMergeKey("fxa_account_abuse_alias");
-                    alert.addMetadata("amo_category", "fxa_account_abuse_alias");
                     alert.addMetadata("email", metabuf);
                     alert.addMetadata("count", Integer.toString(distinct.size()));
                     alert.setSummary(

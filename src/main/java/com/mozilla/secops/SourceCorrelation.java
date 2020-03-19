@@ -281,7 +281,7 @@ public class SourceCorrelation {
                                   + "\"%s\", %d alerting addresses out of %d observed",
                               monitoredResource, isp, alert, cnt));
                       a.setCategory("httprequest");
-                      a.addMetadata("category", "isp_source_correlation");
+                      a.setSubcategory("isp_source_correlation");
                       a.addMetadata("sourceaddress_isp", isp);
                       a.addMetadata("total_address_count", Integer.toString(cnt));
                       a.addMetadata("total_alert_count", Integer.toString(alert));

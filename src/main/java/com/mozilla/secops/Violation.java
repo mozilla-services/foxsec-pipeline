@@ -285,18 +285,6 @@ public class Violation {
     }
   }
 
-  private static String resolveAlertType(Alert a) {
-    switch (a.getCategory()) {
-      case "httprequest":
-        return a.getMetadataValue("category");
-      case "customs":
-        return a.getMetadataValue("customs_category");
-      case "amo":
-        return a.getMetadataValue("amo_category");
-    }
-    return null;
-  }
-
   /**
    * Convert an {@link Alert} into violations
    *
@@ -310,7 +298,7 @@ public class Violation {
    * @return Array of violations or null if conversion is not possible
    */
   public static Violation[] fromAlert(Alert a) {
-    String aType = resolveAlertType(a);
+    String aType = a.getSubcategory();
     if (aType == null) {
       return null;
     }

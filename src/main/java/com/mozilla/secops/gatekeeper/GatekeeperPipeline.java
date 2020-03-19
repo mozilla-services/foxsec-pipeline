@@ -83,9 +83,7 @@ public class GatekeeperPipeline implements Serializable {
       alertList =
           alertList.and(
               events
-                  .apply(
-                      "cfgtick processor",
-                      ParDo.of(new CfgTickProcessor("gatekeeper-cfgtick", "category")))
+                  .apply("cfgtick processor", ParDo.of(new CfgTickProcessor("gatekeeper-cfgtick")))
                   .apply(new GlobalTriggers<Alert>(60)));
     }
 

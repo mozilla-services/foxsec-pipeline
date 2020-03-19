@@ -141,8 +141,8 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
                     }
                     Alert alert = new Alert();
                     alert.setCategory("amo");
+                    alert.setSubcategory("amo_abuse_multi_match");
                     alert.setNotifyMergeKey("amo_abuse_multi_match");
-                    alert.addMetadata("amo_category", "amo_abuse_multi_match");
                     alert.addMetadata("email", buf);
                     alert.addMetadata("count", Integer.toString(cnt));
                     alert.addMetadata("addon_filename", c.element().getKey());

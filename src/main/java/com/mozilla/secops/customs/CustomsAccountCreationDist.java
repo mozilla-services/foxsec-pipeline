@@ -101,9 +101,8 @@ public class CustomsAccountCreationDist
                       if (cand.size() >= threshold) {
                         Alert alert = new Alert();
                         alert.setCategory("customs");
+                        alert.setSubcategory(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
                         alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
-                        alert.addMetadata(
-                            "customs_category", Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
                         alert.addMetadata("count", Integer.toString(cand.size() + 1));
                         alert.addMetadata("sourceaddress", remoteAddress);
                         alert.setSummary(

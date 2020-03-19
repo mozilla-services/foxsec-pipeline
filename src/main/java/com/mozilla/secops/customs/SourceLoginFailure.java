@@ -95,9 +95,9 @@ public class SourceLoginFailure
 
                     Alert alert = new Alert();
                     alert.setCategory("customs");
+                    alert.setSubcategory(Customs.CATEGORY_SOURCE_LOGIN_FAILURE);
                     alert.setTimestamp(Parser.getLatestTimestamp(events));
                     alert.setNotifyMergeKey(Customs.CATEGORY_SOURCE_LOGIN_FAILURE);
-                    alert.addMetadata("customs_category", Customs.CATEGORY_SOURCE_LOGIN_FAILURE);
                     alert.addMetadata("sourceaddress", addr);
                     alert.addMetadata("count", Integer.toString(cnt));
                     alert.setSummary(

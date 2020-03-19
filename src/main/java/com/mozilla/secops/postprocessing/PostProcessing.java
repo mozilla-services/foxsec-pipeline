@@ -84,7 +84,7 @@ public class PostProcessing implements Serializable {
    * <p>Uses {@link Watchlist} to retrieve the watchlist from datastore and check these entries
    * against alert metadata keys.
    */
-  public static class WatchlistAnalyze extends DoFn<Event, Alert> implements DocumentingTransform {
+  public static class WatchlistAnalyze extends DoFn<Alert, Alert> implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
     private Logger log;
     private Watchlist wl;
@@ -126,13 +126,7 @@ public class PostProcessing implements Serializable {
     public void processElement(ProcessContext c) {
       long startTime = System.nanoTime();
 
-      Event e = c.element();
-      if (!e.getPayloadType().equals(Payload.PayloadType.ALERT)) {
-        return;
-      }
-
-      com.mozilla.secops.parser.Alert ae = e.getPayload();
-      Alert sourceAlert = ae.getAlert();
+      Alert sourceAlert = c.element();
 
       List<Alert> eAlerts =
           checkAlertAgainstWatchlistEntries(sourceAlert, Watchlist.watchlistEmailKind, emailKeys);
@@ -165,7 +159,7 @@ public class PostProcessing implements Serializable {
         } else {
           Alert a = new Alert();
           a.setCategory("postprocessing");
-          a.addMetadata("category", "watchlist");
+          a.setSubcategory("watchlist");
           a.setSummary(
               String.format(
                   "matched watchlist object found in alert %s", sourceAlert.getAlertId()));
@@ -211,6 +205,17 @@ public class PostProcessing implements Serializable {
     String getCriticalSeverityEmail();
 
     void setCriticalSeverityEmail(String value);
+
+    @Description("Enable alert summary analysis")
+    @Default.Boolean(false)
+    Boolean getEnableAlertSummaryAnalysis();
+
+    void setEnableAlertSummaryAnalysis(Boolean value);
+
+    @Description("Thresholds to use for alert summary analysis")
+    String[] getAlertSummaryAnalysisThresholds();
+
+    void setAlertSummaryAnalysisThresholds(String[] value);
   }
 
   /**
@@ -225,6 +230,9 @@ public class PostProcessing implements Serializable {
 
     if (options.getEnableWatchlistAnalysis()) {
       b.withTransformDoc(new WatchlistAnalyze(options));
+    }
+    if (options.getEnableAlertSummaryAnalysis()) {
+      b.withTransformDoc(new AlertSummary(options));
     }
 
     return b.build();
@@ -243,7 +251,26 @@ public class PostProcessing implements Serializable {
       PCollection<String> input, PostProcessingOptions options) {
     PCollectionList<Alert> alertList = PCollectionList.empty(input.getPipeline());
 
-    PCollection<Event> inputAlerts = input.apply("parse", new Parse(options));
+    PCollection<Event> inputEvents = input.apply("parse", new Parse(options));
+
+    PCollection<Alert> inputAlerts = null;
+    inputAlerts =
+        inputEvents.apply(
+            "extract alerts",
+            ParDo.of(
+                new DoFn<Event, Alert>() {
+                  private static final long serialVersionUID = 1L;
+
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    Event e = c.element();
+                    if (!e.getPayloadType().equals(Payload.PayloadType.ALERT)) {
+                      return;
+                    }
+                    com.mozilla.secops.parser.Alert ae = e.getPayload();
+                    c.output(ae.getAlert());
+                  }
+                }));
 
     if (options.getEnableWatchlistAnalysis()) {
       alertList =
@@ -252,15 +279,18 @@ public class PostProcessing implements Serializable {
                   .apply("watchlist analyze", ParDo.of(new WatchlistAnalyze(options)))
                   .apply("watchlist analyze rewindow for output", new GlobalTriggers<Alert>(5)));
     }
+    if (options.getEnableAlertSummaryAnalysis()) {
+      alertList =
+          alertList.and(inputAlerts.apply("alert summary analysis", new AlertSummary(options)));
+    }
 
     // If configuration ticks were enabled, enable the processor here too
     if (options.getGenerateConfigurationTicksInterval() > 0) {
       alertList =
           alertList.and(
-              inputAlerts
+              inputEvents
                   .apply(
-                      "cfgtick processor",
-                      ParDo.of(new CfgTickProcessor("postprocessing-cfgtick", "category")))
+                      "cfgtick processor", ParDo.of(new CfgTickProcessor("postprocessing-cfgtick")))
                   .apply(new GlobalTriggers<Alert>(5)));
     }
 
