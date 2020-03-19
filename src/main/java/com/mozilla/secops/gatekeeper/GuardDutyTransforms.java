@@ -65,10 +65,10 @@ public class GuardDutyTransforms implements Serializable {
     void setIgnoreDNSRequestFindingNames(String[] value);
 
     @Description(
-        "Escalate GuardDuty Findings for any finding types that match regex (multiple allowed)")
-    String[] getEscalateGDFindingTypeRegex();
+        "Mark GuardDuty Findings for any finding types that match regex as High severity. All others that are not ignored are considered Low severity. (multiple allowed)")
+    String[] getHighGDFindingTypeRegex();
 
-    void setEscalateGDFindingTypeRegex(String[] value);
+    void setHighGDFindingTypeRegex(String[] value);
 
     @Default.Long(60 * 15) // 15 minutes
     @Description("Suppress alert generation for repeated GuardDuty Findings within this value")
@@ -180,7 +180,7 @@ public class GuardDutyTransforms implements Serializable {
 
     private static final String alertCategory = "gatekeeper:aws";
 
-    private List<Pattern> escalate;
+    private List<Pattern> highPatterns;
     private final String critNotifyEmail;
     private final String identityMgrPath;
 
@@ -197,14 +197,12 @@ public class GuardDutyTransforms implements Serializable {
       critNotifyEmail = opts.getCriticalNotificationEmail();
       identityMgrPath = opts.getIdentityManagerPath();
 
-      String[] escalateRegexes = opts.getEscalateGDFindingTypeRegex();
-      escalate = new ArrayList<Pattern>();
-      if (escalateRegexes != null) {
-        for (String s : escalateRegexes) {
-          escalate.add(Pattern.compile(s));
+      String[] highRegexes = opts.getHighGDFindingTypeRegex();
+      highPatterns = new ArrayList<Pattern>();
+      if (highRegexes != null) {
+        for (String s : highRegexes) {
+          highPatterns.add(Pattern.compile(s));
         }
-      } else {
-        escalate.add(Pattern.compile(".+"));
       }
     }
 
@@ -258,14 +256,16 @@ public class GuardDutyTransforms implements Serializable {
       a.setSeverity(Alert.AlertSeverity.CRITICAL);
     }
 
-    private void tryAddEscalationEmail(Alert a, Finding f) {
+    private void addFindingSeverity(Alert a, Finding f) {
       if (critNotifyEmail != null && f.getType() != null) {
-        for (Pattern p : escalate) {
+        for (Pattern p : highPatterns) {
           if (p.matcher(f.getType()).matches()) {
+            a.addMetadata("alert_handling_severity", "high");
             a.addMetadata("notify_email_direct", critNotifyEmail);
             return;
           }
         }
+        a.addMetadata("alert_handling_severity", "low");
       }
     }
 
@@ -502,7 +502,7 @@ public class GuardDutyTransforms implements Serializable {
 
                   addBaseFindingData(a, f, awsAcctMap);
                   addTypeSpecificFindingData(a, f);
-                  tryAddEscalationEmail(a, f);
+                  addFindingSeverity(a, f);
                   c.output(a);
                 }
               }));

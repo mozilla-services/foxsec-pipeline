@@ -19,7 +19,7 @@ require (
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/nlopes/slack v0.6.0 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/sirupsen/logrus v1.4.2 // indirect
+	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.3.0
 	go.mozilla.org/gopgagent v0.0.0-20170926210634-4d7ea76ff71a // indirect
 	go.mozilla.org/mozlogrus v2.0.0+incompatible // indirect

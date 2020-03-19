@@ -58,10 +58,10 @@ var (
 )
 
 func init() {
+	mozlogrus.Enable("slackbot-background")
 	if _testing {
 		return
 	}
-	mozlogrus.Enable("slackbot-background")
 	client = &http.Client{
 		Timeout: 10 * time.Second,
 	}

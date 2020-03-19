@@ -387,14 +387,14 @@ public class TestGatekeeper {
   }
 
   @Test
-  public void gatekeeperEscalateAllTestWithEmail() throws Exception {
+  public void gatekeeperHighAllTestWithEmail() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
     opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
 
-    opts.setEscalateETDFindingRuleRegex(new String[] {".+"});
-    opts.setEscalateGDFindingTypeRegex(new String[] {".+"});
+    opts.setHighETDFindingRuleRegex(new String[] {".+"});
+    opts.setHighGDFindingTypeRegex(new String[] {".+"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
@@ -407,6 +407,7 @@ public class TestGatekeeper {
               for (Alert a : x) {
                 assertNotNull(a.getMetadataValue("notify_email_direct"));
                 assertEquals("unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                assertEquals("high", a.getMetadataValue("alert_handling_severity"));
               }
               return null;
             });
@@ -415,7 +416,7 @@ public class TestGatekeeper {
   }
 
   @Test
-  public void gatekeeperImplicitEscalateAllTestWithEmail() throws Exception {
+  public void gatekeeperImplicitLowAllTestWithEmail() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
@@ -430,8 +431,8 @@ public class TestGatekeeper {
         .satisfies(
             x -> {
               for (Alert a : x) {
-                assertNotNull(a.getMetadataValue("notify_email_direct"));
-                assertEquals("unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                assertNull(a.getMetadataValue("notify_email_direct"));
+                assertEquals("low", a.getMetadataValue("alert_handling_severity"));
               }
               return null;
             });
@@ -440,7 +441,7 @@ public class TestGatekeeper {
   }
 
   @Test
-  public void gatekeeperImplicitEscalateAllTestNoEmail() throws Exception {
+  public void gatekeeperImplicitHighAllTestNoEmail() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
@@ -462,7 +463,7 @@ public class TestGatekeeper {
   }
 
   @Test
-  public void gatekeeperIgnoreSomeAndEscalateSomeTest() throws Exception {
+  public void gatekeeperIgnoreSomeAndHighSomeTest() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
@@ -470,9 +471,9 @@ public class TestGatekeeper {
 
     // AWS: ignore all recon findings for EC2 and escalate all Trojan or Backdoor findings
     opts.setIgnoreGDFindingTypeRegex(new String[] {"Recon:EC2.+"});
-    opts.setEscalateGDFindingTypeRegex(new String[] {"Trojan.+", "Backdoor.+"});
+    opts.setHighGDFindingTypeRegex(new String[] {"Trojan.+", "Backdoor.+"});
     // GCP: escalate all findings for ETD
-    opts.setEscalateETDFindingRuleRegex(new String[] {".+"});
+    opts.setHighETDFindingRuleRegex(new String[] {".+"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
@@ -492,8 +493,10 @@ public class TestGatekeeper {
                     assertNotNull(a.getMetadataValue("notify_email_direct"));
                     assertEquals(
                         "unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                    assertEquals("high", a.getMetadataValue("alert_handling_severity"));
                   } else {
                     assertNull(a.getMetadataValue("notify_email_direct"));
+                    assertEquals("low", a.getMetadataValue("alert_handling_severity"));
                   }
                 }
                 if (a.getCategory().equals("gatekeeper:gcp")) {
@@ -510,12 +513,12 @@ public class TestGatekeeper {
   }
 
   @Test
-  public void gatekeeperEscalateAllTestNoEmail() throws Exception {
+  public void gatekeeperHighAllTestNoEmail() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
 
-    opts.setEscalateETDFindingRuleRegex(new String[] {".+"});
-    opts.setEscalateGDFindingTypeRegex(new String[] {".+"});
+    opts.setHighETDFindingRuleRegex(new String[] {".+"});
+    opts.setHighGDFindingTypeRegex(new String[] {".+"});
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 

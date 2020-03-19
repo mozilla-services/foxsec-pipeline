@@ -10,6 +10,7 @@ FROM foxsec-pipeline-base:latest
 # invalidated if the dependencies change.
 COPY contrib/go.* /root/project/contrib/
 COPY contrib/auth0pull/go.* /root/project/contrib/auth0pull/
+COPY contrib/bugzilla-alert-manager/go.* /root/project/contrib/bugzilla-alert-manager/
 COPY contrib/cloudtrail-streamer/go.* /root/project/contrib/cloudtrail-streamer/
 COPY contrib/duopull/go.* /root/project/contrib/duopull/
 COPY contrib/slackbot-background/go.* /root/project/contrib/slackbot-background/
@@ -18,6 +19,7 @@ COPY pom.xml /root/project/pom.xml
 RUN mvn -B dependency:resolve dependency:resolve-plugins dependency:go-offline && \
 	cd contrib && go mod download && \
 	(cd auth0pull && go mod download) && \
+	(cd bugzilla-alert-manager && go mod download) && \
 	(cd cloudtrail-streamer && go mod download) && \
 	(cd duopull && go mod download) && \
 	(cd slackbot-background && go mod download) && \
@@ -29,6 +31,7 @@ RUN mvn -B javadoc:javadoc && mvn -B compile
 
 RUN cd contrib && \
 	(cd auth0pull && go build) && \
+	(cd bugzilla-alert-manager && go build) && \
 	(cd cloudtrail-streamer && go build) && \
 	(cd duopull && go build) && \
 	(cd slackbot-background && go build) && \

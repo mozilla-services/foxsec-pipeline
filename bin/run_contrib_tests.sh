@@ -13,6 +13,7 @@ $(gcloud beta emulators pubsub env-init)
 cd /root/project/contrib
 go test -v ./...
 (cd auth0pull && go test -v)
+(cd bugzilla-alert-manager && go test -v)
 (cd cloudtrail-streamer && go test -v)
 (cd duopull && go test -v)
 (cd slackbot-background && go test -v)

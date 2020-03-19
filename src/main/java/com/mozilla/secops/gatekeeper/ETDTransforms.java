@@ -38,10 +38,11 @@ public class ETDTransforms implements Serializable {
 
     void setIgnoreETDFindingRuleRegex(String[] value);
 
-    @Description("Escalate ETD Findings for any finding rules that match regex (multiple allowed)")
-    String[] getEscalateETDFindingRuleRegex();
+    @Description(
+        "Mark ETD Findings for any finding types that match regex as High severity. All others that are not ignored are considered Low severity. (multiple allowed)")
+    String[] getHighETDFindingRuleRegex();
 
-    void setEscalateETDFindingRuleRegex(String[] value);
+    void setHighETDFindingRuleRegex(String[] value);
 
     @Default.Long(60 * 15) // 15 minutes
     @Description("Suppress alert generation for repeated ETD Findings within this value")
@@ -112,7 +113,7 @@ public class ETDTransforms implements Serializable {
 
     private static final String alertCategory = "gatekeeper:gcp";
 
-    private List<Pattern> escalate;
+    private List<Pattern> highPatterns;
     private String critNotifyEmail;
 
     /**
@@ -122,15 +123,13 @@ public class ETDTransforms implements Serializable {
      */
     public GenerateETDAlerts(Options opts) {
       critNotifyEmail = opts.getCriticalNotificationEmail();
-      String[] escalateRegexes = opts.getEscalateETDFindingRuleRegex();
+      String[] highRegexes = opts.getHighETDFindingRuleRegex();
 
-      escalate = new ArrayList<Pattern>();
-      if (escalateRegexes != null) {
-        for (String s : escalateRegexes) {
-          escalate.add(Pattern.compile(s));
+      highPatterns = new ArrayList<Pattern>();
+      if (highRegexes != null) {
+        for (String s : highRegexes) {
+          highPatterns.add(Pattern.compile(s));
         }
-      } else {
-        escalate.add(Pattern.compile(".+"));
       }
     }
 
@@ -174,12 +173,14 @@ public class ETDTransforms implements Serializable {
         return;
       }
       if (critNotifyEmail != null) {
-        for (Pattern p : escalate) {
+        for (Pattern p : highPatterns) {
           if (p.matcher(dc.getRuleName()).matches()) {
+            a.addMetadata("alert_handling_severity", "high");
             a.addMetadata("notify_email_direct", critNotifyEmail);
             return;
           }
         }
+        a.addMetadata("alert_handling_severity", "low");
       }
     }
 
