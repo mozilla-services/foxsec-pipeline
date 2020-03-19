@@ -341,9 +341,7 @@ public class TestEndpointSequenceAbuse {
         HTTPRequest.expandInputMap(
             p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
 
-    PCollection<Long> count = results.apply(Count.globally());
-
-    PAssert.thatSingleton(count).isEqualTo(0L);
+    PAssert.that(results).empty();
     p.run().waitUntilFinish();
   }
 
