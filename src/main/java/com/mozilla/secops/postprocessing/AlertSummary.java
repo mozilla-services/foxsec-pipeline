@@ -257,13 +257,19 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
 
     private Alert createAlert(
         String threshold, int ov, int nv, Instant widthStart, Instant maxTimestamp) {
+      String timeframe = null;
+      if ((maxTimestamp.getMillis() - widthStart.getMillis() + 1) > 1800000) {
+        timeframe = "1h";
+      } else {
+        timeframe = "15m";
+      }
       Alert ret = new Alert();
       ret.setCategory("postprocessing");
       ret.setSubcategory("alertsummary");
       ret.setSummary(
           String.format(
-              "detected threshold hit %s, %d -> %d using criteria %s",
-              ov < nv ? "increase" : "decrease", ov, nv, threshold));
+              "alert %s, %d alerts -> %d alerts over previous %s using criteria %s",
+              ov < nv ? "increase" : "decrease", ov, nv, timeframe, threshold));
       ret.addMetadata("threshold", threshold);
       ret.addMetadata("start", widthStart.toString());
       ret.addMetadata("end", maxTimestamp.toString());
