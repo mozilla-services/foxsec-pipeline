@@ -8,6 +8,12 @@ import org.apache.beam.sdk.options.PipelineOptions;
 
 /** Standard input options for pipelines. */
 public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions {
+  @Description("Pipeline version")
+  @Default.String(Version.PIPELINE)
+  String getPipelineVersion();
+
+  void setPipelineVersion(String value);
+
   @Description("Use event timestamps on output in parser DoFn")
   @Default.Boolean(false)
   Boolean getUseEventTimestamp();
