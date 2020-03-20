@@ -20,7 +20,6 @@ import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Duration;
-import org.joda.time.Instant;
 
 /**
  * Source address ingestion and alert correlation
@@ -315,7 +314,7 @@ public class SourceCorrelation {
       o.setIsp(n.getSourceAddressIsp());
       o.setAsn(n.getSourceAddressAsn());
       o.setSourceDataType(SourceData.SourceDataType.SOURCE_DATA_TYPE_EVENT);
-      c.outputWithTimestamp(o, new Instant());
+      c.output(o);
     }
   }
 
@@ -343,7 +342,7 @@ public class SourceCorrelation {
         o.setAsn(new Integer(asns));
       }
       o.setSourceDataType(SourceData.SourceDataType.SOURCE_DATA_TYPE_ALERT);
-      c.outputWithTimestamp(o, new Instant());
+      c.output(o);
     }
   }
 }
