@@ -176,7 +176,7 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
         if (parts[0].equals(CLASSIFIER_GLOBAL_STRING)) {
           buf = "all alerts (globally for all pipelines)";
         } else {
-          buf = String.format("all alerts for for service/category %s", parts[0]);
+          buf = String.format("all alerts for service/category %s", parts[0]);
         }
       } else {
         if (parts.length == 2) {
