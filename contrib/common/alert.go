@@ -90,3 +90,12 @@ func PubSubMessageToAlerts(psmsg pubsub.Message) ([]*Alert, error) {
 	}
 	return alerts, nil
 }
+
+func PubSubMessageToAlert(psmsg pubsub.Message) (*Alert, error) {
+	var alert *Alert
+	err := json.Unmarshal(psmsg.Data, &alert)
+	if err != nil {
+		return nil, err
+	}
+	return alert, nil
+}

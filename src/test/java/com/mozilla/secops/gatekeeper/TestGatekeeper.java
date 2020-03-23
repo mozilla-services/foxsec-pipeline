@@ -66,6 +66,7 @@ public class TestGatekeeper {
     PAssert.that(alerts)
         .satisfies(
             x -> {
+              int findingUrlChecked = 0;
               for (Alert a : x) {
                 assertNotNull(a.getCategory());
                 if (a.getCategory().equals("gatekeeper:aws")) {
@@ -79,11 +80,11 @@ public class TestGatekeeper {
                   assertNotNull(a.getMetadataValue("finding_first_seen_at"));
                   assertNotNull(a.getMetadataValue("finding_last_seen_at"));
                   assertNotNull(a.getMetadataValue("url_to_finding"));
-                  if (a.getMetadataValue("finding_id")
-                      .equals("19ab29f7-5f41-94dd-f757-19556835054f")) {
+                  if (a.getMetadataValue("finding_id").equals("36b59ed2edad8b965a0ee921052cb481")) {
+                    findingUrlChecked++;
                     assertEquals(
-                        a.getMetadataValue("url_to_finding"),
-                        "https://us-west-2.console.aws.amazon.com/guardduty/home?region=us-west-2#/findings?fId=19ab29f7-5f41-94dd-f757-19556835054f");
+                        "https://us-west-2.console.aws.amazon.com/guardduty/home?region=us-west-2#/findings?fId=36b59ed2edad8b965a0ee921052cb481",
+                        a.getMetadataValue("url_to_finding"));
                   }
                   // all findings in sample data have a count of 2
                   assertEquals("2", a.getMetadataValue("finding_count"));
@@ -215,6 +216,7 @@ public class TestGatekeeper {
                   fail(String.format("unexpected alert category type: %s", a.getCategory()));
                 }
               }
+              assertEquals(findingUrlChecked, 1);
               return null;
             });
 

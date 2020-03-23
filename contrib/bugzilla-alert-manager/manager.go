@@ -79,13 +79,14 @@ func userOnTicketDuty() (string, error) {
 	return users[0].Email, nil
 }
 
-func createNewBug(alertCollection *AlertCollection) error {
+func createNewBug(alert *common.Alert) error {
 	assignedTo, err := userOnTicketDuty()
 	if err != nil {
 		log.Errorf("Couldn't get user on ticket duty: %s", err)
 		return err
 	}
-	_, err = globals.bugzillaClient.CreateBugFromAlerts(assignedTo, alertCollection.category, alertCollection.alerts)
+	log.Infof("Creating new %s bug assigned to %s", alert.Category, assignedTo)
+	_, err = globals.bugzillaClient.CreateBugFromAlerts(assignedTo, alert.Category, []*common.Alert{alert})
 	return err
 }
 
@@ -102,61 +103,54 @@ func BugzillaAlertManager(ctx context.Context, psmsg pubsub.Message) error {
 		return nil
 	}
 
-	alerts, err := common.PubSubMessageToAlerts(psmsg)
+	alert, err := common.PubSubMessageToAlert(psmsg)
 	if err != nil {
 		log.Errorf("Error decoding pubsub message: %s", err)
 		return nil
 	}
 
-	// Filter out "high" severity alerts with metadata key "alert_handling_severity"
-	var lowSeverityAlerts []*common.Alert
-	var alertIds []string
-	for _, alert := range alerts {
-		if alert.GetMetadata("alert_handling_severity") == "low" {
-			lowSeverityAlerts = append(lowSeverityAlerts, alert)
-			alertIds = append(alertIds, alert.Id)
-		}
+	// Check if we should process this alert
+	if alert.GetMetadata("alert_handling_severity") != "low" {
+		return nil
 	}
-
-	if len(lowSeverityAlerts) == 0 {
+	if _, ok := globals.bugzillaClient.Config.CategoryToTracker[alert.Category]; !ok {
 		return nil
 	}
 
-	contextLogger := log.WithFields(log.Fields{"alert_ids": alertIds})
+	contextLogger := log.WithFields(log.Fields{"alert_id": alert.Id})
+	contextLogger.Infof("Handling %s", alert.Id)
 
-	collections := CreateCollections(lowSeverityAlerts)
-
-	for _, collection := range collections {
-		searchValues := url.Values{}
-		searchValues.Add("whiteboard", collection.category)
-		searchResp, err := globals.bugzillaClient.SearchBugs(searchValues)
-		if err != nil {
-			contextLogger.Errorf("Error from bug searching: %s", err)
-			continue
-		}
-		if len(searchResp.Bugs) != 0 {
+	searchValues := url.Values{}
+	searchValues.Add("whiteboard", alert.Category)
+	searchResp, err := globals.bugzillaClient.SearchBugs(searchValues)
+	if err != nil {
+		contextLogger.Errorf("Error from bug searching: %s", err)
+	} else {
+		if searchResp != nil && len(searchResp.Bugs) != 0 {
 			sort.Sort(searchResp)
 			newestBug := searchResp.Bugs[0]
 			// Was the bug created today?
 			ny, nm, nd := time.Now().Date()
 			y, m, d := newestBug.CreationTime.Date()
 			if (ny == y) && (nm == m) && (nd == d) {
+				contextLogger.Infof("Adding %s to bugzilla bug %d", alert.Id, newestBug.Id)
 				// Add to bug
-				err := globals.bugzillaClient.AddAlertsToBug(newestBug.Id, collection.alerts)
+				err := globals.bugzillaClient.AddAlertsToBug(newestBug.Id, []*common.Alert{alert})
 				if err != nil {
 					contextLogger.Errorf("Error adding comment to bug %d: %s", newestBug.Id, err)
 					return err
 				}
-				continue
+				return nil
 			}
 		}
+	}
 
-		// Create new bug
-		err = createNewBug(collection)
-		if err != nil {
-			contextLogger.Errorf("Error creating new bug: %s", err)
-			return err
-		}
+	// Create new bug
+	contextLogger.Info("Creating new bug")
+	err = createNewBug(alert)
+	if err != nil {
+		contextLogger.Errorf("Error creating new bug: %s", err)
+		return err
 	}
 
 	return nil

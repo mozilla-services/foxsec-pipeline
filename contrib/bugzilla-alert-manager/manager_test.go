@@ -30,7 +30,7 @@ var (
 	searchBugCnt  int
 )
 
-func generateTestAlerts() pubsub.Message {
+func generateLowSevTestAlert() pubsub.Message {
 	lowSevAlert := &common.Alert{
 		Id:        "lowtestunique",
 		Category:  "gatekeeper:aws",
@@ -38,6 +38,14 @@ func generateTestAlerts() pubsub.Message {
 		Metadata:  []*common.AlertMeta{{Key: "alert_handling_severity", Value: "low"}},
 		Timestamp: time.Now().Add(-5 * time.Minute),
 	}
+	buf, err := json.Marshal(lowSevAlert)
+	if err != nil {
+		panic(err)
+	}
+	return pubsub.Message{Data: buf}
+}
+
+func generateHighSevTestAlert() pubsub.Message {
 	highSevAlert := &common.Alert{
 		Id:        "hightestunique",
 		Category:  "gatekeeper:aws",
@@ -45,7 +53,7 @@ func generateTestAlerts() pubsub.Message {
 		Metadata:  []*common.AlertMeta{{Key: "alert_handling_severity", Value: "high"}},
 		Timestamp: time.Now().Add(-6 * time.Minute),
 	}
-	buf, err := json.Marshal([]*common.Alert{lowSevAlert, highSevAlert})
+	buf, err := json.Marshal(highSevAlert)
 	if err != nil {
 		panic(err)
 	}
@@ -85,6 +93,7 @@ func createMockServer(t *testing.T) *httptest.Server {
 			cb := &common.CreateBug{}
 			err = json.Unmarshal(body, cb)
 			assert.NoError(t, err)
+			assert.Equal(t, cb.Product, "TEST_PRODUCT")
 			assert.Contains(t, cb.Summary, "gatekeeper:aws alerts")
 			assert.Contains(t, cb.Description, "lowtestunique")
 			assert.NotContains(t, cb.Description, "hightestunique")
@@ -121,23 +130,23 @@ func TestBugzillaAlertManager(t *testing.T) {
 		Timestamp: time.Now(),
 		EventID:   "1234567890",
 	})
-	// init needed globals and DB
+	// init needed globals
+	err = config.LoadFrom("test_config.yaml")
+	assert.NoError(t, err)
 	server := createMockServer(t)
 	client := pagerduty.NewClient("testkey", pagerduty.WithAPIEndpoint(server.URL))
 	globals.pagerdutyClient = client
-	bugzillaConfig := common.BugzillaConfig{
-		AlertConfigs: map[string]common.BugzillaAlertConfig{
-			"gatekeeper:aws": {TrackerBugId: "123"},
-		},
-	}
+	globals.bugzillaClient = common.NewBugzillaClient(config.BugzillaConfig, server.URL)
 
-	globals.bugzillaClient = common.NewBugzillaClient(bugzillaConfig, server.URL)
+	// Start test with high sev
+	err = BugzillaAlertManager(ctx, generateHighSevTestAlert())
+	assert.NoError(t, err)
+	assert.Equal(t, 0, pdCnt)
+	assert.Equal(t, 0, searchBugCnt)
+	assert.Equal(t, 0, createBugCnt)
+	assert.Equal(t, 0, commentBugCnt)
 
-	config.PagerdutyTicketDutyScheduleId = "1"
-
-	// Start test
-	testAlerts := generateTestAlerts()
-	err = BugzillaAlertManager(ctx, testAlerts)
+	err = BugzillaAlertManager(ctx, generateLowSevTestAlert())
 	assert.NoError(t, err)
 	assert.Equal(t, 1, pdCnt)
 	assert.Equal(t, 1, searchBugCnt)
@@ -146,8 +155,7 @@ func TestBugzillaAlertManager(t *testing.T) {
 
 	// Since a bug exsists for today, this should add the
 	// low sev alert as a comment.
-	moreTestAlerts := generateTestAlerts()
-	err = BugzillaAlertManager(ctx, moreTestAlerts)
+	err = BugzillaAlertManager(ctx, generateLowSevTestAlert())
 	assert.NoError(t, err)
 	assert.Equal(t, 1, pdCnt)
 	assert.Equal(t, 2, searchBugCnt)
