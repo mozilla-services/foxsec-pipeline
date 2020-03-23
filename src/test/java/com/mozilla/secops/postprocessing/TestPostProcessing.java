@@ -276,6 +276,30 @@ public class TestPostProcessing {
               int total = 0;
               for (Alert a : results) {
                 total++;
+                if (a.getSummary()
+                    .equals(
+                        "alert increase, 5 alerts -> 41 alerts over previous 1h using "
+                            + "criteria authprofile:50:50:1")) {
+                  assertEquals(
+                      a.getPayload(),
+                      "An increase in alerts was observed that triggered a configured "
+                          + "threshold.\n\nThe alert count was 41 over the previous 1h, and "
+                          + "was 5 during the 1h prior.\n\nThe threshold that matched was a "
+                          + "50 percent increase for all alerts for service testsdec of cate"
+                          + "gory authprofile with at least 1 alert(s) present.\n");
+                } else if (a.getSummary()
+                    .equals(
+                        "alert decrease, 5 alerts -> 1 alerts over previous 15m using "
+                            + "criteria testsdec-authprofile-state_analyze:50:50:1")) {
+                  assertEquals(
+                      a.getPayload(),
+                      "A decrease in alerts was observed that triggered a configured "
+                          + "threshold.\n\nThe alert count was 1 over the previous 15m, and"
+                          + " was 5 during the 15m prior.\n\nThe threshold that matched was "
+                          + "a 50 percent decrease for all alerts for service testsdec of ca"
+                          + "tegory authprofile and subcategory state_analyze with at least "
+                          + "1 alert(s) present.\n");
+                }
                 assertThat(
                     a.getSummary(),
                     anyOf(

@@ -168,6 +168,34 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
         throw new IllegalArgumentException("threshold value cannot be negative");
       }
     }
+
+    public String describe(boolean isIncrease) {
+      String[] parts = classifier.split(CLASSIFIER_SEPARATOR);
+      String buf = null;
+      if (parts.length == 1) {
+        if (parts[0].equals(CLASSIFIER_GLOBAL_STRING)) {
+          buf = "all alerts (globally for all pipelines)";
+        } else {
+          buf = String.format("all alerts for for service/category %s", parts[0]);
+        }
+      } else {
+        if (parts.length == 2) {
+          buf = String.format("all alerts for service %s of category %s", parts[0], parts[1]);
+        } else {
+          buf =
+              String.format(
+                  "all alerts for service %s of category %s and subcategory %s",
+                  parts[0], parts[1], parts[2]);
+        }
+      }
+      int displayValue = percentDec;
+      if (isIncrease) {
+        displayValue = percentInc;
+      }
+      return String.format(
+          "a %d percent %s for %s with at least %d alert(s) present",
+          displayValue, isIncrease ? "increase" : "decrease", buf, minAlertsLatestWindow);
+    }
   }
 
   @DefaultCoder(AvroCoder.class)
@@ -288,6 +316,22 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
       if (warningEmail != null) {
         ret.addMetadata("notify_email_direct", warningEmail);
       }
+
+      String p =
+          String.format(
+              "%s in alerts was observed that triggered a configured threshold.\n\n",
+              ov < nv ? "An increase" : "A decrease");
+      p =
+          p
+              + String.format(
+                  "The alert count was %d over the previous %s, and was %d during "
+                      + "the %s prior.\n\n",
+                  nv, timeframe, ov, timeframe);
+      ThresholdDetails d = new ThresholdDetails();
+      d.parse(threshold);
+      p = p + String.format("The threshold that matched was %s.\n", d.describe(ov < nv));
+      ret.addToPayload(p);
+
       return ret;
     }
 
