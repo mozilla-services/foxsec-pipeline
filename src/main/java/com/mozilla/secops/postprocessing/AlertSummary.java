@@ -92,21 +92,8 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
     }
 
     for (int i = 0; i < thresholds.length; i++) {
-      String[] parts = thresholds[i].split(":");
-      if (parts.length != 4) {
-        throw new IllegalArgumentException("threshold had invalid format");
-      }
-      int x, y, z = 0;
-      try {
-        x = Integer.parseInt(parts[1]);
-        y = Integer.parseInt(parts[2]);
-        z = Integer.parseInt(parts[3]);
-      } catch (NumberFormatException exc) {
-        throw new IllegalArgumentException("invalid integer in threshold");
-      }
-      if (x < 0 || y < 0 || z < 0) {
-        throw new IllegalArgumentException("threshold value cannot be negative");
-      }
+      // Parse to verify the format here
+      new ThresholdDetails().parse(thresholds[i]);
       log.info("adding threshold {}", thresholds[i]);
     }
 
@@ -155,6 +142,59 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
     @Override
     public PaneSummary defaultValue() {
       return new PaneSummary();
+    }
+  }
+
+  private static class ThresholdDetails {
+    public String classifier;
+    public int percentInc;
+    public int percentDec;
+    public int minAlertsLatestWindow;
+
+    public void parse(String threshold) {
+      String[] parts = threshold.split(":");
+      if (parts.length != 4) {
+        throw new IllegalArgumentException("threshold had invalid format");
+      }
+      classifier = parts[0];
+      try {
+        percentInc = Integer.parseInt(parts[1]);
+        percentDec = Integer.parseInt(parts[2]);
+        minAlertsLatestWindow = Integer.parseInt(parts[3]);
+      } catch (NumberFormatException exc) {
+        throw new IllegalArgumentException("invalid integer in threshold");
+      }
+      if (percentInc < 0 || percentDec < 0 || minAlertsLatestWindow < 0) {
+        throw new IllegalArgumentException("threshold value cannot be negative");
+      }
+    }
+
+    public String describe(boolean isIncrease) {
+      String[] parts = classifier.split(CLASSIFIER_SEPARATOR);
+      String buf = null;
+      if (parts.length == 1) {
+        if (parts[0].equals(CLASSIFIER_GLOBAL_STRING)) {
+          buf = "all alerts (globally for all pipelines)";
+        } else {
+          buf = String.format("all alerts for service/category %s", parts[0]);
+        }
+      } else {
+        if (parts.length == 2) {
+          buf = String.format("all alerts for service %s of category %s", parts[0], parts[1]);
+        } else {
+          buf =
+              String.format(
+                  "all alerts for service %s of category %s and subcategory %s",
+                  parts[0], parts[1], parts[2]);
+        }
+      }
+      int displayValue = percentDec;
+      if (isIncrease) {
+        displayValue = percentInc;
+      }
+      return String.format(
+          "a %d percent %s for %s with at least %d alert(s) present",
+          displayValue, isIncrease ? "increase" : "decrease", buf, minAlertsLatestWindow);
     }
   }
 
@@ -257,19 +297,41 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
 
     private Alert createAlert(
         String threshold, int ov, int nv, Instant widthStart, Instant maxTimestamp) {
+      String timeframe = null;
+      if ((maxTimestamp.getMillis() - widthStart.getMillis() + 1) > 1800000) {
+        timeframe = "1h";
+      } else {
+        timeframe = "15m";
+      }
       Alert ret = new Alert();
       ret.setCategory("postprocessing");
       ret.setSubcategory("alertsummary");
       ret.setSummary(
           String.format(
-              "detected threshold hit %s, %d -> %d using criteria %s",
-              ov < nv ? "increase" : "decrease", ov, nv, threshold));
+              "alert %s, %d alerts -> %d alerts over previous %s using criteria %s",
+              ov < nv ? "increase" : "decrease", ov, nv, timeframe, threshold));
       ret.addMetadata("threshold", threshold);
       ret.addMetadata("start", widthStart.toString());
       ret.addMetadata("end", maxTimestamp.toString());
       if (warningEmail != null) {
         ret.addMetadata("notify_email_direct", warningEmail);
       }
+
+      String p =
+          String.format(
+              "%s in alerts was observed that triggered a configured threshold.\n\n",
+              ov < nv ? "An increase" : "A decrease");
+      p =
+          p
+              + String.format(
+                  "The alert count was %d over the previous %s, and was %d during "
+                      + "the %s prior.\n\n",
+                  nv, timeframe, ov, timeframe);
+      ThresholdDetails d = new ThresholdDetails();
+      d.parse(threshold);
+      p = p + String.format("The threshold that matched was %s.\n", d.describe(ov < nv));
+      ret.addToPayload(p);
+
       return ret;
     }
 
@@ -279,20 +341,21 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
 
       for (int i = 0; i < thresholds.length; i++) {
         // We make an assumption here thresholds has been validated for correct format
-        String[] criteria = thresholds[i].split(":");
+        ThresholdDetails t = new ThresholdDetails();
+        t.parse(thresholds[i]);
 
-        String classifier = criteria[0];
         // This criteria needs to exist in both the old and new PaneSummary, if not we will not
         // assess it
-        if (!o.getCounters().containsKey(classifier) || !n.getCounters().containsKey(classifier)) {
+        if (!o.getCounters().containsKey(t.classifier)
+            || !n.getCounters().containsKey(t.classifier)) {
           continue;
         }
-        int oldvalue = o.getCounters().get(classifier);
-        int newvalue = n.getCounters().get(classifier);
+        int oldvalue = o.getCounters().get(t.classifier);
+        int newvalue = n.getCounters().get(t.classifier);
 
-        int pi = Integer.parseInt(criteria[1]);
-        int pd = Integer.parseInt(criteria[2]);
-        int min = Integer.parseInt(criteria[3]);
+        int pi = t.percentInc;
+        int pd = t.percentDec;
+        int min = t.minAlertsLatestWindow;
 
         if (newvalue < min) {
           continue;
