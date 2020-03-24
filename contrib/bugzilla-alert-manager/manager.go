@@ -128,7 +128,7 @@ func BugzillaAlertManager(ctx context.Context, psmsg pubsub.Message) error {
 	} else {
 		if searchResp != nil && len(searchResp.Bugs) != 0 {
 			sort.Sort(searchResp)
-			newestBug := searchResp.Bugs[0]
+			newestBug := searchResp.Bugs[len(searchResp.Bugs)-1]
 			// Was the bug created today?
 			ny, nm, nd := time.Now().Date()
 			y, m, d := newestBug.CreationTime.Date()
