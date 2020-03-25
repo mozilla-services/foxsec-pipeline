@@ -565,7 +565,7 @@ public class TestAuthProfile {
             new DatastoreStateInterface(
                 options.getDatastoreKind(), options.getDatastoreNamespace()));
     state.initialize();
-    StateCursor c = state.newCursor();
+    StateCursor<AuthStateModel> c = state.newCursor(AuthStateModel.class, true);
     AuthStateModel sm = new AuthStateModel("wriker@mozilla.com");
     DateTime n = new DateTime();
     DateTime oneDayAgo = n.minusHours(1);
@@ -645,7 +645,7 @@ public class TestAuthProfile {
             new DatastoreStateInterface(
                 options.getDatastoreKind(), options.getDatastoreNamespace()));
     state.initialize();
-    StateCursor c = state.newCursor();
+    StateCursor<AuthStateModel> c = state.newCursor(AuthStateModel.class, true);
     AuthStateModel sm = new AuthStateModel("wriker@mozilla.com");
     DateTime n = new DateTime();
     DateTime oneDayAgo = n.minusHours(1);

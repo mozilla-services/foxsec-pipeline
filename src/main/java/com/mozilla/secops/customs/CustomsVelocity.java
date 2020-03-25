@@ -164,9 +164,9 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                       }
                       seenAddr.add(remoteAddress);
 
-                      StateCursor cur;
+                      StateCursor<AuthStateModel> cur;
                       try {
-                        cur = state.newCursor();
+                        cur = state.newCursor(AuthStateModel.class, true);
                       } catch (StateException exc) {
                         // Experimental, so log this as info for now. This could be expanded to
                         // error in the future.

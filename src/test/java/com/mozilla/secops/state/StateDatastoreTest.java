@@ -30,8 +30,8 @@ public class StateDatastoreTest {
     assertNotNull(s);
     s.initialize();
 
-    StateCursor c1 = s.newCursor();
-    StateCursor c2 = s.newCursor();
+    StateCursor<StateTestClass> c1 = s.newCursor(StateTestClass.class, true);
+    StateCursor<StateTestClass> c2 = s.newCursor(StateTestClass.class, true);
     assertNotNull(c1);
     assertNotNull(c2);
 
@@ -42,12 +42,12 @@ public class StateDatastoreTest {
     c1.set("testing", t);
     c1.commit();
 
-    c1 = s.newCursor();
-    t = c1.get("testing", StateTestClass.class);
+    c1 = s.newCursor(StateTestClass.class, true);
+    t = c1.get("testing");
     assertNotNull(t);
     assertEquals("test", t.str);
 
-    StateTestClass t2 = c2.get("testing", StateTestClass.class);
+    StateTestClass t2 = c2.get("testing");
     assertNotNull(t2);
     assertEquals("test", t2.str);
 

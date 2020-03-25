@@ -31,60 +31,19 @@ public class State {
   }
 
   /**
-   * Perform simple key fetch operation with no intended follow up modification and update of the
-   * value. For operations involving a fetch, update, and store a new cursor should be allocated by
-   * the caller instead.
-   *
-   * @param s State key to fetch state for
-   * @param cls Class to deserialize state data into
-   * @param <T> T
-   * @return Returns an object containing state data for key, null if not found
-   * @throws StateException StateException
-   */
-  public <T> T get(String s, Class<T> cls) throws StateException {
-    StateCursor c = newCursor();
-    try {
-      return c.get(s, cls);
-    } finally {
-      c.commit();
-    }
-  }
-
-  /**
-   * Perform a get all fetch operation with no intended follow up modification and update of any
-   * value. For operations involving a fetch, update, and store a new cursor should be allocated by
-   * the caller instead.
-   *
-   * @param cls Class to deserialize state data into
-   * @param <T> T
-   * @return Returns an array containing the state data for all keys of the kind in {@link
-   *     DatastoreStateInterface}, null if none are found.
-   * @throws StateException StateException
-   */
-  public <T> T[] getAll(Class<T> cls) throws StateException {
-    StateCursor c = newCursor();
-    try {
-      return c.getAll(cls);
-    } finally {
-      c.commit();
-    }
-  }
-
-  /**
    * Allocate new state cursor for a set of operations
    *
-   * <p>In cases where the underlying {@link StateInterface} supports transactions, allocating a new
-   * cursor will begin a new transaction, from which writes will not take effect until the
-   * transaction has been commited.
+   * <p>If the transaction flag is true, the new cursor will be allocated as a transaction. In this
+   * case be sure to properly commit the transaction in the cursor when complete.
    *
-   * <p>If the underlying interface does not support transactions, the new cursor will still provide
-   * read and write functionality but it will not provide any form of transaction consistency.
-   *
+   * @param stateClass Class used in stage storage
+   * @param transaction If true, allocate cursor as a transaction
    * @return {@link StateCursor}
    * @throws StateException StateException
    */
-  public StateCursor newCursor() throws StateException {
-    return si.newCursor();
+  public <T> StateCursor<T> newCursor(Class<T> stateClass, boolean transaction)
+      throws StateException {
+    return si.newCursor(stateClass, transaction);
   }
 
   /**

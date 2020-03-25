@@ -179,6 +179,11 @@ public class AlertIO {
       }
     }
 
+    @Teardown
+    public void teardown() {
+      slack.done();
+    }
+
     @ProcessElement
     public void processElement(ProcessContext c) {
       Alert a = c.element();

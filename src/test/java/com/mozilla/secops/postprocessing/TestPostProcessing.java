@@ -57,7 +57,7 @@ public class TestPostProcessing {
   }
 
   private void addWatchlistEntries() throws Exception {
-    StateCursor c;
+    StateCursor<Watchlist.WatchlistEntry> c;
 
     State is =
         new State(
@@ -70,7 +70,7 @@ public class TestPostProcessing {
     ipe.setSeverity(Alert.AlertSeverity.CRITICAL);
     ipe.setCreatedBy("picard");
     ipe.setExpiresAt(new DateTime());
-    c = is.newCursor();
+    c = is.newCursor(Watchlist.WatchlistEntry.class, true);
     c.set(ipe.getObject(), ipe);
     c.commit();
     is.done();
@@ -86,7 +86,7 @@ public class TestPostProcessing {
     emaile.setSeverity(Alert.AlertSeverity.WARNING);
     emaile.setCreatedBy("picard");
     emaile.setExpiresAt(new DateTime());
-    c = es.newCursor();
+    c = es.newCursor(Watchlist.WatchlistEntry.class, true);
     c.set(emaile.getObject(), emaile);
     c.commit();
     es.done();

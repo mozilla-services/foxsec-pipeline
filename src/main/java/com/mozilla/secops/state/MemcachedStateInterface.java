@@ -3,7 +3,6 @@ package com.mozilla.secops.state;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.OperationTimeoutException;
 
 /** Utilize a memcached instance for centralized state storage */
 public class MemcachedStateInterface implements StateInterface {
@@ -11,8 +10,12 @@ public class MemcachedStateInterface implements StateInterface {
   private final int memcachedPort;
   private MemcachedClient memclient;
 
-  public StateCursor newCursor() throws StateException {
-    return new MemcachedStateCursor(memclient);
+  public <T> StateCursor<T> newCursor(Class<T> stateClass, boolean transaction)
+      throws StateException {
+    if (transaction) {
+      throw new StateException("memcached state interface does not support transactions");
+    }
+    return new MemcachedStateCursor<T>(memclient, stateClass);
   }
 
   public void done() {
@@ -27,14 +30,6 @@ public class MemcachedStateInterface implements StateInterface {
     try {
       memclient = new MemcachedClient(new InetSocketAddress(memcachedHost, memcachedPort));
     } catch (IOException exc) {
-      throw new StateException(exc.getMessage());
-    }
-  }
-
-  public String getObject(String s) throws StateException {
-    try {
-      return (String) memclient.get(s);
-    } catch (OperationTimeoutException exc) {
       throw new StateException(exc.getMessage());
     }
   }

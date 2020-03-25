@@ -10,6 +10,7 @@ import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateCursor;
 import com.mozilla.secops.state.StateException;
+import java.util.ArrayList;
 import java.util.Objects;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -249,11 +250,15 @@ public class Watchlist {
     }
 
     WatchlistEntry entry;
+    StateCursor<WatchlistEntry> sc = null;
     try {
-      entry = s.get(obj, WatchlistEntry.class);
+      sc = s.newCursor(WatchlistEntry.class, false);
+      entry = sc.get(obj);
     } catch (StateException exc) {
       log.error("Error getting watchlist entry of type {}: {}", type, exc.getMessage());
       return null;
+    } finally {
+      s.done();
     }
 
     return entry;
@@ -269,15 +274,19 @@ public class Watchlist {
       return null;
     }
 
-    WatchlistEntry[] entries;
+    ArrayList<WatchlistEntry> entries = null;
+    StateCursor<WatchlistEntry> sc = null;
     try {
-      entries = s.getAll(WatchlistEntry.class);
+      sc = s.newCursor(WatchlistEntry.class, false);
+      entries = sc.getAll();
     } catch (StateException exc) {
       log.error("Error getting all watched {}: {}", type, exc.getMessage());
       return null;
+    } finally {
+      s.done();
     }
 
-    return entries;
+    return entries.toArray(new WatchlistEntry[0]);
   }
 
   /**
@@ -415,7 +424,7 @@ public class Watchlist {
               new DatastoreStateInterface(
                   kind, Watchlist.watchlistDatastoreNamespace, cmd.getOptionValue("p")));
       s.initialize();
-      StateCursor c = s.newCursor();
+      StateCursor<Watchlist.WatchlistEntry> c = s.newCursor(Watchlist.WatchlistEntry.class, true);
       c.set(we.getObject(), we);
       c.commit();
       s.done();

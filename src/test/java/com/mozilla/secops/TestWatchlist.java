@@ -40,7 +40,7 @@ public class TestWatchlist {
                 Watchlist.watchlistEmailKind, Watchlist.watchlistDatastoreNamespace));
     es.initialize();
     es.deleteAll();
-    StateCursor c;
+    StateCursor<Watchlist.WatchlistEntry> c;
 
     Watchlist wl = new Watchlist();
 
@@ -55,7 +55,7 @@ public class TestWatchlist {
     ipe.setCreatedBy("picard");
     ipe.setExpiresAt(new DateTime());
 
-    c = is.newCursor();
+    c = is.newCursor(Watchlist.WatchlistEntry.class, true);
     c.set(ipe.getObject(), ipe);
     c.commit();
 
@@ -84,10 +84,10 @@ public class TestWatchlist {
     emailTwo.setCreatedBy("picard");
     emailTwo.setExpiresAt(new DateTime());
 
-    c = es.newCursor();
+    c = es.newCursor(Watchlist.WatchlistEntry.class, true);
     c.set(emailOne.getObject(), emailOne);
     c.commit();
-    c = es.newCursor();
+    c = es.newCursor(Watchlist.WatchlistEntry.class, true);
     c.set(emailTwo.getObject(), emailTwo);
     c.commit();
 
