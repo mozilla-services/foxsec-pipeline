@@ -65,7 +65,7 @@ func (bc *BugzillaClient) CreateBugFromAlerts(assignedTo, category string, alert
 
 	bugText := fmt.Sprintf("## %s alerts\n---\n", category)
 	for _, alert := range alerts {
-		bugText = bugText + fmt.Sprintf("%s\n---\n", alert.PrettyPrint())
+		bugText = bugText + fmt.Sprintf("%s\n---\n", alert.MarkdownFormat())
 	}
 
 	bugJson, err := json.Marshal(&CreateBug{
@@ -126,7 +126,7 @@ type CreateComment struct {
 func (bc *BugzillaClient) AddAlertsToBug(bugId int, alerts []*Alert) error {
 	text := "## New Alerts\n---\n"
 	for _, alert := range alerts {
-		text = text + fmt.Sprintf("%s\n---\n", alert.PrettyPrint())
+		text = text + fmt.Sprintf("%s\n---\n", alert.MarkdownFormat())
 	}
 	commentJson, err := json.Marshal(&CreateComment{text, true})
 	if err != nil {

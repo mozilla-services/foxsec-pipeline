@@ -50,6 +50,70 @@ Payload (message sent to user):
 	return s
 }
 
+func (a *Alert) MarkdownFormat() string {
+	if a.Category == "gatekeeper:aws" {
+		return a.GuarddutyMarkdownFormat()
+	}
+	return a.PrettyPrint()
+}
+
+// Used by `bugzilla-alert-manager` to format guardduty alerts
+// within Bugzilla bug description/comments.
+//
+// Example of output:
+//	#### Core Alert Info
+//	Finding Type: <>
+//	Finding URL: <>
+//	Finding ID: <>
+//	AWS Account Name: <>
+//	AWS Account ID: <>
+//	Finding Description: <>
+//
+//	#### Fraud Pipeline Info
+//	Id: <>
+//	Summary: <>
+//	Severity: <>
+//	Category: <>
+//	Timestamp: <>
+//
+//	### Metadata
+//	....
+func (a *Alert) GuarddutyMarkdownFormat() string {
+	core := fmt.Sprintf(`#### Core Alert Info
+Finding Type: %s
+Finding URL: %s
+Finding ID: %s
+AWS Account Name: %s
+AWS Account ID: %s
+Finding Description: %s
+`,
+		a.GetMetadata("finding_type"),
+		a.GetMetadata("url_to_finding"),
+		a.GetMetadata("finding_id"),
+		a.GetMetadata("aws_account_name"),
+		a.GetMetadata("aws_account_id"),
+		a.GetMetadata("description"),
+	)
+	fraudInfo := fmt.Sprintf(`#### Fraud Pipeline Info
+Id: %s
+Summary: %s
+Severity: %s
+Category: %s
+Timestamp: %s
+`,
+		a.Id, a.Summary, a.Severity, a.Category, a.Timestamp)
+
+	var md string
+	for _, am := range a.Metadata {
+		md = md + fmt.Sprintf(" - %s=%s\n", am.Key, am.Value)
+	}
+	metadata := fmt.Sprintf(`#### Metadata
+%s
+`, md)
+
+	return fmt.Sprintf("%s\n%s\n%s", core, fraudInfo, metadata)
+}
+
 func (a *Alert) OlderThan(dur time.Duration) bool {
 	return a.Timestamp.Add(dur).Before(time.Now())
 }
