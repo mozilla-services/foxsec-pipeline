@@ -94,6 +94,9 @@ public class PostProcessing implements Serializable {
    *
    * <p>Uses {@link Watchlist} to retrieve the watchlist from datastore and check these entries
    * against alert metadata keys.
+   *
+   * <p>Since state based DoFn requires keyed input, we just expect a dummy key here to satisfy that
+   * requirement. Elements passed to the function can all be keyed with the same value.
    */
   public static class WatchlistAnalyze extends DoFn<KV<Boolean, Alert>, Alert>
       implements DocumentingTransform {
@@ -106,9 +109,13 @@ public class PostProcessing implements Serializable {
     private static final int MAX_BATCH_SIZE = 250;
     private static final Duration MAX_BATCH_DURATION = Duration.standardSeconds(1);
 
+    // Allocate an expiry timer, which will be used when we reach the end of window and is
+    // independent of element count or processing time.
     @TimerId("alertExpiry")
     private final TimerSpec alertExpiry = TimerSpecs.timer(TimeDomain.EVENT_TIME);
 
+    // Allocate a stale timer, which will be used after a certain period of processing time
+    // elapses to dequeue any buffered elements.
     @TimerId("alertStale")
     private final TimerSpec alertStale = TimerSpecs.timer(TimeDomain.PROCESSING_TIME);
 
