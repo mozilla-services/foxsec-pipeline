@@ -53,7 +53,7 @@ public class StateTest {
     State s = new State(si);
     assertNotNull(s);
     s.initialize();
-    StateCursor c = s.newCursor();
+    StateCursor<StateTestClass> c = s.newCursor(StateTestClass.class, false);
     assertNotNull(c);
 
     StateTestClass t = new StateTestClass();
@@ -61,13 +61,10 @@ public class StateTest {
 
     t.str = "test";
     c.set("testing", t);
-    c.commit();
 
-    c = s.newCursor();
-    t = c.get("testing", StateTestClass.class);
+    t = c.get("testing");
     assertNotNull(t);
     assertEquals("test", t.str);
-    c.commit();
   }
 
   @Test
@@ -80,18 +77,14 @@ public class StateTest {
     assertNotNull(t);
     t.str = "test";
 
-    StateCursor c = s.newCursor();
+    StateCursor<StateTestClass> c = s.newCursor(StateTestClass.class, false);
     c.set("testing", t);
-    c.commit();
-    c = s.newCursor();
-    t = c.get("testing", StateTestClass.class);
+    t = c.get("testing");
     assertNotNull(t);
     assertEquals("test", t.str);
-    c.commit();
 
-    c = s.newCursor();
-    assertNull(c.get("nonexist", StateTestClass.class));
-    c.commit();
+    c = s.newCursor(StateTestClass.class, false);
+    assertNull(c.get("nonexist"));
   }
 
   @Test(expected = StateException.class)
@@ -103,14 +96,8 @@ public class StateTest {
     StateTestClass t = new StateTestClass();
     assertNotNull(t);
     t.str = "test";
-    StateCursor c = s.newCursor();
-    try {
-      c.set("", t);
-    } catch (StateException exc) {
-      throw exc;
-    } finally {
-      c.commit();
-    }
+    StateCursor<StateTestClass> c = s.newCursor(StateTestClass.class, false);
+    c.set("", t);
   }
 
   @Test(expected = StateException.class)
@@ -119,13 +106,7 @@ public class StateTest {
     State s = new State(si);
     assertNotNull(s);
     s.initialize();
-    StateCursor c = s.newCursor();
-    try {
-      c.get("", StateTestClass.class);
-    } catch (StateException exc) {
-      throw exc;
-    } finally {
-      c.commit();
-    }
+    StateCursor<StateTestClass> c = s.newCursor(StateTestClass.class, false);
+    c.get("");
   }
 }

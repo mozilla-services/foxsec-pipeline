@@ -755,7 +755,8 @@ public class AuthProfile implements Serializable {
           // We also want to skip AlertIO for untracked identities here
           a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
         } else {
-          StateCursor cur = state.newCursor();
+          // AuthStateModel expects a cursor that has been allocated as a transaction
+          StateCursor<AuthStateModel> cur = state.newCursor(AuthStateModel.class, true);
 
           a.addMetadata("identity_key", userIdentity);
           // The event was for a tracked identity, initialize the state model

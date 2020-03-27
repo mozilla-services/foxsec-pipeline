@@ -7,6 +7,7 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.crypto.RuntimeSecrets;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
+import com.mozilla.secops.state.StateCursor;
 import com.mozilla.secops.state.StateException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -686,14 +687,18 @@ public class IprepdIO {
       throw new IOException(exc.getMessage());
     }
 
+    StateCursor<WhitelistedObject> sc = null;
+    StateCursor<WhitelistedObject> lsc = null;
     try {
-      WhitelistedObject wobj = state.get(obj, WhitelistedObject.class);
+      sc = state.newCursor(WhitelistedObject.class, false);
+      WhitelistedObject wobj = sc.get(obj);
       if (wobj != null) {
         a.addMetadata(IPREPD_EXEMPT, "true");
         a.addMetadata(IPREPD_EXEMPT + "_created_by", wobj.getCreatedBy());
       } else {
         if (type.equals(whitelistedIpKind)) {
-          WhitelistedObject legacyWobj = legacyState.get(obj, WhitelistedObject.class);
+          lsc = legacyState.newCursor(WhitelistedObject.class, false);
+          WhitelistedObject legacyWobj = lsc.get(obj);
           if (legacyWobj != null) {
             a.addMetadata(IPREPD_EXEMPT, "true");
             a.addMetadata(IPREPD_EXEMPT + "_created_by", legacyWobj.getCreatedBy());

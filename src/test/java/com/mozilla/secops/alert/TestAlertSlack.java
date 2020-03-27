@@ -14,6 +14,7 @@ import com.github.seratch.jslack.api.methods.response.chat.ChatPostMessageRespon
 import com.mozilla.secops.slack.SlackManager;
 import com.mozilla.secops.state.MemcachedStateInterface;
 import com.mozilla.secops.state.State;
+import com.mozilla.secops.state.StateCursor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -70,7 +71,8 @@ public class TestAlertSlack {
     State state =
         new State(new MemcachedStateInterface(cfg.getMemcachedHost(), cfg.getMemcachedPort()));
     state.initialize();
-    Alert a = state.get(ta.getAlertId().toString(), Alert.class);
+    StateCursor<Alert> sc = state.newCursor(Alert.class, false);
+    Alert a = sc.get(ta.getAlertId().toString());
     assertNotNull(a);
     assertEquals(a.getTimestamp(), ta.getTimestamp());
     assertEquals(a.getMetadataValue("status"), "NEW");

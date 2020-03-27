@@ -1,143 +1,165 @@
 package com.mozilla.secops.state;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import java.io.IOException;
-import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Generic state cursor implementation */
-public abstract class StateCursor {
+public abstract class StateCursor<T> {
   private final Logger log;
-  private final ObjectMapper mapper;
+  protected final Class<T> stateClass;
+  protected final ObjectMapper mapper;
+  protected ArrayList<StateOperation<T>> operations;
+  protected HashMap<UUID, StateOperation<T>> completedOperations;
 
   /**
-   * Low level state object fetch operation
+   * Add an operation for execution in the cursor
    *
-   * <p>Most uses should prefer {@link #get}.
-   *
-   * @param s Key
-   * @return Value
+   * @param operation StateOperation
+   * @return This for chaining
    * @throws StateException StateException
    */
-  public abstract String getObject(String s) throws StateException;
+  public StateCursor<T> withOperation(StateOperation<T> operation) throws StateException {
+    // A key is required for everything but GET_ALL
+    if (operation.getOperationType() != StateOperation.OperationType.GET_ALL
+        && !validKey(operation.getKey())) {
+      throw new StateException("invalid key name");
+    }
+    operations.add(operation);
+    return this;
+  }
 
   /**
-   * Low level state object fetch all operation
+   * Fetch a result value from a completed operation
    *
-   * <p>Most uses should prefer {@link #getAll}.
+   * <p>Only applicable for GET related operations.
    *
-   * @return String[]
+   * @param id Operation ID
+   * @return T
    * @throws StateException StateException
    */
-  public abstract String[] getAllObjects() throws StateException;
+  public T getResultValueForId(UUID id) throws StateException {
+    if (!completedOperations.containsKey(id)) {
+      throw new StateException("requested operation id was unknown or not yet completed");
+    }
+    return completedOperations.get(id).getResultValue();
+  }
 
   /**
-   * Low level state object save operation
+   * Fetch a set of result values from a completed operation
    *
-   * <p>Most uses should prefer {@link #set}.
+   * <p>Only applicable for GET_ALL related operations.
    *
-   * @param s Key
-   * @param v Value
+   * @param id Operation ID
+   * @return ArrayList
    * @throws StateException StateException
    */
-  public abstract void saveObject(String s, String v) throws StateException;
+  public ArrayList<T> getResultValuesForId(UUID id) throws StateException {
+    if (!completedOperations.containsKey(id)) {
+      throw new StateException("requested operation id was unknown or not yet completed");
+    }
+    return completedOperations.get(id).getResultValues();
+  }
 
   /**
    * Commit transaction
    *
-   * <p>For cursors that have an underlying interface implementation that does not support
-   * transactions, commit is a noop.
+   * <p>If the cursor was created as a transaction, calling this method on the cursor will commit
+   * the transaction. If this method is called on a cursor that is not configured as a transaction,
+   * an exception will be thrown.
    *
    * @throws StateException StateException
    */
   public abstract void commit() throws StateException;
 
+  /**
+   * Execute all operations in cursor
+   *
+   * @throws StateException
+   */
+  public void execute() throws StateException {
+    completedOperations.clear();
+    executeInner();
+    operations.clear();
+  }
+
+  /**
+   * Execute all operations in cursor
+   *
+   * @throws StateException
+   */
+  protected void executeInner() throws StateException {
+    throw new RuntimeException("executeInner must be overridden by implementing class");
+  }
+
+  /**
+   * Set a value in state
+   *
+   * <p>This is a convenience method that will add a single SET operation and call execute.
+   *
+   * @param key Key
+   * @param value Value
+   * @throws StateException StateException
+   */
+  public void set(String key, T value) throws StateException {
+    StateOperation<T> o = new StateOperation<T>().set(key, value);
+    withOperation(o);
+    execute();
+  }
+
+  /**
+   * Get a value from state
+   *
+   * <p>This is a convenience method that will add a single GET operation and call execute.
+   *
+   * @param key Key
+   * @return T
+   * @throws StateException StateException
+   */
+  public T get(String key) throws StateException {
+    StateOperation<T> o = new StateOperation<T>().get(key);
+    withOperation(o);
+    execute();
+    return getResultValueForId(o.getId());
+  }
+
+  /**
+   * Get all values from state
+   *
+   * <p>This is a convenience method that will add a single GET_ALL operation and call execute.
+   *
+   * @return ArrayList
+   * @throws StateException StateException
+   */
+  public ArrayList<T> getAll() throws StateException {
+    StateOperation<T> o = new StateOperation<T>().getAll();
+    withOperation(o);
+    execute();
+    return getResultValuesForId(o.getId());
+  }
+
   private static Boolean validKey(String k) {
-    if (k.isEmpty()) {
+    if ((k == null) || (k.isEmpty())) {
       return false;
     }
     return true;
   }
 
   /**
-   * Get a state value
+   * Allocate new {@link StateCursor}
    *
-   * @param s State key to fetch state for
-   * @param cls Class to deserialize state data into
-   * @param <T> T
-   * @return Returns an object containing state data for key, null if not found
-   * @throws StateException StateException
+   * @param stateClass Class for state storage
    */
-  public <T> T get(String s, Class<T> cls) throws StateException {
-    if (!validKey(s)) {
-      throw new StateException("invalid key name");
-    }
-    log.info("Requesting state for {}", s);
-    String lv = getObject(s);
-    if (lv == null) {
-      return null;
-    }
-
-    try {
-      return mapper.readValue(lv, cls);
-    } catch (IOException exc) {
-      throw new StateException(exc.getMessage());
-    }
-  }
-
-  /**
-   * Get all state values of the specified kind (specific to Datastore)
-   *
-   * @param cls Class to deserialize state data into
-   * @param <T> T
-   * @return Returns an array containing the state data for all keys of the kind in {@link
-   *     DatastoreStateInterface}, null if none are found.
-   * @throws StateException StateException
-   */
-  public <T> T[] getAll(Class<T> cls) throws StateException {
-    String[] lv = getAllObjects();
-    if (lv == null) {
-      return null;
-    }
-
-    try {
-      @SuppressWarnings("unchecked")
-      T[] results = (T[]) Array.newInstance(cls, lv.length);
-      for (int i = 0; i < lv.length; i++) {
-        results[i] = mapper.readValue(lv[i], cls);
-      }
-      return results;
-    } catch (IOException exc) {
-      throw new StateException(exc.getMessage());
-    }
-  }
-
-  /**
-   * Set a state value
-   *
-   * @param s State key to store state for
-   * @param o Object containing state data to serialize into state storage
-   * @throws StateException StateException
-   */
-  public void set(String s, Object o) throws StateException {
-    if (!validKey(s)) {
-      throw new StateException("invalid key name");
-    }
-    log.info("Writing state for {}", s);
-
-    try {
-      saveObject(s, mapper.writeValueAsString(o));
-    } catch (JsonProcessingException exc) {
-      throw new StateException(exc.getMessage());
-    }
-  }
-
-  /** Allocate new {@link StateCursor} */
-  public StateCursor() {
+  public StateCursor(Class<T> stateClass) {
     log = LoggerFactory.getLogger(StateCursor.class);
+    operations = new ArrayList<StateOperation<T>>();
+    completedOperations = new HashMap<UUID, StateOperation<T>>();
+
+    this.stateClass = stateClass;
 
     mapper = new ObjectMapper();
     mapper.registerModule(new JodaModule());

@@ -12,6 +12,7 @@ public class StateMemcachedTest {
     State s = new State(new MemcachedStateInterface("127.0.0.1", 11212));
     assertNotNull(s);
     s.initialize();
-    s.get("testing", StateTestClass.class);
+    StateCursor<StateTestClass> sc = s.newCursor(StateTestClass.class, false);
+    sc.get("testing");
   }
 }

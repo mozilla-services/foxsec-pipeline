@@ -52,19 +52,19 @@ public class TestAuthStateModel {
   public void authStateModelTest() throws Exception {
     testEnv();
     State s = new State(new DatastoreStateInterface("authprofile", "teststatemodel"));
-    StateCursor c;
+    StateCursor<AuthStateModel> c;
     s.initialize();
 
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     assertNull(AuthStateModel.get("nonexist", c, new PruningStrategyEntryAge()));
     c.commit();
 
     AuthStateModel sm = new AuthStateModel("riker");
     assertNotNull(sm);
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     sm.set(c, new PruningStrategyEntryAge());
 
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     sm = AuthStateModel.get("riker", c, new PruningStrategyEntryAge());
     assertNotNull(sm);
     assertEquals(sm.getEntries().size(), 0);
@@ -74,17 +74,17 @@ public class TestAuthStateModel {
     assertEquals(sm.getEntries().size(), 1);
     sm.set(c, new PruningStrategyEntryAge());
 
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     sm = AuthStateModel.get("riker", c, new PruningStrategyEntryAge());
     assertEquals(sm.getEntries().size(), 1);
     assertFalse(sm.updateEntry("127.0.0.1", 1.0, 1.0)); // Assert false for update existing
     sm.set(c, new PruningStrategyEntryAge());
 
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     assertTrue(sm.updateEntry("10.0.0.1", 44.0, 44.0));
     assertEquals(sm.getEntries().size(), 2);
     sm.set(c, new PruningStrategyEntryAge());
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     sm = AuthStateModel.get("riker", c, new PruningStrategyEntryAge());
     assertEquals(sm.getEntries().size(), 2);
     c.commit();
@@ -93,33 +93,33 @@ public class TestAuthStateModel {
     assertNotNull(sm);
     assertTrue(sm.updateEntry("127.0.0.1", 1.0, 1.0));
     assertEquals(sm.getEntries().size(), 1);
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     sm.set(c, new PruningStrategyEntryAge());
 
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     sm = AuthStateModel.get("picard", c, new PruningStrategyEntryAge());
     assertTrue(sm.updateEntry("10.0.0.1", new DateTime().minusDays(1), 44.0, 44.0));
     sm.set(c, new PruningStrategyEntryAge());
 
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     sm = AuthStateModel.get("picard", c, new PruningStrategyEntryAge());
     assertEquals(sm.getEntries().size(), 2);
     sm.set(c, new PruningStrategyEntryAge());
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     PruningStrategyEntryAge ps = new PruningStrategyEntryAge();
     ps.setEntryAgePruningSeconds(43200L);
     sm = AuthStateModel.get("picard", c, ps);
     assertEquals(sm.getEntries().size(), 1);
     c.commit();
 
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     sm = new AuthStateModel("laforge");
     assertTrue(sm.updateEntry("127.0.0.1", new DateTime().minusHours(1), 1.0, 1.0));
     assertFalse(sm.updateEntry("127.0.0.1", new DateTime().minusHours(1), 1.0, 1.0));
     assertTrue(sm.updateEntry("127.0.0.2", 1.0, 1.0));
     assertEquals(2, sm.getEntries().size());
     sm.set(c, new PruningStrategyLatest());
-    c = s.newCursor();
+    c = s.newCursor(AuthStateModel.class, true);
     sm = AuthStateModel.get("laforge", c, new PruningStrategyLatest());
     assertEquals(1, sm.getEntries().size());
     // Updating should be true, since 127.0.0.1 will have been removed

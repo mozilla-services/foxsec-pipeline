@@ -20,7 +20,7 @@ import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.metrics.Distribution;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -28,13 +28,24 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.state.BagState;
+import org.apache.beam.sdk.state.StateSpec;
+import org.apache.beam.sdk.state.StateSpecs;
+import org.apache.beam.sdk.state.TimeDomain;
+import org.apache.beam.sdk.state.Timer;
+import org.apache.beam.sdk.state.TimerSpec;
+import org.apache.beam.sdk.state.TimerSpecs;
+import org.apache.beam.sdk.state.ValueState;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,18 +94,70 @@ public class PostProcessing implements Serializable {
    *
    * <p>Uses {@link Watchlist} to retrieve the watchlist from datastore and check these entries
    * against alert metadata keys.
+   *
+   * <p>Since state based DoFn requires keyed input, we just expect a dummy key here to satisfy that
+   * requirement. Elements passed to the function can all be keyed with the same value.
    */
-  public static class WatchlistAnalyze extends DoFn<Alert, Alert> implements DocumentingTransform {
+  public static class WatchlistAnalyze extends DoFn<KV<Boolean, Alert>, Alert>
+      implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
     private Logger log;
     private Watchlist wl;
     private String warningEmail;
     private String criticalEmail;
 
+    private static final int MAX_BATCH_SIZE = 250;
+    private static final Duration MAX_BATCH_DURATION = Duration.standardSeconds(1);
+
+    // Allocate an expiry timer, which will be used when we reach the end of window and is
+    // independent of element count or processing time.
+    @TimerId("alertExpiry")
+    private final TimerSpec alertExpiry = TimerSpecs.timer(TimeDomain.EVENT_TIME);
+
+    // Allocate a stale timer, which will be used after a certain period of processing time
+    // elapses to dequeue any buffered elements.
+    @TimerId("alertStale")
+    private final TimerSpec alertStale = TimerSpecs.timer(TimeDomain.PROCESSING_TIME);
+
+    @StateId("alertBuffer")
+    private final StateSpec<BagState<Alert>> alertBuffer = StateSpecs.bag();
+
+    @StateId("alertBufferCount")
+    private final StateSpec<ValueState<Integer>> alertBufferCount = StateSpecs.value();
+
     private final Distribution alertProcessingTime;
 
     private static final String[] emailKeys = new String[] {"email", "username", "identity_key"};
     private static final String[] ipKeys = new String[] {"sourceaddress", "sourceaddress_previous"};
+
+    private static class KeyData {
+      public String key;
+      public String value;
+      public String type;
+
+      @Override
+      public boolean equals(Object o) {
+        if (o == this) {
+          return true;
+        }
+        if (!(o instanceof KeyData)) {
+          return false;
+        }
+        KeyData k = (KeyData) o;
+        return key.equals(k.key) && value.equals(k.value) && type.equals(k.type);
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hash(key, value, type);
+      }
+
+      KeyData(String key, String value, String type) {
+        this.key = key;
+        this.value = value;
+        this.type = type;
+      }
+    }
 
     public WatchlistAnalyze(PostProcessingOptions options) {
       warningEmail = options.getWarningSeverityEmail();
@@ -123,68 +186,172 @@ public class PostProcessing implements Serializable {
     }
 
     @ProcessElement
-    public void processElement(ProcessContext c) {
+    public void processElement(
+        ProcessContext c,
+        BoundedWindow w,
+        @StateId("alertBuffer") BagState<Alert> alertBuffer,
+        @StateId("alertBufferCount") ValueState<Integer> alertBufferCount,
+        @TimerId("alertExpiry") Timer alertExpiry,
+        @TimerId("alertStale") Timer alertStale) {
       long startTime = System.nanoTime();
 
-      Alert sourceAlert = c.element();
+      alertExpiry.set(w.maxTimestamp());
 
-      List<Alert> eAlerts =
-          checkAlertAgainstWatchlistEntries(sourceAlert, Watchlist.watchlistEmailKind, emailKeys);
-      for (Alert a : eAlerts) {
-        c.output(a);
+      Alert sourceAlert = c.element().getValue();
+
+      Integer cnt = alertBufferCount.read();
+      if (cnt == null) {
+        cnt = 0;
       }
-
-      List<Alert> ipAlerts =
-          checkAlertAgainstWatchlistEntries(sourceAlert, Watchlist.watchlistIpKind, ipKeys);
-      for (Alert a : ipAlerts) {
-        c.output(a);
+      if (cnt == 0) {
+        alertStale.offset(MAX_BATCH_DURATION).setRelative();
       }
+      cnt++;
+      alertBufferCount.write(cnt);
+      alertBuffer.add(sourceAlert);
 
-      // nanoseconds to milliseconds
-      alertProcessingTime.update((System.nanoTime() - startTime) / 1000000);
+      if (cnt >= MAX_BATCH_SIZE) {
+        for (Alert a : processAlerts(alertBuffer.read())) {
+          c.output(a);
+        }
+        alertBuffer.clear();
+        alertBufferCount.clear();
+      }
     }
 
-    private List<Alert> checkAlertAgainstWatchlistEntries(
-        Alert sourceAlert, String whitelistEntryType, String[] keys) {
-      List<Alert> outputAlerts = new ArrayList<Alert>();
-      for (String key : keys) {
-        String v = sourceAlert.getMetadataValue(key);
-        if (v == null) {
-          continue;
-        }
-
-        Watchlist.WatchlistEntry entry = wl.getWatchlistEntry(whitelistEntryType, v);
-        if (entry == null) {
-          continue;
-        } else {
-          Alert a = new Alert();
-          a.setCategory("postprocessing");
-          a.setSubcategory("watchlist");
-          a.setSummary(
-              String.format(
-                  "matched watchlist object found in alert %s", sourceAlert.getAlertId()));
-          a.setSeverity(entry.getSeverity());
-
-          // Add escalation metadata
-          if (entry.getSeverity() == Alert.AlertSeverity.WARNING) {
-            a.addMetadata("notify_email_direct", warningEmail);
-          }
-          if (entry.getSeverity() == Alert.AlertSeverity.CRITICAL) {
-            a.addMetadata("notify_email_direct", criticalEmail);
-          }
-
-          a.addMetadata("source_alert", sourceAlert.getAlertId().toString());
-          a.addMetadata("matched_metadata_key", key);
-          // This may seem redundant with the below `matched_object`, but trying to
-          // future proof against adding regex matchers (or similar).
-          a.addMetadata("matched_metadata_value", v);
-          a.addMetadata("matched_type", entry.getType());
-          a.addMetadata("matched_object", entry.getObject());
-          a.addMetadata("whitelisted_entry_created_by", entry.getCreatedBy());
-          outputAlerts.add(a);
+    @OnTimer("alertStale")
+    public void onStale(
+        OnTimerContext c,
+        @StateId("alertBuffer") BagState<Alert> alertBuffer,
+        @StateId("alertBufferCount") ValueState<Integer> alertBufferCount) {
+      if (!alertBuffer.isEmpty().read()) {
+        for (Alert a : processAlerts(alertBuffer.read())) {
+          c.output(a);
         }
       }
-      return outputAlerts;
+      alertBuffer.clear();
+      alertBufferCount.clear();
+    }
+
+    @OnTimer("alertExpiry")
+    public void onExpiry(
+        OnTimerContext c,
+        @StateId("alertBuffer") BagState<Alert> alertBuffer,
+        @StateId("alertBufferCount") ValueState<Integer> alertBufferCount) {
+      if (!alertBuffer.isEmpty().read()) {
+        for (Alert a : processAlerts(alertBuffer.read())) {
+          c.output(a);
+        }
+      }
+      alertBuffer.clear();
+      alertBufferCount.clear();
+    }
+
+    private ArrayList<KeyData> extractIpValues(Alert a) {
+      ArrayList<KeyData> ret = new ArrayList<>();
+      for (String i : ipKeys) {
+        String v = a.getMetadataValue(i);
+        if (v != null) {
+          ret.add(new KeyData(i, v, Watchlist.watchlistIpKind));
+        }
+      }
+      return ret;
+    }
+
+    private ArrayList<KeyData> extractEmailValues(Alert a) {
+      ArrayList<KeyData> ret = new ArrayList<>();
+      for (String i : emailKeys) {
+        String v = a.getMetadataValue(i);
+        if (v != null) {
+          ret.add(new KeyData(i, v, Watchlist.watchlistEmailKind));
+        }
+      }
+      return ret;
+    }
+
+    private ArrayList<Alert> processAlerts(Iterable<Alert> input) {
+      // First pull all the alerts from the iterable and store them in an ArrayList as we
+      // will need to iterate over them more then once. While we are doing this, build a list
+      // of values of the various types we need we will want to check.
+      ArrayList<Alert> alerts = new ArrayList<>();
+      ArrayList<String> emailValues = new ArrayList<>();
+      ArrayList<String> ipValues = new ArrayList<>();
+      for (Alert a : input) {
+        alerts.add(a);
+
+        for (KeyData i : extractIpValues(a)) {
+          if (!ipValues.contains(i.value)) {
+            ipValues.add(i.value);
+          }
+        }
+        for (KeyData i : extractEmailValues(a)) {
+          if (!emailValues.contains(i.value)) {
+            emailValues.add(i.value);
+          }
+        }
+      }
+      log.info("processing {} alerts", alerts.size());
+
+      // Query Watchlist for values; clear the original values arrays and move any matching
+      // items here.
+      ArrayList<Watchlist.WatchlistEntry> emailEntries =
+          wl.getWatchlistEntries(Watchlist.watchlistEmailKind, emailValues);
+      ArrayList<Watchlist.WatchlistEntry> ipEntries =
+          wl.getWatchlistEntries(Watchlist.watchlistIpKind, ipValues);
+
+      ArrayList<Alert> ret = new ArrayList<>();
+      for (Alert a : alerts) {
+        for (KeyData i : extractEmailValues(a)) {
+          Watchlist.WatchlistEntry matchedEntry = evaluateKeyData(i, emailEntries);
+          if (matchedEntry != null) {
+            ret.add(createAlert(a, matchedEntry, i));
+          }
+        }
+        for (KeyData i : extractIpValues(a)) {
+          Watchlist.WatchlistEntry matchedEntry = evaluateKeyData(i, ipEntries);
+          if (matchedEntry != null) {
+            ret.add(createAlert(a, matchedEntry, i));
+          }
+        }
+      }
+      return ret;
+    }
+
+    private Watchlist.WatchlistEntry evaluateKeyData(
+        KeyData k, ArrayList<Watchlist.WatchlistEntry> entries) {
+      for (Watchlist.WatchlistEntry w : entries) {
+        if (k.value.equals(w.getObject())) {
+          return w;
+        }
+      }
+      return null;
+    }
+
+    private Alert createAlert(Alert sourceAlert, Watchlist.WatchlistEntry entry, KeyData k) {
+      Alert a = new Alert();
+      a.setCategory("postprocessing");
+      a.setSubcategory("watchlist");
+      a.setSummary(
+          String.format("matched watchlist object found in alert %s", sourceAlert.getAlertId()));
+      a.setSeverity(entry.getSeverity());
+
+      // Add escalation metadata
+      if (entry.getSeverity() == Alert.AlertSeverity.WARNING) {
+        a.addMetadata("notify_email_direct", warningEmail);
+      }
+      if (entry.getSeverity() == Alert.AlertSeverity.CRITICAL) {
+        a.addMetadata("notify_email_direct", criticalEmail);
+      }
+
+      a.addMetadata("source_alert", sourceAlert.getAlertId().toString());
+      a.addMetadata("matched_metadata_key", k.key);
+      // This may seem redundant with the below `matched_object`, but trying to
+      // future proof against adding regex matchers (or similar).
+      a.addMetadata("matched_metadata_value", k.value);
+      a.addMetadata("matched_type", entry.getType());
+      a.addMetadata("matched_object", entry.getObject());
+      a.addMetadata("whitelisted_entry_created_by", entry.getCreatedBy());
+      return a;
     }
   }
 
@@ -276,6 +443,17 @@ public class PostProcessing implements Serializable {
       alertList =
           alertList.and(
               inputAlerts
+                  .apply(
+                      "watchlist key for state",
+                      ParDo.of(
+                          new DoFn<Alert, KV<Boolean, Alert>>() {
+                            private static final long serialVersionUID = 1L;
+
+                            @ProcessElement
+                            public void processElement(ProcessContext c) {
+                              c.output(KV.of(true, c.element()));
+                            }
+                          }))
                   .apply("watchlist analyze", ParDo.of(new WatchlistAnalyze(options)))
                   .apply("watchlist analyze rewindow for output", new GlobalTriggers<Alert>(5)));
     }

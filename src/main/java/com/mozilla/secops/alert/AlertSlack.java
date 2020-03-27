@@ -57,10 +57,24 @@ public class AlertSlack {
     String datastoreKind = cfg.getDatastoreKind();
 
     if (memcachedHost != null && memcachedPort != null) {
-      this.state = new State(new MemcachedStateInterface(memcachedHost, memcachedPort));
+      state = new State(new MemcachedStateInterface(memcachedHost, memcachedPort));
     } else if (datastoreNamespace != null && datastoreKind != null) {
-      this.state = new State(new DatastoreStateInterface(datastoreKind, datastoreNamespace));
+      state = new State(new DatastoreStateInterface(datastoreKind, datastoreNamespace));
     }
+    try {
+      state.initialize();
+    } catch (StateException exc) {
+      throw new RuntimeException(exc.getMessage());
+    }
+  }
+
+  /**
+   * Mark AlertSlack instance as done
+   *
+   * <p>Should be called when object will no longer be used.
+   */
+  public void done() {
+    state.done();
   }
 
   /**
@@ -136,23 +150,14 @@ public class AlertSlack {
       return false;
     }
 
-    StateCursor c = null;
+    StateCursor<Alert> c = null;
     try {
-      state.initialize();
-      c = state.newCursor();
+      c = state.newCursor(Alert.class, false);
       a.addMetadata("status", "NEW");
       c.set(a.getAlertId().toString(), a);
     } catch (StateException exc) {
       log.error("error saving alert state (StateException): {}", exc.getMessage());
       return false;
-    } finally {
-      if (c != null) {
-        try {
-          c.commit();
-        } catch (StateException exc) {
-          log.error("error during alert state commit (StateException): {}", exc.getMessage());
-        }
-      }
     }
 
     log.info("generating slack message for {}", userId);

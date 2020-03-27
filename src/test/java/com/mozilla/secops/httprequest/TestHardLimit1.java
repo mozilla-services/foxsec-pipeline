@@ -141,9 +141,9 @@ public class TestHardLimit1 {
     wobj.setType("ip");
     wobj.setExpiresAt(new DateTime().plusDays(1));
     wobj.setCreatedBy("test");
-    StateCursor cur = state.newCursor();
+    StateCursor<IprepdIO.WhitelistedObject> cur =
+        state.newCursor(IprepdIO.WhitelistedObject.class, false);
     cur.set("192.168.1.4", wobj);
-    cur.commit();
     state.done();
 
     // Create legacy whitelisted ip in datastore
@@ -156,9 +156,9 @@ public class TestHardLimit1 {
     wobj.setIp("192.168.1.5");
     wobj.setExpiresAt(new DateTime().plusDays(1));
     wobj.setCreatedBy("test");
-    StateCursor lcur = legacyState.newCursor();
+    StateCursor<IprepdIO.WhitelistedObject> lcur =
+        legacyState.newCursor(IprepdIO.WhitelistedObject.class, false);
     lcur.set("192.168.1.5", legacyWobj);
-    lcur.commit();
     legacyState.done();
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();

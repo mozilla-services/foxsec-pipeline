@@ -22,8 +22,11 @@ public interface StateInterface {
   /**
    * Allocate new state cursor
    *
+   * @param stateClass Class used in state storage
+   * @param transaction If true, allocate cursor as a transaction
    * @return StateCursor
    * @throws StateException StateException
    */
-  public StateCursor newCursor() throws StateException;
+  public <T> StateCursor<T> newCursor(Class<T> stateClass, boolean transaction)
+      throws StateException;
 }

@@ -5,7 +5,6 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreException;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
-import com.google.cloud.datastore.KeyFactory;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery;
@@ -16,13 +15,13 @@ public class DatastoreStateInterface implements StateInterface {
   private Datastore datastore;
   private final String kind;
   private final String namespace;
-  private KeyFactory keyFactory;
   private String project;
   private HttpTransportOptions transportOpts;
 
-  public StateCursor newCursor() throws StateException {
+  public <T> StateCursor<T> newCursor(Class<T> stateClass, boolean transaction)
+      throws StateException {
     try {
-      return new DatastoreStateCursor(datastore, namespace, kind);
+      return new DatastoreStateCursor<T>(datastore, namespace, kind, stateClass, transaction);
     } catch (DatastoreException exc) {
       throw new StateException(exc.getMessage());
     }
@@ -53,7 +52,6 @@ public class DatastoreStateInterface implements StateInterface {
       }
       datastore = b.build().getService();
     }
-    keyFactory = datastore.newKeyFactory().setNamespace(namespace).setKind(kind);
   }
 
   public void deleteAll() throws StateException {

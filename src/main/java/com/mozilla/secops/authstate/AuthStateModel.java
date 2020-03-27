@@ -351,9 +351,9 @@ public class AuthStateModel {
    * @return User {@link AuthStateModel} or null if it does not exist
    * @throws StateException StateException
    */
-  public static AuthStateModel get(String user, StateCursor s, PruningStrategy ps)
+  public static AuthStateModel get(String user, StateCursor<AuthStateModel> s, PruningStrategy ps)
       throws StateException {
-    AuthStateModel ret = s.get(user, AuthStateModel.class);
+    AuthStateModel ret = s.get(user);
     if (ret == null) {
       return null;
     }
@@ -370,7 +370,7 @@ public class AuthStateModel {
    * @param ps Pruning strategy
    * @throws StateException StateException
    */
-  public void set(StateCursor s, PruningStrategy ps) throws StateException {
+  public void set(StateCursor<AuthStateModel> s, PruningStrategy ps) throws StateException {
     ps.pruneState(this);
     s.set(subject, this);
     s.commit();
