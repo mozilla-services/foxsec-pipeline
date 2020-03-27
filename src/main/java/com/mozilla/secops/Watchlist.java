@@ -10,8 +10,10 @@ import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateCursor;
 import com.mozilla.secops.state.StateException;
+import com.mozilla.secops.state.StateOperation;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.UUID;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -232,36 +234,49 @@ public class Watchlist {
   }
 
   /**
-   * Get a watchlist entry of the specific type with the specified obj identifier. Returns null if
-   * not found.
+   * Get all watchlist entries of the specific type that match a value in the provided value array.
    *
    * @param type Type of watchlist entry (email, ip, etc)
-   * @param obj The obj to try and get
-   * @return WatchlistEntry, or null if not found
+   * @param values List of values to look up.
+   * @return ArrayList of matching entries
    */
-  public WatchlistEntry getWatchlistEntry(String type, String obj) {
-    State s;
+  public ArrayList<WatchlistEntry> getWatchlistEntries(String type, ArrayList<String> values) {
+    State s = null;
+    ArrayList<WatchlistEntry> ret = new ArrayList<>();
     if (type.equals(watchlistEmailKind)) {
       s = emailState;
     } else if (type.equals(watchlistIpKind)) {
       s = ipState;
     } else {
-      return null;
+      return ret;
     }
 
-    WatchlistEntry entry;
-    StateCursor<WatchlistEntry> sc = null;
     try {
-      sc = s.newCursor(WatchlistEntry.class, false);
-      entry = sc.get(obj);
+      StateCursor<WatchlistEntry> sc = s.newCursor(WatchlistEntry.class, false);
+
+      // For each value, create a GET operation and add it to the cursor. The underlying state
+      // mechanism will optimize the group fetch for us.
+      ArrayList<UUID> operations = new ArrayList<>();
+      for (String i : values) {
+        StateOperation<WatchlistEntry> o = new StateOperation<WatchlistEntry>().get(i);
+        sc.withOperation(o);
+        operations.add(o.getId());
+      }
+
+      // Execute the query and pull any completed operation with a resulting value into
+      // the array we will return.
+      sc.execute();
+      for (UUID i : operations) {
+        WatchlistEntry w = sc.getResultValueForId(i);
+        if (w != null) {
+          ret.add(w);
+        }
+      }
     } catch (StateException exc) {
-      log.error("Error getting watchlist entry of type {}: {}", type, exc.getMessage());
-      return null;
-    } finally {
-      s.done();
+      log.error("Error getting watchlist entries of type {}: {}", type, exc.getMessage());
     }
 
-    return entry;
+    return ret;
   }
 
   private WatchlistEntry[] getWatchedObjects(String type) {

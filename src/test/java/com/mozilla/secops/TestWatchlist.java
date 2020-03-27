@@ -8,6 +8,7 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateCursor;
+import java.util.ArrayList;
 import org.joda.time.DateTime;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,9 +64,12 @@ public class TestWatchlist {
     assertEquals(1, ips.length);
     assertEquals(ips[0], ipe);
 
-    Watchlist.WatchlistEntry entry = wl.getWatchlistEntry(Watchlist.watchlistIpKind, "127.0.0.1");
-    assertNotNull(entry);
-    assertEquals(entry, ipe);
+    ArrayList<String> buf = new ArrayList<>();
+    buf.add("127.0.0.1");
+    ArrayList<Watchlist.WatchlistEntry> entries =
+        wl.getWatchlistEntries(Watchlist.watchlistIpKind, buf);
+    assertNotNull(entries);
+    assertEquals(entries.get(0), ipe);
 
     // Add email watchlist entries
     ObjectMapper mapper = new ObjectMapper();
@@ -87,17 +91,19 @@ public class TestWatchlist {
     c = es.newCursor(Watchlist.WatchlistEntry.class, true);
     c.set(emailOne.getObject(), emailOne);
     c.commit();
+
+    buf = new ArrayList<>();
+    buf.add("example@enterprise.com");
+    entries = wl.getWatchlistEntries(Watchlist.watchlistEmailKind, buf);
+    assertNotNull(entries);
+    assertEquals(entries.get(0), emailOne);
+
     c = es.newCursor(Watchlist.WatchlistEntry.class, true);
     c.set(emailTwo.getObject(), emailTwo);
     c.commit();
 
     Watchlist.WatchlistEntry[] emails = wl.getWatchedEmails();
     assertEquals(2, emails.length);
-
-    Watchlist.WatchlistEntry emailEntry =
-        wl.getWatchlistEntry(Watchlist.watchlistEmailKind, "example@enterprise.com");
-    assertNotNull(emailEntry);
-    assertEquals(emailOne, emailEntry);
 
     int cnt = 0;
     for (Watchlist.WatchlistEntry email : emails) {
