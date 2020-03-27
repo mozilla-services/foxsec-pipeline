@@ -14,7 +14,6 @@ import com.google.cloud.datastore.Transaction;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 /** Datastore state cursor implementation */
 public class DatastoreStateCursor<T> extends StateCursor<T> {
@@ -84,10 +83,9 @@ public class DatastoreStateCursor<T> extends StateCursor<T> {
     Key[] getParamFinal = getParam.toArray(new Key[0]);
 
     Iterator<Entity> getResults = null;
-    List<Entity> setResults = null;
     try {
       getResults = rw.get(getParamFinal);
-      setResults = rw.put(setParamFinal);
+      rw.put(setParamFinal);
     } catch (DatastoreException exc) {
       throw new StateException(exc.getMessage());
     }
