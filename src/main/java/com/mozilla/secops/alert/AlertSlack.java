@@ -61,10 +61,12 @@ public class AlertSlack {
     } else if (datastoreNamespace != null && datastoreKind != null) {
       state = new State(new DatastoreStateInterface(datastoreKind, datastoreNamespace));
     }
-    try {
-      state.initialize();
-    } catch (StateException exc) {
-      throw new RuntimeException(exc.getMessage());
+    if (state != null) {
+      try {
+        state.initialize();
+      } catch (StateException exc) {
+        throw new RuntimeException(exc.getMessage());
+      }
     }
   }
 
@@ -74,7 +76,9 @@ public class AlertSlack {
    * <p>Should be called when object will no longer be used.
    */
   public void done() {
-    state.done();
+    if (state != null) {
+      state.done();
+    }
   }
 
   /**
