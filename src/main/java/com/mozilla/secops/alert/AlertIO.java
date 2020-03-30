@@ -181,7 +181,9 @@ public class AlertIO {
 
     @Teardown
     public void teardown() {
-      slack.done();
+      if (slack != null) {
+        slack.done();
+      }
     }
 
     @ProcessElement
