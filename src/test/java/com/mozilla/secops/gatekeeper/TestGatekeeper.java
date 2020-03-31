@@ -37,6 +37,8 @@ public class TestGatekeeper {
         PipelineOptionsFactory.as(GatekeeperPipeline.GatekeeperOptions.class);
     opts.setUseEventTimestamp(true);
     opts.setMonitoredResourceIndicator("gatekeeper-test");
+    opts.setGuarddutyConfigPath("/testdata/guarddutyconfig.json");
+    opts.setIdentityManagerPath("/testdata/identitymanager.json");
     return opts;
   }
 
@@ -45,14 +47,15 @@ public class TestGatekeeper {
   @Test
   public void gatekeeperNoFiltersTest() throws Exception {
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
+    // Set an empty guardduty config
+    opts.setGuarddutyConfigPath("/testdata/guarddutyconfig-empty.json");
     opts.setInputFile(
         new String[] {
-          "./target/test-classes/testdata/gatekeeper/guardduty-sample-findings.txt",
+          "./target/test-classes/testdata/gatekeeper/guardduty-sample-findings-default.txt",
           "./target/test-classes/testdata/gatekeeper/etd-sample-findings.txt"
         });
     opts.setGenerateConfigurationTicksInterval(1);
     opts.setGenerateConfigurationTicksMaximum(5L);
-
     PCollection<String> input =
         p.apply(
             "input",
@@ -73,6 +76,7 @@ public class TestGatekeeper {
                   assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                   assertTrue(
                       a.getSummary().startsWith("suspicious activity detected in aws account"));
+
                   assertEquals("123456789012", a.getMetadataValue("aws_account_id"));
                   assertEquals("us-west-2", a.getMetadataValue("aws_region"));
 
@@ -224,53 +228,6 @@ public class TestGatekeeper {
   }
 
   @Test
-  public void gatekeeperTestEnrichedGDAlertsWithoutIdentityMgr() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
-
-    PAssert.that(alerts)
-        .satisfies(
-            x -> {
-              for (Alert a : x) {
-                assertNotNull(a.getCategory());
-                if (a.getCategory().equals("gatekeeper:aws")) {
-                  assertNull(a.getMetadataValue("aws_account_name"));
-                }
-              }
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void gatekeeperTestEnrichedGDAlertsWithIdentityMgr() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-
-    // load identity manager containing mapping for all accounts in test data
-    opts.setIdentityManagerPath("/testdata/identitymanager.json");
-
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
-
-    PAssert.that(alerts)
-        .satisfies(
-            x -> {
-              for (Alert a : x) {
-                assertNotNull(a.getCategory());
-                if (a.getCategory().equals("gatekeeper:aws")) {
-                  assertEquals("mock-aws-account-name", a.getMetadataValue("aws_account_name"));
-                }
-              }
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
   public void gatekeeperIgnoreAllETDTest() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
@@ -279,7 +236,7 @@ public class TestGatekeeper {
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(19L);
+    PAssert.that(count).containsInAnyOrder(17L);
 
     PAssert.that(alerts)
         .satisfies(
@@ -287,11 +244,6 @@ public class TestGatekeeper {
               for (Alert a : x) {
                 assertNotNull(a.getCategory());
                 assertEquals("gatekeeper:aws", a.getCategory());
-                assertTrue(
-                    a.getSummary().startsWith("suspicious activity detected in aws account"));
-                assertEquals("123456789012", a.getMetadataValue("aws_account_id"));
-                assertEquals("us-west-2", a.getMetadataValue("aws_region"));
-                assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
               }
               return null;
             });
@@ -300,10 +252,10 @@ public class TestGatekeeper {
   }
 
   @Test
-  public void gatekeeperIgnoreAllGDTest() throws Exception {
+  public void gatekeeperETDTest() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-    opts.setIgnoreGDFindingTypeRegex(new String[] {".+"});
+    opts.setGuarddutyConfigPath("/testdata/guarddutyconfig-ignore-all.json");
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
@@ -334,205 +286,60 @@ public class TestGatekeeper {
   }
 
   @Test
-  public void gatekeeperIgnoreSomeGDTest() throws Exception {
+  public void gatekeeperGDTest() throws Exception {
     TestStream<String> s = getTestStream();
     GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-    opts.setIgnoreGDFindingTypeRegex(new String[] {"Recon:EC2.+"});
+    opts.setCriticalNotificationEmail("triage@example.com");
 
     PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(21L);
+    PAssert.that(count).containsInAnyOrder(20L);
 
     PAssert.that(alerts)
         .satisfies(
             x -> {
+              int highCheck = 0;
+              int ignoreCheck = 0;
+              int lowCheck = 0;
               for (Alert a : x) {
                 assertNotNull(a.getCategory());
-                assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                 if (a.getCategory().equals("gatekeeper:aws")) {
+                  // Check ignore matchers
                   assertFalse(a.getMetadataValue("finding_type").contains("Recon:EC2"));
-                }
-              }
-              return null;
-            });
+                  if (a.getMetadataValue("domain_name") != null) {
+                    ignoreCheck++;
+                    assertFalse(a.getMetadataValue("domain_name").equals("ignore.com"));
+                  }
+                  if (a.getMetadataValue("tag_Name") != null) {
+                    ignoreCheck++;
+                    assertFalse(
+                        a.getMetadataValue("tag_Name").equals("iTalkToCryptoMiningServers"));
+                  }
 
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void gatekeeperDoNotIgnoreEC2InstanceTest() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-    opts.setIgnoreDNSRequestFindingNames(new String[] {});
-
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
-
-    PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(22L);
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void gatekeeperIgnoreEC2InstanceTest() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-    opts.setIgnoreDNSRequestFindingNames(new String[] {"iTalkToCryptoMiningServers"});
-
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
-
-    PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(21L);
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void gatekeeperHighAllTestWithEmail() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-
-    opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
-
-    opts.setHighETDFindingRuleRegex(new String[] {".+"});
-    opts.setHighGDFindingTypeRegex(new String[] {".+"});
-
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
-
-    PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(22L);
-
-    PAssert.that(alerts)
-        .satisfies(
-            x -> {
-              for (Alert a : x) {
-                assertNotNull(a.getMetadataValue("notify_email_direct"));
-                assertEquals("unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
-                assertEquals("high", a.getMetadataValue("alert_handling_severity"));
-              }
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void gatekeeperImplicitLowAllTestWithEmail() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-
-    opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
-
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
-
-    PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(22L);
-
-    PAssert.that(alerts)
-        .satisfies(
-            x -> {
-              for (Alert a : x) {
-                assertNull(a.getMetadataValue("notify_email_direct"));
-                assertEquals("low", a.getMetadataValue("alert_handling_severity"));
-              }
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void gatekeeperImplicitHighAllTestNoEmail() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
-
-    PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(22L);
-
-    PAssert.that(alerts)
-        .satisfies(
-            x -> {
-              for (Alert a : x) {
-                assertNull(a.getMetadataValue("notify_email_direct"));
-              }
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void gatekeeperIgnoreSomeAndHighSomeTest() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-
-    opts.setCriticalNotificationEmail("unlucky_dev@mozilla.com");
-
-    // AWS: ignore all recon findings for EC2 and escalate all Trojan or Backdoor findings
-    opts.setIgnoreGDFindingTypeRegex(new String[] {"Recon:EC2.+"});
-    opts.setHighGDFindingTypeRegex(new String[] {"Trojan.+", "Backdoor.+"});
-    // GCP: escalate all findings for ETD
-    opts.setHighETDFindingRuleRegex(new String[] {".+"});
-
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
-
-    PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(21L);
-
-    PAssert.that(alerts)
-        .satisfies(
-            x -> {
-              for (Alert a : x) {
-                if (a.getCategory().equals("gatekeeper:aws")) {
-                  // check ignored regex was ignored
-                  assertFalse(a.getMetadataValue("finding_type").contains("Recon:EC2"));
-                  // check escalate regex matches were escalated
-                  if (a.getMetadataValue("finding_type").contains("Trojan")
-                      || a.getMetadataValue("finding_type").contains("Backdoor")) {
-                    assertNotNull(a.getMetadataValue("notify_email_direct"));
-                    assertEquals(
-                        "unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
+                  // Check high severity matchers
+                  if (a.getMetadataValue("finding_type").startsWith("Trojan")) {
+                    highCheck++;
+                    assertEquals("triage@example.com", a.getMetadataValue("notify_email_direct"));
+                    assertEquals("high", a.getMetadataValue("alert_handling_severity"));
+                  } else if (a.getMetadataValue("finding_type").startsWith("Backdoor")) {
+                    highCheck++;
+                    assertEquals("triage@example.com", a.getMetadataValue("notify_email_direct"));
+                    assertEquals("high", a.getMetadataValue("alert_handling_severity"));
+                  } else if (a.getMetadataValue("aws_account_id").equals("999999999")) {
+                    highCheck++;
+                    assertEquals("triage@example.com", a.getMetadataValue("notify_email_direct"));
                     assertEquals("high", a.getMetadataValue("alert_handling_severity"));
                   } else {
+                    lowCheck++;
                     assertNull(a.getMetadataValue("notify_email_direct"));
                     assertEquals("low", a.getMetadataValue("alert_handling_severity"));
                   }
                 }
-                if (a.getCategory().equals("gatekeeper:gcp")) {
-                  // check escalate regex matches were escalated
-                  assertNotNull(a.getMetadataValue("notify_email_direct"));
-                  assertEquals(
-                      "unlucky_dev@mozilla.com", a.getMetadataValue("notify_email_direct"));
-                }
               }
-              return null;
-            });
-
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void gatekeeperHighAllTestNoEmail() throws Exception {
-    TestStream<String> s = getTestStream();
-    GatekeeperPipeline.GatekeeperOptions opts = getBaseTestOptions();
-
-    opts.setHighETDFindingRuleRegex(new String[] {".+"});
-    opts.setHighGDFindingTypeRegex(new String[] {".+"});
-
-    PCollection<Alert> alerts = GatekeeperPipeline.executePipeline(p, p.apply(s), opts);
-
-    PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(22L);
-
-    PAssert.that(alerts)
-        .satisfies(
-            x -> {
-              for (Alert a : x) {
-                assertNull(a.getMetadataValue("notify_email_direct"));
-              }
+              assertEquals(ignoreCheck, 2);
+              assertEquals(highCheck, 6);
+              assertEquals(lowCheck, 11);
               return null;
             });
 

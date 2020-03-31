@@ -30,10 +30,8 @@ import com.mozilla.secops.parser.GuardDuty;
 import com.mozilla.secops.parser.Payload;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -52,23 +50,10 @@ public class GuardDutyTransforms implements Serializable {
 
   /** Runtime options for GuardDuty Transforms */
   public interface Options extends PipelineOptions, IOOptions {
-    @Description(
-        "Ignore GuardDuty Findings for any finding types that match regex (multiple allowed)")
-    String[] getIgnoreGDFindingTypeRegex();
+    @Description("Specify guardduty configuration location; resource path, gcs path")
+    String getGuarddutyConfigPath();
 
-    void setIgnoreGDFindingTypeRegex(String[] value);
-
-    @Description(
-        "Ignore all GuardDuty Findings of type DNS_REQUEST for instances with a matching \"name\" tag using regex (multiple allowed)")
-    String[] getIgnoreDNSRequestFindingNames();
-
-    void setIgnoreDNSRequestFindingNames(String[] value);
-
-    @Description(
-        "Mark GuardDuty Findings for any finding types that match regex as High severity. All others that are not ignored are considered Low severity. (multiple allowed)")
-    String[] getHighGDFindingTypeRegex();
-
-    void setHighGDFindingTypeRegex(String[] value);
+    void setGuarddutyConfigPath(String value);
 
     @Default.Long(60 * 15) // 15 minutes
     @Description("Suppress alert generation for repeated GuardDuty Findings within this value")
@@ -81,8 +66,7 @@ public class GuardDutyTransforms implements Serializable {
   public static class ExtractFindings extends PTransform<PCollection<Event>, PCollection<Event>> {
     private static final long serialVersionUID = 1L;
 
-    private List<Pattern> exclude;
-    private List<Pattern> ignoreDNSFindingNames;
+    private List<GuardDutyFindingMatcher> ignoreMatchers;
 
     /**
      * static initializer for filter
@@ -90,42 +74,12 @@ public class GuardDutyTransforms implements Serializable {
      * @param opts {@link Options} pipeline options
      */
     public ExtractFindings(Options opts) {
-      String[] ignoreRegexes = opts.getIgnoreGDFindingTypeRegex();
-      exclude = new ArrayList<Pattern>();
-      if (ignoreRegexes != null) {
-        for (String s : ignoreRegexes) {
-          exclude.add(Pattern.compile(s));
-        }
+      try {
+        GuardDutyConfig gdc = GuardDutyConfig.load(opts.getGuarddutyConfigPath());
+        ignoreMatchers = gdc.getIgnoreMatchers();
+      } catch (IOException exc) {
+        throw new RuntimeException(exc.getMessage());
       }
-
-      String[] dnsIgnoreRegexes = opts.getIgnoreDNSRequestFindingNames();
-      ignoreDNSFindingNames = new ArrayList<Pattern>();
-      if (dnsIgnoreRegexes != null) {
-        for (String s : dnsIgnoreRegexes) {
-          ignoreDNSFindingNames.add(Pattern.compile(s));
-        }
-      }
-    }
-
-    // extracts the Mozilla-required "app" tag from the underlying resource of a GuardDuty Finding
-    // if available.
-    // https://mana.mozilla.org/wiki/pages/viewpage.action?spaceKey=INEN&title=Cloud+Labels+and+Tags
-    private String extractNameTag(Finding f) {
-      if (f != null) {
-        Resource rsrc = f.getResource();
-        if (rsrc != null) {
-          InstanceDetails idets = rsrc.getInstanceDetails();
-          if (idets != null) {
-            List<Tag> tags = idets.getTags();
-            for (Tag t : tags) {
-              if (t.getKey() != null && t.getKey().toLowerCase().equals("name")) {
-                return t.getValue();
-              }
-            }
-          }
-        }
-      }
-      return null;
     }
 
     @Override
@@ -146,25 +100,12 @@ public class GuardDutyTransforms implements Serializable {
                     return;
                   }
                   Finding f = gde.getFinding();
-                  if (f == null || f.getType() == null) {
+                  if (f == null) {
                     return;
                   }
-                  for (Pattern p : exclude) {
-                    if (p.matcher(f.getType()).matches()) {
+                  for (GuardDutyFindingMatcher matcher : ignoreMatchers) {
+                    if (matcher.matches(f)) {
                       return;
-                    }
-                  }
-                  if (f.getService() != null
-                      && f.getService().getAction() != null
-                      && f.getService().getAction().getActionType() != null
-                      && f.getService().getAction().getActionType().equals("DNS_REQUEST")) {
-                    String ec2Name = extractNameTag(f);
-                    if (ignoreDNSFindingNames != null && ec2Name != null) {
-                      for (Pattern p : ignoreDNSFindingNames) {
-                        if (p.matcher(ec2Name).matches()) {
-                          return;
-                        }
-                      }
                     }
                   }
                   c.output(e);
@@ -180,7 +121,7 @@ public class GuardDutyTransforms implements Serializable {
 
     private static final String alertCategory = "gatekeeper:aws";
 
-    private List<Pattern> highPatterns;
+    private List<GuardDutyFindingMatcher> highMatchers;
     private final String critNotifyEmail;
     private final String identityMgrPath;
 
@@ -196,13 +137,11 @@ public class GuardDutyTransforms implements Serializable {
 
       critNotifyEmail = opts.getCriticalNotificationEmail();
       identityMgrPath = opts.getIdentityManagerPath();
-
-      String[] highRegexes = opts.getHighGDFindingTypeRegex();
-      highPatterns = new ArrayList<Pattern>();
-      if (highRegexes != null) {
-        for (String s : highRegexes) {
-          highPatterns.add(Pattern.compile(s));
-        }
+      try {
+        GuardDutyConfig gdc = GuardDutyConfig.load(opts.getGuarddutyConfigPath());
+        highMatchers = gdc.getHighSeverityMatchers();
+      } catch (IOException exc) {
+        throw new RuntimeException(exc.getMessage());
       }
     }
 
@@ -255,16 +194,14 @@ public class GuardDutyTransforms implements Serializable {
     }
 
     private void addFindingSeverity(Alert a, Finding f) {
-      if (critNotifyEmail != null && f.getType() != null) {
-        for (Pattern p : highPatterns) {
-          if (p.matcher(f.getType()).matches()) {
-            a.addMetadata("alert_handling_severity", "high");
-            a.addMetadata("notify_email_direct", critNotifyEmail);
-            return;
-          }
+      for (GuardDutyFindingMatcher matcher : highMatchers) {
+        if (matcher.matches(f)) {
+          a.addMetadata("alert_handling_severity", "high");
+          a.addMetadata("notify_email_direct", critNotifyEmail);
+          return;
         }
-        a.addMetadata("alert_handling_severity", "low");
       }
+      a.addMetadata("alert_handling_severity", "low");
     }
 
     // best effort addition of local port related metadata

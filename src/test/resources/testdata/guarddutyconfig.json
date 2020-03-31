@@ -1,0 +1,15 @@
+{
+  "ignore_matchers": [
+    {"aws_tags": {"Name": "iTalkToCryptoMiningServers"}},
+    {"finding_type": "Recon:EC2.+"},
+    {"finding_type": "Trojan.+", "domain_name": "ignore.com"}
+  ],
+  "high_severity_matchers": [
+    {"finding_type": "Trojan.+"},
+    {"finding_type": "Backdoor.+"},
+    {
+      "account_id": "999999999",
+      "finding_type": "Stealth:IAMUser/LoggingConfigurationModified"
+    }
+  ]
+}
