@@ -30,6 +30,7 @@ public class CustomsPasswordResetAbuse
 
   private final Logger log = LoggerFactory.getLogger(CustomsAccountCreation.class);
 
+  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
   public String getTransformDocDescription() {
     return String.format(
         "Alert if single source requests password reset for at least %d distinct accounts "

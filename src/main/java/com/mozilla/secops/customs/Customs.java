@@ -103,6 +103,7 @@ public class Customs implements Serializable {
       monitoredResource = options.getMonitoredResourceIndicator();
     }
 
+    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
     public String getTransformDoc() {
       return "Summarizes various event counts over 15 minute period.";
     }

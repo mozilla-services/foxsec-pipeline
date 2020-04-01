@@ -45,6 +45,7 @@ public class CustomsAccountCreation
     this.escalate = options.getEscalateAccountCreation();
   }
 
+  /** Transform documentation for users - see {@link CustomsDocumentingTransform} */
   public String getTransformDocDescription() {
     return String.format(
         "Alert if single source address creates %d or more accounts within 10 minute"

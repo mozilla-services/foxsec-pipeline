@@ -100,6 +100,12 @@ public class FxaAuth implements Serializable {
       return value;
     }
 
+    /**
+     * Get Errno from int value
+     *
+     * @param errno int value
+     * @return Errno
+     */
     @JsonCreator
     public static Errno forValue(int errno) {
       for (Errno e : values()) {

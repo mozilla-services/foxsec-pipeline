@@ -69,6 +69,7 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
 
   private Logger log;
 
+  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
   public String getTransformDoc() {
     return String.format(
         "Analyze alerts across windows to identify threshold violations"

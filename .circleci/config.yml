@@ -12,6 +12,9 @@ jobs:
           name: Spotless check
           command: bin/m spotless:check
       - run:
+          name: Javadoc (checkstyle) check
+          command: bin/m checkstyle:check
+      - run:
           name: Generate version.json
           command: bin/write_version_json.sh
       - run:

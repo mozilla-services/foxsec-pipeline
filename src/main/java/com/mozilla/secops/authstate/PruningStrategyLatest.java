@@ -8,6 +8,11 @@ import java.util.HashMap;
  * All entries are removed from the model with the exception of the entry with the latest timestamp.
  */
 public class PruningStrategyLatest implements PruningStrategy {
+  /**
+   * Implementation of method of {@link PruningStrategyLatest}
+   *
+   * <p>See {@link PruningStrategy}
+   */
   public void pruneState(AuthStateModel s) {
     ArrayList<AbstractMap.SimpleEntry<String, AuthStateModel.ModelEntry>> sorted =
         s.timeSortedEntries();
