@@ -69,6 +69,68 @@ func createMockServer(t *testing.T) *httptest.Server {
 		pdCnt++
 		w.Write([]byte(`{"users": [{"id": "1", "email": "testuser@example.com"}]}`))
 	})
+	mux.HandleFunc("/oncalls", func(w http.ResponseWriter, r *http.Request) {
+		pdCnt++
+		w.Write([]byte(`{
+			"oncalls": [
+			  {
+				"escalation_policy": {
+				  "id": "P9OFD2O",
+				  "type": "escalation_policy_reference",
+				  "summary": "Default",
+				  "self": "https://api.pagerduty.com/escalation_policies/P9OFD2O",
+				  "html_url": "https://apidocs.pagerduty.com/escalation_policies/P9OFD2O"
+				},
+				"escalation_level": 1,
+				"schedule": null,
+				"user": {
+				  "name": "John Doe",
+				  "email": "john.doe@example.com",
+				  "time_zone": "America/Los_Angeles",
+				  "color": "purple",
+				  "avatar_url": "https://secure.gravatar.com/avatar/8eb1b522f60d11fa897de1dc6351b7e8.png?d=mm&r=PG",
+				  "billed": true,
+				  "role": "owner",
+				  "description": null,
+				  "invitation_sent": false,
+				  "job_title": null,
+				  "teams": [],
+				  "contact_methods": [
+					{
+					  "id": "P1NJL34",
+					  "type": "email_contact_method_reference",
+					  "summary": "Default",
+					  "self": "https://api.pagerduty.com/users/PPC00ZX/contact_methods/P1NJL34",
+					  "html_url": null
+					}
+				  ],
+				  "notification_rules": [
+					{
+					  "id": "P29AUSK",
+					  "type": "assignment_notification_rule_reference",
+					  "summary": "0 minutes: channel P1NJL34",
+					  "self": "https://api.pagerduty.com/users/PPC00ZX/notification_rules/P29AUSK",
+					  "html_url": null
+					},
+					{
+					  "id": "PQ4XWX0",
+					  "type": "assignment_notification_rule_reference",
+					  "summary": "0 minutes: channel P1NJL34",
+					  "self": "https://api.pagerduty.com/users/PPC00ZX/notification_rules/PQ4XWX0",
+					  "html_url": null
+					}
+				  ],
+				  "coordinated_incidents": [],
+				  "id": "PPC00ZX",
+				  "type": "user",
+				  "summary": "John Doe",
+				  "self": "https://api.pagerduty.com/users/PPC00ZX",
+				  "html_url": "https://apidocs.pagerduty.com/users/PPC00ZX"
+				},
+				"start": null,
+				"end": null
+			  }]}`))
+	})
 
 	// Bugzilla Comment Mock
 	mux.HandleFunc("/rest/bug/1/comment", func(w http.ResponseWriter, r *http.Request) {
