@@ -309,6 +309,11 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     return false;
   }
 
+  /**
+   * Check if the auth event contained a successful certifcate signing
+   *
+   * @return Boolean
+   */
   public Boolean discernCertificateSignSuccess() {
     if (!(fxaAuthData.getPath().equals("/v1/certificate/sign"))) {
       return false;

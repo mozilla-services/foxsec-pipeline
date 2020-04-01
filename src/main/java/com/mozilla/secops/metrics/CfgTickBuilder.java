@@ -35,7 +35,7 @@ public class CfgTickBuilder {
   /**
    * Add documentation about a transform to the configuration tick
    *
-   * @param t {@link DocumentingTransform}
+   * @param t {@link com.mozilla.secops.DocumentingTransform}
    */
   public void withTransformDoc(DocumentingTransform t) {
     cfgData.put(String.format("heuristic_%s", t.getClass().getSimpleName()), t.getTransformDoc());

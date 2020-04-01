@@ -23,6 +23,11 @@ public class PruningStrategyEntryAge implements PruningStrategy {
     this.entryAgePruningSeconds = entryAgePruningSeconds;
   }
 
+  /**
+   * Implementation of method of {@link PruningStrategyEntryAge}
+   *
+   * <p>See {@link PruningStrategy}
+   */
   public void pruneState(AuthStateModel s) {
     Map<String, AuthStateModel.ModelEntry> entries = s.getEntries();
 

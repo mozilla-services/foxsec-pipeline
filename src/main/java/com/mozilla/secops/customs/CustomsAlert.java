@@ -150,6 +150,12 @@ public class CustomsAlert implements Serializable {
     return ret;
   }
 
+  /**
+   * Convert source login failure alert into a list of customs alerts.
+   *
+   * @param a Alert to convert
+   * @return ArrayList of CustomsAlert created
+   */
   public static ArrayList<CustomsAlert> convertSourceLoginFailure(Alert a) {
     ArrayList<CustomsAlert> ret = new ArrayList<>();
 
@@ -170,6 +176,12 @@ public class CustomsAlert implements Serializable {
     return ret;
   }
 
+  /**
+   * Convert a distributed source login failure alert into a list of customs alerts.
+   *
+   * @param a Alert to convert
+   * @return ArrayList of CustomsAlert created
+   */
   public static ArrayList<CustomsAlert> convertSourceLoginFailureDist(Alert a) {
     ArrayList<CustomsAlert> ret = new ArrayList<>();
 

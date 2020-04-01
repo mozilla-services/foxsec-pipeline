@@ -15,6 +15,7 @@ public class KeyedEvent implements Serializable {
   private final String key;
   private final Event event;
 
+  /** Convert KeyedEvent to {@link KV} */
   public KV<String, Event> toKV() {
     if ((key == null) || (event == null)) {
       return null;
@@ -22,6 +23,7 @@ public class KeyedEvent implements Serializable {
     return KV.of(key, event);
   }
 
+  /** Initialize new KeyedEvent */
   public KeyedEvent(String key, Event event) {
     this.key = key;
     this.event = event;

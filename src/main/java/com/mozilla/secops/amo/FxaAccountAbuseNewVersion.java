@@ -56,6 +56,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
     this.project = project;
   }
 
+  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
   public String getTransformDoc() {
     return String.format(
         "Correlates AMO addon submissions with abusive FxA account creation alerts via iprepd. Also includes blacklisted accounts regex: %s",

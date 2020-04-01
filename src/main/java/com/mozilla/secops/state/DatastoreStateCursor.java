@@ -24,6 +24,11 @@ public class DatastoreStateCursor<T> extends StateCursor<T> {
   private KeyFactory keyFactory;
   private Transaction tx;
 
+  /**
+   * Commit datastore transaction
+   *
+   * @throws StateException
+   */
   public void commit() throws StateException {
     if (tx == null) {
       throw new StateException("datastore cursor not configured as transaction");
