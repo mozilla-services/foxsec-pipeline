@@ -1,0 +1,6 @@
+{
+  "ignore_matchers": [
+    {"finding_type": ".+"}
+  ],
+  "high_severity_matchers": []
+}
