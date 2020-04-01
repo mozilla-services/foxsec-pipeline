@@ -67,16 +67,24 @@ type Globals struct {
 }
 
 func userOnTicketDuty() (string, error) {
-	users, err := globals.pagerdutyClient.ListOnCallUsers(config.PagerdutyTicketDutyScheduleId, pagerduty.ListOnCallUsersOptions{})
+	opts := pagerduty.ListOnCallOptions{
+		ScheduleIDs: []string{config.PagerdutyTicketDutyScheduleId},
+		Includes:    []string{"users"},
+	}
+	resp, err := globals.pagerdutyClient.ListOnCalls(opts)
 	if err != nil {
 		log.Errorf("Error getting pagerduty schedule: %s. Using default %s", err, globals.bugzillaClient.Config.DefaultAssignedTo)
 		return globals.bugzillaClient.Config.DefaultAssignedTo, nil
 	}
-	if len(users) == 0 {
+	if resp.OnCalls == nil || len(resp.OnCalls) == 0 {
 		log.Errorf("No oncall user found for schedule %s! Using default %s", config.PagerdutyTicketDutyScheduleId, globals.bugzillaClient.Config.DefaultAssignedTo)
 		return globals.bugzillaClient.Config.DefaultAssignedTo, nil
 	}
-	return users[0].Email, nil
+	if resp.OnCalls[0].User.Email == "" {
+		log.Errorf("Oncall found, but no email for user %s for schedule %s! Using default %s", resp.OnCalls[0].User.Summary, config.PagerdutyTicketDutyScheduleId, globals.bugzillaClient.Config.DefaultAssignedTo)
+		return globals.bugzillaClient.Config.DefaultAssignedTo, nil
+	}
+	return resp.OnCalls[0].User.Email, nil
 }
 
 func createNewBug(alert *common.Alert) error {
