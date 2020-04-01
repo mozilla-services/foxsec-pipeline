@@ -255,6 +255,7 @@ public class CidrUtil {
     add("::1/128");
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   private static class AwsCidrPrefixEntry {
     String ip4Prefix;
     String ip6Prefix;
