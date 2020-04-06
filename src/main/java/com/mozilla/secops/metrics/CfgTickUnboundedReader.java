@@ -26,6 +26,9 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
    * @param source Source for reader
    */
   public CfgTickUnboundedReader(CfgTickUnboundedSource source) {
+    if (source.getInterval() <= 0) {
+      throw new IllegalArgumentException("interval must be > 0");
+    }
     this.source = source;
     current = null;
     lastTick = null;

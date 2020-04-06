@@ -39,7 +39,7 @@ public class TestCfgTickGenerator implements Serializable {
   public void cfgTickGeneratorTest() throws Exception {
     CfgTickGeneratorOptions o = getOptions();
 
-    CfgTickBuilder builder = new CfgTickBuilder().includePipelineOptions(getOptions());
+    CfgTickBuilder builder = new CfgTickBuilder().includePipelineOptions(o);
 
     PCollection<Event> results =
         pipeline
@@ -63,6 +63,35 @@ public class TestCfgTickGenerator implements Serializable {
                 cnt++;
               }
               assertEquals(2, cnt);
+              return null;
+            });
+
+    pipeline.run().waitUntilFinish();
+  }
+
+  @Test
+  public void cfgTickGeneratorTestZeroInterval() throws Exception {
+    CfgTickGeneratorOptions o = getOptions();
+    o.setGenerateConfigurationTicksInterval(0);
+
+    CfgTickBuilder builder = new CfgTickBuilder().includePipelineOptions(o);
+
+    PCollection<Event> results =
+        pipeline
+            .apply(Input.compositeInputAdapter(o, builder.build()))
+            .apply(ParDo.of(new ParserDoFn()));
+
+    PAssert.that(results)
+        .satisfies(
+            i -> {
+              int cnt = 0;
+              for (Event e : i) {
+                if (e.getPayloadType() != Payload.PayloadType.CFGTICK) {
+                  continue;
+                }
+                cnt++;
+              }
+              assertEquals(0, cnt);
               return null;
             });
 
