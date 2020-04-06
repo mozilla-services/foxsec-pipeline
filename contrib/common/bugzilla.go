@@ -52,6 +52,7 @@ type CreateBug struct {
 	Version     string   `json:"version"`
 	Component   string   `json:"component"`
 	Summary     string   `json:"summary"`
+	Alias       string   `json:"alias"`
 	Description string   `json:"description"`
 	AssignedTo  string   `json:"assigned_to"`
 	Blocks      string   `json:"blocks"`
@@ -61,7 +62,9 @@ type CreateBug struct {
 }
 
 func (bc *BugzillaClient) CreateBugFromAlerts(assignedTo, category string, alerts []*Alert) (int, error) {
-	summary := fmt.Sprintf("%s alerts for %s", category, time.Now().Format("2006-01-02"))
+	n := time.Now().Format("2006-01-02")
+	summary := fmt.Sprintf("%s alerts for %s", category, n)
+	alias := fmt.Sprintf("foxsec-%s-%s", category, n)
 
 	bugText := fmt.Sprintf("## %s alerts\n---\n", category)
 	for _, alert := range alerts {
@@ -69,16 +72,17 @@ func (bc *BugzillaClient) CreateBugFromAlerts(assignedTo, category string, alert
 	}
 
 	bugJson, err := json.Marshal(&CreateBug{
-		bc.Config.Product,
-		"unspecified",
-		bc.Config.Component,
-		summary,
-		bugText,
-		assignedTo,
-		bc.Config.CategoryToTracker[category],
-		"task",
-		bc.Config.Groups,
-		category,
+		Product:     bc.Config.Product,
+		Version:     "unspecified",
+		Component:   bc.Config.Component,
+		Summary:     summary,
+		Alias:       alias,
+		Description: bugText,
+		AssignedTo:  assignedTo,
+		Blocks:      bc.Config.CategoryToTracker[category],
+		Type:        "task",
+		Groups:      bc.Config.Groups,
+		Whiteboard:  category,
 	})
 	if err != nil {
 		return 0, err

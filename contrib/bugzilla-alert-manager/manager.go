@@ -23,8 +23,8 @@ var (
 
 	config = &common.Configuration{}
 
-	// Support retries for events for a told of 30 seconds.
-	EXPIRATION = time.Second * 30
+	// Support retries for events for up to 3 minutes before expiring
+	EXPIRATION = time.Minute * 3
 
 	// dirty hack to disable init in unit tests
 	_testing = false
