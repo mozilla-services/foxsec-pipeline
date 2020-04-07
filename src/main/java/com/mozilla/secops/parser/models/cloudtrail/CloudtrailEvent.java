@@ -4,7 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.util.HashMap;
 
-/** Model for Cloudtrail Events JSON parsing */
+/**
+ * Model for Cloudtrail Events JSON parsing
+ *
+ * <p>Read about Cloudtrail events here:
+ * https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-record-contents.html
+ */
 public class CloudtrailEvent implements Serializable {
   private static final long serialVersionUID = 1L;
 

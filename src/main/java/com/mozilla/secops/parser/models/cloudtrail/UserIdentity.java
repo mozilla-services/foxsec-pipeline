@@ -3,7 +3,12 @@ package com.mozilla.secops.parser.models.cloudtrail;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import java.io.Serializable;
 
-/** Model for userIdentity element in Cloudtrail Events */
+/**
+ * Model for userIdentity element in Cloudtrail Events
+ *
+ * <p>Read about the UserIdentity record here:
+ * https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-user-identity.html
+ */
 public class UserIdentity implements Serializable {
   private static final long serialVersionUID = 1L;
 
