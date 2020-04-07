@@ -100,7 +100,7 @@ public class TestAmo {
         .apply(OutputOptions.compositeOutput(getTestOptions()));
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(16L);
+    PAssert.that(count).containsInAnyOrder(17L);
 
     PAssert.that(alerts)
         .satisfies(
@@ -112,6 +112,7 @@ public class TestAmo {
               int cntMatchedAddon = 0;
               int cntMultiMatch = 0;
               int cntMultiSubmit = 0;
+              int cntCloudSubmit = 0;
               int cntIpLogin = 0;
               int cntNewVersionSubmission = 0;
               for (Alert a : x) {
@@ -191,6 +192,11 @@ public class TestAmo {
                         a.getSummary());
                     assertEquals("2", a.getMetadataValue("count"));
                     cntIpLogin++;
+                  } else if (a.getMetadataValue("amo_category").equals("amo_cloud_submission")) {
+                    assertEquals("aws", a.getMetadataValue("provider"));
+                    assertEquals("52.204.100.1", a.getMetadataValue("sourceaddress"));
+                    assertEquals("tashayar@mozilla.com", a.getMetadataValue("email"));
+                    cntCloudSubmit++;
                   } else {
                     assertEquals("255.255.25.25", a.getMetadataValue("sourceaddress"));
                     if (a.getMetadataValue("addon_version") != null) {
@@ -249,6 +255,7 @@ public class TestAmo {
               assertEquals("cntMultiSubmit", 1, cntMultiSubmit);
               assertEquals("cntIpLogin", 1, cntIpLogin);
               assertEquals("cntNewVersionSubmission", 2, cntNewVersionSubmission);
+              assertEquals("cntCloudSubmit", 1, cntCloudSubmit);
               return null;
             });
 
