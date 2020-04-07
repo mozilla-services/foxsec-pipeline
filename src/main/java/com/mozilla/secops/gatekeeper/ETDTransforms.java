@@ -133,7 +133,7 @@ public class ETDTransforms implements Serializable {
       }
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return "Alerts are generated based on events sent from GCP's Event Threat Detection.";
     }

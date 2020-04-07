@@ -145,7 +145,7 @@ public class GuardDutyTransforms implements Serializable {
       }
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return "Alerts are generated based on events sent from AWS's Guardduty.";
     }

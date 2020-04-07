@@ -218,7 +218,7 @@ public class SourceCorrelation {
       this.monitoredResource = toggles.getMonitoredResource();
     }
 
-    /** Transform documentation for users - see {@link DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return String.format(
           "Source address alerting correlation, ISP analysis on minimum %d "

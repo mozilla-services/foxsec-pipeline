@@ -340,7 +340,7 @@ public class AuthProfile implements Serializable {
       useEventTimestampForAlert = options.getUseEventTimestampForAlert();
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return String.format(
           "Alert via %s immediately on auth events to specified objects: %s",
@@ -546,7 +546,7 @@ public class AuthProfile implements Serializable {
       useEventTimestampForAlert = options.getUseEventTimestampForAlert();
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return "Alert if an identity (can be thought of as a user) authenticates from a new IP";
     }

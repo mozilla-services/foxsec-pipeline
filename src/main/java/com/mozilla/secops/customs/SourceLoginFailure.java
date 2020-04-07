@@ -41,7 +41,7 @@ public class SourceLoginFailure
     escalate = options.getEscalateSourceLoginFailure();
   }
 
-  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+  /** {@inheritDoc} */
   public String getTransformDocDescription() {
     return String.format(
         "Alert on %d login failures from a single source in a 10 minute window.", threshold);

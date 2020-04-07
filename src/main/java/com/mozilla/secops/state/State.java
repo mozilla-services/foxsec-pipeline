@@ -36,6 +36,7 @@ public class State {
    * <p>If the transaction flag is true, the new cursor will be allocated as a transaction. In this
    * case be sure to properly commit the transaction in the cursor when complete.
    *
+   * @param <T> Class used in state storage
    * @param stateClass Class used in stage storage
    * @param transaction If true, allocate cursor as a transaction
    * @return {@link StateCursor}

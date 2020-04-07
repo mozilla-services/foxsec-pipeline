@@ -9,9 +9,9 @@ import java.util.HashMap;
  */
 public class PruningStrategyLatest implements PruningStrategy {
   /**
-   * Implementation of method of {@link PruningStrategyLatest}
+   * {@inheritDoc}
    *
-   * <p>See {@link PruningStrategy}
+   * <p>Implementation of method of {@link PruningStrategyLatest}
    */
   public void pruneState(AuthStateModel s) {
     ArrayList<AbstractMap.SimpleEntry<String, AuthStateModel.ModelEntry>> sorted =

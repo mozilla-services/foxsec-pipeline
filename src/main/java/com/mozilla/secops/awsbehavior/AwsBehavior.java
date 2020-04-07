@@ -79,7 +79,11 @@ public class AwsBehavior implements Serializable {
 
     private Logger log;
 
-    /** Initialize new Matcher with a {@link CloudtrailMatcher} */
+    /**
+     * Initialize new Matcher with a {@link CloudtrailMatcher}
+     *
+     * @param cm {@link CloudtrailMatcher}
+     */
     public Matcher(CloudtrailMatcher cm) {
       this.cm = cm;
       log = LoggerFactory.getLogger(Matcher.class);
@@ -148,7 +152,11 @@ public class AwsBehavior implements Serializable {
     private CloudtrailMatcherManager cmmanager;
     private Logger log;
 
-    /** Initialize new Matchers with {@link AwsBehaviorOptions} */
+    /**
+     * Initialize new Matchers with {@link AwsBehaviorOptions}
+     *
+     * @param options {@link AwsBehaviorOptions}
+     */
     public Matchers(AwsBehaviorOptions options) throws IOException {
       log = LoggerFactory.getLogger(Matchers.class);
       cmmanagerPath = options.getCloudtrailMatcherManagerPath();

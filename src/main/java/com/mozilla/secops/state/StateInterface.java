@@ -22,6 +22,7 @@ public interface StateInterface {
   /**
    * Allocate new state cursor
    *
+   * @param <T> Class used in state storage
    * @param stateClass Class used in state storage
    * @param transaction If true, allocate cursor as a transaction
    * @return StateCursor

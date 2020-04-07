@@ -18,6 +18,7 @@ public class DatastoreStateInterface implements StateInterface {
   private String project;
   private HttpTransportOptions transportOpts;
 
+  /** {@inheritDoc} */
   public <T> StateCursor<T> newCursor(Class<T> stateClass, boolean transaction)
       throws StateException {
     try {
@@ -27,8 +28,14 @@ public class DatastoreStateInterface implements StateInterface {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>noop for datastore
+   */
   public void done() {}
 
+  /** {@inheritDoc} */
   public void initialize() throws StateException {
     String emulatorHost = System.getenv("DATASTORE_HOST");
     String emulatorProject = System.getenv("DATASTORE_PROJECT_ID");
@@ -54,6 +61,7 @@ public class DatastoreStateInterface implements StateInterface {
     }
   }
 
+  /** {@inheritDoc} */
   public void deleteAll() throws StateException {
     StructuredQuery<Entity> query =
         Query.newEntityQueryBuilder().setNamespace(namespace).setKind(kind).build();

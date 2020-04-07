@@ -49,7 +49,7 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
     this.matchAlertOn = matchAlertOn;
   }
 
-  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+  /** {@inheritDoc} */
   public String getTransformDoc() {
     return String.format(
         "Detect distributed AMO submissions with the same file name. Alert on %s submissions of the same file name.",

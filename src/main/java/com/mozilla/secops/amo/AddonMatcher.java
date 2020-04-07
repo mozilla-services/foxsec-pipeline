@@ -45,7 +45,7 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
     this.matchCriteria = matchCriteria;
   }
 
-  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+  /** {@inheritDoc} */
   public String getTransformDoc() {
     return String.format(
         "Match abusive addon uploads using these patterns %s and generate alerts",

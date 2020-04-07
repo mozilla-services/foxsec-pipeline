@@ -24,9 +24,9 @@ public class PruningStrategyEntryAge implements PruningStrategy {
   }
 
   /**
-   * Implementation of method of {@link PruningStrategyEntryAge}
+   * {@inheritDoc}
    *
-   * <p>See {@link PruningStrategy}
+   * <p>Implementation of method of {@link PruningStrategyEntryAge}
    */
   public void pruneState(AuthStateModel s) {
     Map<String, AuthStateModel.ModelEntry> entries = s.getEntries();

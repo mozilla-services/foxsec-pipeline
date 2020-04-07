@@ -69,7 +69,7 @@ public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollectio
     this.aggMatchers = aggMatchers;
   }
 
-  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+  /** {@inheritDoc} */
   public String getTransformDoc() {
     return String.format(
         "Detect multiple account logins for the same account from different source addresses associated with different country codes. Alert on %s different countries and %s different IPs. Regex for account exceptions: %s",
