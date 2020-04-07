@@ -123,6 +123,12 @@ public class Amo implements Serializable {
                     options.getAddonMultiIpLoginAlertExceptions(),
                     options.getAddonMultiIpLoginAggressiveMatcher())));
 
+    resultsList =
+        resultsList.and(
+            parsed.apply(
+                "addon cloud submission",
+                new AddonCloudSubmission(options.getMonitoredResourceIndicator())));
+
     // If configuration ticks were enabled, enable the processor here too
     if (options.getGenerateConfigurationTicksInterval() > 0) {
       resultsList =
@@ -283,6 +289,8 @@ public class Amo implements Serializable {
             options.getAddonMultiIpLoginAlertOnIp(),
             options.getAddonMultiIpLoginAlertExceptions(),
             options.getAddonMultiIpLoginAggressiveMatcher()));
+
+    b.withTransformDoc(new AddonCloudSubmission(options.getMonitoredResourceIndicator()));
 
     return b.build();
   }
