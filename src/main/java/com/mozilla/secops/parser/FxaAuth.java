@@ -310,7 +310,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
   }
 
   /**
-   * Check if the auth event contained a successful certifcate signing
+   * Check if the auth event contained a successful certificate signing
    *
    * @return Boolean
    */

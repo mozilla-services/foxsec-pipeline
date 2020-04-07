@@ -160,7 +160,7 @@ public class PostProcessing implements Serializable {
     }
 
     /**
-     * Initialize WatchlistAnaylze with {@link PostProcessingOptions}
+     * Initialize WatchlistAnalyze with {@link PostProcessingOptions}
      *
      * @param options {@link PostProcessingOptions}
      */
