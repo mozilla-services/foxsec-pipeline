@@ -45,7 +45,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   private final String maxmindCityDbPath;
   private final String maxmindIspDbPath;
 
-  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+  /** {@inheritDoc} */
   public String getTransformDocDescription() {
     return String.format(
         "Alert based on applying location velocity analysis to FxA events,"

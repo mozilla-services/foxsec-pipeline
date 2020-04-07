@@ -37,7 +37,7 @@ public class SourceLoginFailureDist
     escalate = options.getEscalateSourceLoginFailureDistributed();
   }
 
-  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+  /** {@inheritDoc} */
   public String getTransformDocDescription() {
     return String.format(
         "Alert on login failures for a particular account from %d different source addresses "

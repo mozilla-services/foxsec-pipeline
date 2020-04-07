@@ -147,6 +147,7 @@ public class DatastoreStateCursor<T> extends StateCursor<T> {
    * @param d Initialized {@link Datastore} object
    * @param namespace Datastore namespace
    * @param kind Datastore kind
+   * @param stateClass Class used in stage storage
    * @param transaction True to initialize cursor as a transaction
    */
   public DatastoreStateCursor(

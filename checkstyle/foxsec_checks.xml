@@ -36,8 +36,8 @@
         <module name="JavadocParagraph"/>
         <module name="JavadocMethod">
             <property name="scope" value="public"/>
-            <property name="allowMissingParamTags" value="true"/>
-            <property name="allowMissingReturnTag" value="true"/>
+            <property name="allowMissingParamTags" value="false"/>
+            <property name="allowMissingReturnTag" value="false"/>
             <property name="allowedAnnotations" value="Override, Test, Setup, Teardown, ProcessElement, OnTimer, OnStale"/>
             <property name="tokens" value="METHOD_DEF, CTOR_DEF, ANNOTATION_FIELD_DEF"/>
         </module>

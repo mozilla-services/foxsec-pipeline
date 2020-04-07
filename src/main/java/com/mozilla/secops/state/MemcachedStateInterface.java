@@ -10,6 +10,7 @@ public class MemcachedStateInterface implements StateInterface {
   private final int memcachedPort;
   private MemcachedClient memclient;
 
+  /** {@inheritDoc} */
   public <T> StateCursor<T> newCursor(Class<T> stateClass, boolean transaction)
       throws StateException {
     if (transaction) {
@@ -18,14 +19,17 @@ public class MemcachedStateInterface implements StateInterface {
     return new MemcachedStateCursor<T>(memclient, stateClass);
   }
 
+  /** {@inheritDoc} */
   public void done() {
     memclient.shutdown();
   }
 
+  /** {@inheritDoc} */
   public void deleteAll() throws StateException {
     memclient.flush();
   }
 
+  /** {@inheritDoc} */
   public void initialize() throws StateException {
     try {
       memclient = new MemcachedClient(new InetSocketAddress(memcachedHost, memcachedPort));

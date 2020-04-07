@@ -195,7 +195,7 @@ public class HTTPRequest implements Serializable {
       log = LoggerFactory.getLogger(ErrorRateAnalysis.class);
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return String.format(
           "Alert if a single source address generates more than %d 4xx errors in a "
@@ -306,7 +306,7 @@ public class HTTPRequest implements Serializable {
       log = LoggerFactory.getLogger(HardLimitAnalysis.class);
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return String.format(
           "Alert if single source address makes more than %d requests in a 1 minute window.",
@@ -427,7 +427,7 @@ public class HTTPRequest implements Serializable {
       log = LoggerFactory.getLogger(UserAgentBlacklistAnalysis.class);
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return new String(
           "Alert if client makes request with user agent that matches entry in blacklist.");
@@ -616,7 +616,7 @@ public class HTTPRequest implements Serializable {
       }
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       String buf = null;
       for (int i = 0; i < endpoints.length; i++) {
@@ -849,7 +849,7 @@ public class HTTPRequest implements Serializable {
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return String.format(
           "Alert if a single source address makes more than %.2f times the calculated"
@@ -1014,7 +1014,11 @@ public class HTTPRequest implements Serializable {
       public String secondMethod;
       public String secondPath;
 
-      /** Convert configuration to String */
+      /**
+       * Convert configuration to String
+       *
+       * @return Class parameters as a string
+       */
       public String toString() {
         return String.format(
             "%d:%s:%s:%d:%s:%s",
@@ -1061,7 +1065,7 @@ public class HTTPRequest implements Serializable {
       }
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       String buf = null;
       for (int i = 0; i < endpointPatterns.length; i++) {

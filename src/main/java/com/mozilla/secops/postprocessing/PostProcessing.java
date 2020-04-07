@@ -159,7 +159,11 @@ public class PostProcessing implements Serializable {
       }
     }
 
-    /** Initialize WatchlistAnaylze with {@link PostProcessingOptions} */
+    /**
+     * Initialize WatchlistAnaylze with {@link PostProcessingOptions}
+     *
+     * @param options {@link PostProcessingOptions}
+     */
     public WatchlistAnalyze(PostProcessingOptions options) {
       warningEmail = options.getWarningSeverityEmail();
       criticalEmail = options.getCriticalSeverityEmail();
@@ -167,7 +171,7 @@ public class PostProcessing implements Serializable {
           Metrics.distribution(METRICS_NAMESPACE, WATCHLIST_ALERT_PROCESSING_TIME_METRIC);
     }
 
-    /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+    /** {@inheritDoc} */
     public String getTransformDoc() {
       return "Alert on matched watchlist entries in incoming alerts from other pipelines.";
     }

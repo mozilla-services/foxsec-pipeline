@@ -27,7 +27,7 @@ public class ReportRestriction extends PTransform<PCollection<Event>, PCollectio
     this.monitoredResource = monitoredResource;
   }
 
-  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+  /** {@inheritDoc} */
   public String getTransformDoc() {
     return "Reports on request restrictions from AMO";
   }

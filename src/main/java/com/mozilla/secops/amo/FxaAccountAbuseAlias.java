@@ -52,7 +52,7 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
     this.maxAliases = maxAliases;
   }
 
-  /** Transform documentation for users - see {@link com.mozilla.secops.DocumentingTransform} */
+  /** {@inheritDoc} */
   public String getTransformDoc() {
     return String.format(
         "Alerts on aliased FxA accounts usage. A max of %s are allowed for one account in a given session.",

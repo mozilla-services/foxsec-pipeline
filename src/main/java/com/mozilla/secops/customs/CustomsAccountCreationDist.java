@@ -43,7 +43,7 @@ public class CustomsAccountCreationDist
     this.escalate = options.getEscalateAccountCreationDistributed();
   }
 
-  /** Transform documentation for users - see {@link CustomsDocumentingTransform} */
+  /** {@inheritDoc} */
   public String getTransformDocDescription() {
     return String.format(
         "Alert if at least %d accounts are created from different source addresses in a 10 "
