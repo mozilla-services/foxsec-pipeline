@@ -3,8 +3,6 @@
 [![Build Status](https://circleci.com/gh/mozilla-services/foxsec-pipeline/tree/master.svg?style=svg)](https://circleci.com/gh/mozilla-services/foxsec-pipeline/tree/master)
 [![Documentation](https://img.shields.io/badge/documentation-link-purple.svg)](https://mozilla-services.github.io/foxsec-pipeline/secops-beam/)
 
-[Apache Beam](https://beam.apache.org/) pipelines for analyzing log data.
-
 ## Documentation
 
 * [secops-beam Java documentation](https://mozilla-services.github.io/foxsec-pipeline/secops-beam/)
