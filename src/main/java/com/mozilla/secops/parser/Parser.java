@@ -10,6 +10,7 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.logging.v2.model.MonitoredResource;
+import com.google.common.base.Splitter;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.model.IspResponse;
 import com.mozilla.secops.CidrUtil;
@@ -42,7 +43,10 @@ public class Parser {
   private final JacksonFactory googleJacksonFactory;
   private final Logger log;
   private final ParserCfg cfg;
+  private final CidrUtil parserXffCidrUtil;
   private GeoIP geoip;
+
+  private static final Splitter XFF_SPLITTER = Splitter.on(",").trimResults();
 
   public static final String SYSLOG_TS_RE = "\\S{3} {1,2}\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}";
 
@@ -160,8 +164,6 @@ public class Parser {
       return null;
     }
 
-    CidrUtil c = cfg.getXffAddressSelectorAsCidrUtil();
-
     String[] parts = parseXForwardedFor(input);
     if (parts == null) {
       // Input was not formatted correctly or was not an IP address
@@ -173,13 +175,13 @@ public class Parser {
       return input;
     }
 
-    if (c == null) {
+    if (parserXffCidrUtil == null) {
       // No selectors specified but we had multiple addresses, return the last one
       return parts[parts.length - 1];
     }
 
     for (int i = parts.length - 1; i >= 0; i--) {
-      if (c.contains(parts[i])) {
+      if (parserXffCidrUtil.contains(parts[i])) {
         continue;
       } else {
         return parts[i];
@@ -232,13 +234,15 @@ public class Parser {
     } else if (in.isEmpty()) {
       return new String[0];
     }
-    String[] v = in.split(", ?");
-    for (String t : v) {
+    ArrayList<String> ret = new ArrayList<>();
+    Iterable<String> buf = XFF_SPLITTER.split(in);
+    for (String t : buf) {
       if (!(InetAddressValidator.getInstance().isValid(t))) {
         return null;
       }
+      ret.add(t);
     }
-    return v;
+    return ret.toArray(new String[0]);
   }
 
   private String getStackdriverProject(LogEntry entry) {
@@ -515,6 +519,9 @@ public class Parser {
     mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
     googleJacksonFactory = new JacksonFactory();
+
+    // Cache a CidrUtil instance used for XFF address extraction if needed
+    parserXffCidrUtil = cfg.getXffAddressSelectorAsCidrUtil();
 
     this.cfg = cfg;
     if (cfg.getMaxmindCityDbPath() != null || cfg.getMaxmindIspDbPath() != null) {
