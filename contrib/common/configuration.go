@@ -28,6 +28,7 @@ type Configuration struct {
 	SesSenderEmail         string        `yaml:"ses_sender_email"`
 	DefaultEscalationEmail string        `yaml:"default_escalation_email"`
 	AlertEscalationTTL     time.Duration `yaml:"alert_escalation_ttl"`
+	EmergencyCcEmail       string        `yaml:"emergency_cc_email"`
 
 	SlackAuthToken string `yaml:"slack_auth_token"`
 	SlackChannelId string `yaml:"slack_channel_id"`

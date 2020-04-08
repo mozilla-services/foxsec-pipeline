@@ -17,7 +17,7 @@ func handle911Cmd(ctx context.Context, cmd common.SlashCommandData, db *common.D
 	msg := &slack.Msg{}
 	log.Infof("User %s invoked secops911 with message: %s", cmd.UserID, cmd.Text)
 	caller := getCallerDetails(cmd.UserID)
-	err := globals.sesClient.Send911Email(caller, cmd.Text)
+	err := globals.sesClient.Send911Email(caller, config.EmergencyCcEmail, cmd.Text)
 	if err != nil {
 		msg.Text = fmt.Sprintf("Unable contact on call. Please directly email %s", globals.sesClient.DefaultEscalationEmail())
 		return msg, err

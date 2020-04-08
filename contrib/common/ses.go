@@ -23,7 +23,7 @@ type SESClient struct {
 //EscalationMailer formats and sends necessary emails for notifications
 type EscalationMailer interface {
 	SendEscalationEmail(alert *Alert) error
-	Send911Email(caller string, msg string) error
+	Send911Email(caller string, ccAddress string, msg string) error
 	DefaultEscalationEmail() string
 }
 
@@ -70,12 +70,43 @@ func (sesc *SESClient) SendEscalationEmail(alert *Alert) error {
 
 // Send911Email sends an email notification to the default escalation email
 // with a message from the slack slash command invocation
-func (sesc *SESClient) Send911Email(caller string, msg string) error {
-	subject := fmt.Sprintf("[foxsec] Secops 911 from %s via slack", caller)
+func (sesc *SESClient) Send911Email(caller string, ccAddress string, msg string) error {
+	subject := fmt.Sprintf("[foxsec-alert] Secops 911 from %s via slack", caller)
 	body := fmt.Sprintf("%s on slack raised a secops911 with the message: %s", caller, msg)
-	escalationEmail := sesc.defaultEscalationEmail
 
-	return sesc.SendEmail(escalationEmail, subject, body)
+	ccAddresses := []*string{}
+	if ccAddress != "" {
+		ccAddresses = append(ccAddresses, aws.String(ccAddress))
+	}
+
+	input := &ses.SendEmailInput{
+		Destination: &ses.Destination{
+			CcAddresses: ccAddresses,
+			ToAddresses: []*string{
+				aws.String(sesc.defaultEscalationEmail),
+			},
+		},
+		Message: &ses.Message{
+			Body: &ses.Body{
+				Text: &ses.Content{
+					Charset: aws.String(EMAIL_CHAR_SET),
+					Data:    aws.String(body),
+				},
+			},
+			Subject: &ses.Content{
+				Charset: aws.String(EMAIL_CHAR_SET),
+				Data:    aws.String(subject),
+			},
+		},
+		Source: aws.String(sesc.senderEmail),
+	}
+
+	_, err := sesc.sesClient.SendEmail(input)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SendEmail sends an email to email

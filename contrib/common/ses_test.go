@@ -27,18 +27,31 @@ func (m *mockSes) SendEmail(input *ses.SendEmailInput) (*ses.SendEmailOutput, er
 }
 
 func TestSend911Email(t *testing.T) {
-	expectedMsg := "{\n  Destination: {\n    CcAddresses: [],\n    ToAddresses: [\"testRecipient@test.com\"]\n  },\n  Message: {\n    Body: {\n      Text: {\n        Charset: \"UTF-8\",\n        Data: \"summoner on slack raised a secops911 with the message: help! emergency!\"\n      }\n    },\n    Subject: {\n      Charset: \"UTF-8\",\n      Data: \"[foxsec] Secops 911 from summoner via slack\"\n    }\n  },\n  Source: \"testSender@test.com\"\n}"
+	expectedMsg := "{\n  Destination: {\n    CcAddresses: [\"testCc@test.com\"],\n    ToAddresses: [\"testRecipient@test.com\"]\n  },\n  Message: {\n    Body: {\n      Text: {\n        Charset: \"UTF-8\",\n        Data: \"summoner on slack raised a secops911 with the message: help! emergency!\"\n      }\n    },\n    Subject: {\n      Charset: \"UTF-8\",\n      Data: \"[foxsec-alert] Secops 911 from summoner via slack\"\n    }\n  },\n  Source: \"testSender@test.com\"\n}"
 	mSes := mockSes{}
 	sesClient := SESClient{
 		sesClient:              &mSes,
 		senderEmail:            defaultSender,
 		defaultEscalationEmail: defaultRecipient,
 	}
-	sesClient.Send911Email("summoner", "help! emergency!")
+	sesClient.Send911Email("summoner", "testCc@test.com", "help! emergency!")
 	assert.Equal(t, 1, mSes.emailsSent)
 	c := mSes.emailContentsSent[0]
 	assert.Equal(t, expectedMsg, c.String())
+}
 
+func TestSend911EmailWithEmptyCC(t *testing.T) {
+	expectedMsg := "{\n  Destination: {\n    CcAddresses: [],\n    ToAddresses: [\"testRecipient@test.com\"]\n  },\n  Message: {\n    Body: {\n      Text: {\n        Charset: \"UTF-8\",\n        Data: \"summoner on slack raised a secops911 with the message: help! emergency!\"\n      }\n    },\n    Subject: {\n      Charset: \"UTF-8\",\n      Data: \"[foxsec-alert] Secops 911 from summoner via slack\"\n    }\n  },\n  Source: \"testSender@test.com\"\n}"
+	mSes := mockSes{}
+	sesClient := SESClient{
+		sesClient:              &mSes,
+		senderEmail:            defaultSender,
+		defaultEscalationEmail: defaultRecipient,
+	}
+	sesClient.Send911Email("summoner", "", "help! emergency!")
+	assert.Equal(t, 1, mSes.emailsSent)
+	c := mSes.emailContentsSent[0]
+	assert.Equal(t, expectedMsg, c.String())
 }
 
 func TestEscalationEmail(t *testing.T) {

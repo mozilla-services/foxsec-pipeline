@@ -59,6 +59,7 @@ type FakeMailer struct {
 	Num911Sent         int
 	NumEscalationsSent int
 	ArgList911callers  []string
+	ArgList911cc       []string
 	ArgList911messages []string
 }
 
@@ -69,10 +70,11 @@ func (f *FakeMailer) SendEscalationEmail(alert *common.Alert) error {
 }
 
 // Send911Email records the 911 escalation emails we've sent out
-func (f *FakeMailer) Send911Email(caller string, message string) error {
+func (f *FakeMailer) Send911Email(caller string, ccAddress string, message string) error {
 	f.Num911Sent++
 	f.ArgList911callers = append(f.ArgList911callers, caller)
 	f.ArgList911messages = append(f.ArgList911messages, message)
+	f.ArgList911cc = append(f.ArgList911cc, ccAddress)
 	return nil
 }
 
