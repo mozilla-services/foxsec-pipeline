@@ -42,6 +42,7 @@ public class Parser {
   private final JacksonFactory googleJacksonFactory;
   private final Logger log;
   private final ParserCfg cfg;
+  private final CidrUtil parserXffCidrUtil;
   private GeoIP geoip;
 
   public static final String SYSLOG_TS_RE = "\\S{3} {1,2}\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}";
@@ -160,8 +161,6 @@ public class Parser {
       return null;
     }
 
-    CidrUtil c = cfg.getXffAddressSelectorAsCidrUtil();
-
     String[] parts = parseXForwardedFor(input);
     if (parts == null) {
       // Input was not formatted correctly or was not an IP address
@@ -173,13 +172,13 @@ public class Parser {
       return input;
     }
 
-    if (c == null) {
+    if (parserXffCidrUtil == null) {
       // No selectors specified but we had multiple addresses, return the last one
       return parts[parts.length - 1];
     }
 
     for (int i = parts.length - 1; i >= 0; i--) {
-      if (c.contains(parts[i])) {
+      if (parserXffCidrUtil.contains(parts[i])) {
         continue;
       } else {
         return parts[i];
@@ -515,6 +514,9 @@ public class Parser {
     mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
     googleJacksonFactory = new JacksonFactory();
+
+    // Cache a CidrUtil instance used for XFF address extraction if needed
+    parserXffCidrUtil = cfg.getXffAddressSelectorAsCidrUtil();
 
     this.cfg = cfg;
     if (cfg.getMaxmindCityDbPath() != null || cfg.getMaxmindIspDbPath() != null) {

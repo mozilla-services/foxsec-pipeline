@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
 import com.carrotsearch.junitbenchmarks.BenchmarkRule;
+import java.util.ArrayList;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -107,6 +108,9 @@ public class ParserBenchmark {
             + "19-02-15T16:56:33.121592986Z\"}";
     ParserCfg cfg = new ParserCfg();
     cfg.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
+    ArrayList<String> xffa = new ArrayList<>();
+    xffa.add("127.0.0.1/32");
+    cfg.setXffAddressSelector(xffa);
     Parser p = new Parser(cfg);
 
     for (int i = 0; i < 5000; i++) {
@@ -133,6 +137,9 @@ public class ParserBenchmark {
             + "19-02-15T16:56:33.121592986Z\"}";
     ParserCfg cfg = new ParserCfg();
     cfg.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
+    ArrayList<String> xffa = new ArrayList<>();
+    xffa.add("127.0.0.1/32");
+    cfg.setXffAddressSelector(xffa);
     // We need to handle the Mozlog header, so just disable Cloudwatch
     cfg.setDisableCloudwatchStrip(true);
     Parser p = new Parser(cfg);
