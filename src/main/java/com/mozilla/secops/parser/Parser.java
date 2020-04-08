@@ -10,6 +10,7 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.logging.v2.model.MonitoredResource;
+import com.google.common.base.Splitter;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.model.IspResponse;
 import com.mozilla.secops.CidrUtil;
@@ -44,6 +45,8 @@ public class Parser {
   private final ParserCfg cfg;
   private final CidrUtil parserXffCidrUtil;
   private GeoIP geoip;
+
+  private static final Splitter XFF_SPLITTER = Splitter.on(",").trimResults();
 
   public static final String SYSLOG_TS_RE = "\\S{3} {1,2}\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}";
 
@@ -231,13 +234,15 @@ public class Parser {
     } else if (in.isEmpty()) {
       return new String[0];
     }
-    String[] v = in.split(", ?");
-    for (String t : v) {
+    ArrayList<String> ret = new ArrayList<>();
+    Iterable<String> buf = XFF_SPLITTER.split(in);
+    for (String t : buf) {
       if (!(InetAddressValidator.getInstance().isValid(t))) {
         return null;
       }
+      ret.add(t);
     }
-    return v;
+    return ret.toArray(new String[0]);
   }
 
   private String getStackdriverProject(LogEntry entry) {
