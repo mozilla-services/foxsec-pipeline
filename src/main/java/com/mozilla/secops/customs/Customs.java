@@ -64,11 +64,14 @@ public class Customs implements Serializable {
 
   /**
    * Return an array of EventSummary values that indicate which events should be stored during
-   * feature extraction
+   * feature extraction and passed through the prefilter.
    *
    * <p>Any EventSummary values returned here will indicate that an event of that type should be
    * stored during feature extraction. This is required if the underlying analysis transform needs
    * to operate on the events themselves.
+   *
+   * <p>If a particular event type is not returned here, it will not be available to any analysis
+   * transforms.
    *
    * @return ArrayList
    */
