@@ -49,6 +49,7 @@ func setupTest() (*internal.FakeMailer, *internal.FakeTransport) {
 	client = internal.NewTestClient(fakeTransport)
 	globals.slackClient = slack.New("testtoken", slack.OptionHTTPClient(client))
 	globals.sesClient = fakeMailer
+	config.EmergencyCcEmail = "cc@test.com"
 	return fakeMailer, fakeTransport
 }
 func TestSuccessfulSecOps911WithUnknownUser(t *testing.T) {
@@ -98,6 +99,7 @@ func TestSuccessfulSecOps911WithKnownUser(t *testing.T) {
 	assert.Contains(t, fakeTransport.RequestURLs, "responseurl")
 	assert.Contains(t, fakeMailer.ArgList911callers, "Egon Spengler (spengler@ghostbusters.example.com)")
 	assert.Contains(t, fakeMailer.ArgList911messages, "who you gonna call")
+	assert.Contains(t, fakeMailer.ArgList911cc, "cc@test.com")
 }
 
 func TestSuccessfulStagingSecOps911WithUnknownUser(t *testing.T) {
