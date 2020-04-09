@@ -146,21 +146,6 @@ public class TestHardLimit1 {
     cur.set("192.168.1.4", wobj);
     state.done();
 
-    // Create legacy whitelisted ip in datastore
-    State legacyState =
-        new State(
-            new DatastoreStateInterface(
-                IprepdIO.legacyWhitelistedIpKind, IprepdIO.legacyWhitelistedIpNamespace));
-    legacyState.initialize();
-    IprepdIO.WhitelistedObject legacyWobj = new IprepdIO.WhitelistedObject();
-    wobj.setIp("192.168.1.5");
-    wobj.setExpiresAt(new DateTime().plusDays(1));
-    wobj.setCreatedBy("test");
-    StateCursor<IprepdIO.WhitelistedObject> lcur =
-        legacyState.newCursor(IprepdIO.WhitelistedObject.class, false);
-    lcur.set("192.168.1.5", legacyWobj);
-    legacyState.done();
-
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setOutputIprepdEnableDatastoreWhitelist(true);
     options.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
@@ -210,7 +195,7 @@ public class TestHardLimit1 {
     assertEquals(90, (int) r.getReputation("ip", "192.168.1.2"));
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.3"));
     assertEquals(100, (int) r.getReputation("ip", "192.168.1.4"));
-    assertEquals(100, (int) r.getReputation("ip", "192.168.1.5"));
+    assertEquals(90, (int) r.getReputation("ip", "192.168.1.5"));
   }
 
   @Test

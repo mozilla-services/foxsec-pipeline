@@ -581,12 +581,6 @@ public class IprepdIO {
     }
   }
 
-  /** Legacy Kind for whitelisted IP entry in Datastore */
-  public static final String legacyWhitelistedIpKind = "whitelisted_ip";
-
-  /** Legacy Namespace for whitelisted IP in Datastore */
-  public static final String legacyWhitelistedIpNamespace = "whitelisted_ip";
-
   /** Kind for whitelisted IP entry in Datastore */
   public static final String whitelistedIpKind = "ip";
 
@@ -661,56 +655,36 @@ public class IprepdIO {
     }
 
     State state;
-    State legacyState;
     if (datastoreProject != null) {
       state =
           new State(
               new DatastoreStateInterface(type, whitelistedObjectNamespace, datastoreProject));
-      legacyState =
-          new State(
-              new DatastoreStateInterface(
-                  legacyWhitelistedIpKind, legacyWhitelistedIpNamespace, datastoreProject));
     } else {
       state = new State(new DatastoreStateInterface(type, whitelistedObjectNamespace));
-      legacyState =
-          new State(
-              new DatastoreStateInterface(legacyWhitelistedIpKind, legacyWhitelistedIpNamespace));
     }
 
     Logger log = LoggerFactory.getLogger(IprepdIO.class);
 
     try {
       state.initialize();
-      legacyState.initialize();
     } catch (StateException exc) {
       log.error("error initializing state: {}", exc.getMessage());
       throw new IOException(exc.getMessage());
     }
 
     StateCursor<WhitelistedObject> sc = null;
-    StateCursor<WhitelistedObject> lsc = null;
     try {
       sc = state.newCursor(WhitelistedObject.class, false);
       WhitelistedObject wobj = sc.get(obj);
       if (wobj != null) {
         a.addMetadata(IPREPD_EXEMPT, "true");
         a.addMetadata(IPREPD_EXEMPT + "_created_by", wobj.getCreatedBy());
-      } else {
-        if (type.equals(whitelistedIpKind)) {
-          lsc = legacyState.newCursor(WhitelistedObject.class, false);
-          WhitelistedObject legacyWobj = lsc.get(obj);
-          if (legacyWobj != null) {
-            a.addMetadata(IPREPD_EXEMPT, "true");
-            a.addMetadata(IPREPD_EXEMPT + "_created_by", legacyWobj.getCreatedBy());
-          }
-        }
       }
     } catch (StateException exc) {
       log.error("error getting whitelisted object: {}", exc.getMessage());
       throw new IOException(exc.getMessage());
     } finally {
       state.done();
-      legacyState.done();
     }
   }
 }
