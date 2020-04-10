@@ -142,6 +142,13 @@ func BugzillaAlertManager(ctx context.Context, psmsg pubsub.Message) error {
 			y, m, d := newestBug.CreationTime.Date()
 			if (ny == y) && (nm == m) && (nd == d) {
 				contextLogger.Infof("Adding %s to bugzilla bug %d", alert.Id, newestBug.Id)
+				// If bug is closed, re-open
+				if !newestBug.IsOpen {
+					err := globals.bugzillaClient.UpdateBug(newestBug.Id, &common.UpdateBugReq{Status: common.ASSIGNED})
+					if err != nil {
+						log.Errorf("Error re-opening closed bug: %s", err)
+					}
+				}
 				// Add to bug
 				err := globals.bugzillaClient.AddAlertsToBug(newestBug.Id, []*common.Alert{alert})
 				if err != nil {

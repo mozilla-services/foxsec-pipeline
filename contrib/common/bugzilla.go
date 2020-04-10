@@ -184,6 +184,7 @@ type BugResp struct {
 	Id           int       `json:"id"`
 	CreationTime time.Time `json:"creation_time"`
 	AssignedTo   string    `json:"assigned_to"`
+	IsOpen       bool      `json:"is_open"`
 }
 
 func (bc *BugzillaClient) SearchBugs(searchValues url.Values) (*SearchBugResponse, error) {
@@ -208,4 +209,43 @@ func (bc *BugzillaClient) SearchBugs(searchValues url.Values) (*SearchBugRespons
 		return nil, err
 	}
 	return searchResp, nil
+}
+
+type UpdateBugReq struct {
+	Status string `json:"status"`
+}
+
+const ASSIGNED = "ASSIGNED"
+
+func (bc *BugzillaClient) UpdateBug(bugId int, updateReq *UpdateBugReq) error {
+	updateJson, err := json.Marshal(updateReq)
+	if err != nil {
+		return err
+	}
+
+	req, err := bc.CreateDefaultBugzillaRequest(http.MethodPut, fmt.Sprintf("%s/rest/bug/%d", bc.Url, bugId), bytes.NewReader(updateJson))
+	if err != nil {
+		log.Errorf("Error creating request: %s", err)
+		return err
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Errorf("Error sending request to bugzilla: %s", err)
+		return err
+	}
+	if resp.StatusCode > 299 {
+		log.Errorf("Got status code of %d from update bug request %s", resp.StatusCode, string(updateJson))
+
+		errResp := BugzillaErrorResponse{}
+		err = json.NewDecoder(resp.Body).Decode(&errResp)
+		if err != nil {
+			return err
+		}
+		log.Errorf("Bugzilla Error Response: Message: %s | Code: %d", errResp.Message, errResp.Code)
+		return err
+	}
+
+	return nil
 }
