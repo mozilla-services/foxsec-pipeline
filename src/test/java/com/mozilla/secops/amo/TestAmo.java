@@ -10,6 +10,7 @@ import com.mozilla.secops.TestIprepdIO;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.input.InputElement;
 import com.mozilla.secops.parser.ParserTest;
@@ -117,20 +118,23 @@ public class TestAmo {
               int cntNewVersionSubmission = 0;
               for (Alert a : x) {
                 if (a.getCategory().equals("amo")) {
-                  if (a.getMetadataValue("amo_category")
+                  if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                       .equals("fxa_account_abuse_new_version_login")) {
-                    if (a.getMetadataValue("email").equals("kurn@mozilla.com")) {
+                    if (a.getMetadataValue(AlertMeta.Key.EMAIL).equals("kurn@mozilla.com")) {
                       assertEquals("fxa_account_abuse_new_version_login", a.getNotifyMergeKey());
-                      assertEquals("kurn@mozilla.com", a.getMetadataValue("email"));
-                      assertEquals("255.255.25.26", a.getMetadataValue("sourceaddress"));
+                      assertEquals("kurn@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                      assertEquals(
+                          "255.255.25.26", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                       assertEquals(
                           "test login to amo from suspected fraudulent account, kurn@mozilla.com "
                               + "from 255.255.25.26",
                           a.getSummary());
-                    } else if (a.getMetadataValue("email").equals("locutus@mozilla.com")) {
+                    } else if (a.getMetadataValue(AlertMeta.Key.EMAIL)
+                        .equals("locutus@mozilla.com")) {
                       assertEquals("fxa_account_abuse_new_version_login", a.getNotifyMergeKey());
-                      assertEquals("locutus@mozilla.com", a.getMetadataValue("email"));
-                      assertEquals("255.255.25.30", a.getMetadataValue("sourceaddress"));
+                      assertEquals("locutus@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                      assertEquals(
+                          "255.255.25.30", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                       assertEquals(
                           "test login to amo from suspected fraudulent account, locutus@mozilla.com "
                               + "from 255.255.25.30",
@@ -139,71 +143,78 @@ public class TestAmo {
                       fail("unexpected email address");
                     }
                     cntNewVersionLogin++;
-                  } else if (a.getMetadataValue("amo_category").equals("amo_restriction")) {
+                  } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                      .equals("amo_restriction")) {
                     assertEquals("amo_restriction", a.getNotifyMergeKey());
-                    assertEquals("kurn@mozilla.com", a.getMetadataValue("restricted_value"));
+                    assertEquals(
+                        "kurn@mozilla.com", a.getMetadataValue(AlertMeta.Key.RESTRICTED_VALUE));
                     assertEquals(
                         "test request to amo from kurn@mozilla.com restricted based on reputation",
                         a.getSummary());
                     cntRestriction++;
-                  } else if (a.getMetadataValue("amo_category")
+                  } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                       .equals("fxa_account_abuse_new_version_login_banpattern")) {
                     assertEquals(
                         "fxa_account_abuse_new_version_login_banpattern", a.getNotifyMergeKey());
-                    assertEquals("locutus@mozilla.com", a.getMetadataValue("email"));
-                    assertEquals("255.255.25.30", a.getMetadataValue("sourceaddress"));
+                    assertEquals("locutus@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                    assertEquals("255.255.25.30", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                     cntNewVersionBanPattern++;
-                  } else if (a.getMetadataValue("amo_category").equals("fxa_account_abuse_alias")) {
+                  } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                      .equals("fxa_account_abuse_alias")) {
                     assertEquals("fxa_account_abuse_alias", a.getNotifyMergeKey());
-                    assertEquals("6", a.getMetadataValue("count"));
+                    assertEquals("6", a.getMetadataValue(AlertMeta.Key.COUNT));
                     assertEquals(
                         "test possible alias abuse in amo, laforge@mozilla.com has 6 aliases",
                         a.getSummary());
                     cntAbuseAlias++;
-                  } else if (a.getMetadataValue("amo_category").equals("amo_abuse_matched_addon")) {
+                  } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                      .equals("amo_abuse_matched_addon")) {
                     assertEquals("amo_abuse_matched_addon", a.getNotifyMergeKey());
-                    assertEquals("216.160.83.63", a.getMetadataValue("sourceaddress"));
+                    assertEquals("216.160.83.63", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                     assertEquals(
                         "00000000000000000000000000000000_test_submission.zip",
-                        a.getMetadataValue("addon_filename"));
-                    assertEquals("lwaxana@mozilla.com", a.getMetadataValue("email"));
-                    assertEquals("7500", a.getMetadataValue("addon_size"));
+                        a.getMetadataValue(AlertMeta.Key.ADDON_FILENAME));
+                    assertEquals("lwaxana@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                    assertEquals("7500", a.getMetadataValue(AlertMeta.Key.ADDON_SIZE));
                     assertEquals(
                         "test suspected malicious addon submission from 216.160.83.63, lwaxana@mozilla.com",
                         a.getSummary());
                     cntMatchedAddon++;
-                  } else if (a.getMetadataValue("amo_category").equals("amo_abuse_multi_match")) {
+                  } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                      .equals("amo_abuse_multi_match")) {
                     assertEquals("amo_abuse_multi_match", a.getNotifyMergeKey());
                     assertEquals("test addon abuse multi match, 10", a.getSummary());
-                    assertEquals("10", a.getMetadataValue("count"));
-                    assertEquals("x.xpi", a.getMetadataValue("addon_filename"));
+                    assertEquals("10", a.getMetadataValue(AlertMeta.Key.COUNT));
+                    assertEquals("x.xpi", a.getMetadataValue(AlertMeta.Key.ADDON_FILENAME));
                     cntMultiMatch++;
-                  } else if (a.getMetadataValue("amo_category").equals("amo_abuse_multi_submit")) {
+                  } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                      .equals("amo_abuse_multi_submit")) {
                     assertEquals("amo_abuse_multi_submit", a.getNotifyMergeKey());
                     assertEquals("test addon abuse multi submit, 10000 11", a.getSummary());
-                    assertEquals("11", a.getMetadataValue("count"));
+                    assertEquals("11", a.getMetadataValue(AlertMeta.Key.COUNT));
                     cntMultiSubmit++;
-                  } else if (a.getMetadataValue("amo_category")
+                  } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                       .equals("amo_abuse_multi_ip_login")) {
                     assertEquals("amo_abuse_multi_ip_login", a.getNotifyMergeKey());
                     assertEquals(
                         "test addon abuse multi ip country login, sevenofnine@mozilla.net 2 countr"
                             + "ies, 2 source address",
                         a.getSummary());
-                    assertEquals("2", a.getMetadataValue("count"));
+                    assertEquals("2", a.getMetadataValue(AlertMeta.Key.COUNT));
                     cntIpLogin++;
-                  } else if (a.getMetadataValue("amo_category").equals("amo_cloud_submission")) {
-                    assertEquals("aws", a.getMetadataValue("provider"));
-                    assertEquals("52.204.100.1", a.getMetadataValue("sourceaddress"));
-                    assertEquals("tashayar@mozilla.com", a.getMetadataValue("email"));
+                  } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                      .equals("amo_cloud_submission")) {
+                    assertEquals("aws", a.getMetadataValue(AlertMeta.Key.PROVIDER));
+                    assertEquals("52.204.100.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                    assertEquals("tashayar@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
                     cntCloudSubmit++;
                   } else {
-                    assertEquals("255.255.25.25", a.getMetadataValue("sourceaddress"));
-                    if (a.getMetadataValue("addon_version") != null) {
+                    assertEquals("255.255.25.25", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                    if (a.getMetadataValue(AlertMeta.Key.ADDON_VERSION) != null) {
                       assertEquals(
                           "fxa_account_abuse_new_version_submission", a.getNotifyMergeKey());
-                      assertEquals("1.0.0", a.getMetadataValue("addon_version"));
-                      assertEquals("0000001", a.getMetadataValue("addon_id"));
+                      assertEquals("1.0.0", a.getMetadataValue(AlertMeta.Key.ADDON_VERSION));
+                      assertEquals("0000001", a.getMetadataValue(AlertMeta.Key.ADDON_ID));
                       assertEquals(
                           "test addon submission from address associated with "
                               + "suspected fraudulent account, 255.255.25.25",
@@ -211,8 +222,8 @@ public class TestAmo {
                     } else {
                       assertEquals(
                           "fxa_account_abuse_new_version_submission", a.getNotifyMergeKey());
-                      assertNull(a.getMetadataValue("addon_version"));
-                      assertNull(a.getMetadataValue("addon_id"));
+                      assertNull(a.getMetadataValue(AlertMeta.Key.ADDON_VERSION));
+                      assertNull(a.getMetadataValue(AlertMeta.Key.ADDON_ID));
                       assertEquals(
                           "test addon submission from address associated with "
                               + "suspected fraudulent account, 255.255.25.25",
@@ -223,25 +234,25 @@ public class TestAmo {
                 } else if (a.getCategory().equals("amo-cfgtick")) {
                   assertEquals(
                       "Correlates AMO addon submissions with abusive FxA account creation alerts via iprepd. Also includes blacklisted accounts regex: [locutus.*]",
-                      a.getMetadataValue("heuristic_FxaAccountAbuseNewVersion"));
+                      a.getCustomMetadataValue("heuristic_FxaAccountAbuseNewVersion"));
                   assertEquals(
                       "Reports on request restrictions from AMO",
-                      a.getMetadataValue("heuristic_ReportRestriction"));
+                      a.getCustomMetadataValue("heuristic_ReportRestriction"));
                   assertEquals(
                       "Alerts on aliased FxA accounts usage. A max of 5 are allowed for one account in a given session.",
-                      a.getMetadataValue("heuristic_FxaAccountAbuseAlias"));
+                      a.getCustomMetadataValue("heuristic_FxaAccountAbuseAlias"));
                   assertEquals(
                       "Match abusive addon uploads using these patterns [.*test_submission.*:7500:7500] and generate alerts",
-                      a.getMetadataValue("heuristic_AddonMatcher"));
+                      a.getCustomMetadataValue("heuristic_AddonMatcher"));
                   assertEquals(
                       "Detect distributed AMO submissions with the same file name. Alert on 5 submissions of the same file name.",
-                      a.getMetadataValue("heuristic_AddonMultiMatch"));
+                      a.getCustomMetadataValue("heuristic_AddonMultiMatch"));
                   assertEquals(
                       "Detect distributed submissions based on file size intervals. Alert on 10 submissions of the same rounded interval.",
-                      a.getMetadataValue("heuristic_AddonMultiSubmit"));
+                      a.getCustomMetadataValue("heuristic_AddonMultiSubmit"));
                   assertEquals(
                       "Detect multiple account logins for the same account from different source addresses associated with different country codes. Alert on 2 different countries and 2 different IPs. Regex for account exceptions: null",
-                      a.getMetadataValue("heuristic_AddonMultiIpLogin"));
+                      a.getCustomMetadataValue("heuristic_AddonMultiIpLogin"));
                 } else {
                   fail("unexpected category");
                 }

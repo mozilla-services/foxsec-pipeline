@@ -1,6 +1,7 @@
 package com.mozilla.secops;
 
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.httprequest.HTTPRequestToggles;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
@@ -282,9 +283,9 @@ public class SourceCorrelation {
                               monitoredResource, isp, alert, cnt));
                       a.setCategory("httprequest");
                       a.setSubcategory("isp_source_correlation");
-                      a.addMetadata("sourceaddress_isp", isp);
-                      a.addMetadata("total_address_count", Integer.toString(cnt));
-                      a.addMetadata("total_alert_count", Integer.toString(alert));
+                      a.addMetadata(AlertMeta.Key.SOURCEADDRESS_ISP, isp);
+                      a.addMetadata(AlertMeta.Key.TOTAL_ADDRESS_COUNT, Integer.toString(cnt));
+                      a.addMetadata(AlertMeta.Key.TOTAL_ALERT_COUNT, Integer.toString(alert));
                       a.setNotifyMergeKey(
                           String.format("%s isp_source_correlation", monitoredResource));
                       c.output(a);
@@ -330,15 +331,15 @@ public class SourceCorrelation {
     @ProcessElement
     public void processElement(ProcessContext c) {
       Alert a = c.element();
-      if (a.getMetadataValue("sourceaddress") == null) {
+      if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS) == null) {
         return;
       }
       SourceData o = new SourceData();
-      o.setSourceAddress(a.getMetadataValue("sourceaddress"));
-      o.setCity(a.getMetadataValue("sourceaddress_city"));
-      o.setCountry(a.getMetadataValue("sourceaddress_country"));
-      o.setIsp(a.getMetadataValue("sourceaddress_isp"));
-      String asns = a.getMetadataValue("sourceaddress_asn");
+      o.setSourceAddress(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+      o.setCity(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+      o.setCountry(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+      o.setIsp(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_ISP));
+      String asns = a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_ASN);
       if (asns != null) {
         o.setAsn(new Integer(asns));
       }

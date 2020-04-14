@@ -3,6 +3,7 @@ package com.mozilla.secops.amo;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -141,8 +142,8 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                           alert.setCategory("amo");
                           alert.setSubcategory("fxa_account_abuse_new_version_login_banpattern");
                           alert.setNotifyMergeKey("fxa_account_abuse_new_version_login_banpattern");
-                          alert.addMetadata("sourceaddress", d.getRemoteIp());
-                          alert.addMetadata("email", d.getFxaEmail());
+                          alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, d.getRemoteIp());
+                          alert.addMetadata(AlertMeta.Key.EMAIL, d.getFxaEmail());
                           alert.setSummary(
                               String.format(
                                   "%s login to amo from suspected fraudulent account, %s from %s",
@@ -189,10 +190,11 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                             Alert alert = new Alert();
                             alert.setCategory("amo");
                             alert.setNotifyMergeKey("fxa_account_abuse_new_version_login");
-                            alert.addMetadata("sourceaddress", d.getRemoteIp());
-                            alert.addMetadata("email", d.getFxaEmail());
+                            alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, d.getRemoteIp());
+                            alert.addMetadata(AlertMeta.Key.EMAIL, d.getFxaEmail());
                             alert.addMetadata(
-                                "amo_category", "fxa_account_abuse_new_version_login");
+                                AlertMeta.Key.ALERT_SUBCATEGORY_FIELD,
+                                "fxa_account_abuse_new_version_login");
                             alert.setSummary(
                                 String.format(
                                     "%s login to amo from suspected fraudulent account, %s from %s",
@@ -210,14 +212,15 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                           Alert alert = new Alert();
                           alert.setCategory("amo");
                           alert.setNotifyMergeKey("fxa_account_abuse_new_version_submission");
-                          alert.addMetadata("sourceaddress", d.getRemoteIp());
+                          alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, d.getRemoteIp());
                           alert.addMetadata(
-                              "amo_category", "fxa_account_abuse_new_version_submission");
+                              AlertMeta.Key.ALERT_SUBCATEGORY_FIELD,
+                              "fxa_account_abuse_new_version_submission");
                           if (d.getAddonId() != null) {
-                            alert.addMetadata("addon_id", d.getAddonId());
+                            alert.addMetadata(AlertMeta.Key.ADDON_ID, d.getAddonId());
                           }
                           if (d.getAddonVersion() != null) {
-                            alert.addMetadata("addon_version", d.getAddonVersion());
+                            alert.addMetadata(AlertMeta.Key.ADDON_VERSION, d.getAddonVersion());
                           }
                           alert.setSummary(
                               String.format(

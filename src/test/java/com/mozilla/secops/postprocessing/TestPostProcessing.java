@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 
 import com.mozilla.secops.Watchlist;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
@@ -116,35 +117,42 @@ public class TestPostProcessing {
               int ipCnt = 0;
               int cfgTickCnt = 0;
               for (Alert a : results) {
-                if (a.getMetadataValue("category").equals("watchlist")) {
+                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("watchlist")) {
                   assertEquals("postprocessing", a.getCategory());
                   assertEquals(
-                      "0e555555-8df8-4b3d-92dd-24e0e5248534", a.getMetadataValue("source_alert"));
-                  if (a.getMetadataValue("matched_type").equals("email")) {
+                      "0e555555-8df8-4b3d-92dd-24e0e5248534",
+                      a.getMetadataValue(AlertMeta.Key.SOURCE_ALERT));
+                  if (a.getMetadataValue(AlertMeta.Key.MATCHED_TYPE).equals("email")) {
                     emailCnt++;
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                    assertEquals("email", a.getMetadataValue("matched_type"));
-                    assertEquals("identity_key", a.getMetadataValue("matched_metadata_key"));
+                    assertEquals("email", a.getMetadataValue(AlertMeta.Key.MATCHED_TYPE));
                     assertEquals(
-                        "picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+                        "identity_key", a.getMetadataValue(AlertMeta.Key.MATCHED_METADATA_KEY));
                     assertEquals(
-                        "example@enterprise.com", a.getMetadataValue("matched_metadata_value"));
-                  } else if (a.getMetadataValue("matched_type").equals("ip")) {
+                        "picard@enterprise.com",
+                        a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                    assertEquals(
+                        "example@enterprise.com",
+                        a.getMetadataValue(AlertMeta.Key.MATCHED_METADATA_VALUE));
+                  } else if (a.getMetadataValue(AlertMeta.Key.MATCHED_TYPE).equals("ip")) {
                     ipCnt++;
                     assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                     assertEquals(
-                        "pagerduty@enterprise.com", a.getMetadataValue("notify_email_direct"));
-                    assertEquals("ip", a.getMetadataValue("matched_type"));
-                    assertEquals("sourceaddress", a.getMetadataValue("matched_metadata_key"));
-                    assertEquals("127.0.0.1", a.getMetadataValue("matched_metadata_value"));
+                        "pagerduty@enterprise.com",
+                        a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                    assertEquals("ip", a.getMetadataValue(AlertMeta.Key.MATCHED_TYPE));
+                    assertEquals(
+                        "sourceaddress", a.getMetadataValue(AlertMeta.Key.MATCHED_METADATA_KEY));
+                    assertEquals(
+                        "127.0.0.1", a.getMetadataValue(AlertMeta.Key.MATCHED_METADATA_VALUE));
                   }
-                } else if (a.getMetadataValue("category").equals("cfgtick")) {
+                } else if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("cfgtick")) {
                   cfgTickCnt++;
                   assertEquals("postprocessing-cfgtick", a.getCategory());
                   assertEquals(
                       "./target/test-classes/testdata/watchlist_analyze_buffer1.txt",
-                      a.getMetadataValue("inputFile"));
-                  assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
+                      a.getCustomMetadataValue("inputFile"));
+                  assertEquals("5", a.getCustomMetadataValue("generateConfigurationTicksMaximum"));
                 } else {
                   fail("unexpected category");
                 }
@@ -207,34 +215,40 @@ public class TestPostProcessing {
                 if (a.getSummary()
                     .contains(
                         "increase, 1 alerts -> 10 alerts over previous 15m using criteria *:50:50:1")) {
-                  assertEquals("*:50:50:1", a.getMetadataValue("threshold"));
-                  assertEquals("2020-01-01T00:00:00.000Z", a.getMetadataValue("start"));
-                  assertEquals("2020-01-01T00:29:59.999Z", a.getMetadataValue("end"));
-                  assertEquals("picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+                  assertEquals("*:50:50:1", a.getMetadataValue(AlertMeta.Key.THRESHOLD));
+                  assertEquals("2020-01-01T00:00:00.000Z", a.getMetadataValue(AlertMeta.Key.START));
+                  assertEquals("2020-01-01T00:29:59.999Z", a.getMetadataValue(AlertMeta.Key.END));
+                  assertEquals(
+                      "picard@enterprise.com",
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
                   globalSmallIncreaseCount++;
                 } else if (a.getSummary()
                     .contains(
                         "decrease, 5 alerts -> 1 alerts over previous 15m using criteria *:50:50:1")) {
-                  assertEquals("*:50:50:1", a.getMetadataValue("threshold"));
-                  assertEquals("2020-01-01T00:45:00.000Z", a.getMetadataValue("start"));
-                  assertEquals("2020-01-01T01:14:59.999Z", a.getMetadataValue("end"));
-                  assertEquals("picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+                  assertEquals("*:50:50:1", a.getMetadataValue(AlertMeta.Key.THRESHOLD));
+                  assertEquals("2020-01-01T00:45:00.000Z", a.getMetadataValue(AlertMeta.Key.START));
+                  assertEquals("2020-01-01T01:14:59.999Z", a.getMetadataValue(AlertMeta.Key.END));
+                  assertEquals(
+                      "picard@enterprise.com",
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
                   globalSmallDecreaseCount++;
                 } else if (a.getSummary()
                     .contains(
                         "increase, 16 alerts -> 41 alerts over previous 1h using "
                             + "criteria *:50:50:1")) {
-                  assertEquals("*:50:50:1", a.getMetadataValue("threshold"));
-                  assertEquals("2020-01-01T00:00:00.000Z", a.getMetadataValue("start"));
-                  assertEquals("2020-01-01T01:59:59.999Z", a.getMetadataValue("end"));
-                  assertEquals("picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+                  assertEquals("*:50:50:1", a.getMetadataValue(AlertMeta.Key.THRESHOLD));
+                  assertEquals("2020-01-01T00:00:00.000Z", a.getMetadataValue(AlertMeta.Key.START));
+                  assertEquals("2020-01-01T01:59:59.999Z", a.getMetadataValue(AlertMeta.Key.END));
+                  assertEquals(
+                      "picard@enterprise.com",
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
                   globalLargeIncreaseCount++;
                 } else {
                   // Otherwise, a configuration tick
                   assertEquals(
                       "Analyze alerts across windows to identify threshold violations and anomalies. "
                           + "Applied criteria, [*:50:50:1].",
-                      a.getMetadataValue("heuristic_AlertSummary"));
+                      a.getCustomMetadataValue("heuristic_AlertSummary"));
                 }
               }
               assertEquals(1, globalSmallIncreaseCount);
@@ -330,7 +344,8 @@ public class TestPostProcessing {
                         equalTo(
                             "alert increase, 16 alerts -> 41 alerts over previous 1h using "
                                 + "criteria authprofile:50:50:1")));
-                assertEquals("picard@enterprise.com", a.getMetadataValue("notify_email_direct"));
+                assertEquals(
+                    "picard@enterprise.com", a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
               }
               assertEquals(9, total);
               return null;

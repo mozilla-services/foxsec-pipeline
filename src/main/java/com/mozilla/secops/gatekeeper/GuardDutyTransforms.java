@@ -1,28 +1,10 @@
 package com.mozilla.secops.gatekeeper;
 
-import com.amazonaws.services.guardduty.model.AccessKeyDetails;
-import com.amazonaws.services.guardduty.model.Action;
-import com.amazonaws.services.guardduty.model.AwsApiCallAction;
-import com.amazonaws.services.guardduty.model.City;
-import com.amazonaws.services.guardduty.model.Country;
-import com.amazonaws.services.guardduty.model.DnsRequestAction;
-import com.amazonaws.services.guardduty.model.DomainDetails;
 import com.amazonaws.services.guardduty.model.Finding;
-import com.amazonaws.services.guardduty.model.GeoLocation;
-import com.amazonaws.services.guardduty.model.InstanceDetails;
-import com.amazonaws.services.guardduty.model.LocalPortDetails;
-import com.amazonaws.services.guardduty.model.NetworkConnectionAction;
-import com.amazonaws.services.guardduty.model.Organization;
-import com.amazonaws.services.guardduty.model.PortProbeAction;
-import com.amazonaws.services.guardduty.model.PortProbeDetail;
-import com.amazonaws.services.guardduty.model.RemoteIpDetails;
-import com.amazonaws.services.guardduty.model.RemotePortDetails;
-import com.amazonaws.services.guardduty.model.Resource;
-import com.amazonaws.services.guardduty.model.Service;
-import com.amazonaws.services.guardduty.model.Tag;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.alert.AlertSuppressor;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.Event;
@@ -40,7 +22,6 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,37 +140,51 @@ public class GuardDutyTransforms implements Serializable {
           f.getRegion(), f.getRegion(), f.getId());
     }
 
-    private void addBaseFindingData(Alert a, Finding f, Map<String, String> awsAcctMap) {
+    private void addBaseFindingData(Alert a, Finding f, Map<String, String> awsAcctMap)
+        throws IOException {
+      if (f.getId() == null) {
+        throw new IOException("guardduty alert was missing finding id");
+      }
+      a.addMetadata(AlertMeta.Key.FINDING_ID, f.getId());
+
       String acctId = f.getAccountId();
-      a.tryAddMetadata("aws_account_id", acctId);
+      if (acctId == null) {
+        throw new IOException("guardduty alert was missing account id");
+      }
+      a.addMetadata(AlertMeta.Key.AWS_ACCOUNT_ID, acctId);
+
+      if (f.getType() != null) {
+        a.addMetadata(AlertMeta.Key.FINDING_TYPE, f.getType());
+      }
 
       String acctName = null;
-      if (awsAcctMap != null && acctId != null) {
+      if (awsAcctMap != null) {
         acctName = awsAcctMap.get(acctId);
         if (acctName != null) {
-          a.addMetadata("aws_account_name", acctName);
+          a.addMetadata(AlertMeta.Key.AWS_ACCOUNT_NAME, acctName);
         }
       }
 
-      a.tryAddMetadata("aws_region", f.getRegion());
-      a.tryAddMetadata("description", f.getDescription());
-      Double severity = f.getSeverity();
-      if (severity != null) {
-        a.tryAddMetadata("finding_aws_severity", Double.toString(severity));
-      }
-      a.tryAddMetadata("finding_type", f.getType());
-      a.tryAddMetadata("finding_id", f.getId());
+      if (f.getRegion() != null) {
+        a.addMetadata(AlertMeta.Key.AWS_REGION, f.getRegion());
 
-      a.tryAddMetadata("url_to_finding", createFindingUrl(f));
+        // If we have the region, we can also create a link to the finding
+        a.addMetadata(
+            AlertMeta.Key.URL_TO_FINDING,
+            String.format(
+                "https://%s.console.aws.amazon.com/guardduty/home?region=%s#/findings?fId=%s",
+                f.getRegion(), f.getRegion(), f.getId()));
+      }
+      if (f.getDescription() != null) {
+        a.addMetadata(AlertMeta.Key.DESCRIPTION, f.getDescription());
+      }
 
       a.setSummary(
           String.format(
               "suspicious activity detected in aws account %s: %s",
               acctName != null ? acctName : acctId,
-              f.getTitle() != null ? f.getTitle() : "UNKNOWN"));
-      if (f.getUpdatedAt() != null) {
-        a.setTimestamp(DateTime.parse(f.getUpdatedAt()));
-      }
+              f.getTitle() != null ? f.getTitle() : "unknown"));
+
       a.setCategory(alertCategory);
       a.setSeverity(Alert.AlertSeverity.CRITICAL);
     }
@@ -197,204 +192,14 @@ public class GuardDutyTransforms implements Serializable {
     private void addFindingSeverity(Alert a, Finding f) {
       for (GuardDutyFindingMatcher matcher : highMatchers) {
         if (matcher.matches(f)) {
-          a.addMetadata("alert_handling_severity", "high");
-          a.addMetadata("notify_email_direct", critNotifyEmail);
+          a.addMetadata(AlertMeta.Key.ALERT_HANDLING_SEVERITY, "high");
+          if (critNotifyEmail != null) {
+            a.addMetadata(AlertMeta.Key.NOTIFY_EMAIL_DIRECT, critNotifyEmail);
+          }
           return;
         }
       }
-      a.addMetadata("alert_handling_severity", "low");
-    }
-
-    // best effort addition of local port related metadata
-    private void tryAddLocalPortMetadata(Alert a, LocalPortDetails lpd) {
-      if (lpd.getPort() != null) {
-        a.tryAddMetadata("local_port", Integer.toString(lpd.getPort()));
-      }
-      a.tryAddMetadata("local_port_name", lpd.getPortName());
-    }
-
-    // best effort addition of remote ip related metadata
-    private void tryAddRemoteIpMetadata(Alert a, RemoteIpDetails rid) {
-      a.tryAddMetadata("remote_ip_address", rid.getIpAddressV4());
-      Country country = rid.getCountry();
-      if (country != null) {
-        a.tryAddMetadata("remote_ip_country", country.getCountryName());
-        a.tryAddMetadata("remote_ip_country_code", country.getCountryCode());
-      }
-      City city = rid.getCity();
-      if (city != null) {
-        a.tryAddMetadata("remote_ip_city", city.getCityName());
-      }
-      GeoLocation gl = rid.getGeoLocation();
-      if (gl != null) {
-        Double lat = gl.getLat();
-        if (lat != null) {
-          a.tryAddMetadata("remote_ip_latitude", Double.toString(lat));
-        }
-        Double lon = gl.getLon();
-        if (lon != null) {
-          a.tryAddMetadata("remote_ip_longitude", Double.toString(lon));
-        }
-      }
-      Organization org = rid.getOrganization();
-      if (org != null) {
-        a.tryAddMetadata("remote_ip_asn", org.getAsn());
-        a.tryAddMetadata("remote_ip_asn_org", org.getAsnOrg());
-        a.tryAddMetadata("remote_ip_isp", org.getIsp());
-        a.tryAddMetadata("remote_ip_org", org.getOrg());
-      }
-    }
-
-    // best effort addition of resource metadata
-    private void tryAddResourceMetadata(Alert a, Resource rsrc) {
-      a.tryAddMetadata("resource_type", rsrc.getResourceType());
-      // "AccessKey" type resources contain AccessKeyDetails
-      AccessKeyDetails akd = rsrc.getAccessKeyDetails();
-      if (akd != null) {
-        a.tryAddMetadata("access_key_id", akd.getAccessKeyId());
-        a.tryAddMetadata("principal_id", akd.getPrincipalId());
-        a.tryAddMetadata("user_name", akd.getUserName());
-        a.tryAddMetadata("user_type", akd.getUserType());
-      }
-      // "Instance" type resources contain InstanceDetails
-      InstanceDetails idetails = rsrc.getInstanceDetails();
-      if (idetails != null) {
-        a.tryAddMetadata("instance_availability_zone", idetails.getAvailabilityZone());
-        a.tryAddMetadata("instance_image_description", idetails.getImageDescription());
-        a.tryAddMetadata("instance_image_id", idetails.getImageId());
-        a.tryAddMetadata("instance_id", idetails.getInstanceId());
-        a.tryAddMetadata("instance_state", idetails.getInstanceState());
-        a.tryAddMetadata("instance_type", idetails.getInstanceType());
-        a.tryAddMetadata("instance_launch_time", idetails.getLaunchTime());
-        a.tryAddMetadata("instance_platform", idetails.getPlatform());
-        tryAddResourceTagsToMetadata(a, idetails.getTags());
-        // instance details also contains:
-        // - IAM instance profile: IamInstanceProfile
-        // - Network interfaces: List<NetworkInterface>
-        // - Product Codes: List<ProductCode>
-        // we are not interested in these at the moment
-      }
-    }
-
-    // best effort addition of resource tags
-    private void tryAddResourceTagsToMetadata(Alert a, List<Tag> tags) {
-      if (tags == null || tags.size() == 0) {
-        return;
-      }
-      for (Tag t : tags) {
-        a.tryAddMetadata("tag_" + t.getKey(), t.getValue());
-      }
-    }
-
-    // best effort addition of network-connection (action) related metadata
-    private void tryAddNetworkConnectionActionMetadata(Alert a, NetworkConnectionAction nca) {
-      a.tryAddMetadata("network_connection_direction", nca.getConnectionDirection());
-      a.tryAddMetadata("network_connection_proto", nca.getProtocol());
-      a.tryAddMetadata("network_connection_blocked", Boolean.toString(nca.getBlocked()));
-      LocalPortDetails lpd = nca.getLocalPortDetails();
-      if (lpd != null) {
-        tryAddLocalPortMetadata(a, lpd);
-      }
-      RemotePortDetails rpd = nca.getRemotePortDetails();
-      if (rpd != null) {
-        Integer rPort = rpd.getPort();
-        if (rPort != null) {
-          a.tryAddMetadata("remote_port", Integer.toString(rPort));
-        }
-        a.tryAddMetadata("remote_port_name", rpd.getPortName());
-      }
-      RemoteIpDetails rid = nca.getRemoteIpDetails();
-      if (rid != null) {
-        tryAddRemoteIpMetadata(a, rid);
-      }
-    }
-
-    // best effort addition of aws-api-call (action) related metadata
-    private void tryAddAwsApiCallActionMetadata(Alert a, AwsApiCallAction aca) {
-      a.tryAddMetadata("api_name", aca.getApi());
-      a.tryAddMetadata("api_service_name", aca.getServiceName());
-      a.tryAddMetadata("api_caller_type", aca.getCallerType());
-      DomainDetails dd = aca.getDomainDetails();
-      if (dd != null) {
-        a.tryAddMetadata("api_domain_name", dd.getDomain());
-      }
-      RemoteIpDetails rid = aca.getRemoteIpDetails();
-      if (rid != null) {
-        tryAddRemoteIpMetadata(a, rid);
-      }
-    }
-
-    // best effort addition of dns-request (action) related metadata
-    private void tryAddDnsRequestActionMetadata(Alert a, DnsRequestAction dra) {
-      a.tryAddMetadata("domain_name", dra.getDomain());
-    }
-
-    // best effort addition of port-probe (action) related metadata
-    private void tryAddPortProbeActionMetadata(Alert a, PortProbeAction ppa) {
-      a.tryAddMetadata("port_probe_blocked", Boolean.toString(ppa.getBlocked()));
-      List<PortProbeDetail> ppdlist = ppa.getPortProbeDetails();
-      if (ppdlist != null && ppdlist.size() > 0) {
-        // Note that schema allows repeated metadata keys
-        for (PortProbeDetail ppd : ppdlist) {
-          RemoteIpDetails rid = ppd.getRemoteIpDetails();
-          if (rid != null) {
-            tryAddRemoteIpMetadata(a, rid);
-          }
-          LocalPortDetails lpd = ppd.getLocalPortDetails();
-          if (rid != null) {
-            tryAddLocalPortMetadata(a, lpd);
-          }
-        }
-      }
-    }
-
-    /**
-     * adds informational metadata using values within finding without assuming a particular finding
-     * type - adds all metadata that is available
-     *
-     * @param a {@link Alert} the target alert
-     * @param f {@link Finding} the source finding
-     */
-    private void addTypeSpecificFindingData(Alert a, Finding f) {
-      Service svc = f.getService();
-      if (svc != null) {
-        a.tryAddMetadata("aws_service", svc.getServiceName());
-        a.tryAddMetadata("aws_gd_detector_id", svc.getDetectorId());
-        Integer count = svc.getCount();
-        if (count != null) {
-          a.tryAddMetadata("finding_count", Integer.toString(count));
-        }
-        a.tryAddMetadata("finding_first_seen_at", svc.getEventFirstSeen());
-        a.tryAddMetadata("finding_last_seen_at", svc.getEventLastSeen());
-        Action ac = svc.getAction();
-        if (ac != null) {
-          a.tryAddMetadata("finding_action", ac.getActionType());
-          NetworkConnectionAction nca = ac.getNetworkConnectionAction();
-          if (nca != null) {
-            tryAddNetworkConnectionActionMetadata(a, nca);
-          }
-          AwsApiCallAction aca = ac.getAwsApiCallAction();
-          if (aca != null) {
-            tryAddAwsApiCallActionMetadata(a, aca);
-          }
-          DnsRequestAction dra = ac.getDnsRequestAction();
-          if (dra != null) {
-            tryAddDnsRequestActionMetadata(a, dra);
-          }
-          PortProbeAction ppa = ac.getPortProbeAction();
-          if (ppa != null) {
-            tryAddPortProbeActionMetadata(a, ppa);
-          }
-        }
-      }
-      Double conf = f.getConfidence();
-      if (conf != null) {
-        a.tryAddMetadata("finding_confidence", Double.toString(conf));
-      }
-      Resource rsrc = f.getResource();
-      if (rsrc != null) {
-        tryAddResourceMetadata(a, rsrc);
-      }
+      a.addMetadata(AlertMeta.Key.ALERT_HANDLING_SEVERITY, "low");
     }
 
     @Override
@@ -436,8 +241,12 @@ public class GuardDutyTransforms implements Serializable {
 
                   Alert a = new Alert();
 
-                  addBaseFindingData(a, f, awsAcctMap);
-                  addTypeSpecificFindingData(a, f);
+                  try {
+                    addBaseFindingData(a, f, awsAcctMap);
+                  } catch (IOException exc) {
+                    log.error("error processing guardduty alert: {}", exc.getMessage());
+                    return;
+                  }
                   addFindingSeverity(a, f);
                   c.output(a);
                 }
@@ -462,7 +271,7 @@ public class GuardDutyTransforms implements Serializable {
    */
   public static class SuppressAlerts extends PTransform<PCollection<Alert>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
-    private static final String suppressionStateMetadataKey = "finding_id";
+    private static final AlertMeta.Key suppressionStateMetadataKey = AlertMeta.Key.FINDING_ID;
 
     private static Long alertSuppressionWindow;
 

@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserTest;
@@ -100,12 +101,12 @@ public class TestAwsBehavior {
                 String actualSummary = a.getSummary();
                 if (actualSummary.equals("IAM action from console without mfa by picard")) {
                   cnt++;
-                  assertEquals("picard", a.getMetadataValue("user"));
+                  assertEquals("picard", a.getMetadataValue(AlertMeta.Key.USER));
                 } else if (actualSummary.equals("access key created by uhura for guinan")) {
                   cnt++;
-                  assertEquals("uhura", a.getMetadataValue("user"));
-                  if (a.getMetadataValue("resource") != null) {
-                    assertEquals("guinan", a.getMetadataValue("resource"));
+                  assertEquals("uhura", a.getMetadataValue(AlertMeta.Key.USER));
+                  if (a.getMetadataValue(AlertMeta.Key.RESOURCE) != null) {
+                    assertEquals("guinan", a.getMetadataValue(AlertMeta.Key.RESOURCE));
                   }
                 }
               }

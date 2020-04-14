@@ -6,6 +6,7 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.Watchlist;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.metrics.CfgTickBuilder;
 import com.mozilla.secops.metrics.CfgTickProcessor;
@@ -127,8 +128,12 @@ public class PostProcessing implements Serializable {
 
     private final Distribution alertProcessingTime;
 
-    private static final String[] emailKeys = new String[] {"email", "username", "identity_key"};
-    private static final String[] ipKeys = new String[] {"sourceaddress", "sourceaddress_previous"};
+    private static final AlertMeta.Key[] emailKeys =
+        new AlertMeta.Key[] {
+          AlertMeta.Key.EMAIL, AlertMeta.Key.USERNAME, AlertMeta.Key.IDENTITY_KEY
+        };
+    private static final AlertMeta.Key[] ipKeys =
+        new AlertMeta.Key[] {AlertMeta.Key.SOURCEADDRESS, AlertMeta.Key.SOURCEADDRESS_PREVIOUS};
 
     private static class KeyData {
       public String key;
@@ -255,10 +260,10 @@ public class PostProcessing implements Serializable {
 
     private ArrayList<KeyData> extractIpValues(Alert a) {
       ArrayList<KeyData> ret = new ArrayList<>();
-      for (String i : ipKeys) {
+      for (AlertMeta.Key i : ipKeys) {
         String v = a.getMetadataValue(i);
         if (v != null) {
-          ret.add(new KeyData(i, v, Watchlist.watchlistIpKind));
+          ret.add(new KeyData(i.getKey(), v, Watchlist.watchlistIpKind));
         }
       }
       return ret;
@@ -266,10 +271,10 @@ public class PostProcessing implements Serializable {
 
     private ArrayList<KeyData> extractEmailValues(Alert a) {
       ArrayList<KeyData> ret = new ArrayList<>();
-      for (String i : emailKeys) {
+      for (AlertMeta.Key i : emailKeys) {
         String v = a.getMetadataValue(i);
         if (v != null) {
-          ret.add(new KeyData(i, v, Watchlist.watchlistEmailKind));
+          ret.add(new KeyData(i.getKey(), v, Watchlist.watchlistEmailKind));
         }
       }
       return ret;
@@ -343,20 +348,20 @@ public class PostProcessing implements Serializable {
 
       // Add escalation metadata
       if (entry.getSeverity() == Alert.AlertSeverity.WARNING) {
-        a.addMetadata("notify_email_direct", warningEmail);
+        a.addMetadata(AlertMeta.Key.NOTIFY_EMAIL_DIRECT, warningEmail);
       }
       if (entry.getSeverity() == Alert.AlertSeverity.CRITICAL) {
-        a.addMetadata("notify_email_direct", criticalEmail);
+        a.addMetadata(AlertMeta.Key.NOTIFY_EMAIL_DIRECT, criticalEmail);
       }
 
-      a.addMetadata("source_alert", sourceAlert.getAlertId().toString());
-      a.addMetadata("matched_metadata_key", k.key);
+      a.addMetadata(AlertMeta.Key.SOURCE_ALERT, sourceAlert.getAlertId().toString());
+      a.addMetadata(AlertMeta.Key.MATCHED_METADATA_KEY, k.key);
       // This may seem redundant with the below `matched_object`, but trying to
       // future proof against adding regex matchers (or similar).
-      a.addMetadata("matched_metadata_value", k.value);
-      a.addMetadata("matched_type", entry.getType());
-      a.addMetadata("matched_object", entry.getObject());
-      a.addMetadata("whitelisted_entry_created_by", entry.getCreatedBy());
+      a.addMetadata(AlertMeta.Key.MATCHED_METADATA_VALUE, k.value);
+      a.addMetadata(AlertMeta.Key.MATCHED_TYPE, entry.getType());
+      a.addMetadata(AlertMeta.Key.MATCHED_OBJECT, entry.getObject());
+      a.addMetadata(AlertMeta.Key.WHITELISTED_ENTRY_CREATED_BY, entry.getCreatedBy());
       return a;
     }
   }

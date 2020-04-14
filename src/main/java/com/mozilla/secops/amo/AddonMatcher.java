@@ -4,6 +4,7 @@ import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -112,7 +113,7 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
                         alert.setCategory("amo");
                         alert.setSubcategory("amo_abuse_matched_addon");
                         alert.setNotifyMergeKey("amo_abuse_matched_addon");
-                        alert.addMetadata("sourceaddress", d.getRemoteIp());
+                        alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, d.getRemoteIp());
                         // If we got an email address with the event, add it to the alert; we also
                         // add the normalized email equivalents
                         if (d.getFxaEmail() != null) {
@@ -126,10 +127,10 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
                           if (!email.equals(nb)) {
                             buf += ", " + nb;
                           }
-                          alert.addMetadata("email", buf);
+                          alert.addMetadata(AlertMeta.Key.EMAIL, buf);
                         }
-                        alert.addMetadata("addon_filename", d.getFileName());
-                        alert.addMetadata("addon_size", d.getBytes().toString());
+                        alert.addMetadata(AlertMeta.Key.ADDON_FILENAME, d.getFileName());
+                        alert.addMetadata(AlertMeta.Key.ADDON_SIZE, d.getBytes().toString());
                         String summary =
                             String.format(
                                 "%s suspected malicious addon submission from %s",

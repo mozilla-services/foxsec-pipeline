@@ -4,6 +4,7 @@ import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -244,8 +245,8 @@ public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollectio
                     alert.setCategory("amo");
                     alert.setSubcategory("amo_abuse_multi_ip_login");
                     alert.setNotifyMergeKey("amo_abuse_multi_ip_login");
-                    alert.addMetadata("email", buf);
-                    alert.addMetadata("count", Integer.toString(mCont.size()));
+                    alert.addMetadata(AlertMeta.Key.EMAIL, buf);
+                    alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(mCont.size()));
                     alert.setSummary(
                         String.format(
                             "%s addon abuse multi ip country login, %s %d countries, %d source address",

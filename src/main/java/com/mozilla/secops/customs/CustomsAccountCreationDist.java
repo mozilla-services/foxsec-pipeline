@@ -2,6 +2,7 @@ package com.mozilla.secops.customs;
 
 import com.mozilla.secops.StringDistance;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.customs.Customs.CustomsOptions;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
@@ -104,13 +105,13 @@ public class CustomsAccountCreationDist
                         alert.setCategory("customs");
                         alert.setSubcategory(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
                         alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE_DIST);
-                        alert.addMetadata("count", Integer.toString(cand.size() + 1));
-                        alert.addMetadata("sourceaddress", remoteAddress);
+                        alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(cand.size() + 1));
+                        alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
                         alert.setSummary(
                             String.format(
                                 "%s suspicious distributed account creation, %s %d",
                                 monitoredResource, remoteAddress, cand.size() + 1));
-                        alert.addMetadata("email", email);
+                        alert.addMetadata(AlertMeta.Key.EMAIL, email);
                         String buf = "";
                         for (String s : cand) {
                           if (buf.isEmpty()) {
@@ -119,7 +120,7 @@ public class CustomsAccountCreationDist
                             buf += ", " + s;
                           }
                         }
-                        alert.addMetadata("email_similar", buf);
+                        alert.addMetadata(AlertMeta.Key.EMAIL_SIMILAR, buf);
                         c.output(alert);
                       }
                     }

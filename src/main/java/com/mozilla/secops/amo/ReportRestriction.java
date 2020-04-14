@@ -2,6 +2,7 @@ package com.mozilla.secops.amo;
 
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -60,8 +61,8 @@ public class ReportRestriction extends PTransform<PCollection<Event>, PCollectio
                     alert.setCategory("amo");
                     alert.setSubcategory("amo_restriction");
                     alert.setNotifyMergeKey("amo_restriction");
-                    alert.addMetadata("sourceaddress", d.getRemoteIp());
-                    alert.addMetadata("restricted_value", d.getRestrictedValue());
+                    alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, d.getRemoteIp());
+                    alert.addMetadata(AlertMeta.Key.RESTRICTED_VALUE, d.getRestrictedValue());
                     alert.setSummary(
                         String.format(
                             "%s request to amo from %s restricted based on reputation",

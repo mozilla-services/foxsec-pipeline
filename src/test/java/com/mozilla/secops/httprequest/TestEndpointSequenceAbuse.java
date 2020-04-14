@@ -3,6 +3,7 @@ package com.mozilla.secops.httprequest;
 import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -52,15 +53,15 @@ public class TestEndpointSequenceAbuse {
             i -> {
               for (Alert a : i) {
                 assertEquals("1970-01-01T00:00:00.010Z", a.getTimestamp().toString());
-                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
                     "test httprequest endpoint_sequence_abuse 192.168.1.2 GET:/test:1000:GET:/test2 1",
                     a.getSummary());
                 assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_sequence_abuse", a.getMetadataValue("category"));
-                assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
-                assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                assertEquals(1L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals("endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
               }
               return null;
             });
@@ -91,15 +92,15 @@ public class TestEndpointSequenceAbuse {
             i -> {
               for (Alert a : i) {
                 assertEquals("1970-01-01T00:00:00.010Z", a.getTimestamp().toString());
-                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
                     "test httprequest endpoint_sequence_abuse 192.168.1.2 GET:/test:1000:GET:/test2 1",
                     a.getSummary());
                 assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_sequence_abuse", a.getMetadataValue("category"));
-                assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
-                assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                assertEquals(1L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals("endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
               }
               return null;
             });
@@ -131,15 +132,15 @@ public class TestEndpointSequenceAbuse {
             i -> {
               for (Alert a : i) {
                 assertEquals("1970-01-01T00:00:10.500Z", a.getTimestamp().toString());
-                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
                     "test httprequest endpoint_sequence_abuse 192.168.1.2 GET:/test:1000:GET:/test2 2",
                     a.getSummary());
                 assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_sequence_abuse", a.getMetadataValue("category"));
-                assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
-                assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                assertEquals(2L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals("endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                assertEquals(2L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
               }
               return null;
             });
@@ -295,28 +296,30 @@ public class TestEndpointSequenceAbuse {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                if (a.getMetadataValue("sourceaddress").equals("192.168.1.2")) {
+                if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("192.168.1.2")) {
                   assertEquals("1970-01-01T00:00:00.010Z", a.getTimestamp().toString());
-                  assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                  assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals(
                       "test httprequest endpoint_sequence_abuse 192.168.1.2 GET:/test:1000:GET:/test2 1",
                       a.getSummary());
                   assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                  assertEquals("endpoint_sequence_abuse", a.getMetadataValue("category"));
-                  assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
-                  assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                  assertEquals(1L, Long.parseLong(a.getMetadataValue("count"), 10));
-                } else if (a.getMetadataValue("sourceaddress").equals("192.168.1.3")) {
+                  assertEquals(
+                      "endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                  assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                  assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                  assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
+                } else if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("192.168.1.3")) {
                   assertEquals("1970-01-01T00:00:00.040Z", a.getTimestamp().toString());
-                  assertEquals("192.168.1.3", a.getMetadataValue("sourceaddress"));
+                  assertEquals("192.168.1.3", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals(
                       "test httprequest endpoint_sequence_abuse 192.168.1.3 GET:/test:1000:GET:/test2 1",
                       a.getSummary());
                   assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                  assertEquals("endpoint_sequence_abuse", a.getMetadataValue("category"));
-                  assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
-                  assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                  assertEquals(1L, Long.parseLong(a.getMetadataValue("count"), 10));
+                  assertEquals(
+                      "endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                  assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                  assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                  assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
                 }
               }
               return null;
@@ -369,15 +372,15 @@ public class TestEndpointSequenceAbuse {
             i -> {
               for (Alert a : i) {
                 assertEquals("1970-01-01T00:00:00.010Z", a.getTimestamp().toString());
-                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
                     "test httprequest endpoint_sequence_abuse 192.168.1.2 GET:/test:1000:GET:/test2 1",
                     a.getSummary());
                 assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_sequence_abuse", a.getMetadataValue("category"));
-                assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
-                assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                assertEquals(1L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals("endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
               }
               return null;
             });

@@ -50,11 +50,11 @@ public class TestAlertMerge {
                 switch (b.getSummary()) {
                   case "test2":
                   case "test4":
-                    assertNull(b.getMetadataValue("notify_merged_count"));
+                    assertNull(b.getMetadataValue(AlertMeta.Key.NOTIFY_MERGED_COUNT));
                     break;
                   case "test1 (1 similar alerts)":
                   case "test3 (1 similar alerts)":
-                    assertEquals("2", b.getMetadataValue("notify_merged_count"));
+                    assertEquals("2", b.getMetadataValue(AlertMeta.Key.NOTIFY_MERGED_COUNT));
                     break;
                   default:
                     fail("unexpected alert summary");

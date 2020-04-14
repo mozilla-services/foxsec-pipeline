@@ -7,6 +7,7 @@ import static org.junit.Assert.assertThat;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.input.Input;
 import java.util.Arrays;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
@@ -78,15 +79,16 @@ public class TestEndpointAbuse1 {
             i -> {
               for (Alert a : i) {
                 assertEquals("1970-01-01T00:00:15.000Z", a.getTimestamp().toString());
-                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_abuse", a.getMetadataValue("category"));
-                assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
-                assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
-                assertEquals("1970-01-01T00:20:14.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                assertEquals(10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
+                assertEquals(
+                    "1970-01-01T00:20:14.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
               }
               return null;
             });
@@ -135,14 +137,15 @@ public class TestEndpointAbuse1 {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_abuse", a.getMetadataValue("category"));
-                assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
-                assertEquals("1970-01-01T00:20:14.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                assertEquals(10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
+                assertEquals(
+                    "1970-01-01T00:20:14.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
               }
               return null;
             });
@@ -192,14 +195,15 @@ public class TestEndpointAbuse1 {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_abuse", a.getMetadataValue("category"));
-                assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
-                assertEquals("1970-01-01T00:20:14.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                assertEquals(10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
+                assertEquals(
+                    "1970-01-01T00:20:14.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
               }
               return null;
             });
@@ -251,16 +255,16 @@ public class TestEndpointAbuse1 {
                     a.getTimestamp().toString(),
                     anyOf(
                         equalTo("1970-01-01T00:00:00.000Z"), equalTo("1970-01-01T00:30:00.000Z")));
-                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_abuse", a.getMetadataValue("category"));
-                assertEquals("60", a.getMetadataValue("iprepd_suppress_recovery"));
-                assertEquals("Mozilla", a.getMetadataValue("useragent"));
-                assertEquals(10L, Long.parseLong(a.getMetadataValue("count"), 10));
+                assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
+                assertEquals(10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
                 assertThat(
-                    a.getMetadataValue("window_timestamp"),
+                    a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP),
                     anyOf(
                         equalTo("1970-01-01T00:19:59.999Z"), equalTo("1970-01-01T00:49:59.999Z")));
               }
@@ -303,7 +307,7 @@ public class TestEndpointAbuse1 {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertEquals("192.168.1.6", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.6", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
               }
               return null;
             });

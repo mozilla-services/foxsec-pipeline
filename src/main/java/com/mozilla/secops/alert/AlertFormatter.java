@@ -38,7 +38,6 @@ public class AlertFormatter extends DoFn<Alert, Alert> {
    */
   public AlertFormatter(IOOptions options) {
     monitoredResourceIndicator = options.getMonitoredResourceIndicator();
-    addressFields = options.getAlertAddressFields();
     maxmindCityDbPath = options.getMaxmindCityDbPath();
     maxmindIspDbPath = options.getMaxmindIspDbPath();
   }
@@ -47,17 +46,12 @@ public class AlertFormatter extends DoFn<Alert, Alert> {
    * Initialize new AlertFormatter
    *
    * @param monitoredResourceIndicator Monitored resource indicator
-   * @param addressFields Array of address fields
    * @param maxmindCityDbPath Path to Maxmind City DB
    * @param maxmindIspDbPath Path to Maxmind ISP DB
    */
   public AlertFormatter(
-      String monitoredResourceIndicator,
-      String[] addressFields,
-      String maxmindCityDbPath,
-      String maxmindIspDbPath) {
+      String monitoredResourceIndicator, String maxmindCityDbPath, String maxmindIspDbPath) {
     this.monitoredResourceIndicator = monitoredResourceIndicator;
-    this.addressFields = addressFields;
     this.maxmindCityDbPath = maxmindCityDbPath;
     this.maxmindIspDbPath = maxmindIspDbPath;
   }
@@ -66,39 +60,47 @@ public class AlertFormatter extends DoFn<Alert, Alert> {
    * Process metadata fields and add GeoIP information
    *
    * @param a Alert
-   * @param addressFields Array of metadata keys to treat as address fields
    * @param geoip Initialized GeoIP
    */
-  public static void addGeoIPData(Alert a, String[] addressFields, GeoIP geoip) {
-    if (geoip == null || addressFields == null) {
+  public static void addGeoIPData(Alert a, GeoIP geoip) {
+    AlertMeta.Key cityKey, countryKey, ispKey, asnKey, asOrgKey;
+
+    if (geoip == null) {
       return;
     }
 
-    for (String addressField : addressFields) {
-      String address = a.getMetadataValue(addressField);
-      if (address != null) {
-        if (a.getMetadataValue(addressField + "_city") == null
-            && a.getMetadataValue(addressField + "_country") == null) {
-          CityResponse cr = geoip.lookupCity(address);
-          if (cr != null) {
-            a.addMetadata(addressField + "_city", cr.getCity().getName());
-            a.addMetadata(addressField + "_country", cr.getCountry().getIsoCode());
-          }
+    for (AlertMeta.Key k : AlertMeta.IPADDRESS_KEYS) {
+      String buf = a.getMetadataValue(k);
+      if (buf == null) {
+        continue;
+      }
+
+      cityKey = k.getAssociatedKey(AlertMeta.Key.AssociatedKey.CITY);
+      countryKey = k.getAssociatedKey(AlertMeta.Key.AssociatedKey.COUNTRY);
+
+      if (cityKey != null && countryKey != null) {
+        CityResponse cr = geoip.lookupCity(buf);
+        if (cr != null) {
+          a.addMetadata(cityKey, cr.getCity().getName());
+          a.addMetadata(countryKey, cr.getCountry().getIsoCode());
         }
-        if (a.getMetadataValue(addressField + "_isp") == null
-            && a.getMetadataValue(addressField + "_asn") == null
-            && a.getMetadataValue(addressField + "_as_org") == null) {
-          IspResponse ir = geoip.lookupIsp(address);
-          if (ir != null) {
-            if (ir.getIsp() != null) {
-              a.addMetadata(addressField + "_isp", ir.getIsp());
-            }
-            if (ir.getAutonomousSystemNumber() != null) {
-              a.addMetadata(addressField + "_asn", ir.getAutonomousSystemNumber().toString());
-            }
-            if (ir.getAutonomousSystemOrganization() != null) {
-              a.addMetadata(addressField + "_as_org", ir.getAutonomousSystemOrganization());
-            }
+      }
+
+      ispKey = k.getAssociatedKey(AlertMeta.Key.AssociatedKey.ISP);
+      asnKey = k.getAssociatedKey(AlertMeta.Key.AssociatedKey.ASN);
+      asOrgKey = k.getAssociatedKey(AlertMeta.Key.AssociatedKey.AS_ORG);
+
+      if (ispKey != null && asnKey != null && asOrgKey != null) {
+        IspResponse ir = geoip.lookupIsp(buf);
+        if (ir != null) {
+          if (ir.getIsp() != null) {
+            a.addMetadata(ispKey, ir.getIsp());
+          }
+          if (ir.getAutonomousSystemNumber() != null) {
+            a.addMetadata(asnKey, ir.getAutonomousSystemNumber().toString());
+          }
+          if (ir.getAutonomousSystemOrganization() != null) {
+            a.addMetadata(asOrgKey, ir.getAutonomousSystemOrganization());
           }
         }
       }
@@ -117,14 +119,14 @@ public class AlertFormatter extends DoFn<Alert, Alert> {
     Alert a = c.element();
 
     // Add the monitored_resource metadata if missing
-    if (a.getMetadataValue("monitored_resource") == null) {
+    if (a.getMetadataValue(AlertMeta.Key.MONITORED_RESOURCE) == null) {
       if (monitoredResourceIndicator == null) {
         throw new RuntimeException("monitored resource indicator was null in AlertFormatter");
       }
-      a.addMetadata("monitored_resource", monitoredResourceIndicator);
+      a.addMetadata(AlertMeta.Key.MONITORED_RESOURCE, monitoredResourceIndicator);
     }
 
-    addGeoIPData(a, addressFields, geoip);
+    addGeoIPData(a, geoip);
     c.output(a);
   }
 }

@@ -4,6 +4,7 @@ import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Cloudtrail;
 import com.mozilla.secops.parser.Event;
@@ -122,12 +123,12 @@ public class AwsBehavior implements Serializable {
                       Cloudtrail ct = e.getPayload();
                       String alertSummary =
                           String.format("%s by %s", cm.getDescription(), ct.getUser());
-                      alert.addMetadata("user", ct.getUser());
+                      alert.addMetadata(AlertMeta.Key.USER, ct.getUser());
                       if (cm.getResource() != null) {
                         alertSummary =
                             String.format(
                                 "%s for %s", alertSummary, ct.getResource(cm.getResource()));
-                        alert.addMetadata("resource", ct.getResource(cm.getResource()));
+                        alert.addMetadata(AlertMeta.Key.RESOURCE, ct.getResource(cm.getResource()));
                       }
                       alert.setSummary(alertSummary);
 

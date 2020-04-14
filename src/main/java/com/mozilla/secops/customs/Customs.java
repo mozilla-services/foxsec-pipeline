@@ -158,7 +158,8 @@ public class Customs implements Serializable {
                       Alert alert = new Alert();
                       alert.setCategory("customs");
                       alert.setSubcategory("summary");
-                      alert.addMetadata(v.getKey(), v.getValue().toString());
+                      // We are using undefined keys here, so use custom metadata.
+                      alert.addCustomMetadata(v.getKey(), v.getValue().toString());
                       alert.setSummary(
                           String.format(
                               "%s summary for period, %s %d",

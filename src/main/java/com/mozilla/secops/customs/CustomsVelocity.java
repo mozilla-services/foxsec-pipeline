@@ -2,6 +2,7 @@ package com.mozilla.secops.customs;
 
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.authstate.AuthStateModel;
 import com.mozilla.secops.authstate.PruningStrategyLatest;
 import com.mozilla.secops.parser.Event;
@@ -232,14 +233,17 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                           alert.setSubcategory(Customs.CATEGORY_VELOCITY);
                           alert.setTimestamp(e.getTimestamp());
                           alert.setNotifyMergeKey(Customs.CATEGORY_VELOCITY);
-                          alert.addMetadata("sourceaddress", remoteAddress);
-                          alert.addMetadata("sourceaddress_previous", geoResp.getPreviousSource());
+                          alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
                           alert.addMetadata(
-                              "time_delta_seconds", geoResp.getTimeDifference().toString());
+                              AlertMeta.Key.SOURCEADDRESS_PREVIOUS, geoResp.getPreviousSource());
                           alert.addMetadata(
-                              "km_distance", String.format("%.2f", geoResp.getKmDistance()));
-                          alert.addMetadata("uid", uid);
-                          alert.addMetadata("email", email);
+                              AlertMeta.Key.TIME_DELTA_SECONDS,
+                              geoResp.getTimeDifference().toString());
+                          alert.addMetadata(
+                              AlertMeta.Key.KM_DISTANCE,
+                              String.format("%.2f", geoResp.getKmDistance()));
+                          alert.addMetadata(AlertMeta.Key.UID, uid);
+                          alert.addMetadata(AlertMeta.Key.EMAIL, email);
                           alert.setSummary(
                               String.format(
                                   "%s %s velocity exceeded, %.2f km in %d seconds",
@@ -251,10 +255,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                           // It's possible the AlertFormatter DoFn could add this for us later, but
                           // since it is important information as part of this transform make sure
                           // it will be present by leveraging the formatters GeoIP method here.
-                          AlertFormatter.addGeoIPData(
-                              alert,
-                              new String[] {"sourceaddress", "sourceaddress_previous"},
-                              geoip);
+                          AlertFormatter.addGeoIPData(alert, geoip);
 
                           c.output(alert);
                         }

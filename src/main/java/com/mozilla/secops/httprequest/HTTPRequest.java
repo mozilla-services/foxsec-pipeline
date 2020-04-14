@@ -10,6 +10,7 @@ import com.mozilla.secops.SourceCorrelation;
 import com.mozilla.secops.Stats;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.alert.AlertSuppressorCount;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.input.InputElement;
@@ -246,7 +247,7 @@ public class HTTPRequest implements Serializable {
                               monitoredResource, c.element().getKey(), c.element().getValue()));
                       a.setCategory("httprequest");
                       a.setSubcategory("error_rate");
-                      a.addMetadata("sourceaddress", c.element().getKey());
+                      a.addMetadata(AlertMeta.Key.SOURCEADDRESS, c.element().getKey());
 
                       if (enableIprepdDatastoreWhitelist) {
                         try {
@@ -258,11 +259,12 @@ public class HTTPRequest implements Serializable {
                         }
                       }
 
-                      a.addMetadata("error_count", c.element().getValue().toString());
-                      a.addMetadata("error_threshold", maxErrorRate.toString());
+                      a.addMetadata(AlertMeta.Key.ERROR_COUNT, c.element().getValue().toString());
+                      a.addMetadata(AlertMeta.Key.ERROR_THRESHOLD, maxErrorRate.toString());
                       a.setNotifyMergeKey(String.format("%s error_count", monitoredResource));
                       a.addMetadata(
-                          "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                          AlertMeta.Key.WINDOW_TIMESTAMP,
+                          (new DateTime(w.maxTimestamp())).toString());
                       if (!a.hasCorrectFields()) {
                         throw new IllegalArgumentException("alert has invalid field configuration");
                       }
@@ -363,7 +365,7 @@ public class HTTPRequest implements Serializable {
                                   monitoredResource, c.element().getKey(), c.element().getValue()));
                           a.setCategory("httprequest");
                           a.setSubcategory("hard_limit");
-                          a.addMetadata("sourceaddress", c.element().getKey());
+                          a.addMetadata(AlertMeta.Key.SOURCEADDRESS, c.element().getKey());
 
                           try {
                             if (enableIprepdDatastoreWhitelist) {
@@ -375,12 +377,13 @@ public class HTTPRequest implements Serializable {
                             return;
                           }
 
-                          a.addMetadata("count", c.element().getValue().toString());
-                          a.addMetadata("request_threshold", maxCount.toString());
+                          a.addMetadata(AlertMeta.Key.COUNT, c.element().getValue().toString());
+                          a.addMetadata(AlertMeta.Key.REQUEST_THRESHOLD, maxCount.toString());
                           a.setNotifyMergeKey(
                               String.format("%s hard_limit_count", monitoredResource));
                           a.addMetadata(
-                              "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                              AlertMeta.Key.WINDOW_TIMESTAMP,
+                              (new DateTime(w.maxTimestamp())).toString());
                           if (!a.hasCorrectFields()) {
                             throw new IllegalArgumentException(
                                 "alert has invalid field configuration");
@@ -504,7 +507,7 @@ public class HTTPRequest implements Serializable {
                                   monitoredResource, saddr));
                           a.setCategory("httprequest");
                           a.setSubcategory("useragent_blacklist");
-                          a.addMetadata("sourceaddress", saddr);
+                          a.addMetadata(AlertMeta.Key.SOURCEADDRESS, saddr);
 
                           try {
                             if (enableIprepdDatastoreWhitelist) {
@@ -519,7 +522,8 @@ public class HTTPRequest implements Serializable {
                           a.setNotifyMergeKey(
                               String.format("%s useragent_blacklist", monitoredResource));
                           a.addMetadata(
-                              "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                              AlertMeta.Key.WINDOW_TIMESTAMP,
+                              (new DateTime(w.maxTimestamp())).toString());
 
                           if (!a.hasCorrectFields()) {
                             throw new IllegalArgumentException(
@@ -745,7 +749,7 @@ public class HTTPRequest implements Serializable {
                               monitoredResource, remoteAddress, compareMethod, comparePath, count));
                       a.setCategory("httprequest");
                       a.setSubcategory("endpoint_abuse");
-                      a.addMetadata("sourceaddress", remoteAddress);
+                      a.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
 
                       try {
                         if (enableIprepdDatastoreWhitelist) {
@@ -761,13 +765,14 @@ public class HTTPRequest implements Serializable {
                         IprepdIO.addMetadataSuppressRecovery(suppressRecovery, a);
                       }
 
-                      a.addMetadata("endpoint", comparePath);
-                      a.addMetadata("method", compareMethod);
-                      a.addMetadata("count", Integer.toString(count));
-                      a.addMetadata("useragent", userAgent);
+                      a.addMetadata(AlertMeta.Key.ENDPOINT, comparePath);
+                      a.addMetadata(AlertMeta.Key.METHOD, compareMethod);
+                      a.addMetadata(AlertMeta.Key.COUNT, Integer.toString(count));
+                      a.addMetadata(AlertMeta.Key.USERAGENT, userAgent);
                       a.setNotifyMergeKey(String.format("%s endpoint_abuse", monitoredResource));
                       a.addMetadata(
-                          "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                          AlertMeta.Key.WINDOW_TIMESTAMP,
+                          (new DateTime(w.maxTimestamp())).toString());
                       if (!a.hasCorrectFields()) {
                         throw new IllegalArgumentException("alert has invalid field configuration");
                       }
@@ -949,7 +954,7 @@ public class HTTPRequest implements Serializable {
                                     c.element().getValue()));
                             a.setCategory("httprequest");
                             a.setSubcategory("threshold_analysis");
-                            a.addMetadata("sourceaddress", c.element().getKey());
+                            a.addMetadata(AlertMeta.Key.SOURCEADDRESS, c.element().getKey());
 
                             try {
                               if (enableIprepdDatastoreWhitelist) {
@@ -961,13 +966,15 @@ public class HTTPRequest implements Serializable {
                               return;
                             }
 
-                            a.addMetadata("mean", sOutput.getMean().toString());
-                            a.addMetadata("count", c.element().getValue().toString());
-                            a.addMetadata("threshold_modifier", thresholdModifier.toString());
+                            a.addMetadata(AlertMeta.Key.MEAN, sOutput.getMean().toString());
+                            a.addMetadata(AlertMeta.Key.COUNT, c.element().getValue().toString());
+                            a.addMetadata(
+                                AlertMeta.Key.THRESHOLD_MODIFIER, thresholdModifier.toString());
                             a.setNotifyMergeKey(
                                 String.format("%s threshold_analysis", monitoredResource));
                             a.addMetadata(
-                                "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                                AlertMeta.Key.WINDOW_TIMESTAMP,
+                                (new DateTime(w.maxTimestamp())).toString());
                             if (!a.hasCorrectFields()) {
                               throw new IllegalArgumentException(
                                   "alert has invalid field configuration");
@@ -1240,7 +1247,7 @@ public class HTTPRequest implements Serializable {
                                   count));
                           a.setCategory("httprequest");
                           a.setSubcategory("endpoint_sequence_abuse");
-                          a.addMetadata("sourceaddress", remoteAddress);
+                          a.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
 
                           try {
                             if (enableIprepdDatastoreWhitelist) {
@@ -1257,13 +1264,16 @@ public class HTTPRequest implements Serializable {
                           }
 
                           a.addMetadata(
-                              "endpoint_pattern", endpointPatterns[abmaxIndex].toString());
-                          a.addMetadata("count", Integer.toString(count));
-                          a.addMetadata("useragent", lastViolationUserAgent[abmaxIndex]);
+                              AlertMeta.Key.ENDPOINT_PATTERN,
+                              endpointPatterns[abmaxIndex].toString());
+                          a.addMetadata(AlertMeta.Key.COUNT, Integer.toString(count));
+                          a.addMetadata(
+                              AlertMeta.Key.USERAGENT, lastViolationUserAgent[abmaxIndex]);
                           a.setNotifyMergeKey(
                               String.format("%s endpoint_sequence_abuse", monitoredResource));
                           a.addMetadata(
-                              "window_timestamp", (new DateTime(w.maxTimestamp())).toString());
+                              AlertMeta.Key.WINDOW_TIMESTAMP,
+                              (new DateTime(w.maxTimestamp())).toString());
                           if (!a.hasCorrectFields()) {
                             throw new IllegalArgumentException(
                                 "alert has invalid field configuration");
@@ -1321,7 +1331,6 @@ public class HTTPRequest implements Serializable {
     private final Boolean enableIprepdDatastoreWhitelist;
     private final String iprepdDatastoreWhitelistProject;
     private final String monitoredResource;
-    private final String[] addressFields;
     private final String maxmindCityDbPath;
     private final String maxmindIspDbPath;
     private final String initialNatListPath;
@@ -1338,7 +1347,6 @@ public class HTTPRequest implements Serializable {
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
       monitoredResource = toggles.getMonitoredResource();
-      addressFields = options.getAlertAddressFields();
       maxmindCityDbPath = options.getMaxmindCityDbPath();
       maxmindIspDbPath = options.getMaxmindIspDbPath();
       initialNatListPath = options.getKnownGatewaysPath();
@@ -1453,8 +1461,7 @@ public class HTTPRequest implements Serializable {
               .apply(
                   "output format",
                   ParDo.of(
-                      new AlertFormatter(
-                          monitoredResource, addressFields, maxmindCityDbPath, maxmindIspDbPath)));
+                      new AlertFormatter(monitoredResource, maxmindCityDbPath, maxmindIspDbPath)));
 
       if (toggles.getEnableSourceCorrelator()) {
         // Wire up source correlation

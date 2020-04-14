@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -162,14 +163,15 @@ public class CustomsAlert implements Serializable {
     String reason =
         String.format(
             "%s failed login %s times in window",
-            a.getMetadataValue("sourceaddress"), a.getMetadataValue("count"));
+            a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+            a.getMetadataValue(AlertMeta.Key.COUNT));
 
     // Create alert for address
     CustomsAlert buf = baseAlert(a);
     buf.setSeverity(AlertSeverity.WARNING);
     buf.setConfidence(100);
     buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
-    buf.setIndicator(a.getMetadataValue("sourceaddress"));
+    buf.setIndicator(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     buf.setSuggestedAction(AlertAction.SUSPECT);
     buf.setReason(reason);
     ret.add(buf);
@@ -188,9 +190,9 @@ public class CustomsAlert implements Serializable {
     String reason =
         String.format(
             "%s addresses failed login to %s in window",
-            a.getMetadataValue("count"), a.getMetadataValue("email"));
+            a.getMetadataValue(AlertMeta.Key.COUNT), a.getMetadataValue(AlertMeta.Key.EMAIL));
 
-    String[] el = a.getMetadataValue("sourceaddresses").split(", ?");
+    String[] el = a.getMetadataValue(AlertMeta.Key.SOURCEADDRESSES).split(", ?");
     for (String i : el) {
       CustomsAlert ca = baseAlert(a);
       ca.setSeverity(AlertSeverity.WARNING);
@@ -220,19 +222,20 @@ public class CustomsAlert implements Serializable {
     String reason =
         String.format(
             "%s created %s accounts in a single session",
-            a.getMetadataValue("sourceaddress"), a.getMetadataValue("count"));
+            a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+            a.getMetadataValue(AlertMeta.Key.COUNT));
 
     // Create alert for address
     CustomsAlert buf = baseAlert(a);
     buf.setSeverity(AlertSeverity.WARNING);
     buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
-    buf.setIndicator(a.getMetadataValue("sourceaddress"));
+    buf.setIndicator(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     buf.setSuggestedAction(AlertAction.SUSPECT);
     buf.setReason(reason);
     ret.add(buf);
 
     // Create alert for each account identifier
-    String[] parts = a.getMetadataValue("email").split(", ?");
+    String[] parts = a.getMetadataValue(AlertMeta.Key.EMAIL).split(", ?");
     for (String i : parts) {
       buf = baseAlert(a);
       buf.setSeverity(AlertSeverity.WARNING);
@@ -260,13 +263,14 @@ public class CustomsAlert implements Serializable {
     String reason =
         String.format(
             "%d very similar accounts to %s created in fixed time frame",
-            Integer.parseInt(a.getMetadataValue("count")) - 1, a.getMetadataValue("email"));
+            Integer.parseInt(a.getMetadataValue(AlertMeta.Key.COUNT)) - 1,
+            a.getMetadataValue(AlertMeta.Key.EMAIL));
 
     // Create alert for address
     CustomsAlert buf = baseAlert(a);
     buf.setSeverity(AlertSeverity.WARNING);
     buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
-    buf.setIndicator(a.getMetadataValue("sourceaddress"));
+    buf.setIndicator(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     buf.setSuggestedAction(AlertAction.SUSPECT);
     buf.setReason(reason);
     ret.add(buf);
@@ -276,7 +280,7 @@ public class CustomsAlert implements Serializable {
     buf = baseAlert(a);
     buf.setSeverity(AlertSeverity.WARNING);
     buf.setIndicatorType(IndicatorType.EMAIL);
-    buf.setIndicator(a.getMetadataValue("email"));
+    buf.setIndicator(a.getMetadataValue(AlertMeta.Key.EMAIL));
     buf.setSuggestedAction(AlertAction.SUSPECT);
     buf.setReason(reason);
     ret.add(buf);
@@ -296,13 +300,14 @@ public class CustomsAlert implements Serializable {
     String reason =
         String.format(
             "%s attempted password reset on %s accounts in fixed time frame",
-            a.getMetadataValue("sourceaddress"), a.getMetadataValue("count"));
+            a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+            a.getMetadataValue(AlertMeta.Key.COUNT));
 
     CustomsAlert buf = baseAlert(a);
     buf.setSeverity(AlertSeverity.WARNING);
     buf.setConfidence(100);
     buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
-    buf.setIndicator(a.getMetadataValue("sourceaddress"));
+    buf.setIndicator(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     buf.setSuggestedAction(AlertAction.SUSPECT);
     buf.setReason(reason);
     ret.add(buf);

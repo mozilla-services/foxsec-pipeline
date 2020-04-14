@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertConfiguration;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.alert.TemplateManager;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.ParserTest;
@@ -66,7 +67,7 @@ public class TestCritObject {
               long cnt = 0;
               long cfgTickCnt = 0;
               for (Alert a : results) {
-                if (a.getMetadataValue("category").equals("critical_object_analyze")) {
+                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("critical_object_analyze")) {
                   assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                   assertEquals(
                       "critical authentication event observed laforge@mozilla.com to "
@@ -76,16 +77,19 @@ public class TestCritObject {
                       a.getPayload(),
                       containsString(
                           "This destination object is configured as a critical resource"));
-                  assertEquals("critical_object_analyze", a.getMetadataValue("category"));
-                  assertEquals("section31@mozilla.com", a.getMetadataValue("notify_email_direct"));
-                  assertEquals("laforge@mozilla.com", a.getMetadataValue("username"));
-                  assertEquals("projects/test", a.getMetadataValue("object"));
-                  assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                  assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
-                  assertEquals("US", a.getMetadataValue("sourceaddress_country"));
+                  assertEquals(
+                      "critical_object_analyze", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                  assertEquals(
+                      "section31@mozilla.com",
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                  assertEquals("laforge@mozilla.com", a.getMetadataValue(AlertMeta.Key.USERNAME));
+                  assertEquals("projects/test", a.getMetadataValue(AlertMeta.Key.OBJECT));
+                  assertEquals("216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals("Milton", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                  assertEquals("US", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
                   assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
-                  assertEquals("auth_session", a.getMetadataValue("auth_alert_type"));
+                  assertEquals("auth_session", a.getMetadataValue(AlertMeta.Key.AUTH_ALERT_TYPE));
 
                   // Verify sample rendered email template for critical object
                   try {
@@ -100,17 +104,18 @@ public class TestCritObject {
                     fail(exc.getMessage());
                   }
                   cnt++;
-                } else if (a.getMetadataValue("category").equals("cfgtick")) {
+                } else if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("cfgtick")) {
                   cfgTickCnt++;
                   assertEquals("authprofile-cfgtick", a.getCategory());
-                  assertEquals("^projects/test$", a.getMetadataValue("critObjects"));
+                  assertEquals("^projects/test$", a.getCustomMetadataValue("critObjects"));
                   assertEquals(
-                      "section31@mozilla.com", a.getMetadataValue("criticalNotificationEmail"));
-                  assertEquals("^riker@mozilla.com$", a.getMetadataValue("ignoreUserRegex"));
-                  assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
+                      "section31@mozilla.com",
+                      a.getCustomMetadataValue("criticalNotificationEmail"));
+                  assertEquals("^riker@mozilla.com$", a.getCustomMetadataValue("ignoreUserRegex"));
+                  assertEquals("5", a.getCustomMetadataValue("generateConfigurationTicksMaximum"));
                   assertEquals(
                       "Alert via section31@mozilla.com immediately on auth events to specified objects: [^projects/test$]",
-                      a.getMetadataValue("heuristic_CritObjectAnalyze"));
+                      a.getCustomMetadataValue("heuristic_CritObjectAnalyze"));
                 } else {
                   fail("unexpected category");
                 }

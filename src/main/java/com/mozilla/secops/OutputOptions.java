@@ -122,12 +122,6 @@ public interface OutputOptions extends PipelineOptions, GcpOptions {
   void setOutputAlertTemplates(String[] value);
 
   @Description(
-      "Adds GeoIP metadata to all fields specified (multiple allowed); keys names for alert metadata with an IP address, for example: sourceaddress")
-  String[] getAlertAddressFields();
-
-  void setAlertAddressFields(String[] value);
-
-  @Description(
       "Email address to receive critical alert notifications if application generates them")
   String getCriticalNotificationEmail();
 

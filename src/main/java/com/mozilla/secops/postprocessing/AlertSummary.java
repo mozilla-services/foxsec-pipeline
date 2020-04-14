@@ -2,6 +2,7 @@ package com.mozilla.secops.postprocessing;
 
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -250,7 +251,7 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
       // match on the alert.
       ArrayList<String> ret = new ArrayList<>();
       ret.add(CLASSIFIER_GLOBAL_STRING); // e.g., *
-      String mr = a.getMetadataValue("monitored_resource");
+      String mr = a.getMetadataValue(AlertMeta.Key.MONITORED_RESOURCE);
       if (mr != null) {
         ret.add(mr); // e.g., www.mozilla.org
       } else {
@@ -311,11 +312,11 @@ public class AlertSummary extends PTransform<PCollection<Alert>, PCollection<Ale
           String.format(
               "alert %s, %d alerts -> %d alerts over previous %s using criteria %s",
               ov < nv ? "increase" : "decrease", ov, nv, timeframe, threshold));
-      ret.addMetadata("threshold", threshold);
-      ret.addMetadata("start", widthStart.toString());
-      ret.addMetadata("end", maxTimestamp.toString());
+      ret.addMetadata(AlertMeta.Key.THRESHOLD, threshold);
+      ret.addMetadata(AlertMeta.Key.START, widthStart.toString());
+      ret.addMetadata(AlertMeta.Key.END, maxTimestamp.toString());
       if (warningEmail != null) {
-        ret.addMetadata("notify_email_direct", warningEmail);
+        ret.addMetadata(AlertMeta.Key.NOTIFY_EMAIL_DIRECT, warningEmail);
       }
 
       String p =

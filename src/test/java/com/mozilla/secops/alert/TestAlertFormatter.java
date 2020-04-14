@@ -25,7 +25,7 @@ public class TestAlertFormatter {
 
   private PCollection<Alert> getTestInput(TestPipeline p) {
     Alert testAlert = new Alert();
-    testAlert.addMetadata("sourceaddress", "216.160.83.56");
+    testAlert.addMetadata(AlertMeta.Key.SOURCEADDRESS, "216.160.83.56");
     return p.apply(Create.of(Arrays.asList(new Alert[] {testAlert})));
   }
 
@@ -44,8 +44,8 @@ public class TestAlertFormatter {
               for (String s : results) {
                 Alert a = Alert.fromJSON(s);
                 assertNotNull(a);
-                assertNull(a.getMetadataValue("sourceaddress_city"));
-                assertNull(a.getMetadataValue("sourceaddress_country"));
+                assertNull(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                assertNull(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
               }
               return null;
             });
@@ -58,7 +58,6 @@ public class TestAlertFormatter {
     IOOptions options = PipelineOptionsFactory.as(IOOptions.class);
     options.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
     options.setMonitoredResourceIndicator("formatter_test");
-    options.setAlertAddressFields(new String[] {"sourceaddress"});
 
     PCollection<String> res =
         getTestInput(p)
@@ -71,10 +70,11 @@ public class TestAlertFormatter {
               for (String s : results) {
                 Alert a = Alert.fromJSON(s);
                 assertNotNull(a);
-                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
-                assertEquals("US", a.getMetadataValue("sourceaddress_country"));
-                assertEquals("formatter_test", a.getMetadataValue("monitored_resource"));
+                assertEquals("216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                assertEquals("Milton", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                assertEquals("US", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+                assertEquals(
+                    "formatter_test", a.getMetadataValue(AlertMeta.Key.MONITORED_RESOURCE));
               }
               return null;
             });

@@ -12,7 +12,7 @@ import com.mozilla.secops.Minfraud;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertConfiguration;
-import com.mozilla.secops.alert.AlertIO;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.alert.TemplateManager;
 import com.mozilla.secops.authstate.AuthStateModel;
 import com.mozilla.secops.authstate.PruningStrategyEntryAge;
@@ -52,10 +52,12 @@ public class TestAuthProfile {
       return null;
     }
 
-    in = in.replaceAll("DATESTAMP", a.getMetadataValue("event_timestamp"));
+    in = in.replaceAll("DATESTAMP", a.getMetadataValue(AlertMeta.Key.EVENT_TIMESTAMP));
 
-    if (a.getMetadataValue("event_timestamp_source_local") != null) {
-      in = in.replaceAll("DATELOCALSTAMP", a.getMetadataValue("event_timestamp_source_local"));
+    if (a.getMetadataValue(AlertMeta.Key.EVENT_TIMESTAMP_SOURCE_LOCAL) != null) {
+      in =
+          in.replaceAll(
+              "DATELOCALSTAMP", a.getMetadataValue(AlertMeta.Key.EVENT_TIMESTAMP_SOURCE_LOCAL));
     }
 
     return in.replaceAll("ALERTID", a.getAlertId().toString());
@@ -153,23 +155,24 @@ public class TestAuthProfile {
               long infoCnt = 0;
               long cfgTickCnt = 0;
               for (Alert a : results) {
-                if (a.getMetadataValue("category").equals("state_analyze")) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("state_analyze")) {
                   assertEquals("authprofile", a.getCategory());
                   assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
-                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                   String actualSummary = a.getSummary();
                   if (actualSummary.equals(
                       "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                           + "216.160.83.56 [Milton/US]")) {
-                    assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                    assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
-                    assertEquals("US", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals("216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                    assertEquals("Milton", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                    assertEquals("US", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
                     infoCnt++;
                     assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                    assertNull(a.getMetadataValue("notify_email_direct"));
-                    assertNull(a.getMetadataValue("escalate_to"));
-                    assertEquals("known_ip", a.getMetadataValue("state_action_type"));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.ESCALATE_TO));
+                    assertEquals("known_ip", a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
 
                     // Verify sample rendered email template for known source
                     try {
@@ -190,20 +193,25 @@ public class TestAuthProfile {
                   } else if (actualSummary.equals(
                       "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                           + "new source 216.160.83.56 [Milton/US]")) {
-                    assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                    assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
-                    assertEquals("US", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals("216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                    assertEquals("Milton", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                    assertEquals("US", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
                     newCnt++;
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                    assertNull(a.getMetadataValue("notify_email_direct"));
-                    assertEquals(a.getMetadataValue("notify_slack_direct"), "wriker@mozilla.com");
+                    assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
                     assertEquals(
-                        a.getMetadataValue("alert_notification_type"), "slack_confirmation");
-                    assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
+                        a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT),
+                        "wriker@mozilla.com");
+                    assertEquals(
+                        a.getMetadataValue(AlertMeta.Key.ALERT_NOTIFICATION_TYPE),
+                        "slack_confirmation");
+                    assertEquals(
+                        "picard@mozilla.com", a.getMetadataValue(AlertMeta.Key.ESCALATE_TO));
                     // Should be indicated as an unknown IP, and minFraud/GeoIP failure as we have
                     // not configured minFraud
                     assertEquals(
-                        "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
+                        "unknown_ip_minfraud_geo_failure",
+                        a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
 
                     // Verify sample rendered email template for new source
                     try {
@@ -220,27 +228,33 @@ public class TestAuthProfile {
                       fail(exc.getMessage());
                     }
                   }
-                  assertEquals("state_analyze", a.getMetadataValue("category"));
-                  assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
-                  assertEquals("riker", a.getMetadataValue("username"));
-                  assertEquals("emit-bastion", a.getMetadataValue("object"));
-                  assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
+                  assertEquals(
+                      "state_analyze", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  assertEquals(
+                      "wriker@mozilla.com", a.getMetadataValue(AlertMeta.Key.IDENTITY_KEY));
+                  assertEquals("riker", a.getMetadataValue(AlertMeta.Key.USERNAME));
+                  assertEquals("emit-bastion", a.getMetadataValue(AlertMeta.Key.OBJECT));
+                  assertEquals(
+                      "2018-09-18T22:15:38.000Z",
+                      a.getMetadataValue(AlertMeta.Key.EVENT_TIMESTAMP));
                   assertEquals(
                       "2018-09-18T15:15:38.000-07:00",
-                      a.getMetadataValue("event_timestamp_source_local"));
-                } else if (a.getMetadataValue("category").equals("cfgtick")) {
+                      a.getMetadataValue(AlertMeta.Key.EVENT_TIMESTAMP_SOURCE_LOCAL));
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("cfgtick")) {
                   cfgTickCnt++;
                   assertEquals("authprofile-cfgtick", a.getCategory());
-                  assertEquals("testauthprofileanalyze", a.getMetadataValue("datastoreNamespace"));
+                  assertEquals(
+                      "testauthprofileanalyze", a.getCustomMetadataValue("datastoreNamespace"));
                   assertEquals(
                       "./target/test-classes/testdata/authprof_buffer1.txt",
-                      a.getMetadataValue("inputFile"));
-                  assertEquals("authprofile", a.getMetadataValue("datastoreKind"));
-                  assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
+                      a.getCustomMetadataValue("inputFile"));
+                  assertEquals("authprofile", a.getCustomMetadataValue("datastoreKind"));
+                  assertEquals("5", a.getCustomMetadataValue("generateConfigurationTicksMaximum"));
                   assertEquals(
                       "Alert if an identity (can be thought of as a user) authenticates from a new IP",
-                      a.getMetadataValue("heuristic_StateAnalyze"));
-                  assertNull(a.getMetadataValue("heuristic_CritObjectAnalyze"));
+                      a.getCustomMetadataValue("heuristic_StateAnalyze"));
+                  assertNull(a.getCustomMetadataValue("heuristic_CritObjectAnalyze"));
                 } else {
                   fail("unexpected category");
                 }
@@ -278,7 +292,8 @@ public class TestAuthProfile {
                 assertEquals("authprofile", a.getCategory());
                 assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                 assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
-                assertEquals("state_analyze", a.getMetadataValue("category"));
+                assertEquals(
+                    "state_analyze", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 String actualSummary = a.getSummary();
                 if (actualSummary.contains("new source")) {
                   newCnt++;
@@ -286,37 +301,46 @@ public class TestAuthProfile {
                   infoCnt++;
                 }
 
-                String iKey = a.getMetadataValue("identity_key");
-                if (a.getMetadataValue("username").equals("laforge@mozilla.com")) {
+                String iKey = a.getMetadataValue(AlertMeta.Key.IDENTITY_KEY);
+                if (a.getMetadataValue(AlertMeta.Key.USERNAME).equals("laforge@mozilla.com")) {
                   // Identity lookup should have failed
                   assertNull(iKey);
-                  assertNull(a.getMetadataValue("notify_email_direct"));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
 
                   // Severity should be informational since it is an untracked identity
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                  assertEquals("127.0.0.1", a.getMetadataValue("sourceaddress"));
-                  assertEquals("laforge@mozilla.com", a.getMetadataValue("username"));
-                  assertEquals("true", a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                  assertEquals("127.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals("laforge@mozilla.com", a.getMetadataValue(AlertMeta.Key.USERNAME));
+                  assertEquals("true", a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                   assertThat(a.getSummary(), containsString("untracked"));
-                  assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
+                  assertEquals(
+                      "2019-01-03T20:52:04.782Z",
+                      a.getMetadataValue(AlertMeta.Key.EVENT_TIMESTAMP));
                   // No action type on untracked identity
-                  assertNull(a.getMetadataValue("state_action_type"));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                 } else if ((iKey != null) && (iKey.equals("wriker@mozilla.com"))) {
-                  if (a.getMetadataValue("username").equals("riker@mozilla.com")) {
+                  if (a.getMetadataValue(AlertMeta.Key.USERNAME).equals("riker@mozilla.com")) {
                     // GcpAudit event should have generated a warning
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                    assertNull(a.getMetadataValue("notify_email_direct"));
-                    assertEquals(a.getMetadataValue("notify_slack_direct"), "wriker@mozilla.com");
+                    assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
                     assertEquals(
-                        a.getMetadataValue("alert_notification_type"), "slack_confirmation");
+                        a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT),
+                        "wriker@mozilla.com");
+                    assertEquals(
+                        a.getMetadataValue(AlertMeta.Key.ALERT_NOTIFICATION_TYPE),
+                        "slack_confirmation");
                     assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                     assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
-                    assertEquals("2019-01-03T20:52:04.782Z", a.getMetadataValue("event_timestamp"));
-                    assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
-                    assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                    assertEquals(
+                        "2019-01-03T20:52:04.782Z",
+                        a.getMetadataValue(AlertMeta.Key.EVENT_TIMESTAMP));
+                    assertEquals(
+                        "picard@mozilla.com", a.getMetadataValue(AlertMeta.Key.ESCALATE_TO));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                     // Geo will fail on 127.0.0.1
                     assertEquals(
-                        "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
+                        "unknown_ip_minfraud_geo_failure",
+                        a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                   }
                 }
               }
@@ -350,7 +374,7 @@ public class TestAuthProfile {
               long infoCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
-                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                assertNull(a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.contains("new source")) {
                   newCnt++;
@@ -383,8 +407,8 @@ public class TestAuthProfile {
               long cnt = 0;
               for (Alert a : results) {
                 // GCP origin and GcpAudit event, AlertIO ignore flag should be set
-                assertEquals("true", a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
-                assertEquals("gcp_internal", a.getMetadataValue("state_action_type"));
+                assertEquals("true", a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
+                assertEquals("gcp_internal", a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                 assertEquals("authprofile", a.getCategory());
                 assertEquals(
                     "authentication event observed laforge@mozilla.com [untracked] to "
@@ -418,7 +442,7 @@ public class TestAuthProfile {
               long infoCnt = 0;
               for (Alert a : results) {
                 assertEquals("authprofile", a.getCategory());
-                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                assertNull(a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.contains("new source")) {
                   newCnt++;
@@ -459,36 +483,45 @@ public class TestAuthProfile {
                 assertEquals("authprofile", a.getCategory());
                 assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                 assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
-                assertEquals("state_analyze", a.getMetadataValue("category"));
-                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                assertEquals("state_analyze", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertNull(a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.matches("(.*)new source fd00(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertNull(a.getMetadataValue("notify_email_direct"));
-                  assertEquals(a.getMetadataValue("notify_slack_direct"), "wriker@mozilla.com");
-                  assertEquals(a.getMetadataValue("alert_notification_type"), "slack_confirmation");
-                  assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
-                  assertEquals("office", a.getMetadataValue("entry_key"));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
                   assertEquals(
-                      "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT), "wriker@mozilla.com");
+                  assertEquals(
+                      a.getMetadataValue(AlertMeta.Key.ALERT_NOTIFICATION_TYPE),
+                      "slack_confirmation");
+                  assertEquals("picard@mozilla.com", a.getMetadataValue(AlertMeta.Key.ESCALATE_TO));
+                  assertEquals("office", a.getMetadataValue(AlertMeta.Key.ENTRY_KEY));
+                  assertEquals(
+                      "unknown_ip_minfraud_geo_failure",
+                      a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                 } else if (actualSummary.matches("(.*)new source aaaa(.*)")) {
                   newCnt++;
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                  assertNull(a.getMetadataValue("notify_email_direct"));
-                  assertEquals(a.getMetadataValue("notify_slack_direct"), "wriker@mozilla.com");
-                  assertEquals(a.getMetadataValue("alert_notification_type"), "slack_confirmation");
-                  assertNull(a.getMetadataValue("entry_key"));
-                  assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
                   assertEquals(
-                      "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT), "wriker@mozilla.com");
+                  assertEquals(
+                      a.getMetadataValue(AlertMeta.Key.ALERT_NOTIFICATION_TYPE),
+                      "slack_confirmation");
+                  assertNull(a.getMetadataValue(AlertMeta.Key.ENTRY_KEY));
+                  assertEquals("picard@mozilla.com", a.getMetadataValue(AlertMeta.Key.ESCALATE_TO));
+                  assertEquals(
+                      "unknown_ip_minfraud_geo_failure",
+                      a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                 }
-                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
-                assertEquals("riker", a.getMetadataValue("username"));
-                assertEquals("emit-bastion", a.getMetadataValue("object"));
-                assertEquals("unknown", a.getMetadataValue("sourceaddress_city"));
-                assertEquals("unknown", a.getMetadataValue("sourceaddress_country"));
-                assertEquals("2018-09-18T22:15:38.000Z", a.getMetadataValue("event_timestamp"));
+                assertEquals("wriker@mozilla.com", a.getMetadataValue(AlertMeta.Key.IDENTITY_KEY));
+                assertEquals("riker", a.getMetadataValue(AlertMeta.Key.USERNAME));
+                assertEquals("emit-bastion", a.getMetadataValue(AlertMeta.Key.OBJECT));
+                assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+                assertEquals(
+                    "2018-09-18T22:15:38.000Z", a.getMetadataValue(AlertMeta.Key.EVENT_TIMESTAMP));
               }
               assertEquals(2L, newCnt);
               return null;
@@ -516,16 +549,16 @@ public class TestAuthProfile {
               long newCnt = 0;
               long infoCnt = 0;
               for (Alert a : results) {
-                assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                assertNull(a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.equals(
                     "authentication event observed wriker@mozilla.com [wriker@mozilla.com] to www.enterprise.com, "
                         + "216.160.83.56 [Milton/US]")) {
                   infoCnt++;
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                  assertNull(a.getMetadataValue("notify_email_direct"));
-                  assertNull(a.getMetadataValue("escalate_to"));
-                  assertEquals("known_ip", a.getMetadataValue("state_action_type"));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.ESCALATE_TO));
+                  assertEquals("known_ip", a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                 } else if (actualSummary.equals(
                     "authentication event observed wriker@mozilla.com [wriker@mozilla.com] to www.enterprise.com, "
                         + "new source 216.160.83.56 [Milton/US]")) {
@@ -533,15 +566,16 @@ public class TestAuthProfile {
                   assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
                   // No previous state, GeoIP will fail
                   assertEquals(
-                      "unknown_ip_minfraud_geo_failure", a.getMetadataValue("state_action_type"));
+                      "unknown_ip_minfraud_geo_failure",
+                      a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                 }
-                assertEquals("state_analyze", a.getMetadataValue("category"));
-                assertEquals("wriker@mozilla.com", a.getMetadataValue("identity_key"));
-                assertEquals("wriker@mozilla.com", a.getMetadataValue("username"));
-                assertEquals("www.enterprise.com", a.getMetadataValue("object"));
-                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                assertEquals("Milton", a.getMetadataValue("sourceaddress_city"));
-                assertEquals("US", a.getMetadataValue("sourceaddress_country"));
+                assertEquals("state_analyze", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals("wriker@mozilla.com", a.getMetadataValue(AlertMeta.Key.IDENTITY_KEY));
+                assertEquals("wriker@mozilla.com", a.getMetadataValue(AlertMeta.Key.USERNAME));
+                assertEquals("www.enterprise.com", a.getMetadataValue(AlertMeta.Key.OBJECT));
+                assertEquals("216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                assertEquals("Milton", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                assertEquals("US", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
               }
               assertEquals(1L, newCnt);
               // Should have one informational since the rest of the duplicates will be
@@ -589,37 +623,45 @@ public class TestAuthProfile {
               long newCnt = 0;
               long infoCnt = 0;
               for (Alert a : results) {
-                if (a.getMetadataValue("category").equals("state_analyze")) {
+                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("state_analyze")) {
                   assertEquals("authprofile", a.getCategory());
                   assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
-                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                   String actualSummary = a.getSummary();
                   if (actualSummary.equals(
                       "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                           + "89.160.20.112 [Linköping/SE]")) {
                     infoCnt++;
-                    assertEquals("89.160.20.112", a.getMetadataValue("sourceaddress"));
-                    assertEquals("Linköping", a.getMetadataValue("sourceaddress_city"));
-                    assertEquals("SE", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals("89.160.20.112", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                    assertEquals("Linköping", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                    assertEquals("SE", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
                     assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                    assertNull(a.getMetadataValue("notify_email_direct"));
-                    assertNull(a.getMetadataValue("notify_slack_direct"));
-                    assertNull(a.getMetadataValue("escalate_to"));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.ESCALATE_TO));
                   } else if (actualSummary.equals(
                       "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                           + "new source 89.160.20.112 [Linköping/SE]")) {
                     newCnt++;
-                    assertEquals("89.160.20.112", a.getMetadataValue("sourceaddress"));
-                    assertEquals("Linköping", a.getMetadataValue("sourceaddress_city"));
-                    assertEquals("SE", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals("89.160.20.112", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                    assertEquals("Linköping", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                    assertEquals("SE", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                    assertEquals("wriker@mozilla.com", a.getMetadataValue("notify_email_direct"));
-                    assertNull(a.getMetadataValue("notify_slack_direct"));
-                    assertEquals("false", a.getMetadataValue("sourceaddress_is_anonymous"));
-                    assertEquals("false", a.getMetadataValue("sourceaddress_is_anonymous_vpn"));
-                    assertEquals("false", a.getMetadataValue("sourceaddress_is_hosting_provider"));
-                    assertEquals("unknown_ip_within_geo", a.getMetadataValue("state_action_type"));
+                    assertEquals(
+                        "wriker@mozilla.com",
+                        a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT));
+                    assertEquals(
+                        "false", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_IS_ANONYMOUS));
+                    assertEquals(
+                        "false", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_IS_ANONYMOUS_VPN));
+                    assertEquals(
+                        "false",
+                        a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_IS_HOSTING_PROVIDER));
+                    assertEquals(
+                        "unknown_ip_within_geo",
+                        a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                   }
                 }
               }
@@ -669,39 +711,47 @@ public class TestAuthProfile {
               long newCnt = 0;
               long infoCnt = 0;
               for (Alert a : results) {
-                if (a.getMetadataValue("category").equals("state_analyze")) {
+                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("state_analyze")) {
                   assertEquals("authprofile", a.getCategory());
                   assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
-                  assertNull(a.getMetadataValue(AlertIO.ALERTIO_IGNORE_EVENT));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                   String actualSummary = a.getSummary();
                   if (actualSummary.equals(
                       "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                           + "89.160.20.112 [Linköping/SE]")) {
                     infoCnt++;
-                    assertEquals("89.160.20.112", a.getMetadataValue("sourceaddress"));
-                    assertEquals("Linköping", a.getMetadataValue("sourceaddress_city"));
-                    assertEquals("SE", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals("89.160.20.112", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                    assertEquals("Linköping", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                    assertEquals("SE", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
                     assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
-                    assertNull(a.getMetadataValue("notify_email_direct"));
-                    assertNull(a.getMetadataValue("notify_slack_direct"));
-                    assertNull(a.getMetadataValue("escalate_to"));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.ESCALATE_TO));
                   } else if (actualSummary.equals(
                       "authentication event observed riker [wriker@mozilla.com] to emit-bastion, "
                           + "new source 89.160.20.112 [Linköping/SE]")) {
                     newCnt++;
-                    assertEquals("89.160.20.112", a.getMetadataValue("sourceaddress"));
-                    assertEquals("Linköping", a.getMetadataValue("sourceaddress_city"));
-                    assertEquals("SE", a.getMetadataValue("sourceaddress_country"));
+                    assertEquals("89.160.20.112", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                    assertEquals("Linköping", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                    assertEquals("SE", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
                     assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
-                    assertNull(a.getMetadataValue("notify_email_direct"));
-                    assertEquals("wriker@mozilla.com", a.getMetadataValue("notify_slack_direct"));
-                    assertEquals("picard@mozilla.com", a.getMetadataValue("escalate_to"));
-                    assertEquals("false", a.getMetadataValue("sourceaddress_is_anonymous"));
-                    assertEquals("false", a.getMetadataValue("sourceaddress_is_anonymous_vpn"));
-                    assertEquals("true", a.getMetadataValue("sourceaddress_is_hosting_provider"));
+                    assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
                     assertEquals(
-                        "unknown_ip_hosting_provider", a.getMetadataValue("state_action_type"));
+                        "wriker@mozilla.com",
+                        a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT));
+                    assertEquals(
+                        "picard@mozilla.com", a.getMetadataValue(AlertMeta.Key.ESCALATE_TO));
+                    assertEquals(
+                        "false", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_IS_ANONYMOUS));
+                    assertEquals(
+                        "false", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_IS_ANONYMOUS_VPN));
+                    assertEquals(
+                        "true",
+                        a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_IS_HOSTING_PROVIDER));
+                    assertEquals(
+                        "unknown_ip_hosting_provider",
+                        a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                   }
                 }
               }
@@ -757,7 +807,7 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
     templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
     assertEquals(
@@ -766,7 +816,7 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_WITHIN_GEO.toString());
     templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
     assertEquals(
@@ -775,7 +825,7 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_OUTSIDE_GEO.toString());
     templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
     assertEquals(
@@ -784,7 +834,7 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_HOSTING_PROVIDER.toString());
     templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
     assertEquals(
@@ -793,7 +843,7 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_ANON_NETWORK.toString());
     templateOutput = tmgr.processTemplate(a.getEmailTemplate(), a.generateTemplateVariables());
     assertEquals(
@@ -802,9 +852,9 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_WITHIN_GEO.toString());
-    a.setMetadataValue("alert_notification_type", "slack_notification");
+    a.setMetadataValue(AlertMeta.Key.ALERT_NOTIFICATION_TYPE, "slack_notification");
     templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
     assertEquals(
         "unknown ip within geo slack",
@@ -812,9 +862,9 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_OUTSIDE_GEO.toString());
-    a.setMetadataValue("alert_notification_type", "slack_confirmation");
+    a.setMetadataValue(AlertMeta.Key.ALERT_NOTIFICATION_TYPE, "slack_confirmation");
     templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
     assertEquals(
         "unknown ip outside geo slack",
@@ -822,7 +872,7 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_HOSTING_PROVIDER.toString());
     templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
     assertEquals(
@@ -831,7 +881,7 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_ANON_NETWORK.toString());
     templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
     assertEquals(
@@ -840,7 +890,7 @@ public class TestAuthProfile {
         templateOutput);
 
     a.setMetadataValue(
-        AuthProfile.StateAnalyze.META_ACTION_TYPE,
+        AlertMeta.Key.STATE_ACTION_TYPE,
         AuthProfile.StateAnalyze.ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
     templateOutput = tmgr.processTemplate(a.getSlackTemplate(), a.generateTemplateVariables());
     assertEquals(

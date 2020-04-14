@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.ParserTest;
 import java.util.Arrays;
@@ -37,7 +38,6 @@ public class TestHTTPRequestSourceCorrelator {
     ret.setMaxmindIspDbPath(ParserTest.TEST_ISP_DBPATH);
     ret.setEnableSourceCorrelator(true);
     ret.setSourceCorrelatorMinimumAddresses(2);
-    ret.setAlertAddressFields(new String[] {"sourceaddress"});
     ret.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_sourcecorrelator1.txt"});
     return ret;
   }
@@ -68,14 +68,15 @@ public class TestHTTPRequestSourceCorrelator {
             i -> {
               int cnt = 0;
               for (Alert a : i) {
-                if (!a.getMetadataValue("category").equals("isp_source_correlation")) {
+                if (!a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("isp_source_correlation")) {
                   continue;
                 }
                 cnt++;
-                assertEquals("Century Link", a.getMetadataValue("sourceaddress_isp"));
-                assertEquals("2", a.getMetadataValue("total_address_count"));
-                assertEquals("2", a.getMetadataValue("total_alert_count"));
-                assertEquals("test isp_source_correlation", a.getMetadataValue("notify_merge"));
+                assertEquals("Century Link", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_ISP));
+                assertEquals("2", a.getMetadataValue(AlertMeta.Key.TOTAL_ADDRESS_COUNT));
+                assertEquals("2", a.getMetadataValue(AlertMeta.Key.TOTAL_ALERT_COUNT));
+                assertEquals(
+                    "test isp_source_correlation", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
                 assertEquals(
                     "test httprequest isp_source_correlation \"Century Link\", 2 alerting addre"
                         + "sses out of 2 observed",
