@@ -100,6 +100,7 @@ func (bc *BugzillaClient) CreateBugFromAlerts(assignedTo, category string, alert
 		log.Errorf("Error sending request to bugzilla: %s", err)
 		return 0, err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode > 299 {
 		log.Errorf("Got status code of %d from create bug request %s", resp.StatusCode, string(bugJson))
 
@@ -153,6 +154,7 @@ func (bc *BugzillaClient) AddAlertsToBug(bugId int, alerts []*Alert) error {
 		log.Errorf("Error sending request to bugzilla: Resp: %v | Err: %s", resp, err)
 		return err
 	}
+	defer resp.Body.Close()
 	return nil
 }
 
@@ -202,6 +204,7 @@ func (bc *BugzillaClient) SearchBugs(searchValues url.Values) (*SearchBugRespons
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	searchResp := &SearchBugResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&searchResp)
@@ -235,6 +238,7 @@ func (bc *BugzillaClient) UpdateBug(bugId int, updateReq *UpdateBugReq) error {
 		log.Errorf("Error sending request to bugzilla: %s", err)
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode > 299 {
 		log.Errorf("Got status code of %d from update bug request %s", resp.StatusCode, string(updateJson))
 
