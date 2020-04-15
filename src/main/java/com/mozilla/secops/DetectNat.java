@@ -178,6 +178,11 @@ public class DetectNat {
     }
   }
 
+  /**
+   * Creates a User Agent Based Nat Detection transform
+   *
+   * @return A {@code UserAgentBased} {@link PTransform}
+   */
   public static DetectNat.UserAgentBased byUserAgent() {
     return new UserAgentBased(new HashMap<String, Boolean>());
   }
