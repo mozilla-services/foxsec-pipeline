@@ -3,6 +3,10 @@ package com.mozilla.secops;
 import com.google.common.annotations.VisibleForTesting;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
@@ -17,6 +21,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides NAT detection transforms
@@ -32,6 +38,8 @@ import org.apache.beam.sdk.values.TypeDescriptors;
  * NAT gateway, it will not be included in the output set.
  */
 public class DetectNat {
+
+  private static final Logger log = LoggerFactory.getLogger(DetectNat.class);
 
   /**
    * Return an empty NAT view, suitable as a placeholder if NAT detection is not desired
@@ -128,7 +136,7 @@ public class DetectNat {
                 @Setup
                 public void setup() {
                   if (knownGateways.size() == 0 && knownGatewaysPath != null) {
-                    knownGateways = NatUtil.loadGatewayList(knownGatewaysPath);
+                    knownGateways = loadGatewayList(knownGatewaysPath);
                   }
                 }
 
@@ -154,7 +162,7 @@ public class DetectNat {
      * @return A {@code UserAgentBased} {@link PTransform}
      */
     public UserAgentBased withKnownGateways(String path) {
-      return new UserAgentBased(NatUtil.loadGatewayList(path));
+      return new UserAgentBased(loadGatewayList(path));
     }
 
     /**
@@ -172,5 +180,39 @@ public class DetectNat {
 
   public static DetectNat.UserAgentBased byUserAgent() {
     return new UserAgentBased(new HashMap<String, Boolean>());
+  }
+
+  /**
+   * Load detect nat manager configuration from a resource file
+   *
+   * @param path Path to load file file from, resource path or GCS URL
+   * @return a map containing each ip and the value true
+   */
+  public static Map<String, Boolean> loadGatewayList(String path) {
+    HashMap<String, Boolean> gateways = new HashMap<String, Boolean>();
+    InputStream in;
+    if (path == null || path.isEmpty()) {
+      log.info("No initial nat gateway list given, using empty list.");
+      return gateways;
+    }
+    if (GcsUtil.isGcsUrl(path)) {
+      in = GcsUtil.fetchInputStreamContent(path);
+    } else {
+      in = DetectNat.class.getResourceAsStream(path);
+    }
+    if (in == null) {
+      log.error("Unable to read nat gateway list: {}", path);
+      return gateways;
+    }
+    BufferedReader r = new BufferedReader(new InputStreamReader(in));
+    try {
+      while (r.ready()) {
+        gateways.put(r.readLine(), true);
+      }
+      r.close();
+    } catch (IOException e) {
+      log.error("Error reading nat gateway list: {}", e.getMessage());
+    }
+    return gateways;
   }
 }

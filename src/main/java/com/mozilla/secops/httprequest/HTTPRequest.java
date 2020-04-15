@@ -1570,7 +1570,8 @@ public class HTTPRequest implements Serializable {
 
     void setKnownGatewaysPath(String value);
 
-    @Description("Path to load initial gateway list for nat detection; resource path, gcs path")
+    @Description(
+        "Path to load user agent blacklist from for UA blacklist analysis; resource path, gcs path")
     String getUserAgentBlacklistPath();
 
     void setUserAgentBlacklistPath(String value);
