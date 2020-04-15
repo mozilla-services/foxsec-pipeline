@@ -1324,6 +1324,7 @@ public class HTTPRequest implements Serializable {
     private final String[] addressFields;
     private final String maxmindCityDbPath;
     private final String maxmindIspDbPath;
+    private final String initialNatListPath;
 
     /**
      * Create new HTTPRequestAnalysis
@@ -1340,6 +1341,7 @@ public class HTTPRequest implements Serializable {
       addressFields = options.getAlertAddressFields();
       maxmindCityDbPath = options.getMaxmindCityDbPath();
       maxmindIspDbPath = options.getMaxmindIspDbPath();
+      initialNatListPath = options.getKnownGatewaysPath();
     }
 
     @Override
@@ -1355,7 +1357,7 @@ public class HTTPRequest implements Serializable {
 
         PCollectionView<Map<String, Boolean>> natView = null;
         if (toggles.getEnableNatDetection()) {
-          natView = DetectNat.getView(fwEvents);
+          natView = DetectNat.getView(fwEvents, initialNatListPath);
         }
 
         if (toggles.getEnableThresholdAnalysis()) {
@@ -1554,6 +1556,11 @@ public class HTTPRequest implements Serializable {
     Boolean getNatDetection();
 
     void setNatDetection(Boolean value);
+
+    @Description("Path to load initial gateway list for nat detection; resource path, gcs path")
+    String getKnownGatewaysPath();
+
+    void setKnownGatewaysPath(String value);
 
     @Description(
         "Path to load user agent blacklist from for UA blacklist analysis; resource path, gcs path")

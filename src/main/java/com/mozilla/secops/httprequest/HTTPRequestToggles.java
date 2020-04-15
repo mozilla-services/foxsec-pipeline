@@ -24,6 +24,9 @@ public class HTTPRequestToggles {
   private Boolean enableNatDetection;
   private Boolean enableSourceCorrelator;
 
+  // Nat detection settings
+  private String knownGatewaysPath;
+
   // Hard limit settings
   private Long hardLimitRequestCount;
 
@@ -81,6 +84,25 @@ public class HTTPRequestToggles {
    */
   public Boolean getEnableNatDetection() {
     return enableNatDetection;
+  }
+
+  /**
+   * Path to list of inital nat gateways
+   *
+   * @param value Boolean
+   */
+  @JsonProperty("known_gateways_path")
+  public void setKnownGatewaysPath(String value) {
+    this.knownGatewaysPath = value;
+  }
+
+  /**
+   * Get path to list of inital nat gateways
+   *
+   * @return String
+   */
+  public String getKnownGatewaysPath() {
+    return knownGatewaysPath;
   }
 
   /**
@@ -719,6 +741,7 @@ public class HTTPRequestToggles {
     ret.setEnableHardLimitAnalysis(o.getEnableHardLimitAnalysis());
     ret.setEnableUserAgentBlacklistAnalysis(o.getEnableUserAgentBlacklistAnalysis());
     ret.setEnableNatDetection(o.getNatDetection());
+    ret.setKnownGatewaysPath(o.getKnownGatewaysPath());
 
     ret.setHardLimitRequestCount(o.getHardLimitRequestCount());
 
