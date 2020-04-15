@@ -609,7 +609,7 @@ public class HTTPRequest implements Serializable {
               "invalid format for abuse endpoint path, must be <int>:<method>:<path>");
         }
         EndpointAbuseEndpointInfo ninfo = new EndpointAbuseEndpointInfo();
-        ninfo.threshold = new Integer(parts[0]);
+        ninfo.threshold = Integer.parseInt(parts[0]);
         ninfo.method = parts[1];
         ninfo.path = parts[2];
         endpoints[i] = ninfo;
@@ -1320,8 +1320,6 @@ public class HTTPRequest implements Serializable {
     private final transient HTTPRequestToggles toggles;
     private final Boolean enableIprepdDatastoreWhitelist;
     private final String iprepdDatastoreWhitelistProject;
-    private final int sourceCorrelatorMinimumAddresses;
-    private final double sourceCorrelatorAlertPercentage;
     private final String monitoredResource;
     private final String[] addressFields;
     private final String maxmindCityDbPath;
@@ -1338,8 +1336,6 @@ public class HTTPRequest implements Serializable {
 
       enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
       iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
-      sourceCorrelatorMinimumAddresses = options.getSourceCorrelatorMinimumAddresses();
-      sourceCorrelatorAlertPercentage = options.getSourceCorrelatorAlertPercentage();
       monitoredResource = toggles.getMonitoredResource();
       addressFields = options.getAlertAddressFields();
       maxmindCityDbPath = options.getMaxmindCityDbPath();
@@ -1349,10 +1345,6 @@ public class HTTPRequest implements Serializable {
     @Override
     public PCollection<Alert> expand(PCollection<Event> events) {
       PCollectionList<Alert> resultsList = PCollectionList.empty(events.getPipeline());
-
-      // We need to pull the stored service name out of the toggle configuration so we can
-      // assign unique names to our transform steps.
-      String prefix = toggles.getMonitoredResource();
 
       if (toggles.getEnableThresholdAnalysis()
           || toggles.getEnableErrorRateAnalysis()
