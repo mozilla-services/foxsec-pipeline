@@ -65,7 +65,7 @@ public class AddonCloudSubmission extends PTransform<PCollection<Event>, PCollec
                     if ((d == null) || (d.getEventType() == null)) {
                       return;
                     }
-                    if (!d.getEventType().equals(AmoDocker.EventType.FILEUPLOADMNT)) {
+                    if (!d.getEventType().equals(AmoDocker.EventType.NEWVERSION)) {
                       return;
                     }
 
@@ -84,15 +84,18 @@ public class AddonCloudSubmission extends PTransform<PCollection<Event>, PCollec
                     alert.setNotifyMergeKey("amo_cloud_submission");
                     alert.addMetadata(AlertMeta.Key.PROVIDER, f);
                     alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, d.getRemoteIp());
-                    alert.addMetadata(AlertMeta.Key.ADDON_FILENAME, d.getFileName());
-                    alert.addMetadata(AlertMeta.Key.ADDON_SIZE, d.getBytes().toString());
+                    if (d.getAddonGuid() != null) {
+                      alert.addMetadata(AlertMeta.Key.ADDON_GUID, d.getAddonGuid());
+                    }
                     if (d.getFxaEmail() != null) {
                       alert.addMetadata(AlertMeta.Key.EMAIL, d.getFxaEmail());
                     }
                     alert.setSummary(
                         String.format(
-                            "%s cloud provider addon submission from %s",
-                            monitoredResource, d.getRemoteIp()));
+                            "%s cloud provider addon submission from %s, guid %s",
+                            monitoredResource,
+                            d.getRemoteIp(),
+                            d.getAddonGuid() != null ? d.getAddonGuid() : "unknown"));
                     c.output(alert);
                   }
                 }));
