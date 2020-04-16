@@ -3,16 +3,16 @@ package com.mozilla.secops.gatekeeper;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IOOptions;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.alert.AlertSuppressor;
 import com.mozilla.secops.parser.ETDBeta;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.parser.models.etd.DetectionCategory;
 import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
-import com.mozilla.secops.parser.models.etd.Evidence;
 import com.mozilla.secops.parser.models.etd.Properties;
 import com.mozilla.secops.parser.models.etd.SourceId;
-import com.mozilla.secops.parser.models.etd.SourceLogId;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,8 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Implements various transforms on GCP's {@link EventThreatDetectionFinding} Events */
 public class ETDTransforms implements Serializable {
@@ -116,12 +117,16 @@ public class ETDTransforms implements Serializable {
     private List<Pattern> highPatterns;
     private String critNotifyEmail;
 
+    private Logger log;
+
     /**
      * static initializer for alert generation / escalation
      *
      * @param opts {@link Options} pipeline options
      */
     public GenerateETDAlerts(Options opts) {
+      log = LoggerFactory.getLogger(GenerateETDAlerts.class);
+
       critNotifyEmail = opts.getCriticalNotificationEmail();
       String[] highRegexes = opts.getHighETDFindingRuleRegex();
 
@@ -138,32 +143,44 @@ public class ETDTransforms implements Serializable {
       return "Alerts are generated based on events sent from GCP's Event Threat Detection.";
     }
 
-    private void addBaseFindingData(Alert a, EventThreatDetectionFinding f) {
+    private void addBaseFindingData(Alert a, EventThreatDetectionFinding f) throws IOException {
       DetectionCategory dc = f.getDetectionCategory();
-      if (dc != null) {
-        a.tryAddMetadata("indicator", dc.getIndicator());
-        a.tryAddMetadata("rule_name", dc.getRuleName());
-        a.tryAddMetadata("technique", dc.getTechnique());
+      if (dc == null) {
+        throw new IOException("etd alert was missing detection category");
+      } else if (dc.getIndicator() == null) {
+        throw new IOException("etd alert was missing indicator");
+      } else if (dc.getRuleName() == null) {
+        throw new IOException("etd alert was missing rule name");
+      } else if (dc.getTechnique() == null) {
+        throw new IOException("etd alert was missing technique");
       }
+
+      a.addMetadata(AlertMeta.Key.INDICATOR, dc.getIndicator());
+      a.addMetadata(AlertMeta.Key.RULE_NAME, dc.getRuleName());
+      a.addMetadata(AlertMeta.Key.TECHNIQUE, dc.getTechnique());
+
       SourceId sid = f.getSourceId();
-      if (sid != null) {
-        a.tryAddMetadata("project_number", sid.getProjectNumber());
+      if (sid != null && sid.getProjectNumber() != null) {
+        a.addMetadata(AlertMeta.Key.PROJECT_NUMBER, sid.getProjectNumber());
+      } else {
+        throw new IOException("etd alert was missing project number");
       }
+
       Properties prop = f.getProperties();
-      if (prop != null) {
-        a.tryAddMetadata("project_id", prop.getProject_id());
-        a.tryAddMetadata("location", prop.getLocation());
+      if (prop != null && prop.getProject_id() != null) {
+        a.addMetadata(AlertMeta.Key.PROJECT_ID, prop.getProject_id());
+      } else {
+        throw new IOException("etd alert was missing project id or location");
       }
+
       a.setSummary(
           String.format(
               "suspicious activity detected in gcp org %s project %s",
               (sid != null && sid.getCustomerOrganizationNumber() != null)
                   ? sid.getCustomerOrganizationNumber()
-                  : "UNKNOWN",
-              (prop != null && prop.getProject_id() != null) ? prop.getProject_id() : "UNKNOWN"));
-      if (f.getEventTime() != null) {
-        a.setTimestamp(DateTime.parse(f.getEventTime()));
-      }
+                  : "unknown",
+              prop.getProject_id()));
+
       a.setCategory(alertCategory);
       a.setSeverity(Alert.AlertSeverity.CRITICAL);
     }
@@ -173,52 +190,16 @@ public class ETDTransforms implements Serializable {
       if (dc == null || dc.getRuleName() == null) {
         return;
       }
-      if (critNotifyEmail != null) {
-        for (Pattern p : highPatterns) {
-          if (p.matcher(dc.getRuleName()).matches()) {
-            a.addMetadata("alert_handling_severity", "high");
-            a.addMetadata("notify_email_direct", critNotifyEmail);
-            return;
+      for (Pattern p : highPatterns) {
+        if (p.matcher(dc.getRuleName()).matches()) {
+          a.addMetadata(AlertMeta.Key.ALERT_HANDLING_SEVERITY, "high");
+          if (critNotifyEmail != null) {
+            a.addMetadata(AlertMeta.Key.NOTIFY_EMAIL_DIRECT, critNotifyEmail);
           }
-        }
-        a.addMetadata("alert_handling_severity", "low");
-      }
-    }
-
-    /**
-     * adds informational metadata using values within finding without assuming a particular finding
-     * rule - adds all metadata that is available
-     *
-     * @param a {@link Alert} the target alert
-     * @param f {@link EventThreatDetectionFinding} the source finding
-     */
-    private void addRuleSpecificFindingData(Alert a, EventThreatDetectionFinding f) {
-      a.tryAddMetadata("detection_priority", f.getDetectionPriority());
-      a.tryAddMetadata("detection_timestap", f.getEventTime());
-      Properties prop = f.getProperties();
-      if (prop != null) {
-        a.tryAddMetadata("subnetwork_id", prop.getSubnetwork_id());
-        a.tryAddMetadata("subnetwork_name", prop.getSubnetwork_name());
-        a.tryAddMetadata("ip", prop.getIp());
-        List<String> doms = prop.getDomain();
-        if (doms != null) {
-          for (String d : doms) {
-            a.tryAddMetadata("domain", d);
-          }
+          return;
         }
       }
-      SourceId sid = f.getSourceId();
-      if (sid != null) {
-        a.tryAddMetadata("org_number", sid.getCustomerOrganizationNumber());
-      }
-      List<Evidence> evi = f.getEvidence();
-      for (Evidence e : evi) {
-        SourceLogId sli = e.getSourceLogId();
-        if (sli != null) {
-          a.tryAddMetadata("evidence_insert_id", sli.getInsertId());
-          a.tryAddMetadata("evidence_timestamp", sli.getTimestamp());
-        }
-      }
+      a.addMetadata(AlertMeta.Key.ALERT_HANDLING_SEVERITY, "low");
     }
 
     @Override
@@ -244,8 +225,12 @@ public class ETDTransforms implements Serializable {
                   }
                   Alert a = new Alert();
 
-                  addBaseFindingData(a, f);
-                  addRuleSpecificFindingData(a, f);
+                  try {
+                    addBaseFindingData(a, f);
+                  } catch (IOException exc) {
+                    log.error("error processing etd alert: {}", exc.getMessage());
+                    return;
+                  }
                   tryAddEscalationEmail(a, f);
 
                   c.output(a);
@@ -275,22 +260,17 @@ public class ETDTransforms implements Serializable {
       alertSuppressionWindow = opts.getAlertSuppressionSeconds();
     }
 
-    // the suppression state key for ETD findings will be a concatenation of
-    // some mandatory and some optional fields
     private String buildSuppressionStateKey(Alert a) {
+      // The suppression state key for ETD findings will be a concatenation of
+      // mandatory fields
       String key =
-          a.getMetadataValue("project_number")
+          a.getMetadataValue(AlertMeta.Key.PROJECT_NUMBER)
               + "-"
-              + a.getMetadataValue("rule_name")
+              + a.getMetadataValue(AlertMeta.Key.RULE_NAME)
               + "-"
-              + a.getMetadataValue("technique")
+              + a.getMetadataValue(AlertMeta.Key.TECHNIQUE)
               + "-"
-              + a.getMetadataValue("indicator");
-
-      if (a.getMetadataValue("location") != null) {
-        key = key + "-" + a.getMetadataValue("location");
-      }
-      // add more optional fields here
+              + a.getMetadataValue(AlertMeta.Key.INDICATOR);
       return key;
     }
 

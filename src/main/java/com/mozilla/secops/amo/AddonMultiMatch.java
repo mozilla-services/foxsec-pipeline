@@ -4,6 +4,7 @@ import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -144,9 +145,9 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
                     alert.setCategory("amo");
                     alert.setSubcategory("amo_abuse_multi_match");
                     alert.setNotifyMergeKey("amo_abuse_multi_match");
-                    alert.addMetadata("email", buf);
-                    alert.addMetadata("count", Integer.toString(cnt));
-                    alert.addMetadata("addon_filename", c.element().getKey());
+                    alert.addMetadata(AlertMeta.Key.EMAIL, buf);
+                    alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(cnt));
+                    alert.addMetadata(AlertMeta.Key.ADDON_FILENAME, c.element().getKey());
                     alert.setSummary(
                         String.format("%s addon abuse multi match, %d", monitoredResource, cnt));
                     if (suppressRecovery != null) {

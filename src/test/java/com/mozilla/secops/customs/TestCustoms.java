@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.ParserDoFn;
@@ -115,9 +116,11 @@ public class TestCustoms {
                 totalCnt++;
                 if (a.getCategory().equals("customs")) {
                   assertEquals("customs", a.getCategory());
-                  assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                  assertEquals("3", a.getMetadataValue("count"));
-                  assertEquals("account_creation_abuse", a.getMetadataValue("customs_category"));
+                  assertEquals("216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals("3", a.getMetadataValue(AlertMeta.Key.COUNT));
+                  assertEquals(
+                      "account_creation_abuse",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals("test suspicious account creation, 216.160.83.56 3", a.getSummary());
                   alertCnt++;
                 }
@@ -158,17 +161,19 @@ public class TestCustoms {
             x -> {
               int cnt = 0;
               for (Alert a : x) {
-                if (!a.getMetadataValue("sourceaddress").equals("216.160.83.56")) {
+                if (!a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("216.160.83.56")) {
                   continue;
                 }
                 assertEquals("customs", a.getCategory());
-                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
-                assertEquals("6", a.getMetadataValue("count"));
-                assertEquals("user3@mail.com", a.getMetadataValue("email"));
+                assertEquals("216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                assertEquals("6", a.getMetadataValue(AlertMeta.Key.COUNT));
+                assertEquals("user3@mail.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
                 assertEquals(
-                    "account_creation_abuse_distributed", a.getMetadataValue("notify_merge"));
+                    "account_creation_abuse_distributed",
+                    a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
                 assertEquals(
-                    "account_creation_abuse_distributed", a.getMetadataValue("customs_category"));
+                    "account_creation_abuse_distributed",
+                    a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals(
                     "test suspicious distributed account creation, 216.160.83.56 6",
                     a.getSummary());
@@ -207,34 +212,41 @@ public class TestCustoms {
               int sCnt = 0;
               int tCnt = 0;
               for (Alert a : x) {
-                if (a.getMetadataValue("customs_category").equals("source_login_failure")) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("source_login_failure")) {
                   assertEquals("customs", a.getCategory());
-                  assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+                  assertEquals("216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   // Should be 10, since two events have a blocked errno and shouldn't be factored
                   // in
-                  assertEquals("10", a.getMetadataValue("count"));
-                  assertEquals("spock@mozilla.com", a.getMetadataValue("email"));
-                  assertEquals("source_login_failure", a.getMetadataValue("notify_merge"));
-                  assertEquals("source_login_failure", a.getMetadataValue("customs_category"));
+                  assertEquals("10", a.getMetadataValue(AlertMeta.Key.COUNT));
+                  assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                  assertEquals(
+                      "source_login_failure", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  assertEquals(
+                      "source_login_failure",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       "test source login failure threshold exceeded, 216.160.83.56 10 in 10 minutes",
                       a.getSummary());
                   lfCnt++;
-                } else if (a.getMetadataValue("customs_category").equals("summary")) {
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("summary")) {
                   assertEquals("customs", a.getCategory());
-                  assertEquals("22", a.getMetadataValue("login_failure"));
+                  assertEquals("22", a.getCustomMetadataValue("login_failure"));
                   assertEquals("test summary for period, login_failure 22", a.getSummary());
                   sCnt++;
-                } else if (a.getMetadataValue("customs_category")
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                     .equals("source_login_failure_distributed")) {
                   assertEquals("customs", a.getCategory());
                   // Should be ten, since two addresses are duplicates
-                  assertEquals("10", a.getMetadataValue("count"));
-                  assertEquals("kirk@mozilla.com", a.getMetadataValue("email"));
+                  assertEquals("10", a.getMetadataValue(AlertMeta.Key.COUNT));
+                  assertEquals("kirk@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
                   assertEquals(
-                      "source_login_failure_distributed", a.getMetadataValue("notify_merge"));
+                      "source_login_failure_distributed",
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
                   assertEquals(
-                      "source_login_failure_distributed", a.getMetadataValue("customs_category"));
+                      "source_login_failure_distributed",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       "test distributed source login failure threshold exceeded for single "
                           + "account, 10 addresses in 10 minutes",
@@ -243,7 +255,8 @@ public class TestCustoms {
                 } else {
                   fail(
                       String.format(
-                          "unexpected category %s", a.getMetadataValue("customs_category")));
+                          "unexpected category %s",
+                          a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)));
                 }
                 tCnt++;
               }
@@ -279,21 +292,25 @@ public class TestCustoms {
             x -> {
               int cnt = 0;
               for (Alert a : x) {
-                assertEquals("81.2.69.192", a.getMetadataValue("sourceaddress"));
-                assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress_previous"));
-                assertEquals("00000000000000000000000000000000", a.getMetadataValue("uid"));
-                assertEquals("riker@mozilla.com", a.getMetadataValue("email"));
+                assertEquals("81.2.69.192", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                assertEquals(
+                    "216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_PREVIOUS));
+                assertEquals(
+                    "00000000000000000000000000000000", a.getMetadataValue(AlertMeta.Key.UID));
+                assertEquals("riker@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
                 assertEquals(
                     "test 00000000000000000000000000000000 velocity exceeded, "
                         + "7740.82 km in 9 seconds",
                     a.getSummary());
-                assertEquals("velocity", a.getMetadataValue("notify_merge"));
-                assertEquals("London", a.getMetadataValue("sourceaddress_city"));
-                assertEquals("GB", a.getMetadataValue("sourceaddress_country"));
-                assertEquals("Milton", a.getMetadataValue("sourceaddress_previous_city"));
-                assertEquals("US", a.getMetadataValue("sourceaddress_previous_country"));
-                assertEquals("7740.82", a.getMetadataValue("km_distance"));
-                assertEquals("9", a.getMetadataValue("time_delta_seconds"));
+                assertEquals("velocity", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                assertEquals("London", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                assertEquals("GB", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+                assertEquals(
+                    "Milton", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_PREVIOUS_CITY));
+                assertEquals(
+                    "US", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_PREVIOUS_COUNTRY));
+                assertEquals("7740.82", a.getMetadataValue(AlertMeta.Key.KM_DISTANCE));
+                assertEquals("9", a.getMetadataValue(AlertMeta.Key.TIME_DELTA_SECONDS));
                 cnt++;
               }
               assertEquals(1, cnt);
@@ -348,13 +365,16 @@ public class TestCustoms {
             x -> {
               int cnt = 0;
               for (Alert a : x) {
-                assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
                     "test 10.0.0.1 attempted password reset on 5 distinct accounts in 10 minute window",
                     a.getSummary());
                 assertEquals("customs", a.getCategory());
-                assertEquals("password_reset_abuse", a.getMetadataValue("customs_category"));
-                assertEquals("password_reset_abuse", a.getMetadataValue("notify_merge"));
+                assertEquals(
+                    "password_reset_abuse",
+                    a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                assertEquals(
+                    "password_reset_abuse", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
                 cnt++;
               }
               assertEquals(1, cnt);

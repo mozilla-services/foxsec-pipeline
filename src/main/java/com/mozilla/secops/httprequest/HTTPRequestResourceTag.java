@@ -1,6 +1,7 @@
 package com.mozilla.secops.httprequest;
 
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import org.apache.beam.sdk.transforms.DoFn;
 
 /**
@@ -26,7 +27,7 @@ public class HTTPRequestResourceTag extends DoFn<Alert, Alert> {
   @ProcessElement
   public void processElement(ProcessContext c) {
     Alert a = c.element();
-    a.addMetadata("monitored_resource", monitoredResourceIndicator);
+    a.addMetadata(AlertMeta.Key.MONITORED_RESOURCE, monitoredResourceIndicator);
     c.output(a);
   }
 }

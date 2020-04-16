@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,7 +68,7 @@ public class Violation {
     public abstract Violation[] generate(Alert a);
 
     protected Violation createViolation(Alert a, String object, String type, String vStr) {
-      String suppressValue = a.getMetadataValue(IprepdIO.IPREPD_SUPPRESS_RECOVERY);
+      String suppressValue = a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY);
       if (suppressValue == null) {
         return new Violation(object, type, vStr);
       } else {
@@ -81,10 +82,12 @@ public class Violation {
 
     public Violation[] generate(Alert a) {
       ArrayList<Violation> ret = new ArrayList<>();
-      if (a.getMetadataValue("sourceaddress") == null) {
+      if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS) == null) {
         return null;
       }
-      ret.add(createViolation(a, a.getMetadataValue("sourceaddress"), "ip", vType.toString()));
+      ret.add(
+          createViolation(
+              a, a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS), "ip", vType.toString()));
       return ret.toArray(new Violation[ret.size()]);
     }
 
@@ -98,7 +101,7 @@ public class Violation {
 
     public Violation[] generate(Alert a) {
       ArrayList<Violation> ret = new ArrayList<>();
-      String emails = a.getMetadataValue("email");
+      String emails = a.getMetadataValue(AlertMeta.Key.EMAIL);
       if (emails == null) {
         return null;
       }
@@ -119,17 +122,17 @@ public class Violation {
       // Custom generator implementation; we will create a violation both for the email
       // address if present and the source address.
       ArrayList<Violation> ret = new ArrayList<>();
-      if (a.getMetadataValue("sourceaddress") == null) {
+      if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS) == null) {
         return null;
       }
       ret.add(
           createViolation(
               a,
-              a.getMetadataValue("sourceaddress"),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
               "ip",
               ViolationType.ENDPOINT_ABUSE_VIOLATION.toString()));
-      if (a.getMetadataValue("email") != null) {
-        String[] parts = a.getMetadataValue("email").split(", ?");
+      if (a.getMetadataValue(AlertMeta.Key.EMAIL) != null) {
+        String[] parts = a.getMetadataValue(AlertMeta.Key.EMAIL).split(", ?");
         for (String i : parts) {
           ret.add(
               createViolation(a, i, "email", ViolationType.ABUSIVE_ACCOUNT_VIOLATION.toString()));

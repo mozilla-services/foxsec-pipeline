@@ -3,6 +3,7 @@ package com.mozilla.secops.amo;
 import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -81,12 +82,12 @@ public class AddonCloudSubmission extends PTransform<PCollection<Event>, PCollec
                     alert.setCategory("amo");
                     alert.setSubcategory("amo_cloud_submission");
                     alert.setNotifyMergeKey("amo_cloud_submission");
-                    alert.addMetadata("provider", f);
-                    alert.addMetadata("sourceaddress", d.getRemoteIp());
-                    alert.addMetadata("addon_filename", d.getFileName());
-                    alert.addMetadata("addon_size", d.getBytes().toString());
+                    alert.addMetadata(AlertMeta.Key.PROVIDER, f);
+                    alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, d.getRemoteIp());
+                    alert.addMetadata(AlertMeta.Key.ADDON_FILENAME, d.getFileName());
+                    alert.addMetadata(AlertMeta.Key.ADDON_SIZE, d.getBytes().toString());
                     if (d.getFxaEmail() != null) {
-                      alert.addMetadata("email", d.getFxaEmail());
+                      alert.addMetadata(AlertMeta.Key.EMAIL, d.getFxaEmail());
                     }
                     alert.setSummary(
                         String.format(

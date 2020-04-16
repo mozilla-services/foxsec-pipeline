@@ -1,6 +1,7 @@
 package com.mozilla.secops.customs;
 
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
 import com.mozilla.secops.parser.Parser;
@@ -101,8 +102,8 @@ public class CustomsPasswordResetAbuse
                     alert.setCategory("customs");
                     alert.setSubcategory(Customs.CATEGORY_PASSWORD_RESET_ABUSE);
                     alert.setNotifyMergeKey(Customs.CATEGORY_PASSWORD_RESET_ABUSE);
-                    alert.addMetadata("sourceaddress", addr);
-                    alert.addMetadata("count", Integer.toString(cnt));
+                    alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, addr);
+                    alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(cnt));
                     alert.setSummary(
                         String.format(
                             "%s %s attempted password reset on %d distinct accounts "

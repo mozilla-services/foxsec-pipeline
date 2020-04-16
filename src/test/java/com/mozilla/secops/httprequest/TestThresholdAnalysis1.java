@@ -3,6 +3,7 @@ package com.mozilla.secops.httprequest;
 import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -46,13 +47,17 @@ public class TestThresholdAnalysis1 {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals("test httprequest threshold_analysis 10.0.0.1 100", a.getSummary());
-                assertEquals(100L, Long.parseLong(a.getMetadataValue("count"), 10));
-                assertEquals(10.90, Double.parseDouble(a.getMetadataValue("mean")), 0.1);
+                assertEquals(100L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
                 assertEquals(
-                    1.0, Double.parseDouble(a.getMetadataValue("threshold_modifier")), 0.1);
-                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
+                    10.90, Double.parseDouble(a.getMetadataValue(AlertMeta.Key.MEAN)), 0.1);
+                assertEquals(
+                    1.0,
+                    Double.parseDouble(a.getMetadataValue(AlertMeta.Key.THRESHOLD_MODIFIER)),
+                    0.1);
+                assertEquals(
+                    "1970-01-01T00:00:59.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
               }
               return null;
             });
@@ -81,12 +86,16 @@ public class TestThresholdAnalysis1 {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
-                assertEquals(100L, Long.parseLong(a.getMetadataValue("count"), 10));
-                assertEquals(18.33, Double.parseDouble(a.getMetadataValue("mean")), 0.1);
+                assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                assertEquals(100L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
                 assertEquals(
-                    1.0, Double.parseDouble(a.getMetadataValue("threshold_modifier")), 0.1);
-                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
+                    18.33, Double.parseDouble(a.getMetadataValue(AlertMeta.Key.MEAN)), 0.1);
+                assertEquals(
+                    1.0,
+                    Double.parseDouble(a.getMetadataValue(AlertMeta.Key.THRESHOLD_MODIFIER)),
+                    0.1);
+                assertEquals(
+                    "1970-01-01T00:00:59.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
               }
               return null;
             });

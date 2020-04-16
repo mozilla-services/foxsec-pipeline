@@ -157,7 +157,7 @@ public class AlertSlack {
     StateCursor<Alert> c = null;
     try {
       c = state.newCursor(Alert.class, false);
-      a.addMetadata("status", "NEW");
+      a.addMetadata(AlertMeta.Key.STATUS, "NEW");
       c.set(a.getAlertId().toString(), a);
     } catch (StateException exc) {
       log.error("error saving alert state (StateException): {}", exc.getMessage());

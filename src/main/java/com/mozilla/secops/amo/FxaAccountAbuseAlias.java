@@ -4,6 +4,7 @@ import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -128,8 +129,8 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
                     alert.setCategory("amo");
                     alert.setSubcategory("fxa_account_abuse_alias");
                     alert.setNotifyMergeKey("fxa_account_abuse_alias");
-                    alert.addMetadata("email", metabuf);
-                    alert.addMetadata("count", Integer.toString(distinct.size()));
+                    alert.addMetadata(AlertMeta.Key.EMAIL, metabuf);
+                    alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(distinct.size()));
                     alert.setSummary(
                         String.format(
                             "%s possible alias abuse in amo, %s has %d aliases",

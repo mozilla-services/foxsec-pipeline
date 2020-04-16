@@ -3,6 +3,7 @@ package com.mozilla.secops.httprequest;
 import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -46,14 +47,15 @@ public class TestUserAgentBlacklist1 {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertEquals("192.168.1.4", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.4", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 String summary =
                     String.format(
                         "test httprequest useragent_blacklist %s",
-                        a.getMetadataValue("sourceaddress"));
-                assertEquals("useragent_blacklist", a.getMetadataValue("category"));
+                        a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                assertEquals("useragent_blacklist", a.getMetadataValue(AlertMeta.Key.CATEGORY));
                 assertEquals(summary, a.getSummary());
-                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals(
+                    "1970-01-01T00:00:59.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
               }
               return null;
             });

@@ -20,8 +20,6 @@ import org.joda.time.DateTimeZone;
 public class Alert implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  public static final String ALERT_SUBCATEGORY_FIELD = "category";
-
   public enum AlertSeverity {
     /** Informational */
     @JsonProperty("info")
@@ -126,7 +124,7 @@ public class Alert implements Serializable {
    * @param maskedSummary Masked summary string
    */
   public void setMaskedSummary(String maskedSummary) {
-    addMetadata("masked_summary", maskedSummary);
+    addMetadata(AlertMeta.Key.MASKED_SUMMARY, maskedSummary);
   }
 
   /**
@@ -136,7 +134,7 @@ public class Alert implements Serializable {
    */
   @JsonIgnore
   public String getMaskedSummary() {
-    return getMetadataValue("masked_summary");
+    return getMetadataValue(AlertMeta.Key.MASKED_SUMMARY);
   }
 
   /**
@@ -149,7 +147,7 @@ public class Alert implements Serializable {
    * @param key Merge key for alert notifications
    */
   public void setNotifyMergeKey(String key) {
-    addMetadata("notify_merge", key);
+    addMetadata(AlertMeta.Key.NOTIFY_MERGE, key);
   }
 
   /**
@@ -159,7 +157,7 @@ public class Alert implements Serializable {
    */
   @JsonIgnore
   public String getNotifyMergeKey() {
-    return getMetadataValue("notify_merge");
+    return getMetadataValue(AlertMeta.Key.NOTIFY_MERGE);
   }
 
   /**
@@ -209,7 +207,25 @@ public class Alert implements Serializable {
    * @param key Key to return data for
    * @return Value string, null if not found
    */
-  public String getMetadataValue(String key) {
+  public String getMetadataValue(AlertMeta.Key key) {
+    for (AlertMeta m : metadata) {
+      if (m.getKey().equals(key.getKey())) {
+        return m.getValue();
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Return a custom metadata value
+   *
+   * <p>Custom metadata includes arbitrary keys that are not standardized, such as keys set in
+   * configuration ticks. This method should not be used under normal circumstances.
+   *
+   * @param key Key to return data for
+   * @return Value string, null if not found
+   */
+  public String getCustomMetadataValue(String key) {
     for (AlertMeta m : metadata) {
       if (m.getKey().equals(key)) {
         return m.getValue();
@@ -227,16 +243,17 @@ public class Alert implements Serializable {
    * @param key Key to set
    * @param value Value to set for key
    */
-  public void setMetadataValue(String key, String value) {
+  public void setMetadataValue(AlertMeta.Key key, String value) {
+    key.validate(value);
     metaLock.lock();
     try {
       for (AlertMeta m : metadata) {
-        if (m.getKey().equals(key)) {
+        if (m.getKey().equals(key.getKey())) {
           m.setValue(value);
           return;
         }
       }
-      metadata.add(new AlertMeta(key, value));
+      metadata.add(new AlertMeta(key.getKey(), value));
     } finally {
       metaLock.unlock();
     }
@@ -262,7 +279,6 @@ public class Alert implements Serializable {
   @JsonProperty("metadata")
   public void setMetadata(ArrayList<AlertMeta> metadata) {
     this.metadata = metadata;
-    AlertCompat.compatibility(this);
   }
 
   /**
@@ -271,7 +287,29 @@ public class Alert implements Serializable {
    * @param key Key
    * @param value Value
    */
-  public void addMetadata(String key, String value) {
+  public void addMetadata(AlertMeta.Key key, String value) {
+    key.validate(value);
+    // Pick up metadata mutex here to prevent ConcurrentModification exception if object is
+    // serialized while we are appending to the metadata, see local implementation of
+    // writeObject
+    metaLock.lock();
+    try {
+      metadata.add(new AlertMeta(key.getKey(), value));
+    } finally {
+      metaLock.unlock();
+    }
+  }
+
+  /**
+   * Set a custom metadata value
+   *
+   * <p>Custom metadata includes arbitrary keys that are not standardized, such as keys set in
+   * configuration ticks. This method should not be used under normal circumstances.
+   *
+   * @param key Key to set
+   * @param value Value to set
+   */
+  public void addCustomMetadata(String key, String value) {
     // Pick up metadata mutex here to prevent ConcurrentModification exception if object is
     // serialized while we are appending to the metadata, see local implementation of
     // writeObject
@@ -281,24 +319,6 @@ public class Alert implements Serializable {
     } finally {
       metaLock.unlock();
     }
-  }
-
-  /**
-   * A best effort addMetadata(k,v)
-   *
-   * <p>If a null or empty key or value is provided, this function will not add anything. Do NOT use
-   * this function for metadata entries that are not purely informational.
-   *
-   * @param k String key
-   * @param v String value
-   * @return true if metadata entry was set, false otherwise
-   */
-  public boolean tryAddMetadata(String k, String v) {
-    if (k == null || v == null || k.equals("") || v.equals("")) {
-      return false;
-    }
-    addMetadata(k, v);
-    return true;
   }
 
   /**
@@ -346,7 +366,7 @@ public class Alert implements Serializable {
    */
   @JsonIgnore
   public String getSubcategory() {
-    return getMetadataValue(ALERT_SUBCATEGORY_FIELD);
+    return getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD);
   }
 
   /**
@@ -360,8 +380,7 @@ public class Alert implements Serializable {
       throw new IllegalArgumentException("attempt to set subcategory with no category");
     }
 
-    addMetadata(ALERT_SUBCATEGORY_FIELD, subcategory);
-    AlertCompat.compatibility(this);
+    addMetadata(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD, subcategory);
   }
 
   /**
@@ -370,7 +389,7 @@ public class Alert implements Serializable {
    * @param templateName Freemarker template name with file extension
    */
   public void setEmailTemplate(String templateName) {
-    addMetadata("template_name_email", templateName);
+    addMetadata(AlertMeta.Key.TEMPLATE_NAME_EMAIL, templateName);
   }
 
   /**
@@ -380,7 +399,7 @@ public class Alert implements Serializable {
    */
   @JsonIgnore
   public String getEmailTemplate() {
-    return getMetadataValue("template_name_email");
+    return getMetadataValue(AlertMeta.Key.TEMPLATE_NAME_EMAIL);
   }
 
   /**
@@ -389,7 +408,7 @@ public class Alert implements Serializable {
    * @param templateName Freemarker template name with file extension
    */
   public void setSlackTemplate(String templateName) {
-    addMetadata("template_name_slack", templateName);
+    addMetadata(AlertMeta.Key.TEMPLATE_NAME_SLACK, templateName);
   }
 
   /**
@@ -399,7 +418,7 @@ public class Alert implements Serializable {
    */
   @JsonIgnore
   public String getSlackTemplate() {
-    return getMetadataValue("template_name_slack");
+    return getMetadataValue(AlertMeta.Key.TEMPLATE_NAME_SLACK);
   }
 
   /**

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.crypto.RuntimeSecrets;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
@@ -35,12 +36,6 @@ import org.slf4j.LoggerFactory;
 
 /** {@link IprepdIO} provides an IO transform for writing violation messages to iprepd */
 public class IprepdIO {
-  /** Metadata tag in an alert to indicate iprepd exemption */
-  public static final String IPREPD_EXEMPT = "iprepd_exempt";
-
-  /** Metadata tag in an alert to indicate recovery suppression */
-  public static final String IPREPD_SUPPRESS_RECOVERY = "iprepd_suppress_recovery";
-
   /** Custom metric name used to count iprepd violation submissions from write functions */
   public static final String VIOLATION_WRITES_METRIC = "iprepd_violation_writes";
 
@@ -387,7 +382,7 @@ public class IprepdIO {
         return;
       }
 
-      String iprepdExempt = a.getMetadataValue(IPREPD_EXEMPT);
+      String iprepdExempt = a.getMetadataValue(AlertMeta.Key.IPREPD_EXEMPT);
       if (iprepdExempt != null && iprepdExempt.equals("true")) {
         return;
       }
@@ -473,7 +468,7 @@ public class IprepdIO {
    * @param a Alert
    */
   public static void addMetadataSuppressRecovery(Integer value, Alert a) {
-    a.addMetadata(IPREPD_SUPPRESS_RECOVERY, value.toString());
+    a.addMetadata(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY, value.toString());
   }
 
   /** WhitelistedObject contains the metadata associated with a whitelisted objects. */
@@ -677,8 +672,8 @@ public class IprepdIO {
       sc = state.newCursor(WhitelistedObject.class, false);
       WhitelistedObject wobj = sc.get(obj);
       if (wobj != null) {
-        a.addMetadata(IPREPD_EXEMPT, "true");
-        a.addMetadata(IPREPD_EXEMPT + "_created_by", wobj.getCreatedBy());
+        a.addMetadata(AlertMeta.Key.IPREPD_EXEMPT, "true");
+        a.addMetadata(AlertMeta.Key.IPREPD_EXEMPT_CREATED_BY, wobj.getCreatedBy());
       }
     } catch (StateException exc) {
       log.error("error getting whitelisted object: {}", exc.getMessage());

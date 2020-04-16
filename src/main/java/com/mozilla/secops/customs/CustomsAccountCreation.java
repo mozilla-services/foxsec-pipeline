@@ -2,6 +2,7 @@ package com.mozilla.secops.customs;
 
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.customs.Customs.CustomsOptions;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
@@ -101,8 +102,8 @@ public class CustomsAccountCreation
                     alert.setCategory("customs");
                     alert.setSubcategory(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE);
                     alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_CREATION_ABUSE);
-                    alert.addMetadata("sourceaddress", remoteAddress);
-                    alert.addMetadata("count", Integer.toString(cnt));
+                    alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
+                    alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(cnt));
                     alert.setSummary(
                         String.format(
                             "%s suspicious account creation, %s %d",
@@ -115,7 +116,7 @@ public class CustomsAccountCreation
                         buf += ", " + s;
                       }
                     }
-                    alert.addMetadata("email", buf);
+                    alert.addMetadata(AlertMeta.Key.EMAIL, buf);
                     if (accountAbuseSuppressRecovery != null) {
                       IprepdIO.addMetadataSuppressRecovery(accountAbuseSuppressRecovery, alert);
                     }

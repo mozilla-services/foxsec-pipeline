@@ -75,6 +75,6 @@ public class TestAlertSlack {
     Alert a = sc.get(ta.getAlertId().toString());
     assertNotNull(a);
     assertEquals(a.getTimestamp(), ta.getTimestamp());
-    assertEquals(a.getMetadataValue("status"), "NEW");
+    assertEquals(a.getMetadataValue(AlertMeta.Key.STATUS), "NEW");
   }
 }

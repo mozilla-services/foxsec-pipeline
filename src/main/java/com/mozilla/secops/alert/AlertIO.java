@@ -23,9 +23,6 @@ import org.slf4j.LoggerFactory;
  * by AlertIO.
  */
 public class AlertIO {
-  /** Metadata tag to inform {@link AlertIO} to skip an event */
-  public static final String ALERTIO_IGNORE_EVENT = "alertio_ignore_event";
-
   /**
    * Return {@link PTransform} to handle alerting output
    *
@@ -97,7 +94,8 @@ public class AlertIO {
                         return;
                       }
                       Alert tosend = alist.get(0);
-                      tosend.addMetadata("notify_merged_count", Integer.toString(alist.size()));
+                      tosend.addMetadata(
+                          AlertMeta.Key.NOTIFY_MERGED_COUNT, Integer.toString(alist.size()));
 
                       // Also include the number of merged alerts at the end of the summary being
                       // sent for the notification
@@ -202,12 +200,12 @@ public class AlertIO {
         return;
       }
 
-      if (a.getMetadataValue(ALERTIO_IGNORE_EVENT) != null) {
+      if (a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT) != null) {
         log.info("skipping alert with ignore field set: {}", raw);
         return;
       }
 
-      String alertType = a.getMetadataValue("alert_notification_type");
+      String alertType = a.getMetadataValue(AlertMeta.Key.ALERT_NOTIFICATION_TYPE);
 
       if (mailer != null) {
         if (cfg.getEmailCatchall() != null) {
@@ -217,7 +215,7 @@ public class AlertIO {
 
         // If a direct email metadata entry exists, also send the alert directly
         // to the specified address
-        String sd = a.getMetadataValue("notify_email_direct");
+        String sd = a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT);
         if (sd != null) {
           mailer.sendToAddress(a, sd);
         }
@@ -231,7 +229,7 @@ public class AlertIO {
           }
         }
 
-        String slackEmail = a.getMetadataValue("notify_slack_direct");
+        String slackEmail = a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT);
         if (slackEmail != null) {
           if (alertType.equals("slack_notification")) {
             if (!slack.sendToUser(a, slack.getUserId(slackEmail))) {

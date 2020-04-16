@@ -2,6 +2,7 @@ package com.mozilla.secops.customs;
 
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
 import com.mozilla.secops.parser.Parser;
@@ -91,9 +92,9 @@ public class SourceLoginFailureDist
                     // If the email address passes the validator, include it with the alert. If not
                     // we will still generate the alert, but omit including it.
                     if (MiscUtil.validEmail(email)) {
-                      alert.addMetadata("email", email);
+                      alert.addMetadata(AlertMeta.Key.EMAIL, email);
                     }
-                    alert.addMetadata("count", Integer.toString(cnt));
+                    alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(cnt));
                     alert.setSummary(
                         String.format(
                             "%s distributed source login failure threshold exceeded for single account"
@@ -107,7 +108,7 @@ public class SourceLoginFailureDist
                         buf += ", " + s;
                       }
                     }
-                    alert.addMetadata("sourceaddresses", buf);
+                    alert.addMetadata(AlertMeta.Key.SOURCEADDRESSES, buf);
                     c.output(alert);
                   }
                 }))

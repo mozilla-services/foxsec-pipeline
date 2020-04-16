@@ -7,7 +7,7 @@ import com.mozilla.secops.Minfraud;
 import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
-import com.mozilla.secops.alert.AlertIO;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.alert.AlertSuppressor;
 import com.mozilla.secops.authstate.AuthStateModel;
 import com.mozilla.secops.authstate.PruningStrategyEntryAge;
@@ -364,7 +364,7 @@ public class AuthProfile implements Serializable {
             "{}: adding direct email notification metadata route for critical object alert to {}",
             a.getAlertId().toString(),
             critNotifyEmail);
-        a.addMetadata("notify_email_direct", critNotifyEmail);
+        a.addMetadata(AlertMeta.Key.NOTIFY_EMAIL_DIRECT, critNotifyEmail);
       }
     }
 
@@ -377,9 +377,9 @@ public class AuthProfile implements Serializable {
           summary
               + String.format(
                   "%s [%s/%s]",
-                  a.getMetadataValue("sourceaddress"),
-                  a.getMetadataValue("sourceaddress_city"),
-                  a.getMetadataValue("sourceaddress_country"));
+                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
+                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
       a.setSummary(summary);
     }
 
@@ -391,11 +391,11 @@ public class AuthProfile implements Serializable {
       String payload =
           String.format(
               msg,
-              a.getMetadataValue("username"),
-              a.getMetadataValue("object"),
-              a.getMetadataValue("sourceaddress"),
-              a.getMetadataValue("sourceaddress_city"),
-              a.getMetadataValue("sourceaddress_country"));
+              a.getMetadataValue(AlertMeta.Key.USERNAME),
+              a.getMetadataValue(AlertMeta.Key.OBJECT),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
       a.addToPayload(payload);
     }
 
@@ -447,12 +447,6 @@ public class AuthProfile implements Serializable {
   public static class StateAnalyze extends DoFn<KV<String, Iterable<Event>>, Alert>
       implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
-
-    /**
-     * The metadata field set in the alert that indicates the type of action the state analysis step
-     * is indicating.
-     */
-    public static final String META_ACTION_TYPE = "state_action_type";
 
     /**
      * The outcome of state analysis can result in various actions being taken. The metadata action
@@ -591,22 +585,24 @@ public class AuthProfile implements Serializable {
         Alert a, Identity identity, String identityKey, Boolean onlyNotify) {
       if (onlyNotify) {
         if (identity.shouldNotifyViaSlack()) {
-          a.addMetadata("notify_slack_direct", a.getMetadataValue("identity_key"));
-          a.addMetadata("alert_notification_type", "slack_notification");
+          a.addMetadata(
+              AlertMeta.Key.NOTIFY_SLACK_DIRECT, a.getMetadataValue(AlertMeta.Key.IDENTITY_KEY));
+          a.addMetadata(AlertMeta.Key.ALERT_NOTIFICATION_TYPE, "slack_notification");
         } else if (identity.shouldNotifyViaEmail()) {
-          a.addMetadata("notify_email_direct", identity.getNotify().getEmail());
+          a.addMetadata(AlertMeta.Key.NOTIFY_EMAIL_DIRECT, identity.getNotify().getEmail());
         } else {
           log.info("no notification method set for {}", identityKey);
         }
       } else {
         if (identity.getEscalateTo() != null) {
-          a.addMetadata("escalate_to", identity.getEscalateTo());
+          a.addMetadata(AlertMeta.Key.ESCALATE_TO, identity.getEscalateTo());
         }
         if (identity.shouldAlertViaSlack()) {
-          a.addMetadata("notify_slack_direct", a.getMetadataValue("identity_key"));
-          a.addMetadata("alert_notification_type", "slack_confirmation");
+          a.addMetadata(
+              AlertMeta.Key.NOTIFY_SLACK_DIRECT, a.getMetadataValue(AlertMeta.Key.IDENTITY_KEY));
+          a.addMetadata(AlertMeta.Key.ALERT_NOTIFICATION_TYPE, "slack_confirmation");
         } else if (identity.shouldAlertViaEmail()) {
-          a.addMetadata("notify_email_direct", identity.getAlert().getEmail());
+          a.addMetadata(AlertMeta.Key.NOTIFY_EMAIL_DIRECT, identity.getAlert().getEmail());
         } else {
           log.info("no alerting method set for {}", identityKey);
         }
@@ -618,8 +614,8 @@ public class AuthProfile implements Serializable {
           String.format(
               "authentication event observed %s [%s] to %s, ",
               e.getNormalized().getSubjectUser(),
-              a.getMetadataValue("identity_key") != null
-                  ? a.getMetadataValue("identity_key")
+              a.getMetadataValue(AlertMeta.Key.IDENTITY_KEY) != null
+                  ? a.getMetadataValue(AlertMeta.Key.IDENTITY_KEY)
                   : "untracked",
               e.getNormalized().getObject());
       if (a.getSeverity().equals(Alert.AlertSeverity.WARNING)) {
@@ -629,9 +625,9 @@ public class AuthProfile implements Serializable {
           summary
               + String.format(
                   "%s [%s/%s]",
-                  a.getMetadataValue("sourceaddress"),
-                  a.getMetadataValue("sourceaddress_city"),
-                  a.getMetadataValue("sourceaddress_country"));
+                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
+                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
       a.setSummary(summary);
     }
 
@@ -643,16 +639,16 @@ public class AuthProfile implements Serializable {
       String payload =
           String.format(
               msg,
-              a.getMetadataValue("username"),
-              a.getMetadataValue("object"),
-              a.getMetadataValue("sourceaddress"),
-              a.getMetadataValue("sourceaddress_city"),
-              a.getMetadataValue("sourceaddress_country"));
+              a.getMetadataValue(AlertMeta.Key.USERNAME),
+              a.getMetadataValue(AlertMeta.Key.OBJECT),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
 
-      if (a.getMetadataValue(META_ACTION_TYPE) == null) {
+      if (a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE) == null) {
         throw new RuntimeException("state alert had no action type");
       }
-      ActionType at = ActionType.fromString(a.getMetadataValue(META_ACTION_TYPE));
+      ActionType at = ActionType.fromString(a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
       if (at == null) {
         throw new RuntimeException("state alert had invalid action type");
       }
@@ -740,8 +736,8 @@ public class AuthProfile implements Serializable {
                     e.getNormalized().getSourceAddress(), ".*\\.google\\.com$")))) {
           // Skip AlertIO if it's a GCP event from GCP source, we can also skip the remainder of the
           // logic here
-          a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
-          a.addMetadata(META_ACTION_TYPE, ActionType.GCP_INTERNAL.toString());
+          a.addMetadata(AlertMeta.Key.ALERTIO_IGNORE_EVENT, "true");
+          a.addMetadata(AlertMeta.Key.STATE_ACTION_TYPE, ActionType.GCP_INTERNAL.toString());
           buildAlertSummary(e, a);
           buildAlertPayload(e, a);
           c.output(a);
@@ -750,17 +746,17 @@ public class AuthProfile implements Serializable {
 
         Boolean onlyNotify = false;
         if (identity == null) {
-          a.addMetadata("identity_untracked", "true");
+          a.addMetadata(AlertMeta.Key.IDENTITY_UNTRACKED, "true");
           // We do not keep state for untracked identities, but just use the known address
           // list here to filter any duplicates that are part of this batch
           seenKnownAddresses.add(e.getNormalized().getSourceAddress());
           // We also want to skip AlertIO for untracked identities here
-          a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
+          a.addMetadata(AlertMeta.Key.ALERTIO_IGNORE_EVENT, "true");
         } else {
           // AuthStateModel expects a cursor that has been allocated as a transaction
           StateCursor<AuthStateModel> cur = state.newCursor(AuthStateModel.class, true);
 
-          a.addMetadata("identity_key", userIdentity);
+          a.addMetadata(AlertMeta.Key.IDENTITY_KEY, userIdentity);
           // The event was for a tracked identity, initialize the state model
           AuthStateModel sm = AuthStateModel.get(userIdentity, cur, new PruningStrategyEntryAge());
           if (sm == null) {
@@ -769,7 +765,7 @@ public class AuthProfile implements Serializable {
 
           String entryKey = getEntryKey(e.getNormalized().getSourceAddress(), idmanager);
           if (!entryKey.equals(e.getNormalized().getSourceAddress())) {
-            a.addMetadata("entry_key", entryKey);
+            a.addMetadata(AlertMeta.Key.ENTRY_KEY, entryKey);
           }
 
           if (sm.updateEntry(
@@ -795,7 +791,8 @@ public class AuthProfile implements Serializable {
                   e.getNormalized().getSourceAddress());
               a.setSeverity(Alert.AlertSeverity.WARNING);
               a.addMetadata(
-                  META_ACTION_TYPE, ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
+                  AlertMeta.Key.STATE_ACTION_TYPE,
+                  ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
               buildAlertPayload(e, a);
             } else if (e.getNormalized().getSourceAddressIsAnonymous() != null
                 && e.getNormalized().getSourceAddressIsAnonymous()) {
@@ -806,7 +803,8 @@ public class AuthProfile implements Serializable {
                   e.getNormalized().getSubjectUser(),
                   e.getNormalized().getSourceAddress());
               a.setSeverity(Alert.AlertSeverity.WARNING);
-              a.addMetadata(META_ACTION_TYPE, ActionType.UNKNOWN_IP_ANON_NETWORK.toString());
+              a.addMetadata(
+                  AlertMeta.Key.STATE_ACTION_TYPE, ActionType.UNKNOWN_IP_ANON_NETWORK.toString());
               buildAlertPayload(e, a);
             } else if (e.getNormalized().getSourceAddressIsHostingProvider() != null
                 && e.getNormalized().getSourceAddressIsHostingProvider()) {
@@ -817,7 +815,9 @@ public class AuthProfile implements Serializable {
                   e.getNormalized().getSubjectUser(),
                   e.getNormalized().getSourceAddress());
               a.setSeverity(Alert.AlertSeverity.WARNING);
-              a.addMetadata(META_ACTION_TYPE, ActionType.UNKNOWN_IP_HOSTING_PROVIDER.toString());
+              a.addMetadata(
+                  AlertMeta.Key.STATE_ACTION_TYPE,
+                  ActionType.UNKNOWN_IP_HOSTING_PROVIDER.toString());
               buildAlertPayload(e, a);
             } else {
               // If we get this far, it was a new IP and minFraud indicates it was not a hosting
@@ -835,7 +835,9 @@ public class AuthProfile implements Serializable {
                       e.getNormalized().getSubjectUser(),
                       e.getNormalized().getSourceAddress());
                   a.setSeverity(Alert.AlertSeverity.WARNING);
-                  a.addMetadata(META_ACTION_TYPE, ActionType.UNKNOWN_IP_OUTSIDE_GEO.toString());
+                  a.addMetadata(
+                      AlertMeta.Key.STATE_ACTION_TYPE,
+                      ActionType.UNKNOWN_IP_OUTSIDE_GEO.toString());
                   buildAlertPayload(e, a);
                 } else {
                   // New IP, but within acceptable distance. Generate a notification only.
@@ -846,7 +848,8 @@ public class AuthProfile implements Serializable {
                       e.getNormalized().getSubjectUser(),
                       e.getNormalized().getSourceAddress());
                   a.setSeverity(Alert.AlertSeverity.WARNING);
-                  a.addMetadata(META_ACTION_TYPE, ActionType.UNKNOWN_IP_WITHIN_GEO.toString());
+                  a.addMetadata(
+                      AlertMeta.Key.STATE_ACTION_TYPE, ActionType.UNKNOWN_IP_WITHIN_GEO.toString());
                   onlyNotify = true;
                   buildAlertPayload(e, a);
                 }
@@ -859,7 +862,8 @@ public class AuthProfile implements Serializable {
                     e.getNormalized().getSourceAddress());
                 a.setSeverity(Alert.AlertSeverity.WARNING);
                 a.addMetadata(
-                    META_ACTION_TYPE, ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
+                    AlertMeta.Key.STATE_ACTION_TYPE,
+                    ActionType.UNKNOWN_IP_MINFRAUD_GEO_FAILURE.toString());
                 buildAlertPayload(e, a);
               }
             }
@@ -871,7 +875,7 @@ public class AuthProfile implements Serializable {
                 userIdentity,
                 e.getNormalized().getSubjectUser(),
                 e.getNormalized().getSourceAddress());
-            a.addMetadata(META_ACTION_TYPE, ActionType.KNOWN_IP.toString());
+            a.addMetadata(AlertMeta.Key.STATE_ACTION_TYPE, ActionType.KNOWN_IP.toString());
             buildAlertPayload(e, a);
           }
 
@@ -994,11 +998,11 @@ public class AuthProfile implements Serializable {
     Alert a = new Alert();
 
     Normalized n = e.getNormalized();
-    a.addMetadata("object", n.getObject());
-    a.addMetadata("username", n.getSubjectUser());
-    a.addMetadata("sourceaddress", n.getSourceAddress());
-    a.addMetadata("email_contact", contactEmail);
-    a.addMetadata("doc_link", docLink);
+    a.addMetadata(AlertMeta.Key.OBJECT, n.getObject());
+    a.addMetadata(AlertMeta.Key.USERNAME, n.getSubjectUser());
+    a.addMetadata(AlertMeta.Key.SOURCEADDRESS, n.getSourceAddress());
+    a.addMetadata(AlertMeta.Key.EMAIL_CONTACT, contactEmail);
+    a.addMetadata(AlertMeta.Key.DOC_LINK, docLink);
     a.setCategory("authprofile");
 
     a.setEmailTemplate(EMAIL_TEMPLATE);
@@ -1006,37 +1010,38 @@ public class AuthProfile implements Serializable {
 
     String city = n.getSourceAddressCity();
     if (city != null) {
-      a.addMetadata("sourceaddress_city", city);
+      a.addMetadata(AlertMeta.Key.SOURCEADDRESS_CITY, city);
     } else {
-      a.addMetadata("sourceaddress_city", "unknown");
+      a.addMetadata(AlertMeta.Key.SOURCEADDRESS_CITY, "unknown");
     }
     String country = n.getSourceAddressCountry();
     if (city != null) {
-      a.addMetadata("sourceaddress_country", country);
+      a.addMetadata(AlertMeta.Key.SOURCEADDRESS_COUNTRY, country);
     } else {
-      a.addMetadata("sourceaddress_country", "unknown");
+      a.addMetadata(AlertMeta.Key.SOURCEADDRESS_COUNTRY, "unknown");
     }
     String tz = n.getSourceAddressTimeZone();
     if (tz != null) {
-      a.addMetadata("sourceaddress_timezone", tz);
+      a.addMetadata(AlertMeta.Key.SOURCEADDRESS_TIMEZONE, tz);
     } else {
-      a.addMetadata("sourceaddress_timezone", "unknown");
+      a.addMetadata(AlertMeta.Key.SOURCEADDRESS_TIMEZONE, "unknown");
     }
 
     if (e.getNormalized().isOfType(Normalized.Type.AUTH)) {
-      a.addMetadata("auth_alert_type", "auth");
+      a.addMetadata(AlertMeta.Key.AUTH_ALERT_TYPE, "auth");
     } else if (e.getNormalized().isOfType(Normalized.Type.AUTH_SESSION)) {
-      a.addMetadata("auth_alert_type", "auth_session");
+      a.addMetadata(AlertMeta.Key.AUTH_ALERT_TYPE, "auth_session");
     }
 
     DateTime eventTimestamp = e.getTimestamp();
     if (eventTimestamp != null) {
-      a.addMetadata("event_timestamp", eventTimestamp.toString());
+      a.addMetadata(AlertMeta.Key.EVENT_TIMESTAMP, eventTimestamp.toString());
 
       if (tz != null) {
         DateTimeZone dtz = DateTimeZone.forID(tz);
         if (dtz != null) {
-          a.addMetadata("event_timestamp_source_local", eventTimestamp.withZone(dtz).toString());
+          a.addMetadata(
+              AlertMeta.Key.EVENT_TIMESTAMP_SOURCE_LOCAL, eventTimestamp.withZone(dtz).toString());
         }
       }
     }
@@ -1054,32 +1059,38 @@ public class AuthProfile implements Serializable {
     Normalized n = e.getNormalized();
 
     if (n.getSourceAddressRiskScore() != null) {
-      a.addMetadata("sourceaddress_riskscore", String.valueOf(n.getSourceAddressRiskScore()));
+      a.addMetadata(
+          AlertMeta.Key.SOURCEADDRESS_RISKSCORE, String.valueOf(n.getSourceAddressRiskScore()));
     }
     if (n.getSourceAddressIsAnonymous() != null) {
-      a.addMetadata("sourceaddress_is_anonymous", String.valueOf(n.getSourceAddressIsAnonymous()));
+      a.addMetadata(
+          AlertMeta.Key.SOURCEADDRESS_IS_ANONYMOUS,
+          String.valueOf(n.getSourceAddressIsAnonymous()));
     }
     if (n.getSourceAddressIsAnonymousVpn() != null) {
       a.addMetadata(
-          "sourceaddress_is_anonymous_vpn", String.valueOf(n.getSourceAddressIsAnonymousVpn()));
+          AlertMeta.Key.SOURCEADDRESS_IS_ANONYMOUS_VPN,
+          String.valueOf(n.getSourceAddressIsAnonymousVpn()));
     }
     if (n.getSourceAddressIsHostingProvider() != null) {
       a.addMetadata(
-          "sourceaddress_is_hosting_provider",
+          AlertMeta.Key.SOURCEADDRESS_IS_HOSTING_PROVIDER,
           String.valueOf(n.getSourceAddressIsHostingProvider()));
     }
     if (n.getSourceAddressIsLegitimateProxy() != null) {
       a.addMetadata(
-          "sourceaddress_is_legitimate_proxy",
+          AlertMeta.Key.SOURCEADDRESS_IS_LEGITIMATE_PROXY,
           String.valueOf(n.getSourceAddressIsLegitimateProxy()));
     }
     if (n.getSourceAddressIsPublicProxy() != null) {
       a.addMetadata(
-          "sourceaddress_is_public_proxy", String.valueOf(n.getSourceAddressIsPublicProxy()));
+          AlertMeta.Key.SOURCEADDRESS_IS_PUBLIC_PROXY,
+          String.valueOf(n.getSourceAddressIsPublicProxy()));
     }
     if (n.getSourceAddressIsTorExitNode() != null) {
       a.addMetadata(
-          "sourceaddress_is_tor_exit_node", String.valueOf(n.getSourceAddressIsTorExitNode()));
+          AlertMeta.Key.SOURCEADDRESS_IS_TOR_EXIT_NODE,
+          String.valueOf(n.getSourceAddressIsTorExitNode()));
     }
   }
 

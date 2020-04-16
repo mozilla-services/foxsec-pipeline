@@ -1,7 +1,7 @@
 package com.mozilla.secops.metrics;
 
 import com.mozilla.secops.alert.Alert;
-import com.mozilla.secops.alert.AlertIO;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.CfgTick;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -42,9 +42,10 @@ public class CfgTickProcessor extends DoFn<Event, Alert> {
     a.setCategory(category);
     a.setSubcategory("cfgtick");
     a.setSummary("configuration tick");
-    a.addMetadata(AlertIO.ALERTIO_IGNORE_EVENT, "true");
+    a.addMetadata(AlertMeta.Key.ALERTIO_IGNORE_EVENT, "true");
     for (Map.Entry<String, String> entry : configMap.entrySet()) {
-      a.addMetadata(entry.getKey(), entry.getValue());
+      // We need to use custom metadata here since we are adding arbitrary keys
+      a.addCustomMetadata(entry.getKey(), entry.getValue());
     }
     c.output(a);
   }

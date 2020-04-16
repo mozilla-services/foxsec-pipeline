@@ -10,6 +10,7 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.TestIprepdIO;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateCursor;
@@ -90,15 +91,18 @@ public class TestHardLimit1 {
             i -> {
               for (Alert a : i) {
                 assertThat(
-                    a.getMetadataValue("sourceaddress"),
+                    a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
                     anyOf(equalTo("192.168.1.2"), equalTo("192.168.1.4"), equalTo("192.168.1.5")));
                 String summary =
                     String.format(
-                        "test httprequest hard_limit %s 11", a.getMetadataValue("sourceaddress"));
+                        "test httprequest hard_limit %s 11",
+                        a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(summary, a.getSummary());
-                assertEquals(11L, Long.parseLong(a.getMetadataValue("count")));
-                assertEquals(10L, Long.parseLong(a.getMetadataValue("request_threshold")));
-                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals(11L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT)));
+                assertEquals(
+                    10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.REQUEST_THRESHOLD)));
+                assertEquals(
+                    "1970-01-01T00:00:59.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
               }
               return null;
             });
@@ -170,15 +174,18 @@ public class TestHardLimit1 {
             i -> {
               for (Alert a : i) {
                 assertThat(
-                    a.getMetadataValue("sourceaddress"),
+                    a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
                     anyOf(equalTo("192.168.1.2"), equalTo("192.168.1.4"), equalTo("192.168.1.5")));
                 String summary =
                     String.format(
-                        "test httprequest hard_limit %s 11", a.getMetadataValue("sourceaddress"));
+                        "test httprequest hard_limit %s 11",
+                        a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(summary, a.getSummary());
-                assertEquals(11L, Long.parseLong(a.getMetadataValue("count")));
-                assertEquals(10L, Long.parseLong(a.getMetadataValue("request_threshold")));
-                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals(11L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT)));
+                assertEquals(
+                    10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.REQUEST_THRESHOLD)));
+                assertEquals(
+                    "1970-01-01T00:00:59.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
               }
               return null;
             });
@@ -215,11 +222,13 @@ public class TestHardLimit1 {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals("test httprequest hard_limit 192.168.1.2 11", a.getSummary());
-                assertEquals(11L, Long.parseLong(a.getMetadataValue("count")));
-                assertEquals(10L, Long.parseLong(a.getMetadataValue("request_threshold")));
-                assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
+                assertEquals(11L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT)));
+                assertEquals(
+                    10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.REQUEST_THRESHOLD)));
+                assertEquals(
+                    "1970-01-01T00:00:59.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
               }
               return null;
             });

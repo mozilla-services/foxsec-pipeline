@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -43,29 +44,33 @@ public class TestErrorRate1 {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                if (a.getMetadataValue("category").equals("error_rate")) {
-                  assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("error_rate")) {
+                  assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("test httprequest error_rate 10.0.0.1 35", a.getSummary());
-                  assertEquals("error_rate", a.getMetadataValue("category"));
-                  assertEquals(35L, Long.parseLong(a.getMetadataValue("error_count"), 10));
-                  assertEquals(30L, Long.parseLong(a.getMetadataValue("error_threshold"), 10));
-                  assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
-                } else if (a.getMetadataValue("category").equals("cfgtick")) {
+                  assertEquals("error_rate", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                  assertEquals(
+                      35L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.ERROR_COUNT), 10));
+                  assertEquals(
+                      30L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.ERROR_THRESHOLD), 10));
+                  assertEquals(
+                      "1970-01-01T00:00:59.999Z",
+                      a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
+                } else if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("cfgtick")) {
                   assertEquals("httprequest-cfgtick", a.getCategory());
-                  assertEquals("test", a.getMetadataValue("monitoredResourceIndicator"));
-                  if (a.getMetadataValue("inputFile") != null) {
+                  assertEquals("test", a.getCustomMetadataValue("monitoredResourceIndicator"));
+                  if (a.getCustomMetadataValue("inputFile") != null) {
                     // In the case where pipeline options are used to control input, we will have an
                     // entry corresponding to the input in the cfgtick
                     assertEquals(
                         "./target/test-classes/testdata/httpreq_errorrate1.txt",
-                        a.getMetadataValue("inputFile"));
+                        a.getCustomMetadataValue("inputFile"));
                   }
-                  assertEquals("true", a.getMetadataValue("useEventTimestamp"));
-                  assertEquals("5", a.getMetadataValue("generateConfigurationTicksMaximum"));
+                  assertEquals("true", a.getCustomMetadataValue("useEventTimestamp"));
+                  assertEquals("5", a.getCustomMetadataValue("generateConfigurationTicksMaximum"));
                   assertEquals(
                       "Alert if a single source address generates more than 30 4xx errors "
                           + "in a 1 minute window.",
-                      a.getMetadataValue("heuristic_ErrorRateAnalysis"));
+                      a.getCustomMetadataValue("heuristic_ErrorRateAnalysis"));
                 } else {
                   fail("unexpected category");
                 }

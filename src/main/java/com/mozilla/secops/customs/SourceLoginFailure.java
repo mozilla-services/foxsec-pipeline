@@ -1,6 +1,7 @@
 package com.mozilla.secops.customs;
 
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
 import com.mozilla.secops.parser.Parser;
@@ -99,8 +100,8 @@ public class SourceLoginFailure
                     alert.setSubcategory(Customs.CATEGORY_SOURCE_LOGIN_FAILURE);
                     alert.setTimestamp(Parser.getLatestTimestamp(events));
                     alert.setNotifyMergeKey(Customs.CATEGORY_SOURCE_LOGIN_FAILURE);
-                    alert.addMetadata("sourceaddress", addr);
-                    alert.addMetadata("count", Integer.toString(cnt));
+                    alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, addr);
+                    alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(cnt));
                     alert.setSummary(
                         String.format(
                             "%s source login failure threshold exceeded, %s %d in 10 minutes",
@@ -113,7 +114,7 @@ public class SourceLoginFailure
                         buf += ", " + s;
                       }
                     }
-                    alert.addMetadata("email", buf);
+                    alert.addMetadata(AlertMeta.Key.EMAIL, buf);
                     c.output(alert);
                   }
                 }))

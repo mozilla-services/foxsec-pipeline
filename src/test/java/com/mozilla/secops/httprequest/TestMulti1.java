@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
+import com.mozilla.secops.alert.AlertMeta;
 import java.io.Serializable;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
@@ -59,33 +60,43 @@ public class TestMulti1 implements Serializable {
               int r1Ticks = 0;
               int r2Ticks = 0;
               for (Alert a : i) {
-                if (a.getMetadataValue("category").equals("hard_limit")) {
-                  assertEquals("192.168.1.2", a.getMetadataValue("sourceaddress"));
+                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("hard_limit")) {
+                  assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("resource2 httprequest hard_limit 192.168.1.2 11", a.getSummary());
-                  assertEquals(11L, Long.parseLong(a.getMetadataValue("count")));
-                  assertEquals(10L, Long.parseLong(a.getMetadataValue("request_threshold")));
-                  assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
-                  assertEquals("resource2", a.getMetadataValue("monitored_resource"));
-                  assertEquals("resource2 hard_limit_count", a.getMetadataValue("notify_merge"));
+                  assertEquals(11L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT)));
+                  assertEquals(
+                      10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.REQUEST_THRESHOLD)));
+                  assertEquals(
+                      "1970-01-01T00:00:59.999Z",
+                      a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
+                  assertEquals("resource2", a.getMetadataValue(AlertMeta.Key.MONITORED_RESOURCE));
+                  assertEquals(
+                      "resource2 hard_limit_count", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
                   hlAlerts++;
-                } else if (a.getMetadataValue("category").equals("error_rate")) {
-                  assertEquals("10.0.0.1", a.getMetadataValue("sourceaddress"));
+                } else if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("error_rate")) {
+                  assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("resource1 httprequest error_rate 10.0.0.1 35", a.getSummary());
-                  assertEquals("error_rate", a.getMetadataValue("category"));
-                  assertEquals(35L, Long.parseLong(a.getMetadataValue("error_count"), 10));
-                  assertEquals(30L, Long.parseLong(a.getMetadataValue("error_threshold"), 10));
-                  assertEquals("1970-01-01T00:00:59.999Z", a.getMetadataValue("window_timestamp"));
-                  assertEquals("resource1", a.getMetadataValue("monitored_resource"));
-                  assertEquals("resource1 error_count", a.getMetadataValue("notify_merge"));
+                  assertEquals("error_rate", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                  assertEquals(
+                      35L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.ERROR_COUNT), 10));
+                  assertEquals(
+                      30L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.ERROR_THRESHOLD), 10));
+                  assertEquals(
+                      "1970-01-01T00:00:59.999Z",
+                      a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
+                  assertEquals("resource1", a.getMetadataValue(AlertMeta.Key.MONITORED_RESOURCE));
+                  assertEquals(
+                      "resource1 error_count", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
                   erAlerts++;
                 } else if (a.getCategory().equals("httprequest-cfgtick")) {
-                  if (a.getMetadataValue("monitored_resource").equals("resource1")) {
-                    assertNotNull(a.getMetadataValue("heuristic_ErrorRateAnalysis"));
-                    assertNull(a.getMetadataValue("heuristic_HardLimitAnalysis"));
+                  if (a.getMetadataValue(AlertMeta.Key.MONITORED_RESOURCE).equals("resource1")) {
+                    assertNotNull(a.getCustomMetadataValue("heuristic_ErrorRateAnalysis"));
+                    assertNull(a.getCustomMetadataValue("heuristic_HardLimitAnalysis"));
                     r1Ticks++;
-                  } else if (a.getMetadataValue("monitored_resource").equals("resource2")) {
-                    assertNull(a.getMetadataValue("heuristic_ErrorRateAnalysis"));
-                    assertNotNull(a.getMetadataValue("heuristic_HardLimitAnalysis"));
+                  } else if (a.getMetadataValue(AlertMeta.Key.MONITORED_RESOURCE)
+                      .equals("resource2")) {
+                    assertNull(a.getCustomMetadataValue("heuristic_ErrorRateAnalysis"));
+                    assertNotNull(a.getCustomMetadataValue("heuristic_HardLimitAnalysis"));
                     r2Ticks++;
                   } else {
                     fail("bad resource value for configuration tick");

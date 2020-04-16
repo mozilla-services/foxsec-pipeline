@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import com.amazonaws.services.guardduty.model.Finding;
 import com.maxmind.geoip2.model.CityResponse;
+import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
 import java.util.ArrayList;
 import java.util.Map;
@@ -902,7 +903,7 @@ public class ParserTest {
     assertNotNull(a);
     assertEquals("test suspicious account creation, 216.160.83.56 3", a.getSummary());
     assertEquals("customs", a.getCategory());
-    assertEquals("216.160.83.56", a.getMetadataValue("sourceaddress"));
+    assertEquals("216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
   }
 
   @Test
