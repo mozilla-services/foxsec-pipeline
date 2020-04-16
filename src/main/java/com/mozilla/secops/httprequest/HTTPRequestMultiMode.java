@@ -5,7 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mozilla.secops.GcsUtil;
+import com.mozilla.secops.FileUtil;
 import com.mozilla.secops.input.Input;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,18 +25,7 @@ public class HTTPRequestMultiMode {
    * @throws IOException IOException
    */
   public static HTTPRequestMultiMode load(String path) throws IOException {
-    InputStream in;
-    if (path == null) {
-      throw new IOException("attempt to load multimode configuration with null path");
-    }
-    if (GcsUtil.isGcsUrl(path)) {
-      in = GcsUtil.fetchInputStreamContent(path);
-    } else {
-      in = HTTPRequestMultiMode.class.getResourceAsStream(path);
-    }
-    if (in == null) {
-      throw new IOException("multimode configuration resource not found");
-    }
+    InputStream in = FileUtil.getStreamFromPath(path);
     ObjectMapper mapper = new ObjectMapper();
     return mapper.readValue(in, HTTPRequestMultiMode.class);
   }

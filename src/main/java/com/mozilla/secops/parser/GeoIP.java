@@ -4,7 +4,7 @@ import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.model.IspResponse;
-import com.mozilla.secops.GcsUtil;
+import com.mozilla.secops.FileUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -63,17 +63,7 @@ public class GeoIP {
     if (path == null) {
       return null;
     }
-
-    InputStream in;
-    if (GcsUtil.isGcsUrl(path)) {
-      in = GcsUtil.fetchInputStreamContent(path);
-    } else {
-      in = GeoIP.class.getResourceAsStream(path);
-    }
-    if (in == null) {
-      return null;
-    }
-
+    InputStream in = FileUtil.getStreamFromPath(path);
     return new DatabaseReader.Builder(in).build();
   }
 

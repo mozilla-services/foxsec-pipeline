@@ -3,7 +3,7 @@ package com.mozilla.secops.identity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozilla.secops.CidrUtil;
-import com.mozilla.secops.GcsUtil;
+import com.mozilla.secops.FileUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -29,18 +29,7 @@ public class IdentityManager {
    * @throws IOException IOException
    */
   public static IdentityManager load(String path) throws IOException {
-    InputStream in;
-    if (path == null) {
-      throw new IOException("attempt to load identity manager with null path");
-    }
-    if (GcsUtil.isGcsUrl(path)) {
-      in = GcsUtil.fetchInputStreamContent(path);
-    } else {
-      in = IdentityManager.class.getResourceAsStream(path);
-    }
-    if (in == null) {
-      throw new IOException("identity manager resource not found");
-    }
+    InputStream in = FileUtil.getStreamFromPath(path);
     ObjectMapper mapper = new ObjectMapper();
     return mapper.readValue(in, IdentityManager.class);
   }
