@@ -207,6 +207,10 @@ public class TestAmo {
                     assertEquals("aws", a.getMetadataValue(AlertMeta.Key.PROVIDER));
                     assertEquals("52.204.100.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                     assertEquals("tashayar@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                    assertEquals("extension_guid", a.getMetadataValue(AlertMeta.Key.ADDON_GUID));
+                    assertEquals(
+                        "test cloud provider addon submission from 52.204.100.1, guid extension_guid",
+                        a.getSummary());
                     cntCloudSubmit++;
                   } else {
                     assertEquals("255.255.25.25", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
