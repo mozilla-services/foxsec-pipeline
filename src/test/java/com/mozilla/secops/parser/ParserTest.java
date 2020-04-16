@@ -751,7 +751,10 @@ public class ParserTest {
             + "app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2"
             + ".0\", \"Severity\": 6, \"Pid\": 3379, \"Fields\": {\"uid\": \"devinoni_ral\""
             + ", \"remoteAddressChain\": \"216.160.83.56\", \"msg\": \"New version: <Version:"
-            + " 1.0.0> (0000000) from <FileUpload: 00000000000000000000000000000000>\"}}";
+            + " 1.0.0> (0000000) from <FileUpload: 00000000000000000000000000000000>\","
+            + " \"guid\": \"{00000000-0000-0000-0000-000000000000}\", \"email\": \"user@mozilla.com\","
+            + " \"from_api\": false, \"user_id\": 12345678, \"upload\": \"3ad7dd4c5c144c7698"
+            + "84e5db23f6ef1e\"}}";
 
     Parser p = getTestParser();
     assertNotNull(p);
@@ -763,6 +766,10 @@ public class ParserTest {
     assertEquals(AmoDocker.EventType.NEWVERSION, d.getEventType());
     assertEquals("devinoni_ral", d.getUid());
     assertEquals("216.160.83.56", d.getRemoteIp());
+    assertEquals("user@mozilla.com", d.getFxaEmail());
+    assertEquals(false, d.getFromApi());
+    assertEquals("00000000-0000-0000-0000-000000000000", d.getAddonGuid());
+    assertEquals(12345678, (int) d.getUserNumericId());
     assertEquals(
         "New version: <Version: 1.0.0> (0000000) from <FileUpload: 00000000000000000000000000000000>",
         d.getMsg());

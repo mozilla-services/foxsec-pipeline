@@ -1,8 +1,9 @@
 package com.mozilla.secops.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mozilla.secops.parser.models.amo.Amo;
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,9 +35,8 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
     FILEUPLOADMNT
   }
 
-  private String msg;
-  private String uid;
-  private String fxaEmail;
+  private Amo amoData;
+
   private String restrictedValue;
 
   private String addonVersion;
@@ -61,7 +61,7 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
    * @return String
    */
   public String getMsg() {
-    return msg;
+    return amoData.getMsg();
   }
 
   /**
@@ -79,7 +79,7 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
    * @return String
    */
   public String getFxaEmail() {
-    return fxaEmail;
+    return amoData.getEmail();
   }
 
   /**
@@ -106,7 +106,7 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
    * @return String
    */
   public String getUid() {
-    return uid;
+    return amoData.getUid();
   }
 
   /**
@@ -134,6 +134,42 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
    */
   public Integer getBytes() {
     return bytes;
+  }
+
+  /**
+   * Get API submission flag
+   *
+   * @return Boolean
+   */
+  public Boolean getFromApi() {
+    return amoData.getFromApi();
+  }
+
+  /**
+   * Get addon GUID
+   *
+   * @return String
+   */
+  public String getAddonGuid() {
+    return amoData.getGuid();
+  }
+
+  /**
+   * Get numeric user ID
+   *
+   * @return Integer
+   */
+  public Integer getUserNumericId() {
+    return amoData.getNumericUserId();
+  }
+
+  /**
+   * Get upload
+   *
+   * @return String
+   */
+  public String getUpload() {
+    return amoData.getUpload();
   }
 
   @Override
@@ -167,38 +203,32 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
    * @param state State
    */
   public AmoDocker(String input, Event e, ParserState state) {
-    Map<String, String> fields = Parser.convertJsonToMap(input, state.getObjectMapper());
-    if (fields == null) {
+    try {
+      amoData = state.getObjectMapper().readValue(input, Amo.class);
+    } catch (IOException exc) {
       return;
     }
-    msg = fields.get("msg");
-    String remoteIp = fields.get("remoteAddressChain");
-    uid = fields.get("uid");
 
-    if ((msg == null) || (remoteIp == null) || (uid == null)) {
+    if ((amoData.getMsg() == null)
+        || (amoData.getRemoteAddressChain() == null)
+        || (amoData.getUid() == null)) {
       return;
     }
     // Set source address; pass null for the normalized component since we don't want to
     // set the fields in there for this event type
-    setSourceAddress(remoteIp, state, null);
+    setSourceAddress(amoData.getRemoteAddressChain(), state, null);
 
-    if ((fields.get("email") != null) && (!fields.get("email").isEmpty())) {
-      // Some log messages will have an email field to indicate the email address associated
-      // with the account. If we have one, set this in the fxaEmail field.
-      fxaEmail = fields.get("email");
-    }
-
-    Matcher mat = Pattern.compile(reLogin).matcher(msg);
+    Matcher mat = Pattern.compile(reLogin).matcher(amoData.getMsg());
     if (mat.matches()) {
       type = EventType.LOGIN;
       // UID field will not be set in this case, so override from the msg
-      uid = mat.group(1);
+      amoData.setUid(mat.group(1));
       // XXX We could set normalized authentication fields here, but for now just leave
       // this out.
       return;
     }
 
-    mat = Pattern.compile(reNewVersion).matcher(msg);
+    mat = Pattern.compile(reNewVersion).matcher(amoData.getMsg());
     if (mat.matches()) {
       type = EventType.NEWVERSION;
       addonVersion = mat.group(1);
@@ -206,24 +236,24 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
       return;
     }
 
-    mat = Pattern.compile(reGotProfile).matcher(msg);
+    mat = Pattern.compile(reGotProfile).matcher(amoData.getMsg());
     if (mat.matches()) {
       type = EventType.GOTPROFILE;
       // Prefer the email field over the parsed value, but if it is unset then just grab
       // it here
-      if (fxaEmail == null) {
-        fxaEmail = mat.group(1);
+      if (amoData.getEmail() == null) {
+        amoData.setEmail(mat.group(1));
       }
       return;
     }
 
-    mat = Pattern.compile(reFileUpload).matcher(msg);
+    mat = Pattern.compile(reFileUpload).matcher(amoData.getMsg());
     if (mat.matches()) {
       type = EventType.FILEUPLOAD;
       return;
     }
 
-    mat = Pattern.compile(reRestricted).matcher(msg);
+    mat = Pattern.compile(reRestricted).matcher(amoData.getMsg());
     if (mat.matches()) {
       // Only set the restricted type field if it is a type of restriction message
       // that is applicable to the pipeline
@@ -237,7 +267,7 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
       return;
     }
 
-    mat = Pattern.compile(reFileUploadMnt).matcher(msg);
+    mat = Pattern.compile(reFileUploadMnt).matcher(amoData.getMsg());
     if (mat.matches()) {
       type = EventType.FILEUPLOADMNT;
       fileName = mat.group(1);
