@@ -3,10 +3,8 @@ package com.mozilla.secops;
 import com.google.common.annotations.VisibleForTesting;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
@@ -195,29 +193,14 @@ public class DetectNat {
    */
   public static Map<String, Boolean> loadGatewayList(String path) {
     HashMap<String, Boolean> gateways = new HashMap<String, Boolean>();
-    InputStream in;
-    if (path == null || path.isEmpty()) {
-      log.info("No initial nat gateway list given, using empty list.");
-      return gateways;
-    }
-    if (GcsUtil.isGcsUrl(path)) {
-      in = GcsUtil.fetchInputStreamContent(path);
-    } else {
-      in = DetectNat.class.getResourceAsStream(path);
-    }
-    if (in == null) {
-      log.error("Unable to read nat gateway list: {}", path);
-      return gateways;
-    }
-    BufferedReader r = new BufferedReader(new InputStreamReader(in));
+    ArrayList<String> gatewayList = new ArrayList<String>();
     try {
-      while (r.ready()) {
-        gateways.put(r.readLine(), true);
-      }
-      r.close();
+      gatewayList = FileUtil.fileReadLines(path);
     } catch (IOException e) {
       log.error("Error reading nat gateway list: {}", e.getMessage());
+      return gateways;
     }
+    gatewayList.forEach(g -> gateways.put(g, true));
     return gateways;
   }
 }
