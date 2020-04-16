@@ -2,7 +2,7 @@ package com.mozilla.secops.gatekeeper;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mozilla.secops.GcsUtil;
+import com.mozilla.secops.FileUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -27,18 +27,7 @@ public class GuardDutyConfig implements Serializable {
    * @throws IOException IOException
    */
   public static GuardDutyConfig load(String path) throws IOException {
-    InputStream in;
-    if (path == null) {
-      throw new IOException("attempt to load guardduty config with null path");
-    }
-    if (GcsUtil.isGcsUrl(path)) {
-      in = GcsUtil.fetchInputStreamContent(path);
-    } else {
-      in = GuardDutyConfig.class.getResourceAsStream(path);
-    }
-    if (in == null) {
-      throw new IOException("guardduty config resource not found");
-    }
+    InputStream in = FileUtil.getStreamFromPath(path);
     ObjectMapper mapper = new ObjectMapper();
     return mapper.readValue(in, GuardDutyConfig.class);
   }

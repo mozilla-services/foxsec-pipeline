@@ -21,15 +21,7 @@ public class ScriptRunner {
    * @throws IOException IOException
    */
   public void loadScript(String path, String name) throws IOException {
-    InputStream in;
-    if (GcsUtil.isGcsUrl(path)) {
-      in = GcsUtil.fetchInputStreamContent(path);
-    } else {
-      in = ScriptRunner.class.getResourceAsStream(path);
-    }
-    if (in == null) {
-      throw new IOException(String.format("script read of %s failed", path));
-    }
+    InputStream in = FileUtil.getStreamFromPath(path);
     loadedScripts.put(name, shell.parse(new InputStreamReader(in)));
   }
 
