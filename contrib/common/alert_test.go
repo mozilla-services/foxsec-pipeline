@@ -12,7 +12,7 @@ func TestAlert(t *testing.T) {
 	a := &Alert{
 		Timestamp: time.Now().Add(time.Duration(-5) * time.Minute),
 		Metadata: []*AlertMeta{
-			{Key: "status", Value: ALERT_NEW},
+			{Key: META_STATUS, Value: ALERT_NEW},
 			{Key: "foo", Value: "bar"},
 		},
 	}

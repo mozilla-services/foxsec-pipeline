@@ -144,7 +144,7 @@ func alertEscalator(ctx context.Context) error {
 		log.Infof("Checking alert %s", alert.Id)
 		if alert.IsStatus(common.ALERT_NEW) && alert.OlderThan(config.AlertEscalationTTL) {
 			log.Infof("Escalating alert %s", alert.Id)
-			alert.SetMetadata("status", common.ALERT_ESCALATED)
+			alert.SetMetadata(common.META_STATUS, common.ALERT_ESCALATED)
 
 			// TODO: If we retry based off an error here, we could
 			//		   potentially send an escalation email multiple times.

@@ -87,12 +87,12 @@ AWS Account Name: %s
 AWS Account ID: %s
 Finding Description: %s
 `,
-		a.GetMetadata("finding_type"),
-		a.GetMetadata("url_to_finding"),
-		a.GetMetadata("finding_id"),
-		a.GetMetadata("aws_account_name"),
-		a.GetMetadata("aws_account_id"),
-		a.GetMetadata("description"),
+		a.GetMetadata(META_FINDING_TYPE),
+		a.GetMetadata(META_URL_TO_FINDING),
+		a.GetMetadata(META_FINDING_ID),
+		a.GetMetadata(META_AWS_ACCOUNT_NAME),
+		a.GetMetadata(META_AWS_ACCOUNT_ID),
+		a.GetMetadata(META_DESCRIPTION),
 	)
 	fraudInfo := fmt.Sprintf(`#### Fraud Pipeline Info
 Id: %s
@@ -120,7 +120,7 @@ func (a *Alert) OlderThan(dur time.Duration) bool {
 
 func (a *Alert) IsStatus(s string) bool {
 	for _, am := range a.Metadata {
-		if am.Key == "status" {
+		if am.Key == META_STATUS {
 			return am.Value == s
 		}
 	}

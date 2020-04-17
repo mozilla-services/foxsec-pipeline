@@ -118,7 +118,7 @@ func BugzillaAlertManager(ctx context.Context, psmsg pubsub.Message) error {
 	}
 
 	// Check if we should process this alert
-	if alert.GetMetadata("alert_handling_severity") != "low" {
+	if alert.GetMetadata(common.META_ALERT_HANDLING_SEVERITY) != "low" {
 		return nil
 	}
 	if _, ok := globals.bugzillaClient.Config.CategoryToTracker[alert.Category]; !ok {
