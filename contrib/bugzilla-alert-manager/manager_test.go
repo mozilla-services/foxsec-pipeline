@@ -28,6 +28,7 @@ var (
 	createBugCnt  int
 	commentBugCnt int
 	searchBugCnt  int
+	updateBugCnt  int
 )
 
 func generateLowSevTestAlert() pubsub.Message {
@@ -145,6 +146,18 @@ func createMockServer(t *testing.T) *httptest.Server {
 		assert.NotContains(t, cc.Comment, "hightestunique")
 	})
 
+	// Bugzilla Update Bug Mock
+	mux.HandleFunc("/rest/bug/1", func(w http.ResponseWriter, r *http.Request) {
+		updateBugCnt++
+		body, err := ioutil.ReadAll(r.Body)
+		assert.NoError(t, err)
+		defer r.Body.Close()
+		ub := &common.UpdateBugReq{}
+		err = json.Unmarshal(body, ub)
+		assert.NoError(t, err)
+		assert.Equal(t, ub.Status, common.ASSIGNED)
+	})
+
 	// Bugzilla Bug Mock
 	mux.HandleFunc("/rest/bug", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
@@ -166,7 +179,7 @@ func createMockServer(t *testing.T) *httptest.Server {
 		if r.Method == http.MethodGet {
 			searchBugCnt++
 			if searchBugCnt == 1 {
-				w.Write([]byte(`{"bugs":[{"id": 99, "creation_time": "2020-01-01T13:50:04Z"}]}`))
+				w.Write([]byte(`{"bugs":[{"id": 99, "creation_time": "2020-01-01T13:50:04Z", "is_open": false}]}`))
 			} else {
 				b, err := json.Marshal(&common.SearchBugResponse{
 					Bugs: []common.BugResp{
@@ -207,6 +220,7 @@ func TestBugzillaAlertManager(t *testing.T) {
 	assert.Equal(t, 0, searchBugCnt)
 	assert.Equal(t, 0, createBugCnt)
 	assert.Equal(t, 0, commentBugCnt)
+	assert.Equal(t, 0, updateBugCnt)
 
 	err = BugzillaAlertManager(ctx, generateLowSevTestAlert())
 	assert.NoError(t, err)
@@ -214,6 +228,7 @@ func TestBugzillaAlertManager(t *testing.T) {
 	assert.Equal(t, 1, searchBugCnt)
 	assert.Equal(t, 1, createBugCnt)
 	assert.Equal(t, 0, commentBugCnt)
+	assert.Equal(t, 0, updateBugCnt)
 
 	// Since a bug exsists for today, this should add the
 	// low sev alert as a comment.
@@ -223,6 +238,7 @@ func TestBugzillaAlertManager(t *testing.T) {
 	assert.Equal(t, 2, searchBugCnt)
 	assert.Equal(t, 1, createBugCnt)
 	assert.Equal(t, 1, commentBugCnt)
+	assert.Equal(t, 1, updateBugCnt)
 
 	// Clean-up
 	server.Close()
