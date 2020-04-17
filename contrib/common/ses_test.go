@@ -65,7 +65,7 @@ func TestEscalationEmail(t *testing.T) {
 	alert := &Alert{
 		Timestamp: time.Date(2001, time.January, 1, 1, 1, 1, 1, time.UTC),
 		Metadata: []*AlertMeta{
-			{Key: "status", Value: ALERT_NEW},
+			{Key: META_STATUS, Value: ALERT_NEW},
 			{Key: "foo", Value: "bar"},
 		},
 	}

@@ -35,7 +35,7 @@ func generateLowSevTestAlert() pubsub.Message {
 		Id:        "lowtestunique",
 		Category:  "gatekeeper:aws",
 		Summary:   "test low sev alert",
-		Metadata:  []*common.AlertMeta{{Key: "alert_handling_severity", Value: "low"}},
+		Metadata:  []*common.AlertMeta{{Key: common.META_ALERT_HANDLING_SEVERITY, Value: "low"}},
 		Timestamp: time.Now().Add(-5 * time.Minute),
 	}
 	buf, err := json.Marshal(lowSevAlert)
@@ -50,7 +50,7 @@ func generateHighSevTestAlert() pubsub.Message {
 		Id:        "hightestunique",
 		Category:  "gatekeeper:aws",
 		Summary:   "test high sev alert",
-		Metadata:  []*common.AlertMeta{{Key: "alert_handling_severity", Value: "high"}},
+		Metadata:  []*common.AlertMeta{{Key: common.META_ALERT_HANDLING_SEVERITY, Value: "high"}},
 		Timestamp: time.Now().Add(-6 * time.Minute),
 	}
 	buf, err := json.Marshal(highSevAlert)

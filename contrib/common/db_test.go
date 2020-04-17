@@ -25,7 +25,8 @@ func TestAlertDB(t *testing.T) {
 		Id:        id,
 		Timestamp: time.Now().Add(time.Duration(-5) * time.Minute),
 		Metadata: []*AlertMeta{
-			{Key: "status", Value: ALERT_NEW},
+			{Key: META_STATUS, Value: ALERT_NEW},
+			// Add an arbitrary custom key here too
 			{Key: "foo", Value: "bar"},
 		},
 	}
@@ -38,7 +39,7 @@ func TestAlertDB(t *testing.T) {
 	assert.Equal(t, a.Metadata, na.Metadata)
 	assert.True(t, a.Timestamp.Equal(na.Timestamp))
 
-	na.SetMetadata("status", ALERT_ESCALATED)
+	na.SetMetadata(META_STATUS, ALERT_ESCALATED)
 	err = db.SaveAlert(context.Background(), na)
 	assert.NoError(t, err)
 	nna, err := db.GetAlert(context.Background(), id)
