@@ -11,6 +11,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.google.common.base.Splitter;
+import com.google.common.net.InetAddresses;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.model.IspResponse;
 import com.mozilla.secops.CidrUtil;
@@ -21,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.validator.routines.InetAddressValidator;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -237,7 +237,7 @@ public class Parser {
     ArrayList<String> ret = new ArrayList<>();
     Iterable<String> buf = XFF_SPLITTER.split(in);
     for (String t : buf) {
-      if (!(InetAddressValidator.getInstance().isValid(t))) {
+      if (!(InetAddresses.isInetAddress(t))) {
         return null;
       }
       ret.add(t);
