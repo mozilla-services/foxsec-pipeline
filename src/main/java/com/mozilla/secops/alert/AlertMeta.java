@@ -46,9 +46,11 @@ public class AlertMeta implements Serializable {
   /** Keys that may be used for alert metadata */
   public enum Key {
     ADDON_FILENAME("addon_filename"),
+    ADDON_FROM_API("addon_from_api"),
     ADDON_GUID("addon_guid"),
     ADDON_ID("addon_id"),
     ADDON_SIZE("addon_size"),
+    ADDON_USER_ID("addon_user_id"),
     ADDON_VERSION("addon_version"),
     ALERT_HANDLING_SEVERITY("alert_handling_severity"),
     ALERT_NOTIFICATION_TYPE("alert_notification_type"),

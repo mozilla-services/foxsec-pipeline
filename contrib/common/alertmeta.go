@@ -4,9 +4,11 @@ package common
 
 const (
 	META_ADDON_FILENAME                    = "addon_filename"
+	META_ADDON_FROM_API                    = "addon_from_api"
 	META_ADDON_GUID                        = "addon_guid"
 	META_ADDON_ID                          = "addon_id"
 	META_ADDON_SIZE                        = "addon_size"
+	META_ADDON_USER_ID                     = "addon_user_id"
 	META_ADDON_VERSION                     = "addon_version"
 	META_ALERT_HANDLING_SEVERITY           = "alert_handling_severity"
 	META_ALERT_NOTIFICATION_TYPE           = "alert_notification_type"

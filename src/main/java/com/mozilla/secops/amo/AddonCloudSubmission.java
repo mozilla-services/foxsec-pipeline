@@ -90,12 +90,22 @@ public class AddonCloudSubmission extends PTransform<PCollection<Event>, PCollec
                     if (d.getFxaEmail() != null) {
                       alert.addMetadata(AlertMeta.Key.EMAIL, d.getFxaEmail());
                     }
+                    if (d.getFromApi() != null) {
+                      alert.addMetadata(AlertMeta.Key.ADDON_FROM_API, d.getFromApi().toString());
+                    }
+                    if (d.getUserNumericId() != null) {
+                      alert.addMetadata(
+                          AlertMeta.Key.ADDON_USER_ID, d.getUserNumericId().toString());
+                    }
                     alert.setSummary(
                         String.format(
-                            "%s cloud provider addon submission from %s, guid %s",
+                            "%s cloud provider addon submission from %s, guid %s isapi %s"
+                                + " user_id %d",
                             monitoredResource,
                             d.getRemoteIp(),
-                            d.getAddonGuid() != null ? d.getAddonGuid() : "unknown"));
+                            d.getAddonGuid() != null ? d.getAddonGuid() : "unknown",
+                            d.getFromApi() != null ? d.getFromApi().toString() : "unknown",
+                            d.getUserNumericId() != null ? d.getUserNumericId() : "unknown"));
                     c.output(alert);
                   }
                 }));
