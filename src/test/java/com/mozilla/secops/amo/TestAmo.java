@@ -208,8 +208,11 @@ public class TestAmo {
                     assertEquals("52.204.100.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                     assertEquals("tashayar@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
                     assertEquals("extension_guid", a.getMetadataValue(AlertMeta.Key.ADDON_GUID));
+                    assertEquals("99999999", a.getMetadataValue(AlertMeta.Key.ADDON_USER_ID));
+                    assertEquals("true", a.getMetadataValue(AlertMeta.Key.ADDON_FROM_API));
                     assertEquals(
-                        "test cloud provider addon submission from 52.204.100.1, guid extension_guid",
+                        "test cloud provider addon submission from 52.204.100.1, guid extension_guid"
+                            + " isapi true user_id 99999999",
                         a.getSummary());
                     cntCloudSubmit++;
                   } else {
