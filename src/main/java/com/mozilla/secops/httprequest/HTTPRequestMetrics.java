@@ -10,7 +10,7 @@ public class HTTPRequestMetrics {
   /** Metrics for the various analysis transforms in {@link HTTPRequest} pipeline */
   public static class HeuristicMetrics implements Serializable {
     private static final long serialVersionUID = 1L;
-    private final String NAT_DETECTED = "nat_detected";
+    static final String NAT_DETECTED = "alert_skipped_nat_detected";
     private final Counter natDetected;
 
     /**

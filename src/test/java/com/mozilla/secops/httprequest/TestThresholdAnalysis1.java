@@ -4,6 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.httprequest.HTTPRequest.ThresholdAnalysis;
+import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.metrics.MetricNameFilter;
+import org.apache.beam.sdk.metrics.MetricResult;
+import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -100,7 +105,26 @@ public class TestThresholdAnalysis1 {
               return null;
             });
 
-    p.run().waitUntilFinish();
+    PipelineResult pResult = p.run();
+    pResult.waitUntilFinish();
+
+    Iterable<MetricResult<Long>> vWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            ThresholdAnalysis.class.getName(),
+                            HTTPRequestMetrics.HeuristicMetrics.NAT_DETECTED))
+                    .build())
+            .getCounters();
+    int cnt = 0;
+    for (MetricResult<Long> x : vWrites) {
+      assertEquals(1L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
   }
 
   @Test
