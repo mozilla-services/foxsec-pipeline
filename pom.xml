@@ -29,6 +29,23 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>build-classpath</goal>
+                        </goals>
+                        <configuration>
+                            <outputProperty>maven.compile.classpath</outputProperty>
+                            <silent>true</silent>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
@@ -63,6 +80,11 @@
                 </executions>
                 <configuration>
                     <executable>bin/generate_meta.sh</executable>
+                    <environmentVariables>
+                        <CLASSPATH>
+                            ${maven.compile.classpath}:target/classes
+                        </CLASSPATH>
+                    </environmentVariables>
                 </configuration>
             </plugin>
             <plugin>

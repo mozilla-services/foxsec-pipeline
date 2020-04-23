@@ -532,4 +532,18 @@ public class TestAlert {
     a.setSummary("test alert");
     assertTrue(a.hasCorrectFields());
   }
+
+  @Test
+  public void testMetaValidator() throws Exception {
+    Alert a = new Alert();
+    assertNotNull(a);
+
+    assertTrue(a.addMetadata(AlertMeta.Key.SOURCEADDRESS, "1.2.3.4"));
+    assertFalse(a.addMetadata(AlertMeta.Key.EMAIL, ""));
+    assertFalse(a.addMetadata(AlertMeta.Key.EMAIL, null));
+
+    assertTrue(a.setMetadataValue(AlertMeta.Key.SOURCEADDRESS, "1.2.3.4"));
+    assertFalse(a.setMetadataValue(AlertMeta.Key.EMAIL, ""));
+    assertFalse(a.setMetadataValue(AlertMeta.Key.EMAIL, null));
+  }
 }
