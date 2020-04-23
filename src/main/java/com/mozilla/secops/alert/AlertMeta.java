@@ -69,9 +69,9 @@ public class AlertMeta implements Serializable {
     COUNT("count"),
     DESCRIPTION("description"),
     DOC_LINK("doc_link"),
-    EMAIL("email"),
+    EMAIL("email", true),
     EMAIL_CONTACT("email_contact"),
-    EMAIL_SIMILAR("email_similar"),
+    EMAIL_SIMILAR("email_similar", true),
     END("end"),
     ENDPOINT("endpoint"),
     ENDPOINT_PATTERN("endpoint_pattern"),
@@ -141,7 +141,7 @@ public class AlertMeta implements Serializable {
     TIME_DELTA_SECONDS("time_delta_seconds"),
     TOTAL_ADDRESS_COUNT("total_address_count"),
     TOTAL_ALERT_COUNT("total_alert_count"),
-    UID("uid"),
+    UID("uid", true),
     USERAGENT("useragent"),
     USERNAME("username"),
     URL_TO_FINDING("url_to_finding"),
@@ -149,6 +149,8 @@ public class AlertMeta implements Serializable {
     WHITELISTED_ENTRY_CREATED_BY("whitelisted_entry_created_by"),
     SOURCEADDRESS(
         "sourceaddress",
+        true,
+        new AlertMetadataValidator(),
         new AssociatedKeyLinkage[] {
           new AssociatedKeyLinkage(SOURCEADDRESS_CITY, AssociatedKey.CITY),
           new AssociatedKeyLinkage(SOURCEADDRESS_COUNTRY, AssociatedKey.COUNTRY),
@@ -158,6 +160,8 @@ public class AlertMeta implements Serializable {
         }),
     SOURCEADDRESS_PREVIOUS(
         "sourceaddress_previous",
+        true,
+        new AlertMetadataValidator(),
         new AssociatedKeyLinkage[] {
           new AssociatedKeyLinkage(SOURCEADDRESS_PREVIOUS_CITY, AssociatedKey.CITY),
           new AssociatedKeyLinkage(SOURCEADDRESS_PREVIOUS_COUNTRY, AssociatedKey.COUNTRY),
@@ -254,8 +258,24 @@ public class AlertMeta implements Serializable {
       this(key, false, new AlertMetadataValidator(), null);
     }
 
+    /**
+     * Initialize new key
+     *
+     * @param key String to use for key
+     * @param links Associated key linkages
+     */
     Key(String key, AssociatedKeyLinkage[] links) {
       this(key, false, new AlertMetadataValidator(), links);
+    }
+
+    /**
+     * Initialize new key
+     *
+     * @param key String to use for key
+     * @param isSensitive True if metadata is considered to contain sensitive information
+     */
+    Key(String key, boolean isSensitive) {
+      this(key, isSensitive, new AlertMetadataValidator(), null);
     }
   }
 
