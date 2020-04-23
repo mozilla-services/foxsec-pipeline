@@ -83,10 +83,7 @@ public class Amo implements Serializable {
    */
   @JsonProperty("guid")
   void setGuid(String guid) {
-    if (guid != null) {
-      this.guid = guid.replace("{", "");
-      this.guid = this.guid.replace("}", "");
-    }
+    this.guid = guid;
   }
 
   /**

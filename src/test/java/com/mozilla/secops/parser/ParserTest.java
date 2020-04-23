@@ -768,7 +768,7 @@ public class ParserTest {
     assertEquals("216.160.83.56", d.getRemoteIp());
     assertEquals("user@mozilla.com", d.getFxaEmail());
     assertEquals(false, d.getFromApi());
-    assertEquals("00000000-0000-0000-0000-000000000000", d.getAddonGuid());
+    assertEquals("{00000000-0000-0000-0000-000000000000}", d.getAddonGuid());
     assertEquals(12345678, (int) d.getUserNumericId());
     assertEquals(
         "New version: <Version: 1.0.0> (0000000) from <FileUpload: 00000000000000000000000000000000>",
