@@ -12,6 +12,7 @@ import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.alert.AlertSuppressorCount;
+import com.mozilla.secops.httprequest.HTTPRequestMetrics.HeuristicMetrics;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.input.InputElement;
 import com.mozilla.secops.metrics.CfgTickBuilder;
@@ -284,6 +285,7 @@ public class HTTPRequest implements Serializable {
     private final Boolean enableIprepdDatastoreWhitelist;
     private final String iprepdDatastoreWhitelistProject;
     private PCollectionView<Map<String, Boolean>> natView = null;
+    private final HeuristicMetrics metrics;
 
     private Logger log;
 
@@ -306,6 +308,7 @@ public class HTTPRequest implements Serializable {
       this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
       this.natView = natView;
       log = LoggerFactory.getLogger(HardLimitAnalysis.class);
+      metrics = new HeuristicMetrics(HardLimitAnalysis.class.getName());
     }
 
     /** {@inheritDoc} */
@@ -356,6 +359,7 @@ public class HTTPRequest implements Serializable {
                                 "{}: detectnat: skipping result emission for {}",
                                 w.toString(),
                                 c.element().getKey());
+                            metrics.natDetected();
                             return;
                           }
                           Alert a = new Alert();
@@ -406,6 +410,7 @@ public class HTTPRequest implements Serializable {
     private final String uaBlacklistPath;
 
     private PCollectionView<Map<String, Boolean>> natView = null;
+    private final HeuristicMetrics metrics;
 
     private Logger log;
 
@@ -428,6 +433,7 @@ public class HTTPRequest implements Serializable {
       this.natView = natView;
       uaBlacklistPath = toggles.getUserAgentBlacklistPath();
       log = LoggerFactory.getLogger(UserAgentBlacklistAnalysis.class);
+      metrics = new HeuristicMetrics(UserAgentBlacklistAnalysis.class.getName());
     }
 
     /** {@inheritDoc} */
@@ -497,6 +503,7 @@ public class HTTPRequest implements Serializable {
                                 "{}: detectnat: skipping result emission for {}",
                                 w.toString(),
                                 saddr);
+                            metrics.natDetected();
                             return;
                           }
 
@@ -828,6 +835,7 @@ public class HTTPRequest implements Serializable {
     private final String iprepdDatastoreWhitelistProject;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
+    private final HeuristicMetrics metrics;
     private Logger log;
 
     /**
@@ -851,6 +859,7 @@ public class HTTPRequest implements Serializable {
       this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
       this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
       this.natView = natView;
+      this.metrics = new HeuristicMetrics(ThresholdAnalysis.class.getName());
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
     }
 
@@ -941,6 +950,7 @@ public class HTTPRequest implements Serializable {
                                   "{}: detectnat: skipping result emission for {}",
                                   w.toString(),
                                   c.element().getKey());
+                              metrics.natDetected();
                               return;
                             }
                             log.info(
@@ -1006,6 +1016,7 @@ public class HTTPRequest implements Serializable {
     private final String iprepdDatastoreWhitelistProject;
     private final Integer suppressRecovery;
     private PCollectionView<Map<String, Boolean>> natView = null;
+    private final HeuristicMetrics metrics;
 
     /** Internal class for configured endpoints in EPA */
     public static class EndpointSequenceAbuseTimingInfo implements Serializable {
@@ -1052,6 +1063,7 @@ public class HTTPRequest implements Serializable {
       this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
       suppressRecovery = toggles.getEndpointSequenceAbuseSuppressRecovery();
       this.natView = natView;
+      metrics = new HeuristicMetrics(EndpointSequenceAbuse.class.getName());
 
       String[] cfgEndpoints = toggles.getEndpointSequenceAbusePatterns();
       endpointPatterns = new EndpointSequenceAbuseTimingInfo[cfgEndpoints.length];
@@ -1218,6 +1230,7 @@ public class HTTPRequest implements Serializable {
                                 "{}: detectnat: skipping result emission for {}",
                                 w.toString(),
                                 remoteAddress);
+                            metrics.natDetected();
                             return;
                           }
 
