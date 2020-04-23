@@ -81,7 +81,12 @@ public class AlertFormatter extends DoFn<Alert, Alert> {
       if (cityKey != null && countryKey != null) {
         CityResponse cr = geoip.lookupCity(buf);
         if (cr != null) {
-          a.addMetadata(cityKey, cr.getCity().getName());
+          if (cr.getCity() != null) {
+            // getName() can return an empty string in some cases
+            if (cr.getCity().getName() != null && !cr.getCity().getName().isEmpty()) {
+              a.addMetadata(cityKey, cr.getCity().getName());
+            }
+          }
           a.addMetadata(countryKey, cr.getCountry().getIsoCode());
         }
       }

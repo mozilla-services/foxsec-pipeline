@@ -46,7 +46,12 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
       // If we have parser state attempt to resolve GeoIP information
       CityResponse cr = state.getParser().geoIp(sourceAddress);
       if (cr != null) {
-        sourceAddressCity = cr.getCity().getName();
+        if (cr.getCity() != null) {
+          // getName() can return an empty string in some cases
+          if (cr.getCity().getName() != null && !cr.getCity().getName().isEmpty()) {
+            sourceAddressCity = cr.getCity().getName();
+          }
+        }
         sourceAddressCountry = cr.getCountry().getIsoCode();
 
         if ((cr.getLocation() != null)
