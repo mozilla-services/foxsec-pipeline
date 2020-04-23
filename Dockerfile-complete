@@ -27,7 +27,7 @@ RUN mvn -B dependency:resolve dependency:resolve-plugins dependency:go-offline &
 
 COPY . /root/project
 
-RUN mvn -B javadoc:javadoc && mvn -B compile
+RUN mvn -B javadoc:javadoc && mvn -B package -Dmaven.test.skip=true
 
 RUN cd contrib && \
 	(cd auth0pull && go build) && \
