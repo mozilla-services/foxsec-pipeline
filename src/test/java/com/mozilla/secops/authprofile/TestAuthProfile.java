@@ -483,7 +483,8 @@ public class TestAuthProfile {
                 assertEquals("authprofile", a.getCategory());
                 assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                 assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
-                assertEquals("state_analyze", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "state_analyze", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertNull(a.getMetadataValue(AlertMeta.Key.ALERTIO_IGNORE_EVENT));
                 String actualSummary = a.getSummary();
                 if (actualSummary.matches("(.*)new source fd00(.*)")) {
@@ -569,7 +570,8 @@ public class TestAuthProfile {
                       "unknown_ip_minfraud_geo_failure",
                       a.getMetadataValue(AlertMeta.Key.STATE_ACTION_TYPE));
                 }
-                assertEquals("state_analyze", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "state_analyze", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals("wriker@mozilla.com", a.getMetadataValue(AlertMeta.Key.IDENTITY_KEY));
                 assertEquals("wriker@mozilla.com", a.getMetadataValue(AlertMeta.Key.USERNAME));
                 assertEquals("www.enterprise.com", a.getMetadataValue(AlertMeta.Key.OBJECT));
@@ -623,7 +625,8 @@ public class TestAuthProfile {
               long newCnt = 0;
               long infoCnt = 0;
               for (Alert a : results) {
-                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("state_analyze")) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("state_analyze")) {
                   assertEquals("authprofile", a.getCategory());
                   assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
@@ -711,7 +714,8 @@ public class TestAuthProfile {
               long newCnt = 0;
               long infoCnt = 0;
               for (Alert a : results) {
-                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("state_analyze")) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("state_analyze")) {
                   assertEquals("authprofile", a.getCategory());
                   assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());

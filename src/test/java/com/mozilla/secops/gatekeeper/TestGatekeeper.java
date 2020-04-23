@@ -100,7 +100,8 @@ public class TestGatekeeper {
                               .equals("123456789210"));
                   assertEquals("audit_log", a.getMetadataValue(AlertMeta.Key.INDICATOR));
                   assertEquals("persistence", a.getMetadataValue(AlertMeta.Key.TECHNIQUE));
-                } else if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("cfgtick")) {
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("cfgtick")) {
                   assertEquals(Alert.AlertSeverity.INFORMATIONAL, a.getSeverity());
                   assertEquals("gatekeeper-cfgtick", a.getCategory());
                   assertEquals("5", a.getCustomMetadataValue("generateConfigurationTicksMaximum"));

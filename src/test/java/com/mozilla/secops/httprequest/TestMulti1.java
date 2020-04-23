@@ -60,7 +60,8 @@ public class TestMulti1 implements Serializable {
               int r1Ticks = 0;
               int r2Ticks = 0;
               for (Alert a : i) {
-                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("hard_limit")) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("hard_limit")) {
                   assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("resource2 httprequest hard_limit 192.168.1.2 11", a.getSummary());
                   assertEquals(11L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT)));
@@ -73,10 +74,12 @@ public class TestMulti1 implements Serializable {
                   assertEquals(
                       "resource2 hard_limit_count", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
                   hlAlerts++;
-                } else if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("error_rate")) {
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("error_rate")) {
                   assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("resource1 httprequest error_rate 10.0.0.1 35", a.getSummary());
-                  assertEquals("error_rate", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                  assertEquals(
+                      "error_rate", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       35L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.ERROR_COUNT), 10));
                   assertEquals(

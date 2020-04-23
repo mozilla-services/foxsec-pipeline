@@ -117,7 +117,7 @@ public class TestPostProcessing {
               int ipCnt = 0;
               int cfgTickCnt = 0;
               for (Alert a : results) {
-                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("watchlist")) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD).equals("watchlist")) {
                   assertEquals("postprocessing", a.getCategory());
                   assertEquals(
                       "0e555555-8df8-4b3d-92dd-24e0e5248534",
@@ -146,7 +146,8 @@ public class TestPostProcessing {
                     assertEquals(
                         "127.0.0.1", a.getMetadataValue(AlertMeta.Key.MATCHED_METADATA_VALUE));
                   }
-                } else if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("cfgtick")) {
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("cfgtick")) {
                   cfgTickCnt++;
                   assertEquals("postprocessing-cfgtick", a.getCategory());
                   assertEquals(

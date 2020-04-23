@@ -83,7 +83,8 @@ public class TestEndpointAbuse1 {
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "endpoint_abuse", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
                 assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
@@ -141,7 +142,8 @@ public class TestEndpointAbuse1 {
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "endpoint_abuse", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
                 assertEquals(
@@ -199,7 +201,8 @@ public class TestEndpointAbuse1 {
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "endpoint_abuse", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
                 assertEquals(
@@ -259,7 +262,8 @@ public class TestEndpointAbuse1 {
                 assertEquals(
                     "test httprequest endpoint_abuse 192.168.1.2 GET /test 10", a.getSummary());
                 assertEquals("test endpoint_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "endpoint_abuse", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
                 assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                 assertEquals(10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));

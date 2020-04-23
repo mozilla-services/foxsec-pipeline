@@ -63,7 +63,9 @@ public class TestEndpointSequenceAbuse {
                     "test httprequest endpoint_sequence_abuse 192.168.1.2 GET:/test:1000:GET:/test2 1",
                     a.getSummary());
                 assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "endpoint_sequence_abuse",
+                    a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
                 assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                 assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
@@ -102,7 +104,9 @@ public class TestEndpointSequenceAbuse {
                     "test httprequest endpoint_sequence_abuse 192.168.1.2 GET:/test:1000:GET:/test2 1",
                     a.getSummary());
                 assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "endpoint_sequence_abuse",
+                    a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
                 assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                 assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
@@ -142,7 +146,9 @@ public class TestEndpointSequenceAbuse {
                     "test httprequest endpoint_sequence_abuse 192.168.1.2 GET:/test:1000:GET:/test2 2",
                     a.getSummary());
                 assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "endpoint_sequence_abuse",
+                    a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
                 assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                 assertEquals(2L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
@@ -309,7 +315,8 @@ public class TestEndpointSequenceAbuse {
                       a.getSummary());
                   assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
                   assertEquals(
-                      "endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                      "endpoint_sequence_abuse",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
                   assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                   assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
@@ -321,7 +328,8 @@ public class TestEndpointSequenceAbuse {
                       a.getSummary());
                   assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
                   assertEquals(
-                      "endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                      "endpoint_sequence_abuse",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
                   assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                   assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
@@ -402,7 +410,9 @@ public class TestEndpointSequenceAbuse {
                     "test httprequest endpoint_sequence_abuse 192.168.1.2 GET:/test:1000:GET:/test2 1",
                     a.getSummary());
                 assertEquals("test endpoint_sequence_abuse", a.getNotifyMergeKey());
-                assertEquals("endpoint_sequence_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "endpoint_sequence_abuse",
+                    a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
                 assertEquals("Mozilla", a.getMetadataValue(AlertMeta.Key.USERAGENT));
                 assertEquals(1L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));

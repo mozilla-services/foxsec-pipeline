@@ -68,7 +68,8 @@ public class TestHTTPRequestSourceCorrelator {
             i -> {
               int cnt = 0;
               for (Alert a : i) {
-                if (!a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("isp_source_correlation")) {
+                if (!a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("isp_source_correlation")) {
                   continue;
                 }
                 cnt++;
