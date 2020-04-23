@@ -242,21 +242,25 @@ public class Alert implements Serializable {
    *
    * @param key Key to set
    * @param value Value to set for key
+   * @return True if key was successfully set
    */
-  public void setMetadataValue(AlertMeta.Key key, String value) {
-    key.validate(value);
+  public boolean setMetadataValue(AlertMeta.Key key, String value) {
+    if (!key.validate(value)) {
+      return false;
+    }
     metaLock.lock();
     try {
       for (AlertMeta m : metadata) {
         if (m.getKey().equals(key.getKey())) {
           m.setValue(value);
-          return;
+          return true;
         }
       }
       metadata.add(new AlertMeta(key.getKey(), value));
     } finally {
       metaLock.unlock();
     }
+    return true;
   }
 
   /**
@@ -286,9 +290,12 @@ public class Alert implements Serializable {
    *
    * @param key Key
    * @param value Value
+   * @return True if key was successfully set
    */
-  public void addMetadata(AlertMeta.Key key, String value) {
-    key.validate(value);
+  public boolean addMetadata(AlertMeta.Key key, String value) {
+    if (!key.validate(value)) {
+      return false;
+    }
     // Pick up metadata mutex here to prevent ConcurrentModification exception if object is
     // serialized while we are appending to the metadata, see local implementation of
     // writeObject
@@ -298,6 +305,7 @@ public class Alert implements Serializable {
     } finally {
       metaLock.unlock();
     }
+    return true;
   }
 
   /**

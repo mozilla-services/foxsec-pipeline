@@ -6,10 +6,14 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** {@link AlertMeta} is metadata associated with an {@link Alert} */
 public class AlertMeta implements Serializable {
   private static final long serialVersionUID = 1L;
+
+  private static final Logger log = LoggerFactory.getLogger(AlertMeta.class);
 
   private String key;
   private String value;
@@ -24,12 +28,14 @@ public class AlertMeta implements Serializable {
      * Validate value
      *
      * @param value Value for validation
-     * @throws IllegalArgumentException IllegalArgumentException
+     * @return True if value is formatted correctly for key
      */
-    public void validate(String key, String value) {
+    public boolean validate(String key, String value) {
       if (value == null || value.isEmpty()) {
-        throw new IllegalArgumentException(String.format("invalid metadata value for %s", key));
+        log.error("value for key {} is invalid: {}", key, value);
+        return false;
       }
+      return true;
     }
   }
 
@@ -222,13 +228,11 @@ public class AlertMeta implements Serializable {
     /**
      * Validate the format of a value to be used for this key
      *
-     * <p>This method behaves as an assertion and will throw {@link IllegalArgumentException} if the
-     * value is invalid.
-     *
      * @param value Value
+     * @return True if value was formatted correctly for key
      */
-    public void validate(String value) {
-      validator.validate(key, value);
+    public boolean validate(String value) {
+      return validator.validate(key, value);
     }
 
     /**
