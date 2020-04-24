@@ -123,7 +123,7 @@ public class AwsBehavior implements Serializable {
                       Cloudtrail ct = e.getPayload();
                       String alertSummary =
                           String.format("%s by %s", cm.getDescription(), ct.getUser());
-                      alert.addMetadata(AlertMeta.Key.USER, ct.getUser());
+                      alert.addMetadata(AlertMeta.Key.USERNAME, ct.getUser());
                       if (cm.getResource() != null) {
                         alertSummary =
                             String.format(

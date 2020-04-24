@@ -101,10 +101,10 @@ public class TestAwsBehavior {
                 String actualSummary = a.getSummary();
                 if (actualSummary.equals("IAM action from console without mfa by picard")) {
                   cnt++;
-                  assertEquals("picard", a.getMetadataValue(AlertMeta.Key.USER));
+                  assertEquals("picard", a.getMetadataValue(AlertMeta.Key.USERNAME));
                 } else if (actualSummary.equals("access key created by uhura for guinan")) {
                   cnt++;
-                  assertEquals("uhura", a.getMetadataValue(AlertMeta.Key.USER));
+                  assertEquals("uhura", a.getMetadataValue(AlertMeta.Key.USERNAME));
                   if (a.getMetadataValue(AlertMeta.Key.RESOURCE) != null) {
                     assertEquals("guinan", a.getMetadataValue(AlertMeta.Key.RESOURCE));
                   }

@@ -57,7 +57,9 @@ public class TestUserAgentBlacklist1 {
                     String.format(
                         "test httprequest useragent_blacklist %s",
                         a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
-                assertEquals("useragent_blacklist", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                assertEquals(
+                    "useragent_blacklist",
+                    a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals(summary, a.getSummary());
                 assertEquals(
                     "1970-01-01T00:00:59.999Z", a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));

@@ -44,10 +44,12 @@ public class TestErrorRate1 {
         .satisfies(
             i -> {
               for (Alert a : i) {
-                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("error_rate")) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("error_rate")) {
                   assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("test httprequest error_rate 10.0.0.1 35", a.getSummary());
-                  assertEquals("error_rate", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                  assertEquals(
+                      "error_rate", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       35L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.ERROR_COUNT), 10));
                   assertEquals(
@@ -55,7 +57,8 @@ public class TestErrorRate1 {
                   assertEquals(
                       "1970-01-01T00:00:59.999Z",
                       a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
-                } else if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("cfgtick")) {
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("cfgtick")) {
                   assertEquals("httprequest-cfgtick", a.getCategory());
                   assertEquals("test", a.getCustomMetadataValue("monitoredResourceIndicator"));
                   if (a.getCustomMetadataValue("inputFile") != null) {

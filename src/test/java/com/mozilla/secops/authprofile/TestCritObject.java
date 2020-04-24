@@ -67,7 +67,8 @@ public class TestCritObject {
               long cnt = 0;
               long cfgTickCnt = 0;
               for (Alert a : results) {
-                if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("critical_object_analyze")) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("critical_object_analyze")) {
                   assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
                   assertEquals(
                       "critical authentication event observed laforge@mozilla.com to "
@@ -78,7 +79,8 @@ public class TestCritObject {
                       containsString(
                           "This destination object is configured as a critical resource"));
                   assertEquals(
-                      "critical_object_analyze", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+                      "critical_object_analyze",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       "section31@mozilla.com",
                       a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
@@ -104,7 +106,8 @@ public class TestCritObject {
                     fail(exc.getMessage());
                   }
                   cnt++;
-                } else if (a.getMetadataValue(AlertMeta.Key.CATEGORY).equals("cfgtick")) {
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("cfgtick")) {
                   cfgTickCnt++;
                   assertEquals("authprofile-cfgtick", a.getCategory());
                   assertEquals("^projects/test$", a.getCustomMetadataValue("critObjects"));

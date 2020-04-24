@@ -138,7 +138,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("httprequest", a.getCategory());
-    assertEquals("error_rate", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+    assertEquals("error_rate", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
     assertEquals("10.0.0.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     assertEquals("30", a.getMetadataValue(AlertMeta.Key.ERROR_THRESHOLD));
     assertEquals("60", a.getMetadataValue(AlertMeta.Key.ERROR_COUNT));
@@ -165,7 +165,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("httprequest", a.getCategory());
-    assertEquals("useragent_blacklist", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+    assertEquals("useragent_blacklist", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
     assertEquals("10.0.0.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     assertEquals(1, Violation.fromAlert(a).length);
     Violation v = Violation.fromAlert(a)[0];
@@ -189,7 +189,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("httprequest", a.getCategory());
-    assertEquals("threshold_analysis", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+    assertEquals("threshold_analysis", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
     assertEquals("10.0.0.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     assertEquals("180.0", a.getMetadataValue(AlertMeta.Key.MEAN));
     assertEquals("900", a.getMetadataValue(AlertMeta.Key.COUNT));
@@ -429,7 +429,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("httprequest", a.getCategory());
-    assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+    assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
     assertEquals("10.0.0.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     assertEquals("/test", a.getMetadataValue(AlertMeta.Key.ENDPOINT));
     assertEquals("900", a.getMetadataValue(AlertMeta.Key.COUNT));
@@ -458,7 +458,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("httprequest", a.getCategory());
-    assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+    assertEquals("endpoint_abuse", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
     assertEquals("10.0.0.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     assertEquals("/test", a.getMetadataValue(AlertMeta.Key.ENDPOINT));
     assertEquals("900", a.getMetadataValue(AlertMeta.Key.COUNT));
@@ -485,7 +485,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("httprequest", a.getCategory());
-    assertEquals("hard_limit", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+    assertEquals("hard_limit", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
     assertEquals("10.0.0.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     assertEquals("900", a.getMetadataValue(AlertMeta.Key.COUNT));
     assertEquals(1, Violation.fromAlert(a).length);
@@ -510,7 +510,7 @@ public class TestAlert {
     assertNotNull(a);
 
     assertEquals("httprequest", a.getCategory());
-    assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.CATEGORY));
+    assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
     assertEquals("10.0.0.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     assertEquals("180.0", a.getMetadataValue(AlertMeta.Key.MEAN));
     assertEquals("900", a.getMetadataValue(AlertMeta.Key.COUNT));
