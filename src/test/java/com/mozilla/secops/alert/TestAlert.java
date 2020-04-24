@@ -535,15 +535,30 @@ public class TestAlert {
 
   @Test
   public void testMetaValidator() throws Exception {
-    Alert a = new Alert();
-    assertNotNull(a);
+    // Single type value
+    assertTrue(new Alert().addMetadata(AlertMeta.Key.SOURCEADDRESS, "1.2.3.4"));
+    assertFalse(new Alert().addMetadata(AlertMeta.Key.SOURCEADDRESS, ""));
+    assertFalse(new Alert().addMetadata(AlertMeta.Key.SOURCEADDRESS, null));
 
-    assertTrue(a.addMetadata(AlertMeta.Key.SOURCEADDRESS, "1.2.3.4"));
-    assertFalse(a.addMetadata(AlertMeta.Key.EMAIL, ""));
-    assertFalse(a.addMetadata(AlertMeta.Key.EMAIL, null));
+    // List type value
+    assertTrue(new Alert().addMetadata(AlertMeta.Key.EMAIL, "a@mozilla.com"));
+    assertTrue(new Alert().addMetadata(AlertMeta.Key.EMAIL, "a@mozilla.com, b@mozilla.com"));
+    assertTrue(new Alert().addMetadata(AlertMeta.Key.EMAIL, "a@mozilla.com,b@mozilla.com"));
+    assertFalse(new Alert().addMetadata(AlertMeta.Key.EMAIL, ""));
+    assertFalse(new Alert().addMetadata(AlertMeta.Key.EMAIL, null));
+    assertFalse(new Alert().addMetadata(AlertMeta.Key.EMAIL, "a@mozilla.com,,b@mozilla.com"));
 
-    assertTrue(a.setMetadataValue(AlertMeta.Key.SOURCEADDRESS, "1.2.3.4"));
-    assertFalse(a.setMetadataValue(AlertMeta.Key.EMAIL, ""));
-    assertFalse(a.setMetadataValue(AlertMeta.Key.EMAIL, null));
+    // Single type value
+    assertTrue(new Alert().setMetadataValue(AlertMeta.Key.SOURCEADDRESS, "1.2.3.4"));
+    assertFalse(new Alert().setMetadataValue(AlertMeta.Key.SOURCEADDRESS, ""));
+    assertFalse(new Alert().setMetadataValue(AlertMeta.Key.SOURCEADDRESS, null));
+
+    // List type value
+    assertTrue(new Alert().setMetadataValue(AlertMeta.Key.EMAIL, "a@mozilla.com"));
+    assertTrue(new Alert().setMetadataValue(AlertMeta.Key.EMAIL, "a@mozilla.com, b@mozilla.com"));
+    assertTrue(new Alert().setMetadataValue(AlertMeta.Key.EMAIL, "a@mozilla.com,b@mozilla.com"));
+    assertFalse(new Alert().setMetadataValue(AlertMeta.Key.EMAIL, ""));
+    assertFalse(new Alert().setMetadataValue(AlertMeta.Key.EMAIL, null));
+    assertFalse(new Alert().setMetadataValue(AlertMeta.Key.EMAIL, "a@mozilla.com,,b@mozilla.com"));
   }
 }
