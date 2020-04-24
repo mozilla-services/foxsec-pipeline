@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +21,32 @@ public class AlertMeta implements Serializable {
   private String key;
   private String value;
 
+  private static final Splitter META_VALUE_SPLITTER = Splitter.on(",").trimResults();
+
+  public static String joinListValues(Key key, List<String> input) throws IOException {
+    if (!key.getValueType().equals(Key.ValueType.LIST)) {
+      String buf = String.format("key %s for join is not of type list", key.getKey());
+      log.error(buf);
+      throw new IOException(buf);
+    }
+    return String.join(", ", input);
+  }
+
+  public static List<String> splitListValues(Key key, String input) throws IOException {
+    if (!key.getValueType().equals(Key.ValueType.LIST)) {
+      String buf = String.format("key %s for split is not of type list", key.getKey());
+      log.error(buf);
+      throw new IOException(buf);
+    }
+    return META_VALUE_SPLITTER.splitToList(input);
+  }
+
   /**
    * Generic alert metadata value validator
    *
    * <p>Will only verify the value is non-null and not empty.
    */
   private static class AlertMetadataValidator {
-    private Splitter splitter = Splitter.on(",").trimResults();
-
     /**
      * Validate single value format
      *
@@ -54,7 +73,12 @@ public class AlertMeta implements Serializable {
           log.error("null value passed for list type key {}", key.getKey());
           return false;
         }
-        return splitter.splitToList(value).stream().allMatch(i -> validateValue(key.getKey(), i));
+        try {
+          return splitListValues(key, value).stream().allMatch(i -> validateValue(key.getKey(), i));
+        } catch (IOException exc) {
+          // Should never happen at this point
+          throw new RuntimeException("list type assertion during list split");
+        }
       } else {
         return validateValue(key.getKey(), value);
       }

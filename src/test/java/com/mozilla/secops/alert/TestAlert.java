@@ -10,6 +10,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.mozilla.secops.Violation;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -538,15 +539,28 @@ public class TestAlert {
     // Single type value
     assertTrue(new Alert().addMetadata(AlertMeta.Key.SOURCEADDRESS, "1.2.3.4"));
     assertFalse(new Alert().addMetadata(AlertMeta.Key.SOURCEADDRESS, ""));
-    assertFalse(new Alert().addMetadata(AlertMeta.Key.SOURCEADDRESS, null));
+    assertFalse(new Alert().addMetadata(AlertMeta.Key.SOURCEADDRESS, (String) null));
 
     // List type value
     assertTrue(new Alert().addMetadata(AlertMeta.Key.EMAIL, "a@mozilla.com"));
     assertTrue(new Alert().addMetadata(AlertMeta.Key.EMAIL, "a@mozilla.com, b@mozilla.com"));
     assertTrue(new Alert().addMetadata(AlertMeta.Key.EMAIL, "a@mozilla.com,b@mozilla.com"));
     assertFalse(new Alert().addMetadata(AlertMeta.Key.EMAIL, ""));
-    assertFalse(new Alert().addMetadata(AlertMeta.Key.EMAIL, null));
+    assertFalse(new Alert().addMetadata(AlertMeta.Key.EMAIL, (String) null));
     assertFalse(new Alert().addMetadata(AlertMeta.Key.EMAIL, "a@mozilla.com,,b@mozilla.com"));
+
+    // Single type value, List variant
+    ArrayList<String> buf = new ArrayList<>();
+    buf.add("1.2.3.4");
+    assertFalse(new Alert().addMetadata(AlertMeta.Key.SOURCEADDRESS, buf));
+
+    // List type value, List variant
+    buf = new ArrayList<>();
+    buf.add("a@mozilla.com");
+    buf.add("b@mozilla.com");
+    assertTrue(new Alert().addMetadata(AlertMeta.Key.EMAIL, buf));
+    buf.add("");
+    assertFalse(new Alert().addMetadata(AlertMeta.Key.EMAIL, buf));
 
     // Single type value
     assertTrue(new Alert().setMetadataValue(AlertMeta.Key.SOURCEADDRESS, "1.2.3.4"));
