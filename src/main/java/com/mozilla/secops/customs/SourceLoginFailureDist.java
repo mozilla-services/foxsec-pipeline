@@ -100,13 +100,9 @@ public class SourceLoginFailureDist
                             "%s distributed source login failure threshold exceeded for single account"
                                 + ", %d addresses in 10 minutes",
                             monitoredResource, cnt));
-                    String buf = "";
+                    ArrayList<String> buf = new ArrayList<>();
                     for (String s : source) {
-                      if (buf.isEmpty()) {
-                        buf = s;
-                      } else {
-                        buf += ", " + s;
-                      }
+                      buf.add(s);
                     }
                     alert.addMetadata(AlertMeta.Key.SOURCEADDRESSES, buf);
                     c.output(alert);

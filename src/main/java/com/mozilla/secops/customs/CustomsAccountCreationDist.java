@@ -112,13 +112,9 @@ public class CustomsAccountCreationDist
                                 "%s suspicious distributed account creation, %s %d",
                                 monitoredResource, remoteAddress, cand.size() + 1));
                         alert.addMetadata(AlertMeta.Key.EMAIL, email);
-                        String buf = "";
+                        ArrayList<String> buf = new ArrayList<>();
                         for (String s : cand) {
-                          if (buf.isEmpty()) {
-                            buf = s;
-                          } else {
-                            buf += ", " + s;
-                          }
+                          buf.add(s);
                         }
                         alert.addMetadata(AlertMeta.Key.EMAIL_SIMILAR, buf);
                         c.output(alert);

@@ -9,6 +9,7 @@ import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.window.GlobalTriggers;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.transforms.Distinct;
@@ -117,24 +118,20 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
-                    String buf = "";
+                    ArrayList<String> buf = new ArrayList<>();
                     int cnt = 0;
 
                     for (String s : c.element().getValue()) {
-                      if (buf.isEmpty()) {
-                        buf = s;
-                      } else {
-                        buf += ", " + s;
-                      }
+                      buf.add(s);
                       // When we are building the submission buffer, also include a normalized
                       // version of the address, and a dot normalized version
                       String nb = MiscUtil.normalizeEmailPlus(s);
                       if (!s.equals(nb)) {
-                        buf += ", " + nb;
+                        buf.add(nb);
                       }
                       nb = MiscUtil.normalizeEmailPlusDotStrip(s);
                       if (!s.equals(nb)) {
-                        buf += ", " + nb;
+                        buf.add(nb);
                       }
                       cnt++;
                     }

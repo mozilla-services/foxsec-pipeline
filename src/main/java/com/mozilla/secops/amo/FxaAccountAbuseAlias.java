@@ -115,11 +115,12 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
                     Iterable<String> alias = c.element().getValue();
                     ArrayList<String> distinct = new ArrayList<>();
 
-                    String metabuf = normalized;
+                    ArrayList<String> metabuf = new ArrayList<>();
+                    metabuf.add(normalized);
                     for (String s : alias) {
                       if (!distinct.contains(s)) {
                         distinct.add(s);
-                        metabuf += ", " + s;
+                        metabuf.add(s);
                       }
                     }
                     if (distinct.size() <= maxAliases) {
