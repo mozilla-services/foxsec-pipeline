@@ -23,6 +23,13 @@ public class AlertMeta implements Serializable {
 
   private static final Splitter META_VALUE_SPLITTER = Splitter.on(",").trimResults();
 
+  /**
+   * Join a list of values for a specific metadata key
+   *
+   * @param key Key
+   * @param input List of values
+   * @return String
+   */
   public static String joinListValues(Key key, List<String> input) throws IOException {
     if (!key.getValueType().equals(Key.ValueType.LIST)) {
       String buf = String.format("key %s for join is not of type list", key.getKey());
@@ -32,6 +39,13 @@ public class AlertMeta implements Serializable {
     return String.join(", ", input);
   }
 
+  /**
+   * Split a list of values for a specific metadata key
+   *
+   * @param key Key
+   * @param input String
+   * @return List
+   */
   public static List<String> splitListValues(Key key, String input) throws IOException {
     if (!key.getValueType().equals(Key.ValueType.LIST)) {
       String buf = String.format("key %s for split is not of type list", key.getKey());
