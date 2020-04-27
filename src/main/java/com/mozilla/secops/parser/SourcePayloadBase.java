@@ -46,13 +46,19 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
       // If we have parser state attempt to resolve GeoIP information
       CityResponse cr = state.getParser().geoIp(sourceAddress);
       if (cr != null) {
+        // Note that even with a valid response, sometimes the city and country fields we want can
+        // be returned as empty strings. If we see empty strings here treat them the same as if they
+        // were null. Also do the same for the ISP related lookups.
         if (cr.getCity() != null) {
-          // getName() can return an empty string in some cases
           if (cr.getCity().getName() != null && !cr.getCity().getName().isEmpty()) {
             sourceAddressCity = cr.getCity().getName();
           }
         }
-        sourceAddressCountry = cr.getCountry().getIsoCode();
+        if (cr.getCountry() != null) {
+          if (cr.getCountry().getIsoCode() != null && !cr.getCountry().getIsoCode().isEmpty()) {
+            sourceAddressCountry = cr.getCountry().getIsoCode();
+          }
+        }
 
         if ((cr.getLocation() != null)
             && (cr.getLocation().getLatitude() != null)
@@ -60,7 +66,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
           sourceAddressLatitude = cr.getLocation().getLatitude();
           sourceAddressLongitude = cr.getLocation().getLongitude();
 
-          if (cr.getLocation().getTimeZone() != null) {
+          if (cr.getLocation().getTimeZone() != null && !cr.getLocation().getTimeZone().isEmpty()) {
             sourceTimeZone = cr.getLocation().getTimeZone();
           }
         }
@@ -68,9 +74,14 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
 
       IspResponse ir = state.getParser().geoIpIsp(sourceAddress);
       if (ir != null) {
-        sourceAddressIsp = ir.getIsp();
+        if (ir.getIsp() != null && !ir.getIsp().isEmpty()) {
+          sourceAddressIsp = ir.getIsp();
+        }
         sourceAddressAsn = ir.getAutonomousSystemNumber();
-        sourceAddressAsOrg = ir.getAutonomousSystemOrganization();
+        if (ir.getAutonomousSystemOrganization() != null
+            && !ir.getAutonomousSystemOrganization().isEmpty()) {
+          sourceAddressAsOrg = ir.getAutonomousSystemOrganization();
+        }
       }
     }
 

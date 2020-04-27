@@ -78,6 +78,9 @@ public class AlertFormatter extends DoFn<Alert, Alert> {
       cityKey = k.getAssociatedKey(AlertMeta.Key.AssociatedKey.CITY);
       countryKey = k.getAssociatedKey(AlertMeta.Key.AssociatedKey.COUNTRY);
 
+      // Note that even with a valid response, sometimes the city and country fields we want can
+      // be returned as empty strings. If we see empty strings here treat them the same as if they
+      // were null. Also do the same for the ISP related lookups.
       if (cityKey != null && countryKey != null) {
         CityResponse cr = geoip.lookupCity(buf);
         if (cr != null) {
@@ -87,7 +90,11 @@ public class AlertFormatter extends DoFn<Alert, Alert> {
               a.addMetadata(cityKey, cr.getCity().getName());
             }
           }
-          a.addMetadata(countryKey, cr.getCountry().getIsoCode());
+          if (cr.getCountry() != null) {
+            if (cr.getCountry().getIsoCode() != null && !cr.getCountry().getIsoCode().isEmpty()) {
+              a.addMetadata(countryKey, cr.getCountry().getIsoCode());
+            }
+          }
         }
       }
 
@@ -98,13 +105,14 @@ public class AlertFormatter extends DoFn<Alert, Alert> {
       if (ispKey != null && asnKey != null && asOrgKey != null) {
         IspResponse ir = geoip.lookupIsp(buf);
         if (ir != null) {
-          if (ir.getIsp() != null) {
+          if (ir.getIsp() != null && !ir.getIsp().isEmpty()) {
             a.addMetadata(ispKey, ir.getIsp());
           }
           if (ir.getAutonomousSystemNumber() != null) {
             a.addMetadata(asnKey, ir.getAutonomousSystemNumber().toString());
           }
-          if (ir.getAutonomousSystemOrganization() != null) {
+          if (ir.getAutonomousSystemOrganization() != null
+              && !ir.getAutonomousSystemOrganization().isEmpty()) {
             a.addMetadata(asOrgKey, ir.getAutonomousSystemOrganization());
           }
         }
