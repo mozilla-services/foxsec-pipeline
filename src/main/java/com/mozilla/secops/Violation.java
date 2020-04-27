@@ -7,9 +7,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -105,7 +107,12 @@ public class Violation {
       if (emails == null) {
         return null;
       }
-      String[] parts = emails.split(", ?");
+      List<String> parts = null;
+      try {
+        parts = AlertMeta.splitListValues(AlertMeta.Key.EMAIL, emails);
+      } catch (IOException exc) {
+        return null;
+      }
       for (String i : parts) {
         ret.add(createViolation(a, i, "email", vType.toString()));
       }
@@ -132,7 +139,14 @@ public class Violation {
               "ip",
               ViolationType.ENDPOINT_ABUSE_VIOLATION.toString()));
       if (a.getMetadataValue(AlertMeta.Key.EMAIL) != null) {
-        String[] parts = a.getMetadataValue(AlertMeta.Key.EMAIL).split(", ?");
+        List<String> parts = null;
+        try {
+          parts =
+              AlertMeta.splitListValues(
+                  AlertMeta.Key.EMAIL, a.getMetadataValue(AlertMeta.Key.EMAIL));
+        } catch (IOException exc) {
+          return null;
+        }
         for (String i : parts) {
           ret.add(
               createViolation(a, i, "email", ViolationType.ABUSIVE_ACCOUNT_VIOLATION.toString()));

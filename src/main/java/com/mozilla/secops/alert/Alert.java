@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 import org.joda.time.DateTime;
@@ -306,6 +307,23 @@ public class Alert implements Serializable {
       metaLock.unlock();
     }
     return true;
+  }
+
+  /**
+   * Add metadata as a list of values
+   *
+   * <p>Only valid for LIST type fields.
+   *
+   * @param key Key
+   * @param value List
+   * @return True if key was successfully set
+   */
+  public boolean addMetadata(AlertMeta.Key key, List<String> value) {
+    try {
+      return addMetadata(key, AlertMeta.joinListValues(key, value));
+    } catch (IOException exc) {
+      return false;
+    }
   }
 
   /**

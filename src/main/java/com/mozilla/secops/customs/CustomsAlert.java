@@ -7,9 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -192,7 +194,14 @@ public class CustomsAlert implements Serializable {
             "%s addresses failed login to %s in window",
             a.getMetadataValue(AlertMeta.Key.COUNT), a.getMetadataValue(AlertMeta.Key.EMAIL));
 
-    String[] el = a.getMetadataValue(AlertMeta.Key.SOURCEADDRESSES).split(", ?");
+    List<String> el = null;
+    try {
+      el =
+          AlertMeta.splitListValues(
+              AlertMeta.Key.SOURCEADDRESSES, a.getMetadataValue(AlertMeta.Key.SOURCEADDRESSES));
+    } catch (IOException exc) {
+      return ret;
+    }
     for (String i : el) {
       CustomsAlert ca = baseAlert(a);
       ca.setSeverity(AlertSeverity.WARNING);
@@ -235,7 +244,13 @@ public class CustomsAlert implements Serializable {
     ret.add(buf);
 
     // Create alert for each account identifier
-    String[] parts = a.getMetadataValue(AlertMeta.Key.EMAIL).split(", ?");
+    List<String> parts = null;
+    try {
+      parts =
+          AlertMeta.splitListValues(AlertMeta.Key.EMAIL, a.getMetadataValue(AlertMeta.Key.EMAIL));
+    } catch (IOException exc) {
+      return ret;
+    }
     for (String i : parts) {
       buf = baseAlert(a);
       buf.setSeverity(AlertSeverity.WARNING);

@@ -108,13 +108,9 @@ public class CustomsAccountCreation
                         String.format(
                             "%s suspicious account creation, %s %d",
                             monitoredResource, remoteAddress, cnt));
-                    String buf = "";
+                    ArrayList<String> buf = new ArrayList<>();
                     for (String s : seenAcct) {
-                      if (buf.isEmpty()) {
-                        buf = s;
-                      } else {
-                        buf += ", " + s;
-                      }
+                      buf.add(s);
                     }
                     alert.addMetadata(AlertMeta.Key.EMAIL, buf);
                     if (accountAbuseSuppressRecovery != null) {

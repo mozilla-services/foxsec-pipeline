@@ -2,11 +2,13 @@ package com.mozilla.secops.alert;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Splitter;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +21,40 @@ public class AlertMeta implements Serializable {
   private String key;
   private String value;
 
+  private static final Splitter META_VALUE_SPLITTER = Splitter.on(",").trimResults();
+
+  /**
+   * Join a list of values for a specific metadata key
+   *
+   * @param key Key
+   * @param input List of values
+   * @return String
+   */
+  public static String joinListValues(Key key, List<String> input) throws IOException {
+    if (!key.getValueType().equals(Key.ValueType.LIST)) {
+      String buf = String.format("key %s for join is not of type list", key.getKey());
+      log.error(buf);
+      throw new IOException(buf);
+    }
+    return String.join(", ", input);
+  }
+
+  /**
+   * Split a list of values for a specific metadata key
+   *
+   * @param key Key
+   * @param input String
+   * @return List
+   */
+  public static List<String> splitListValues(Key key, String input) throws IOException {
+    if (!key.getValueType().equals(Key.ValueType.LIST)) {
+      String buf = String.format("key %s for split is not of type list", key.getKey());
+      log.error(buf);
+      throw new IOException(buf);
+    }
+    return META_VALUE_SPLITTER.splitToList(input);
+  }
+
   /**
    * Generic alert metadata value validator
    *
@@ -26,17 +62,40 @@ public class AlertMeta implements Serializable {
    */
   private static class AlertMetadataValidator {
     /**
-     * Validate value
+     * Validate single value format
      *
      * @param value Value for validation
      * @return True if value is formatted correctly for key
      */
-    public boolean validate(String key, String value) {
+    protected boolean validateValue(String key, String value) {
       if (value == null || value.isEmpty()) {
         log.error("value for key {} is invalid: {}", key, value);
         return false;
       }
       return true;
+    }
+
+    /**
+     * Run validation on the value being set within a key
+     *
+     * @param value Value for validation
+     * @return True if value is formatted correctly for key
+     */
+    public boolean validate(Key key, String value) {
+      if (key.getValueType().equals(Key.ValueType.LIST)) {
+        if (value == null) {
+          log.error("null value passed for list type key {}", key.getKey());
+          return false;
+        }
+        try {
+          return splitListValues(key, value).stream().allMatch(i -> validateValue(key.getKey(), i));
+        } catch (IOException exc) {
+          // Should never happen at this point
+          throw new RuntimeException("list type assertion during list split");
+        }
+      } else {
+        return validateValue(key.getKey(), value);
+      }
     }
   }
 
@@ -70,9 +129,9 @@ public class AlertMeta implements Serializable {
     COUNT("count"),
     DESCRIPTION("description"),
     DOC_LINK("doc_link"),
-    EMAIL("email", true),
+    EMAIL("email", true, new AlertMetadataValidator(), null, ValueType.LIST),
     EMAIL_CONTACT("email_contact"),
-    EMAIL_SIMILAR("email_similar", true),
+    EMAIL_SIMILAR("email_similar", true, new AlertMetadataValidator(), null, ValueType.LIST),
     END("end"),
     ENDPOINT("endpoint"),
     ENDPOINT_PATTERN("endpoint_pattern"),
@@ -130,7 +189,7 @@ public class AlertMeta implements Serializable {
     SOURCEADDRESS_PREVIOUS_ISP("sourceaddress_previous_isp"),
     SOURCEADDRESS_RISKSCORE("sourceaddress_riskscore"),
     SOURCEADDRESS_TIMEZONE("sourceaddress_timezone"),
-    SOURCEADDRESSES("sourceaddresses"),
+    SOURCEADDRESSES("sourceaddresses", true, new AlertMetadataValidator(), null, ValueType.LIST),
     START("start"),
     STATE_ACTION_TYPE("state_action_type"),
     STATUS("status"),
@@ -158,7 +217,8 @@ public class AlertMeta implements Serializable {
           new AssociatedKeyLinkage(SOURCEADDRESS_ISP, AssociatedKey.ISP),
           new AssociatedKeyLinkage(SOURCEADDRESS_ASN, AssociatedKey.ASN),
           new AssociatedKeyLinkage(SOURCEADDRESS_AS_ORG, AssociatedKey.AS_ORG)
-        }),
+        },
+        ValueType.SINGLE),
     SOURCEADDRESS_PREVIOUS(
         "sourceaddress_previous",
         true,
@@ -169,7 +229,14 @@ public class AlertMeta implements Serializable {
           new AssociatedKeyLinkage(SOURCEADDRESS_PREVIOUS_ISP, AssociatedKey.ISP),
           new AssociatedKeyLinkage(SOURCEADDRESS_PREVIOUS_ASN, AssociatedKey.ASN),
           new AssociatedKeyLinkage(SOURCEADDRESS_PREVIOUS_AS_ORG, AssociatedKey.AS_ORG)
-        });
+        },
+        ValueType.SINGLE);
+
+    /** Storage formats for value fields */
+    public enum ValueType {
+      SINGLE,
+      LIST
+    }
 
     /**
      * Associated key identifiers
@@ -190,6 +257,7 @@ public class AlertMeta implements Serializable {
     private boolean isSensitive;
     private AlertMetadataValidator validator;
     private AssociatedKeyLinkage[] associatedKeys;
+    private ValueType valueType;
 
     /**
      * Return the string that will be used as the metadata key
@@ -207,6 +275,15 @@ public class AlertMeta implements Serializable {
      */
     public boolean getIsSensitive() {
       return isSensitive;
+    }
+
+    /**
+     * Get value field type
+     *
+     * @return ValueType
+     */
+    public ValueType getValueType() {
+      return valueType;
     }
 
     /**
@@ -234,7 +311,7 @@ public class AlertMeta implements Serializable {
      * @return True if value was formatted correctly for key
      */
     public boolean validate(String value) {
-      return validator.validate(key, value);
+      return validator.validate(this, value);
     }
 
     /**
@@ -249,13 +326,15 @@ public class AlertMeta implements Serializable {
         String key,
         boolean isSensitive,
         AlertMetadataValidator validator,
-        AssociatedKeyLinkage[] links) {
+        AssociatedKeyLinkage[] links,
+        ValueType valueType) {
       if (links == null) {
         links = new AssociatedKeyLinkage[] {};
       }
       this.key = key;
       this.isSensitive = isSensitive;
       this.validator = validator;
+      this.valueType = valueType;
       associatedKeys = links;
     }
 
@@ -265,7 +344,7 @@ public class AlertMeta implements Serializable {
      * @param key String to use for key
      */
     Key(String key) {
-      this(key, false, new AlertMetadataValidator(), null);
+      this(key, false, new AlertMetadataValidator(), null, ValueType.SINGLE);
     }
 
     /**
@@ -275,7 +354,7 @@ public class AlertMeta implements Serializable {
      * @param links Associated key linkages
      */
     Key(String key, AssociatedKeyLinkage[] links) {
-      this(key, false, new AlertMetadataValidator(), links);
+      this(key, false, new AlertMetadataValidator(), links, ValueType.SINGLE);
     }
 
     /**
@@ -285,7 +364,7 @@ public class AlertMeta implements Serializable {
      * @param isSensitive True if metadata is considered to contain sensitive information
      */
     Key(String key, boolean isSensitive) {
-      this(key, isSensitive, new AlertMetadataValidator(), null);
+      this(key, isSensitive, new AlertMetadataValidator(), null, ValueType.SINGLE);
     }
   }
 

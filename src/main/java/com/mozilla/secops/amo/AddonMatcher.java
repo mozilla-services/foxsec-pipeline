@@ -118,14 +118,15 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
                         // add the normalized email equivalents
                         if (d.getFxaEmail() != null) {
                           String email = d.getFxaEmail();
-                          String buf = email;
+                          ArrayList<String> buf = new ArrayList<>();
+                          buf.add(email);
                           String nb = MiscUtil.normalizeEmailPlus(email);
                           if (!email.equals(nb)) {
-                            buf += ", " + nb;
+                            buf.add(nb);
                           }
                           nb = MiscUtil.normalizeEmailPlusDotStrip(email);
                           if (!email.equals(nb)) {
-                            buf += ", " + nb;
+                            buf.add(nb);
                           }
                           alert.addMetadata(AlertMeta.Key.EMAIL, buf);
                         }

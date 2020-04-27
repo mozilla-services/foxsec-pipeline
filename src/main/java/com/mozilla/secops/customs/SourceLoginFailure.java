@@ -106,13 +106,9 @@ public class SourceLoginFailure
                         String.format(
                             "%s source login failure threshold exceeded, %s %d in 10 minutes",
                             monitoredResource, addr, cnt));
-                    String buf = "";
+                    ArrayList<String> buf = new ArrayList<>();
                     for (String s : accts) {
-                      if (buf.isEmpty()) {
-                        buf = s;
-                      } else {
-                        buf += ", " + s;
-                      }
+                      buf.add(s);
                     }
                     alert.addMetadata(AlertMeta.Key.EMAIL, buf);
                     c.output(alert);

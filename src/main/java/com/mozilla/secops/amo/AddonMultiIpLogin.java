@@ -231,14 +231,15 @@ public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollectio
                     }
 
                     String email = c.element().getKey();
-                    String buf = email;
+                    ArrayList<String> buf = new ArrayList<>();
+                    buf.add(email);
                     String nb = MiscUtil.normalizeEmailPlus(email);
                     if (!email.equals(nb)) {
-                      buf += ", " + nb;
+                      buf.add(nb);
                     }
                     nb = MiscUtil.normalizeEmailPlusDotStrip(email);
                     if (!email.equals(nb)) {
-                      buf += ", " + nb;
+                      buf.add(nb);
                     }
 
                     Alert alert = new Alert();
