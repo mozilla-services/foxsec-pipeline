@@ -1362,7 +1362,7 @@ public class HTTPRequest implements Serializable {
       monitoredResource = toggles.getMonitoredResource();
       maxmindCityDbPath = options.getMaxmindCityDbPath();
       maxmindIspDbPath = options.getMaxmindIspDbPath();
-      initialNatListPath = options.getKnownGatewaysPath();
+      initialNatListPath = toggles.getKnownGatewaysPath();
     }
 
     @Override
