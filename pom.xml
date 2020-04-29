@@ -163,6 +163,11 @@
                 <artifactId>guava</artifactId>
                 <version>25.1-jre</version>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-cbor</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <!-- Direct dependencies are declared here. If the dependency is both
