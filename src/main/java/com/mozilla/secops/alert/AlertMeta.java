@@ -439,9 +439,9 @@ public class AlertMeta implements Serializable {
       }
       w.write(
           String.format(
-              "SELECT EXTRACT(DATETIME FROM _PARTITIONTIME) AS partitiontime, "
+              "SELECT "
                   + "id, timestamp, severity, category, ARRAY(\nSELECT AS STRUCT key, "
-                  + "value FROM UNNEST(metadata) WHERE\nKEY NOT IN (%s)\n) AS metadata\n"
+                  + "value FROM UNNEST(metadata) WHERE\nkey NOT IN (%s)\n) AS metadata\n"
                   + "FROM <<table>>\n",
               String.join(", ", sFields)));
       w.close();
