@@ -21,6 +21,7 @@ public class HTTPRequestToggles {
   private Boolean enableEndpointSequenceAbuseAnalysis;
   private Boolean enableHardLimitAnalysis;
   private Boolean enableUserAgentBlacklistAnalysis;
+  private Boolean enablePerEndpointErrorRateAnalysis;
   private Boolean enableNatDetection;
   private Boolean enableSourceCorrelator;
 
@@ -47,7 +48,13 @@ public class HTTPRequestToggles {
   private Boolean endpointAbuseExtendedVariance;
   private String[] endpointAbuseCustomVarianceSubstrings;
   private Integer endpointAbuseSuppressRecovery;
+
+  // Session Windowing settings
   private Long sessionGapDurationMinutes;
+  private Long alertSuppressionDurationSeconds;
+
+  // Error Session Windowing settings
+  private Long errorSessionGapDurationMinutes;
 
   // Source correlator settings
   private Integer sourceCorrelatorMinimumAddresses;
@@ -56,6 +63,11 @@ public class HTTPRequestToggles {
   // Endpoint Abuse timing settings
   private String[] endpointSequenceAbusePatterns;
   private Integer endpointSequenceAbuseTimingSuppressRecovery;
+
+  // Per Endpoint Error Rate settings
+  private String[] perEndpointErrorRatePaths;
+  private Integer perEndpointErrorRateSuppressRecovery;
+  private Long perEndpointErrorRateAlertSuppressionDurationSeconds;
 
   // Filtering settings
   private String[] filterRequestPath;
@@ -353,6 +365,25 @@ public class HTTPRequestToggles {
   }
 
   /**
+   * Set duration to suppress alerts (when using session windows)
+   *
+   * @param value Long
+   */
+  @JsonProperty("alert_suppression_duration_seconds")
+  public void setAlertSuppressionDurationSeconds(Long value) {
+    alertSuppressionDurationSeconds = value;
+  }
+
+  /**
+   * Get duration to suppress alerts (when using session windows)
+   *
+   * @return Long
+   */
+  public Long getAlertSuppressionDurationSeconds() {
+    return alertSuppressionDurationSeconds;
+  }
+
+  /**
    * Set endpoint sequence abuse analysis
    *
    * @param enableEndpointSequenceAbuseAnalysis Boolean
@@ -483,6 +514,103 @@ public class HTTPRequestToggles {
    */
   public String getUserAgentBlacklistPath() {
     return userAgentBlacklistPath;
+  }
+
+  /**
+   * Get enable per endpoint error rate analysis setting
+   *
+   * @return Boolean
+   */
+  public Boolean getEnablePerEndpointErrorRateAnalysis() {
+    return enablePerEndpointErrorRateAnalysis;
+  }
+
+  /**
+   * Set enable per endpoint error rate analysis setting
+   *
+   * @param value
+   */
+  @JsonProperty("enable_per_endpoint_error_rate_analysis")
+  public void setEnablePerEndpointErrorRateAnaysis(Boolean value) {
+    enablePerEndpointErrorRateAnalysis = value;
+  }
+
+  /**
+   * Get paths for per endpoint error rate analysis
+   *
+   * @return String[]
+   */
+  public String[] getPerEndpointErrorRatePaths() {
+    return perEndpointErrorRatePaths;
+  }
+
+  /**
+   * Set enable per endpoint error rate analysis setting
+   *
+   * @param value
+   */
+  @JsonProperty("per_endpoint_error_rate_paths")
+  public void setPerEndpointErrorRatePaths(String[] value) {
+    perEndpointErrorRatePaths = value;
+  }
+
+  /**
+   * Get paths for per endpoint error rate analysis
+   *
+   * @return Integer
+   */
+  public Integer getPerEndpointErrorRateSuppressRecovery() {
+    return perEndpointErrorRateSuppressRecovery;
+  }
+
+  /**
+   * Set enable per endpoint error rate analysis setting
+   *
+   * @param value
+   */
+  @JsonProperty("per_endpoint_error_rate_suppress_recovery")
+  public void setPerEndpointErrorRateSuppressRecovery(Integer value) {
+    perEndpointErrorRateSuppressRecovery = value;
+  }
+
+  /**
+   * Get session gap duration for session windows of only error events
+   *
+   * @return Long
+   */
+  public Long getErrorSessionGapDurationMinutes() {
+    return errorSessionGapDurationMinutes;
+  }
+
+  /**
+   * Set session gap duration for session windows of only error events
+   *
+   * @param errorSessionGapDurationMinutes Double
+   */
+  @JsonProperty("error_session_gap_duration_minutes")
+  public void setErrorSessionGapDurationMinutes(Long errorSessionGapDurationMinutes) {
+    this.errorSessionGapDurationMinutes = errorSessionGapDurationMinutes;
+  }
+
+  /**
+   * Get alert suppression duration for per endpoint error rate
+   *
+   * @return Long
+   */
+  public Long getPerEndpointErrorRateAlertSuppressionDurationSeconds() {
+    return perEndpointErrorRateAlertSuppressionDurationSeconds;
+  }
+
+  /**
+   * Set alert suppression duration for per endpoint error rate
+   *
+   * @param perEndpointErrorRateAlertSuppressionDurationSeconds long
+   */
+  @JsonProperty("per_endpoint_error_rate_alert_suppression_duration_seconds")
+  public void setPerEndpointErrorRateAlertSuppressionDurationSeconds(
+      Long perEndpointErrorRateAlertSuppressionDurationSeconds) {
+    this.perEndpointErrorRateAlertSuppressionDurationSeconds =
+        perEndpointErrorRateAlertSuppressionDurationSeconds;
   }
 
   /**
@@ -740,6 +868,7 @@ public class HTTPRequestToggles {
     ret.setEnableEndpointSequenceAbuseAnalysis(o.getEnableEndpointSequenceAbuseAnalysis());
     ret.setEnableHardLimitAnalysis(o.getEnableHardLimitAnalysis());
     ret.setEnableUserAgentBlacklistAnalysis(o.getEnableUserAgentBlacklistAnalysis());
+    ret.setEnablePerEndpointErrorRateAnaysis(o.getEnablePerEndpointErrorRateAnalysis());
     ret.setEnableNatDetection(o.getNatDetection());
     ret.setKnownGatewaysPath(o.getKnownGatewaysPath());
 
@@ -758,10 +887,19 @@ public class HTTPRequestToggles {
     ret.setEndpointAbuseExtendedVariance(o.getEndpointAbuseExtendedVariance());
     ret.setEndpointAbuseCustomVarianceSubstrings(o.getEndpointAbuseCustomVarianceSubstrings());
     ret.setEndpointAbuseSuppressRecovery(o.getEndpointAbuseSuppressRecovery());
+
     ret.setSessionGapDurationMinutes(o.getSessionGapDurationMinutes());
+    ret.setAlertSuppressionDurationSeconds(o.getAlertSuppressionDurationSeconds());
 
     ret.setEndpointSequenceAbuseSuppressRecovery(o.getEndpointSequenceAbuseSuppressRecovery());
     ret.setEndpointSequenceAbusePattern(o.getEndpointSequenceAbusePatterns());
+
+    ret.setPerEndpointErrorRatePaths(o.getPerEndpointErrorRatePaths());
+    ret.setPerEndpointErrorRateSuppressRecovery(
+        o.getPerEndpointErrorRateAnalysisSuppressRecovery());
+    ret.setPerEndpointErrorRateAlertSuppressionDurationSeconds(
+        o.getPerEndpointErrorRateAlertSuppressionDurationSeconds());
+    ret.setErrorSessionGapDurationMinutes(o.getErrorSessionGapDurationMinutes());
 
     ret.setFilterRequestPath(o.getFilterRequestPath());
     ret.setIncludeUrlHostRegex(o.getIncludeUrlHostRegex());
@@ -784,6 +922,7 @@ public class HTTPRequestToggles {
     enableEndpointSequenceAbuseAnalysis = false;
     enableHardLimitAnalysis = false;
     enableUserAgentBlacklistAnalysis = false;
+    enablePerEndpointErrorRateAnalysis = false;
     enableNatDetection = false;
 
     hardLimitRequestCount = 100L;
