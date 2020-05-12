@@ -24,6 +24,7 @@ import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +39,13 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
@@ -105,8 +108,8 @@ public class HTTPRequest implements Serializable {
     private final Long gapDurationMinutes;
     private final Long paneFiringDelaySeconds = 10L;
 
-    public KeyAndWindowForSessionsFireEarly(HTTPRequestToggles toggles) {
-      gapDurationMinutes = toggles.getSessionGapDurationMinutes();
+    public KeyAndWindowForSessionsFireEarly(Long gapDurationMinutes) {
+      this.gapDurationMinutes = gapDurationMinutes;
     }
 
     @Override
@@ -132,6 +135,7 @@ public class HTTPRequest implements Serializable {
                       String userAgent = n.getUserAgent();
                       String rpath = n.getUrlRequestPath();
                       String url = n.getRequestUrl();
+                      String status = String.valueOf(n.getRequestStatus());
                       if (sourceAddress == null
                           || requestMethod == null
                           || rpath == null
@@ -148,6 +152,7 @@ public class HTTPRequest implements Serializable {
                       v.add(userAgent);
                       v.add(eTime);
                       v.add(url);
+                      v.add(status);
                       c.output(KV.of(sourceAddress, v));
                     }
                   }))
@@ -565,6 +570,7 @@ public class HTTPRequest implements Serializable {
     private final String iprepdDatastoreWhitelistProject;
     private final Integer suppressRecovery;
     private final Long sessionGapDurationMinutes;
+    private final Long alertSuppressionDurationSeconds;
 
     /** Internal class for configured endpoints in EPA */
     public static class EndpointAbuseEndpointInfo implements Serializable {
@@ -610,6 +616,7 @@ public class HTTPRequest implements Serializable {
       suppressRecovery = toggles.getEndpointAbuseSuppressRecovery();
       customVarianceSubstrings = toggles.getEndpointAbuseCustomVarianceSubstrings();
       sessionGapDurationMinutes = toggles.getSessionGapDurationMinutes();
+      alertSuppressionDurationSeconds = toggles.getAlertSuppressionDurationSeconds();
 
       String[] cfgEndpoints = toggles.getEndpointAbusePath();
       endpoints = new EndpointAbuseEndpointInfo[cfgEndpoints.length];
@@ -793,7 +800,7 @@ public class HTTPRequest implements Serializable {
           //
           // See also https://issues.apache.org/jira/browse/BEAM-2507
           .apply("endpoint abuse analysis global", new GlobalTriggers<KV<String, Alert>>(5))
-          .apply(ParDo.of(new AlertSuppressorCount(600L))); // 10 mins, should be configurable
+          .apply(ParDo.of(new AlertSuppressorCount(alertSuppressionDurationSeconds)));
     }
 
     private Boolean considerSupporting(String path) {
@@ -1336,6 +1343,248 @@ public class HTTPRequest implements Serializable {
     }
   }
 
+  /**
+   * Transform for detection of a single source generating errors at a given path pattern. The path
+   * is specified using a regex and an alert is generated if there are more than the threshold
+   * amount of requests matching the path with a status in the 400's.
+   *
+   * <p>Generates alerts where the request profile violates path thresholds specified in the
+   * perEndpointErrorRate pipeline option configuration.
+   */
+  public static class PerEndpointErrorRateAnalysis
+      extends PTransform<PCollection<KV<String, ArrayList<String>>>, PCollection<Alert>>
+      implements DocumentingTransform {
+    private static final long serialVersionUID = 1L;
+
+    private Logger log;
+    private final String monitoredResource;
+    private final Boolean enableIprepdDatastoreWhitelist;
+    private final String iprepdDatastoreWhitelistProject;
+    private final EndpointErrorInfo[] endpointInfo;
+    private final Integer suppressRecovery;
+    private final Long sessionGapDurationMinutes;
+    private final Long alertSuppressionDurationSeconds;
+
+    /**
+     * Initializer for {@link PerEndpointErrorRateAnalysis}
+     *
+     * @param toggles {@link HTTPRequestToggles}
+     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
+     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     */
+    public PerEndpointErrorRateAnalysis(
+        HTTPRequestToggles toggles,
+        Boolean enableIprepdDatastoreWhitelist,
+        String iprepdDatastoreWhitelistProject) {
+      log = LoggerFactory.getLogger(PerEndpointErrorRateAnalysis.class);
+
+      this.monitoredResource = toggles.getMonitoredResource();
+      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
+      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      this.suppressRecovery = toggles.getPerEndpointErrorRateSuppressRecovery();
+      this.sessionGapDurationMinutes = toggles.getSessionGapDurationMinutes();
+      this.alertSuppressionDurationSeconds =
+          toggles.getPerEndpointErrorRateAlertSuppressionDurationSeconds();
+
+      String[] cfgEndpoints = toggles.getPerEndpointErrorRatePaths();
+
+      this.endpointInfo = new EndpointErrorInfo[cfgEndpoints.length];
+
+      for (int i = 0; i < cfgEndpoints.length; i++) {
+        String[] parts = cfgEndpoints[i].split(":");
+        if (parts.length != 3) {
+          throw new IllegalArgumentException(
+              "invalid format for per endpoint error rate analysis, must be <int>:<method>:<path>");
+        }
+        EndpointErrorInfo ninfo = new EndpointErrorInfo();
+        ninfo.threshold = Integer.parseInt(parts[0]);
+        ninfo.method = parts[1];
+        ninfo.path = Pattern.compile(parts[2]);
+
+        endpointInfo[i] = ninfo;
+      }
+    }
+    /** Internal class for configured endpoints in PEERA */
+    public static class EndpointErrorInfo implements Serializable {
+      private static final long serialVersionUID = 1L;
+
+      /** Request method */
+      public String method;
+
+      /** Path (pattern) */
+      public Pattern path;
+
+      /** Threshold */
+      public Integer threshold;
+
+      /** Interval */
+      public Long interval;
+
+      /** Returns true if an event matches the endpoint for both method and path */
+      boolean matchesEvent(String eventMethod, String eventPath) {
+        return method.equals(eventMethod) && path.matcher(eventPath).matches();
+      }
+    }
+
+    /** Internal class to keep track of current state for a given endpoint rule for this key */
+    public static class EndpointErrorState implements Serializable {
+      private static final long serialVersionUID = 1L;
+      int errorCounter;
+      Instant mostRecentError;
+      String userAgent;
+
+      /**
+       * Increments the counter and if this is the most recent event seen update the timestamp and
+       * use this event's useragent for any alerts generated
+       */
+      void update(Instant timestamp, String userAgent) {
+        errorCounter++;
+        if (mostRecentError == null || mostRecentError.isBefore(timestamp)) {
+          mostRecentError = timestamp;
+          this.userAgent = userAgent;
+        }
+      }
+    }
+
+    /** {@inheritDoc} */
+    public String getTransformDoc() {
+      String buf = null;
+      for (int i = 0; i < endpointInfo.length; i++) {
+        String x =
+            String.format(
+                "%d errors to endpoints matching %s %s.",
+                endpointInfo[i].threshold, endpointInfo[i].method, endpointInfo[i].path);
+        if (buf == null) {
+          buf = x;
+        } else {
+          buf += " " + x;
+        }
+      }
+      return String.format(
+          "Clients are sessionized by address, where a session ends after "
+              + "%d minutes of inactivity. An alert is generated if a client is observed "
+              + "making repeated requests to configured endpoints that result in higher "
+              + "amount of errors. %s",
+          sessionGapDurationMinutes, buf);
+    }
+
+    @Override
+    public PCollection<Alert> expand(PCollection<KV<String, ArrayList<String>>> input) {
+      return input
+          .apply(GroupByKey.<String, ArrayList<String>>create())
+          .apply(
+              "analyze per-client",
+              ParDo.of(
+                  new DoFn<KV<String, Iterable<ArrayList<String>>>, KV<String, Alert>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c, BoundedWindow w) {
+                      String remoteAddress = c.element().getKey();
+                      Iterable<ArrayList<String>> errors = c.element().getValue();
+                      EndpointErrorState[] state = new EndpointErrorState[endpointInfo.length];
+                      Arrays.setAll(state, i -> new EndpointErrorState());
+
+                      for (ArrayList<String> e : errors) {
+                        String method = e.get(0);
+                        String path = e.get(1);
+                        for (int i = 0; i < endpointInfo.length; i++) {
+                          if (endpointInfo[i].matchesEvent(method, path)) {
+                            Instant ts = Instant.parse(e.get(3));
+                            String userAgent = e.get(2);
+                            state[i].update(ts, userAgent);
+                          }
+                        }
+                      }
+
+                      // find the endpoint with the highest count and use that to
+                      // generate alert
+                      Integer max = null;
+                      int count = -1;
+                      for (int i = 0; i < endpointInfo.length; i++) {
+                        if (endpointInfo[i].threshold <= state[i].errorCounter) {
+                          if (max == null) {
+                            max = i;
+                            count = state[i].errorCounter;
+                          } else {
+                            if (count < state[i].errorCounter) {
+                              max = i;
+                              count = state[i].errorCounter;
+                            }
+                          }
+                        }
+                      }
+
+                      if (max == null) {
+                        return;
+                      }
+
+                      Alert a = new Alert();
+                      a.setTimestamp(state[max].mostRecentError.toDateTime());
+                      a.setSummary(
+                          String.format(
+                              "%s httprequest per_endpoint_error_rate %s %s %s %d",
+                              monitoredResource,
+                              remoteAddress,
+                              endpointInfo[max].method,
+                              endpointInfo[max].path.pattern(),
+                              state[max].errorCounter));
+                      a.setCategory("httprequest");
+                      a.setSubcategory("per_endpoint_error_rate");
+                      a.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
+
+                      if (enableIprepdDatastoreWhitelist) {
+                        try {
+                          IprepdIO.addMetadataIfIpWhitelisted(
+                              remoteAddress, a, iprepdDatastoreWhitelistProject);
+                        } catch (IOException exc) {
+                          log.error("error checking whitelist: {}", exc.getMessage());
+                          return;
+                        }
+                      }
+                      if (suppressRecovery != null) {
+                        IprepdIO.addMetadataSuppressRecovery(suppressRecovery, a);
+                      }
+                      a.addMetadata(AlertMeta.Key.COUNT, String.valueOf(state[max].errorCounter));
+                      a.addMetadata(
+                          AlertMeta.Key.ENDPOINT_PATTERN, endpointInfo[max].path.toString());
+                      a.addMetadata(
+                          AlertMeta.Key.ERROR_THRESHOLD,
+                          String.valueOf(endpointInfo[max].threshold));
+                      a.setNotifyMergeKey(
+                          String.format("%s per_endpoint_error_rate", monitoredResource));
+                      a.addMetadata(
+                          AlertMeta.Key.WINDOW_TIMESTAMP,
+                          (new DateTime(w.maxTimestamp())).toString());
+                      if (!a.hasCorrectFields()) {
+                        throw new IllegalArgumentException("alert has invalid field configuration");
+                      }
+                      c.output(KV.of(remoteAddress, a));
+                    }
+                  }))
+          .apply("per endpoint error analysis global", new GlobalTriggers<KV<String, Alert>>(5))
+          .apply(ParDo.of(new AlertSuppressorCount(alertSuppressionDurationSeconds)));
+    }
+  }
+
+  /**
+   * Function to be used with filter transform in order to exclude any events that do not have a
+   * request status in the 400s
+   */
+  public static class Has4xxRequestStatus implements SerializableFunction<Event, Boolean> {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Boolean apply(Event event) {
+      Normalized n = event.getNormalized();
+      if (n.getRequestStatus() != null
+          && n.getRequestStatus() >= 400
+          && n.getRequestStatus() < 500) {
+        return true;
+      } else return false;
+    }
+  }
+
   private static class HTTPRequestAnalysis
       extends PTransform<PCollection<Event>, PCollection<Alert>> {
     private static final long serialVersionUID = 1L;
@@ -1457,12 +1706,27 @@ public class HTTPRequest implements Serializable {
                 events
                     .apply(
                         "key and window for sessions fire early",
-                        new KeyAndWindowForSessionsFireEarly(toggles))
-                    // No requirement for follow up application of GlobalTriggers here since
-                    // EndpointAbuseAnalysis will do this for us
+                        new KeyAndWindowForSessionsFireEarly(
+                            toggles.getSessionGapDurationMinutes()))
                     .apply(
                         "endpoint abuse analysis",
                         new EndpointAbuseAnalysis(
+                            toggles,
+                            enableIprepdDatastoreWhitelist,
+                            iprepdDatastoreWhitelistProject)));
+      }
+      if (toggles.getEnablePerEndpointErrorRateAnalysis()) {
+        resultsList =
+            resultsList.and(
+                events
+                    .apply("filter non 4xx requests", Filter.by(new Has4xxRequestStatus()))
+                    .apply(
+                        "key and window for sessions fire early",
+                        new KeyAndWindowForSessionsFireEarly(
+                            toggles.getErrorSessionGapDurationMinutes()))
+                    .apply(
+                        "per endpoint error rate analysis",
+                        new PerEndpointErrorRateAnalysis(
                             toggles,
                             enableIprepdDatastoreWhitelist,
                             iprepdDatastoreWhitelistProject)));
@@ -1533,6 +1797,12 @@ public class HTTPRequest implements Serializable {
     Boolean getEnableUserAgentBlacklistAnalysis();
 
     void setEnableUserAgentBlacklistAnalysis(Boolean value);
+
+    @Description("Enable per endpoint error rate analysis")
+    @Default.Boolean(false)
+    Boolean getEnablePerEndpointErrorRateAnalysis();
+
+    void setEnablePerEndpointErrorRateAnalysis(Boolean value);
 
     @Description("Hard limit request count per window per client")
     @Default.Long(100L)
@@ -1623,6 +1893,29 @@ public class HTTPRequest implements Serializable {
 
     void setEndpointSequenceAbusePatterns(String[] value);
 
+    @Description("Paths for per endpoint error rate limit monitoring; e.g., threshold:method:path ")
+    String[] getPerEndpointErrorRatePaths();
+
+    void setPerEndpointErrorRatePaths(String[] value);
+
+    @Description(
+        "In per endpoint error rate analysis, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getPerEndpointErrorRateAnalysisSuppressRecovery();
+
+    void setPerEndpointErrorRateAnalysisSuppressRecovery(Integer value);
+
+    @Description("Duration to suppress alerts for per endpoint error rate; seconds")
+    @Default.Long(120)
+    Long getPerEndpointErrorRateAlertSuppressionDurationSeconds();
+
+    void setPerEndpointErrorRateAlertSuppressionDurationSeconds(Long value);
+
+    @Description("Duration for session gap used for filtered events containing only errors")
+    @Default.Long(5)
+    Long getErrorSessionGapDurationMinutes();
+
+    void setErrorSessionGapDurationMinutes(Long value);
+
     @Description(
         "Filter requests that result in a non-4xx status for path before analysis; e.g., method:/path")
     String[] getFilterRequestPath();
@@ -1644,6 +1937,12 @@ public class HTTPRequest implements Serializable {
     Long getSessionGapDurationMinutes();
 
     void setSessionGapDurationMinutes(Long value);
+
+    @Description("Duration to suppress alerts for sessions; seconds")
+    @Default.Long(600L)
+    Long getAlertSuppressionDurationSeconds();
+
+    void setAlertSuppressionDurationSeconds(Long value);
 
     @Description("Ignore requests from whitelisted cloud providers (GCP, AWS)")
     @Default.Boolean(true)
@@ -1741,6 +2040,13 @@ public class HTTPRequest implements Serializable {
               options.getOutputIprepdEnableDatastoreWhitelist(),
               options.getOutputIprepdDatastoreWhitelistProject(),
               null));
+    }
+    if (toggles.getEnablePerEndpointErrorRateAnalysis()) {
+      b.withTransformDoc(
+          new PerEndpointErrorRateAnalysis(
+              toggles,
+              options.getOutputIprepdEnableDatastoreWhitelist(),
+              options.getOutputIprepdDatastoreWhitelistProject()));
     }
 
     return b.build();
