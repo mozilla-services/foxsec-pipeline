@@ -117,28 +117,6 @@ public class Alert implements Serializable {
   }
 
   /**
-   * Set a masked summary in the alert
-   *
-   * <p>Some output transforms will prefer the masked summary to the primary summary field, assuming
-   * the masked summary has sensitive information removed.
-   *
-   * @param maskedSummary Masked summary string
-   */
-  public void setMaskedSummary(String maskedSummary) {
-    addMetadata(AlertMeta.Key.MASKED_SUMMARY, maskedSummary);
-  }
-
-  /**
-   * Get any masked summary value in the alert
-   *
-   * @return Masked summary or null if unset
-   */
-  @JsonIgnore
-  public String getMaskedSummary() {
-    return getMetadataValue(AlertMeta.Key.MASKED_SUMMARY);
-  }
-
-  /**
    * Set alert merge key for notifications in metadata
    *
    * <p>If a merge key is set in metadata for an alert, some output transforms will utilize this key
@@ -445,6 +423,25 @@ public class Alert implements Serializable {
   @JsonIgnore
   public String getSlackTemplate() {
     return getMetadataValue(AlertMeta.Key.TEMPLATE_NAME_SLACK);
+  }
+
+  /**
+   * Set slack catchall template name
+   *
+   * @param templateName Freemarker template name with file extension
+   */
+  public void setSlackCatchallTemplate(String templateName) {
+    addMetadata(AlertMeta.Key.TEMPLATE_NAME_SLACK_CATCHALL, templateName);
+  }
+
+  /**
+   * Get slack catchall template name
+   *
+   * @return Freemarker template name with file extension or null if not set.
+   */
+  @JsonIgnore
+  public String getSlackCatchallTemplate() {
+    return getMetadataValue(AlertMeta.Key.TEMPLATE_NAME_SLACK_CATCHALL);
   }
 
   /**

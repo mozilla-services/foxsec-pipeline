@@ -93,12 +93,17 @@ public class AlertSlack {
   public Boolean sendToCatchall(Alert a) {
     log.info("generating catchall slack for {} (channel id)", cfg.getSlackCatchall());
 
-    String summary = a.getSummary();
-    if (a.getMaskedSummary() != null) {
-      summary = a.getMaskedSummary();
+    String text = String.format("%s (%s)", a.getSummary(), a.getAlertId());
+    if (a.getSlackCatchallTemplate() != null) {
+      try {
+        text =
+            templateManager.processTemplate(
+                a.getSlackCatchallTemplate(), a.generateTemplateVariables());
+      } catch (Exception exc) {
+        log.error("slack template processing failed: {}", exc.getMessage());
+      }
     }
 
-    String text = String.format("%s (%s)", summary, a.getAlertId());
     try {
       return slackManager.handleSlackResponse(
           slackManager.sendMessageToChannel(cfg.getSlackCatchall(), text));

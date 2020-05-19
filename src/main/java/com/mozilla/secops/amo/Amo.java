@@ -31,6 +31,8 @@ import org.apache.beam.sdk.values.PCollectionList;
 public class Amo implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  protected static final String SLACK_CATCHALL_TEMPLATE = "slack/catchall/amo.ftlh";
+
   /**
    * Execute AMO pipeline
    *
@@ -297,6 +299,9 @@ public class Amo implements Serializable {
 
   private static void runAmo(AmoOptions options) throws IOException {
     Pipeline p = Pipeline.create(options);
+
+    // Register slack catchall alert templates
+    options.setOutputAlertTemplates(new String[] {SLACK_CATCHALL_TEMPLATE});
 
     PCollection<String> input =
         p.apply("input", Input.compositeInputAdapter(options, buildConfigurationTick(options)));

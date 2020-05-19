@@ -9,8 +9,10 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.TestIprepdIO;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertConfiguration;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.alert.TemplateManager;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.input.InputElement;
 import com.mozilla.secops.parser.ParserTest;
@@ -91,12 +93,13 @@ public class TestAmo {
             "input",
             new Input(options.getProject()).simplex().withInputElement(e).simplexReadRaw());
 
-    PCollection<Alert> alerts = Amo.executePipeline(p, input, options);
+    PCollection<Alert> alerts =
+        Amo.executePipeline(p, input, options)
+            .apply(ParDo.of(new AlertFormatter(getTestOptions())));
 
     // Hook the output up to the composite output transform so we get local iprepd submission
     // in the tests
     alerts
-        .apply(ParDo.of(new AlertFormatter(getTestOptions())))
         .apply(MapElements.via(new AlertFormatter.AlertToString()))
         .apply(OutputOptions.compositeOutput(getTestOptions()));
 
@@ -214,6 +217,30 @@ public class TestAmo {
                         "test cloud provider addon submission from 52.204.100.1, guid extension_guid"
                             + " isapi true user_id 99999999",
                         a.getSummary());
+                    assertEquals("slack/catchall/amo.ftlh", a.getSlackCatchallTemplate());
+
+                    // Test slack template rendereing
+                    try {
+                      AlertConfiguration alertCfg = new AlertConfiguration();
+                      alertCfg.registerTemplate(a.getSlackCatchallTemplate());
+                      TemplateManager tmgr = new TemplateManager(alertCfg);
+                      tmgr.validate();
+                      String catchallText =
+                          tmgr.processTemplate(
+                              a.getSlackCatchallTemplate(), a.generateTemplateVariables());
+                      assertEquals(
+                          String.format(
+                              "test cloud provider addon submission from 52.204.100.1, guid"
+                                  + " <https://addons-internal.prod.mozaws.net/en-US/admin/models/addons/addon/extension_guid/change/|extension_guid>"
+                                  + " isapi true user_id"
+                                  + " <https://addons-internal.prod.mozaws.net/en-US/admin/models/users/userprofile/99999999/change/|99999999>"
+                                  + " (%s)\n",
+                              a.getAlertId()),
+                          catchallText);
+                    } catch (Exception exc) {
+                      fail(exc.getMessage());
+                    }
+
                     cntCloudSubmit++;
                   } else {
                     assertEquals("255.255.25.25", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
