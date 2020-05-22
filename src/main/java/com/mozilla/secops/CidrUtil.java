@@ -3,6 +3,7 @@ package com.mozilla.secops;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.net.InetAddresses;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class CidrUtil {
   private final String AWS_IP_RANGES_URL = "https://ip-ranges.amazonaws.com/ip-ranges.json";
 
   private ArrayList<IpAddressMatcher> subnets;
+  private InetRadix inetTree;
 
   /** Load exclusion list from path resource */
   public static final int CIDRUTIL_FILE = 1;
@@ -179,15 +181,47 @@ public class CidrUtil {
   }
 
   /**
+   * Determine if an address is an IPv4 address
+   *
+   * @param addr Address
+   * @return boolean
+   */
+  public static boolean isInet4(String addr) {
+    return InetAddresses.forString(addr).getAddress().length == 4 ? true : false;
+  }
+
+  /**
+   * Strip the mask component from a CIDR subnet.
+   *
+   * <p>For example, given 192.168.0.0/24 return 192.168.0.0.
+   *
+   * @param cidr CIDR subnet
+   * @return String
+   */
+  public static String stripMaskFromCidr(String cidr) {
+    int i = cidr.indexOf("/");
+    if (i == -1) {
+      return null;
+    }
+    return cidr.substring(0, i);
+  }
+
+  /**
    * Return true if any loaded subnet contains the specified address
    *
    * @param addr IP address to check against subnets
    * @return True if any loaded subnet contains the address
    */
   public Boolean contains(String addr) {
-    for (IpAddressMatcher s : subnets) {
-      if (s.matches(addr)) {
+    if (isInet4(addr)) {
+      if (inetTree.contains(addr)) {
         return true;
+      }
+    } else {
+      for (IpAddressMatcher s : subnets) {
+        if (s.matches(addr)) {
+          return true;
+        }
       }
     }
     return false;
@@ -332,12 +366,21 @@ public class CidrUtil {
    * @param cidr Subnet to add
    */
   public void add(String cidr) {
-    subnets.add(new IpAddressMatcher(cidr));
+    String addr = stripMaskFromCidr(cidr);
+    if (addr == null) {
+      throw new IllegalArgumentException(String.format("bad format, %s", cidr));
+    }
+    if (isInet4(addr)) {
+      inetTree.add(cidr);
+    } else {
+      subnets.add(new IpAddressMatcher(cidr));
+    }
   }
 
   /** Constructor for {@link CidrUtil}, initialize empty */
   public CidrUtil() {
     subnets = new ArrayList<IpAddressMatcher>();
+    inetTree = new InetRadix();
   }
 
   /**
