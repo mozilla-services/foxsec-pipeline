@@ -181,6 +181,16 @@ public class CidrUtil {
   }
 
   /**
+   * Determine if an address is an IPv4 address
+   *
+   * @param addr Address
+   * @return boolean
+   */
+  public static boolean isInet4(String addr) {
+    return InetAddresses.forString(addr).getAddress().length == 4 ? true : false;
+  }
+
+  /**
    * Strip the mask component from a CIDR subnet.
    *
    * <p>For example, given 192.168.0.0/24 return 192.168.0.0.
@@ -203,8 +213,7 @@ public class CidrUtil {
    * @return True if any loaded subnet contains the address
    */
   public Boolean contains(String addr) {
-    int il = InetAddresses.forString(addr).getAddress().length;
-    if (il == 4) {
+    if (isInet4(addr)) {
       if (inetTree.contains(addr)) {
         return true;
       }
@@ -361,8 +370,7 @@ public class CidrUtil {
     if (addr == null) {
       throw new IllegalArgumentException(String.format("bad format, %s", cidr));
     }
-    int il = InetAddresses.forString(addr).getAddress().length;
-    if (il == 4) {
+    if (isInet4(addr)) {
       inetTree.add(cidr);
     } else {
       subnets.add(new IpAddressMatcher(cidr));

@@ -1,50 +1,48 @@
 package com.mozilla.secops;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import com.google.common.net.InetAddresses;
 import java.nio.ByteBuffer;
 
 /**
  * CIDR lookup using radix tree search
  *
  * <p>Only supports IPv4.
+ *
+ * <p>See also http://www.cs.columbia.edu/~ji/F02/ir04/routing.pdf
  */
 public class InetRadix {
   private static class Node {
-    public Node l, r, p;
-    public Boolean v;
+    public Node left, right;
+    public boolean isLeaf;
 
     Node() {
-      l = r = p = null;
-      v = null;
+      left = right = null;
+      isLeaf = false;
     }
   }
 
   private static class Tree {
     Node root;
 
+    // 10000000 00000000 00000000 00000000 (1L << 31)
     private long startBit = 0x80000000L;
 
     public boolean contains(long ip) {
       long bit = startBit;
       Node n = root;
-      boolean ret = false;
 
       while (n != null) {
-        if (n.v != null) {
-          ret = n.v;
+        if (n.isLeaf) {
+          return true;
         }
         if ((ip & bit) != 0) {
-          n = n.r;
+          n = n.right;
         } else {
-          n = n.l;
-        }
-        if ((0xffffffffL & bit) == 0) {
-          break;
+          n = n.left;
         }
         bit = bit >> 1;
       }
-      return ret;
+      return false;
     }
 
     public void insert(long ip, long mask) {
@@ -55,9 +53,9 @@ public class InetRadix {
 
       while ((bit & mask) != 0) {
         if ((ip & bit) != 0) {
-          next = n.r;
+          next = n.right;
         } else {
-          next = n.l;
+          next = n.left;
         }
         if (next == null) {
           break;
@@ -67,23 +65,22 @@ public class InetRadix {
       }
 
       if (next != null) {
-        n.v = true;
+        n.isLeaf = true;
         return;
       }
 
       while ((bit & mask) != 0) {
         next = new Node();
-        next.p = n;
         if ((ip & bit) != 0) {
-          n.r = next;
+          n.right = next;
         } else {
-          n.l = next;
+          n.left = next;
         }
         bit = bit >> 1;
         n = next;
       }
 
-      n.v = true;
+      n.isLeaf = true;
     }
 
     Tree() {
@@ -96,11 +93,7 @@ public class InetRadix {
   private long longFromString(String ip) {
     ByteBuffer bb = ByteBuffer.allocate(8);
     bb.putInt(0);
-    try {
-      bb.put(InetAddress.getByName(ip).getAddress());
-    } catch (UnknownHostException exc) {
-      throw new IllegalArgumentException(exc.getMessage());
-    }
+    bb.put(InetAddresses.forString(ip).getAddress());
     bb.rewind();
     return bb.getLong();
   }
@@ -125,6 +118,14 @@ public class InetRadix {
     String ip = cidr.substring(0, i);
     int m = Integer.parseInt(cidr.substring(i + 1));
 
+    // Generate a bitmask from our integer mask value, e.g. for a /24:
+    //
+    // 1 << (32 - 24)
+    // 00000000 00000000 00000001 00000000
+    // - 1
+    // 00000000 00000000 00000000 11111111
+    // ^ 0xffffffff
+    // 11111111 11111111 11111111 00000000
     long mask = ((1L << (32 - m)) - 1L) ^ 0xffffffffL;
 
     tree.insert(longFromString(ip), mask);
