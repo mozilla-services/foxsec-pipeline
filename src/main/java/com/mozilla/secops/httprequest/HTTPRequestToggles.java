@@ -935,6 +935,7 @@ public class HTTPRequestToggles {
 
     endpointAbuseExtendedVariance = false;
     sessionGapDurationMinutes = 45L;
+    alertSuppressionDurationSeconds = 600L;
 
     ignoreCloudProviderRequests = true;
     ignoreInternalRequests = true;
