@@ -18,6 +18,7 @@ import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.models.cloudwatch.CloudWatchEvent;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +45,7 @@ public class Parser {
   private final Logger log;
   private final ParserCfg cfg;
   private final CidrUtil parserXffCidrUtil;
+  private final HashMap<Class<?>, Constructor<?>> parserCache;
   private GeoIP geoip;
 
   private static final Splitter XFF_SPLITTER = Splitter.on(",").trimResults();
@@ -477,10 +479,12 @@ public class Parser {
       }
       Class<?> cls = p.getClass();
       try {
-        e.setPayload(
-            (PayloadBase)
-                cls.getConstructor(String.class, Event.class, ParserState.class)
-                    .newInstance(input, e, state));
+        Constructor<?> c = parserCache.get(cls);
+        if (c == null) {
+          c = cls.getConstructor(String.class, Event.class, ParserState.class);
+          parserCache.put(cls, c);
+        }
+        e.setPayload((PayloadBase) c.newInstance(input, e, state));
       } catch (ReflectiveOperationException exc) {
         log.error(exc.getMessage());
       }
@@ -522,6 +526,8 @@ public class Parser {
 
     // Cache a CidrUtil instance used for XFF address extraction if needed
     parserXffCidrUtil = cfg.getXffAddressSelectorAsCidrUtil();
+
+    parserCache = new HashMap<Class<?>, Constructor<?>>();
 
     this.cfg = cfg;
     if (cfg.getMaxmindCityDbPath() != null || cfg.getMaxmindIspDbPath() != null) {
