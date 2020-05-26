@@ -82,6 +82,7 @@ public class AddonCloudSubmission extends PTransform<PCollection<Event>, PCollec
                     alert.setCategory("amo");
                     alert.setSubcategory("amo_cloud_submission");
                     alert.setNotifyMergeKey("amo_cloud_submission");
+                    alert.setSlackCatchallTemplate(Amo.SLACK_CATCHALL_TEMPLATE);
                     alert.addMetadata(AlertMeta.Key.PROVIDER, f);
                     alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, d.getRemoteIp());
                     if (d.getAddonGuid() != null) {

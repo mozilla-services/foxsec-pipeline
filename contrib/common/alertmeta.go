@@ -88,6 +88,7 @@ const (
 	META_TECHNIQUE                         = "technique"
 	META_TEMPLATE_NAME_EMAIL               = "template_name_email"
 	META_TEMPLATE_NAME_SLACK               = "template_name_slack"
+	META_TEMPLATE_NAME_SLACK_CATCHALL      = "template_name_slack_catchall"
 	META_THRESHOLD                         = "threshold"
 	META_THRESHOLD_MODIFIER                = "threshold_modifier"
 	META_TIME_DELTA_SECONDS                = "time_delta_seconds"

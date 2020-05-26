@@ -196,6 +196,7 @@ public class AlertMeta implements Serializable {
     TECHNIQUE("technique"),
     TEMPLATE_NAME_EMAIL("template_name_email"),
     TEMPLATE_NAME_SLACK("template_name_slack"),
+    TEMPLATE_NAME_SLACK_CATCHALL("template_name_slack_catchall"),
     THRESHOLD("threshold"),
     THRESHOLD_MODIFIER("threshold_modifier"),
     TIME_DELTA_SECONDS("time_delta_seconds"),
