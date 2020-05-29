@@ -116,6 +116,32 @@ public class AlertSlack {
   }
 
   /**
+   * Send alert to supplementary slack channel
+   *
+   * <p>If any supplementary slack output metadata is set in the alert, this method will send the
+   * required message to the configured channel.
+   *
+   * @param a Alert
+   * @return Boolean on whether the alert was sent successfully
+   */
+  public Boolean sendToSupplementary(Alert a) {
+    String ch = a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY);
+    String msg = a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE);
+    if (ch == null || msg == null) {
+      return true; // Nothing to send, return success
+    }
+    try {
+      return slackManager.handleSlackResponse(slackManager.sendMessageToChannel(ch, msg));
+    } catch (IOException exc) {
+      log.error("error sending slack alert (IOException): {}", exc.getMessage());
+      return false;
+    } catch (SlackApiException exc) {
+      log.error("error sending slack alert (SlackApiException): {}", exc.getMessage());
+      return false;
+    }
+  }
+
+  /**
    * Send alert to a user.
    *
    * @param a Alert
