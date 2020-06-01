@@ -46,6 +46,8 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   private final String maxmindCityDbPath;
   private final String maxmindIspDbPath;
 
+  private boolean escalate;
+
   /** {@inheritDoc} */
   public String getTransformDocDescription() {
     return String.format(
@@ -69,6 +71,8 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
 
     maxmindCityDbPath = options.getMaxmindCityDbPath();
     maxmindIspDbPath = options.getMaxmindIspDbPath();
+
+    escalate = options.getEscalateVelocity();
   }
 
   @Override
@@ -273,6 +277,6 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   }
 
   public boolean isExperimental() {
-    return true;
+    return !escalate;
   }
 }
