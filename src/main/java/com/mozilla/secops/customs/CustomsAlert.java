@@ -84,6 +84,7 @@ public class CustomsAlert implements Serializable {
               Customs.CATEGORY_PASSWORD_RESET_ABUSE,
               "Large number of password reset requests from single source address for multiple accounts in "
                   + "fixed time frame");
+          put(Customs.CATEGORY_VELOCITY, "Login velocity threshold exceeded for given account.");
         }
       };
 
@@ -130,6 +131,8 @@ public class CustomsAlert implements Serializable {
         return convertSourceLoginFailureDist(a);
       case "password_reset_abuse":
         return convertPasswordResetAbuse(a);
+      case "velocity":
+        return convertVelocity(a);
     }
     return null;
   }
@@ -324,6 +327,34 @@ public class CustomsAlert implements Serializable {
     buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
     buf.setIndicator(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     buf.setSuggestedAction(AlertAction.SUSPECT);
+    buf.setReason(reason);
+    ret.add(buf);
+
+    return ret;
+  }
+
+  /**
+   * Convert a velocity alert
+   *
+   * @param a Alert
+   * @return ArrayList of CustomsAlert
+   */
+  public static ArrayList<CustomsAlert> convertVelocity(Alert a) {
+    ArrayList<CustomsAlert> ret = new ArrayList<>();
+
+    String reason =
+        String.format(
+            "%s velocity exceeded, %s km in %s seconds",
+            a.getMetadataValue(AlertMeta.Key.UID),
+            a.getMetadataValue(AlertMeta.Key.KM_DISTANCE),
+            a.getMetadataValue(AlertMeta.Key.TIME_DELTA_SECONDS));
+
+    CustomsAlert buf = baseAlert(a);
+    buf.setSeverity(AlertSeverity.WARNING);
+    buf.setConfidence(100);
+    buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
+    buf.setIndicator(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+    buf.setSuggestedAction(AlertAction.BLOCK);
     buf.setReason(reason);
     ret.add(buf);
 

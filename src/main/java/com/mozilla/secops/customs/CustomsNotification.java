@@ -23,6 +23,7 @@ public class CustomsNotification extends PTransform<PCollection<String>, PDone> 
   private final Boolean escalateSourceLoginFailure;
   private final Boolean escalateSourceLoginFailureDistributed;
   private final Boolean escalatePasswordResetAbuse;
+  private final Boolean escalateVelocity;
 
   /**
    * Initialize new CustomsNotification
@@ -37,6 +38,7 @@ public class CustomsNotification extends PTransform<PCollection<String>, PDone> 
     escalateSourceLoginFailure = options.getEscalateSourceLoginFailure();
     escalateSourceLoginFailureDistributed = options.getEscalateSourceLoginFailureDistributed();
     escalatePasswordResetAbuse = options.getEscalatePasswordResetAbuse();
+    escalateVelocity = options.getEscalateVelocity();
   }
 
   private Boolean allowEscalation(Alert a) {
@@ -51,6 +53,8 @@ public class CustomsNotification extends PTransform<PCollection<String>, PDone> 
         return escalateSourceLoginFailureDistributed;
       case Customs.CATEGORY_PASSWORD_RESET_ABUSE:
         return escalatePasswordResetAbuse;
+      case Customs.CATEGORY_VELOCITY:
+        return escalateVelocity;
     }
     return false;
   }
