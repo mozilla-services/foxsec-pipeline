@@ -277,6 +277,12 @@ public class Customs implements Serializable {
 
     void setEnableVelocityDetector(Boolean value);
 
+    @Description("Enable escalation of velocity alerts; CustomsVelocity")
+    @Default.Boolean(false)
+    Boolean getEscalateVelocity();
+
+    void setEscalateVelocity(Boolean value);
+
     @Description("Maximum km/h for velocity analysis")
     @Default.Integer(800)
     Integer getMaximumKilometersPerHour();

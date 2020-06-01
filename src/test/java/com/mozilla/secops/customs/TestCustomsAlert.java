@@ -71,5 +71,19 @@ public class TestCustomsAlert {
             + "10.0.0.7, 10.0.0.8, 10.0.0.9, 10.0.0.10\"}]}";
     c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
     assertEquals(10, c.size());
+
+    buf =
+        "{\"severity\":\"info\",\"id\":\"63d44a9a-e5b7-4568-a343-0acec9f2ec7c\",\"summary\":\"test "
+            + "00000000000000000000000000000000 velocity exceeded, 7740.82 km in 9 seconds\",\"category\""
+            + ":\"customs\",\"timestamp\":\"1970-01-01T00:00:09.000Z\",\"metadata\":[{\"key\":\"category\""
+            + ",\"value\":\"velocity\"},{\"key\":\"notify_merge\",\"value\":\"velocity\"},{\"key\":\"sourc"
+            + "eaddress\",\"value\":\"81.2.69.192\"},{\"key\":\"sourceaddress_previous\",\"value\":\"216.1"
+            + "60.83.56\"},{\"key\":\"time_delta_seconds\",\"value\":\"9\"},{\"key\":\"km_distance\",\"val"
+            + "ue\":\"7740.82\"},{\"key\":\"uid\",\"value\":\"00000000000000000000000000000000\"},{\"key\""
+            + ":\"email\",\"value\":\"riker@mozilla.com\"},{\"key\":\"sourceaddress_city\",\"value\":\"Lon"
+            + "don\"},{\"key\":\"sourceaddress_country\",\"value\":\"GB\"},{\"key\":\"sourceaddress_previo"
+            + "us_city\",\"value\":\"Milton\"},{\"key\":\"sourceaddress_previous_country\",\"value\":\"US\"}]}";
+    c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
+    assertEquals(1, c.size());
   }
 }
