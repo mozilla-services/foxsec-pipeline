@@ -321,6 +321,119 @@ public class TestCustoms {
   }
 
   @Test
+  public void velocityMonitorOnlyTest() throws Exception {
+    testEnv();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_velocity1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableVelocityDetectorMonitorOnly(true);
+    options.setEnableVelocityDetector(true);
+    options.setXffAddressSelector("127.0.0.1/32");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              int regular = 0;
+              int monitorOnly = 0;
+              for (Alert a : x) {
+                if (a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE).equals("velocity")) {
+                  regular++;
+                } else if (a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE)
+                    .equals("velocity_monitor_only")) {
+                  monitorOnly++;
+                }
+                assertEquals("81.2.69.192", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                assertEquals(
+                    "216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_PREVIOUS));
+                assertEquals(
+                    "00000000000000000000000000000000", a.getMetadataValue(AlertMeta.Key.UID));
+                assertEquals("riker@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                assertEquals(
+                    "test 00000000000000000000000000000000 velocity exceeded, "
+                        + "7740.82 km in 9 seconds",
+                    a.getSummary());
+                assertEquals("London", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                assertEquals("GB", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+                assertEquals(
+                    "Milton", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_PREVIOUS_CITY));
+                assertEquals(
+                    "US", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_PREVIOUS_COUNTRY));
+                assertEquals("7740.82", a.getMetadataValue(AlertMeta.Key.KM_DISTANCE));
+                assertEquals("9", a.getMetadataValue(AlertMeta.Key.TIME_DELTA_SECONDS));
+                cnt++;
+              }
+              assertEquals(2, cnt);
+              assertEquals(1, regular);
+              assertEquals(1, monitorOnly);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void velocityMonitorOnly2Test() throws Exception {
+    testEnv();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_velocity1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableVelocityDetector(true);
+    options.setEnableVelocityDetectorMonitorOnly(true);
+    options.setMinimumDistanceForAlert(8000.0);
+    options.setXffAddressSelector("127.0.0.1/32");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                assertEquals("81.2.69.192", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                assertEquals(
+                    "216.160.83.56", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_PREVIOUS));
+                assertEquals(
+                    "00000000000000000000000000000000", a.getMetadataValue(AlertMeta.Key.UID));
+                assertEquals("riker@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                assertEquals(
+                    "test 00000000000000000000000000000000 velocity exceeded, "
+                        + "7740.82 km in 9 seconds",
+                    a.getSummary());
+                assertEquals(
+                    "velocity_monitor_only", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                assertEquals("London", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                assertEquals("GB", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+                assertEquals(
+                    "Milton", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_PREVIOUS_CITY));
+                assertEquals(
+                    "US", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_PREVIOUS_COUNTRY));
+                assertEquals("7740.82", a.getMetadataValue(AlertMeta.Key.KM_DISTANCE));
+                assertEquals("9", a.getMetadataValue(AlertMeta.Key.TIME_DELTA_SECONDS));
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void velocityTestBelowMinimumDistance() throws Exception {
     testEnv();
 

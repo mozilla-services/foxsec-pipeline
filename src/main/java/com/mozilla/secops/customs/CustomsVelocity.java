@@ -37,6 +37,9 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   private final Double maxKilometersPerSecond;
   private final Double minimumDistanceForAlert;
 
+  private final Double maxKilometersPerSecondMonitorOnly;
+  private final Double minimumDistanceForAlertMonitorOnly;
+
   private final String memcachedHost;
   private final Integer memcachedPort;
   private final String datastoreNamespace;
@@ -47,13 +50,19 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   private final String maxmindIspDbPath;
 
   private boolean escalate;
+  private boolean checkExperimentalParam;
 
   /** {@inheritDoc} */
   public String getTransformDocDescription() {
+    String checkExp = "";
+    if (checkExperimentalParam) {
+      String.format(
+          ", monitor only alert using a maximum KM/s of %.2f", maxKilometersPerSecondMonitorOnly);
+    }
     return String.format(
         "Alert based on applying location velocity analysis to FxA events,"
-            + " using a maximum KM/s of %.2f",
-        maxKilometersPerSecond);
+            + " using a maximum KM/s of %.2f%s",
+        maxKilometersPerSecond, checkExp);
   }
 
   /**
@@ -65,6 +74,9 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
     monitoredResource = options.getMonitoredResourceIndicator();
     maxKilometersPerSecond = options.getMaximumKilometersPerHour() / 3600.0;
     minimumDistanceForAlert = options.getMinimumDistanceForAlert();
+    maxKilometersPerSecondMonitorOnly = options.getMaximumKilometersPerHourMonitorOnly() / 3600.0;
+    minimumDistanceForAlertMonitorOnly = options.getMinimumDistanceForAlertMonitorOnly();
+    checkExperimentalParam = options.getEnableVelocityDetectorMonitorOnly();
     memcachedHost = options.getMemcachedHost();
     memcachedPort = options.getMemcachedPort();
     datastoreNamespace = options.getDatastoreNamespace();
@@ -262,6 +274,68 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                           AlertFormatter.addGeoIPData(alert, geoip);
 
                           c.output(alert);
+                        }
+
+                        // for monitoring smaller velocity jumps than we escalate for
+                        if (checkExperimentalParam) {
+                          AuthStateModel.GeoVelocityResponse geoRespMO =
+                              sm.geoVelocityAnalyzeLatest(maxKilometersPerSecondMonitorOnly);
+
+                          if (geoRespMO != null) {
+                            log.info(
+                                "{}: new location is {}km away from last location within {}s",
+                                uid,
+                                geoRespMO.getKmDistance(),
+                                geoRespMO.getTimeDifference());
+
+                            boolean minDistanceMetMO = true;
+                            if (minimumDistanceForAlertMonitorOnly != null) {
+                              if (geoRespMO.getKmDistance() < minimumDistanceForAlertMonitorOnly) {
+                                log.info(
+                                    "{}: will skip alert as minimum distance was not met (monitor only)",
+                                    uid);
+                                minDistanceMet = false;
+                              }
+                            }
+
+                            if (geoRespMO.getMaxKmPerSecondExceeded() && minDistanceMetMO) {
+                              log.info("{}: creating velocity monitor only alert", uid);
+                              Alert alertMO = new Alert();
+                              alertMO.setCategory("customs");
+                              alertMO.setSubcategory(Customs.CATEGORY_VELOCITY_MONITOR_ONLY);
+                              alertMO.setTimestamp(e.getTimestamp());
+                              alertMO.setNotifyMergeKey(Customs.CATEGORY_VELOCITY_MONITOR_ONLY);
+                              alertMO.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
+                              alertMO.addMetadata(
+                                  AlertMeta.Key.SOURCEADDRESS_PREVIOUS,
+                                  geoResp.getPreviousSource());
+                              alertMO.addMetadata(
+                                  AlertMeta.Key.TIME_DELTA_SECONDS,
+                                  geoResp.getTimeDifference().toString());
+                              alertMO.addMetadata(
+                                  AlertMeta.Key.KM_DISTANCE,
+                                  String.format("%.2f", geoResp.getKmDistance()));
+                              alertMO.addMetadata(AlertMeta.Key.UID, uid);
+                              alertMO.addMetadata(AlertMeta.Key.EMAIL, email);
+                              alertMO.setSummary(
+                                  String.format(
+                                      "%s %s velocity exceeded, %.2f km in %d seconds",
+                                      monitoredResource,
+                                      uid,
+                                      geoRespMO.getKmDistance(),
+                                      geoRespMO.getTimeDifference()));
+
+                              // It's possible the AlertFormatter DoFn could add this for us
+                              // later, but
+                              // since it is important information as part of this transform make
+                              // sure
+                              // it will be present by leveraging the formatters GeoIP method
+                              // here.
+                              AlertFormatter.addGeoIPData(alertMO, geoip);
+
+                              c.output(alertMO);
+                            }
+                          }
                         }
                       }
 
