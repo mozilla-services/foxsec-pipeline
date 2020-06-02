@@ -56,8 +56,9 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
   public String getTransformDocDescription() {
     String checkExp = "";
     if (checkExperimentalParam) {
-      String.format(
-          ", monitor only alert using a maximum KM/s of %.2f", maxKilometersPerSecondMonitorOnly);
+      checkExp =
+          String.format(
+              ", monitor only using a maximum KM/s of %.2f", maxKilometersPerSecondMonitorOnly);
     }
     return String.format(
         "Alert based on applying location velocity analysis to FxA events,"
@@ -308,13 +309,13 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                               alertMO.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
                               alertMO.addMetadata(
                                   AlertMeta.Key.SOURCEADDRESS_PREVIOUS,
-                                  geoResp.getPreviousSource());
+                                  geoRespMO.getPreviousSource());
                               alertMO.addMetadata(
                                   AlertMeta.Key.TIME_DELTA_SECONDS,
-                                  geoResp.getTimeDifference().toString());
+                                  geoRespMO.getTimeDifference().toString());
                               alertMO.addMetadata(
                                   AlertMeta.Key.KM_DISTANCE,
-                                  String.format("%.2f", geoResp.getKmDistance()));
+                                  String.format("%.2f", geoRespMO.getKmDistance()));
                               alertMO.addMetadata(AlertMeta.Key.UID, uid);
                               alertMO.addMetadata(AlertMeta.Key.EMAIL, email);
                               alertMO.setSummary(
@@ -324,14 +325,6 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                                       uid,
                                       geoRespMO.getKmDistance(),
                                       geoRespMO.getTimeDifference()));
-
-                              // It's possible the AlertFormatter DoFn could add this for us
-                              // later, but
-                              // since it is important information as part of this transform make
-                              // sure
-                              // it will be present by leveraging the formatters GeoIP method
-                              // here.
-                              AlertFormatter.addGeoIPData(alertMO, geoip);
 
                               c.output(alertMO);
                             }
