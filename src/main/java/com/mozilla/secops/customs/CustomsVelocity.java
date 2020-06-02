@@ -58,12 +58,13 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
     if (checkExperimentalParam) {
       checkExp =
           String.format(
-              ", monitor only using a maximum KM/s of %.2f", maxKilometersPerSecondMonitorOnly);
+              ", monitor only using a maximum KM/s of %.2f and minimum distance of %.2fKM",
+              maxKilometersPerSecondMonitorOnly, minimumDistanceForAlertMonitorOnly);
     }
     return String.format(
         "Alert based on applying location velocity analysis to FxA events,"
-            + " using a maximum KM/s of %.2f%s",
-        maxKilometersPerSecond, checkExp);
+            + " using a maximum KM/s of %.2f and minimum distance of %.2fKM%s",
+        maxKilometersPerSecond, minimumDistanceForAlert, checkExp);
   }
 
   /**
