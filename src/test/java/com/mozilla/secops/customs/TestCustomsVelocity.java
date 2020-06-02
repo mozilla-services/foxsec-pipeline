@@ -21,6 +21,20 @@ public class TestCustomsVelocity {
   }
 
   @Test
+  public void TestTransformDocWithMonitorOnly() {
+    CustomsOptions options = PipelineOptionsFactory.as(Customs.CustomsOptions.class);
+    options.setEscalateVelocity(true);
+    options.setEnableVelocityDetectorMonitorOnly(true);
+    CustomsVelocity sut = new CustomsVelocity(options);
+    String doc = sut.getTransformDoc();
+    String expected =
+        String.format(
+            "Alert based on applying location velocity analysis to FxA events, using a maximum KM/s of 0.22, monitor only using a maximum KM/s of 0.22",
+            options.getPasswordResetAbuseThreshold());
+    assertEquals(expected, doc);
+  }
+
+  @Test
   public void TestTransformDocForNonEscalated() {
     CustomsOptions options = PipelineOptionsFactory.as(Customs.CustomsOptions.class);
     options.setEscalateVelocity(false);

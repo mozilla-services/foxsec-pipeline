@@ -47,6 +47,7 @@ public class Customs implements Serializable {
   public static final String CATEGORY_ACCOUNT_CREATION_ABUSE_DIST =
       "account_creation_abuse_distributed";
   public static final String CATEGORY_VELOCITY = "velocity";
+  public static final String CATEGORY_VELOCITY_MONITOR_ONLY = "velocity_monitor_only";
   public static final String CATEGORY_PASSWORD_RESET_ABUSE = "password_reset_abuse";
 
   /** Used by keyEvents */
@@ -294,6 +295,24 @@ public class Customs implements Serializable {
 
     void setMinimumDistanceForAlert(Double value);
 
+    @Description("Enable velocity analysis; CustomsVelocityMonitorOnly")
+    @Default.Boolean(false)
+    Boolean getEnableVelocityDetectorMonitorOnly();
+
+    void setEnableVelocityDetectorMonitorOnly(Boolean value);
+
+    @Description("Maximum km/h for velocity analysis; CustomsVelocityMonitorOnly")
+    @Default.Integer(800)
+    Integer getMaximumKilometersPerHourMonitorOnly();
+
+    void setMaximumKilometersPerHourMonitorOnly(Integer value);
+
+    @Description(
+        "Minimum distance that must be travelled (km) to create velocity alert; CustomsVelocityMonitorOnly")
+    Double getMinimumDistanceForAlertMonitorOnly();
+
+    void setMinimumDistanceForAlertMonitorOnly(Double value);
+
     @Description("Enable password reset abuse analysis; CustomsPasswordResetAbuse")
     @Default.Boolean(false)
     Boolean getEnablePasswordResetAbuseDetector();
@@ -511,6 +530,7 @@ public class Customs implements Serializable {
       resultsList =
           resultsList.and(events.apply("location velocity", new CustomsVelocity(options)));
     }
+
     if (options.getEnableSummaryAnalysis()) {
       resultsList = resultsList.and(events.apply("summary", new CustomsSummary(options)));
     }
