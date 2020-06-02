@@ -284,7 +284,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
 
                           if (geoRespMO != null) {
                             log.info(
-                                "{}: new location is {}km away from last location within {}s",
+                                "{}: new location is {}km away from last location within {}s (monitor only)",
                                 uid,
                                 geoRespMO.getKmDistance(),
                                 geoRespMO.getTimeDifference());
@@ -295,7 +295,7 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                                 log.info(
                                     "{}: will skip alert as minimum distance was not met (monitor only)",
                                     uid);
-                                minDistanceMet = false;
+                                minDistanceMetMO = false;
                               }
                             }
 
@@ -320,12 +320,18 @@ public class CustomsVelocity extends PTransform<PCollection<Event>, PCollection<
                               alertMO.addMetadata(AlertMeta.Key.EMAIL, email);
                               alertMO.setSummary(
                                   String.format(
-                                      "%s %s velocity exceeded, %.2f km in %d seconds",
+                                      "%s %s velocity exceeded, %.2f km in %d seconds (monitor only)",
                                       monitoredResource,
                                       uid,
                                       geoRespMO.getKmDistance(),
                                       geoRespMO.getTimeDifference()));
 
+                              // It's possible the AlertFormatter DoFn could add this for us later,
+                              // but
+                              // since it is important information as part of this transform make
+                              // sure
+                              // it will be present by leveraging the formatters GeoIP method here.
+                              AlertFormatter.addGeoIPData(alertMO, geoip);
                               c.output(alertMO);
                             }
                           }
