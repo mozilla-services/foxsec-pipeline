@@ -322,7 +322,13 @@ public class AuthProfile implements Serializable {
     private final String critNotifyEmail;
     private final String contactEmail;
     private final String docLink;
+    private final String alternateCritSlackEscalation;
     private final boolean useEventTimestampForAlert;
+
+    private DateTimeZone altEscalateTz;
+    private int altEscalateHourStart;
+    private int altEscalateHourStop;
+    private String altEscalateChannel;
 
     private Logger log;
     private Pattern[] critObjectPat;
@@ -337,7 +343,25 @@ public class AuthProfile implements Serializable {
       critNotifyEmail = options.getCriticalNotificationEmail();
       contactEmail = options.getContactEmail();
       docLink = options.getDocLink();
+      alternateCritSlackEscalation = options.getAlternateCritSlackEscalation();
       useEventTimestampForAlert = options.getUseEventTimestampForAlert();
+
+      if (alternateCritSlackEscalation != null) {
+        String[] parts = alternateCritSlackEscalation.split(":");
+        if (parts.length != 4) {
+          throw new IllegalArgumentException(
+              "invalid format for alternate escalation policy, "
+                  + "must be <tz>:<start_hour>:<end_hour>:<channel_id>");
+        }
+        altEscalateTz = DateTimeZone.forID(parts[0]);
+        if (altEscalateTz == null) {
+          throw new IllegalArgumentException(
+              "alternate escalation policy timezone lookup returned null");
+        }
+        altEscalateHourStart = Integer.parseInt(parts[1]);
+        altEscalateHourStop = Integer.parseInt(parts[2]);
+        altEscalateChannel = parts[3];
+      }
     }
 
     /** {@inheritDoc} */
@@ -359,6 +383,34 @@ public class AuthProfile implements Serializable {
     }
 
     private void addEscalationMetadata(Alert a) {
+      if (alternateCritSlackEscalation != null) {
+        // We have an alternate escalation policy specified. Convert the alert timestamp
+        // to match our policy timestamp, and see if it falls within the specified boundary.
+        //
+        // Note the policy is only applied if the resulting conversion falls on a weekday.
+        //
+        // ISO 6 (Saturday)
+        // ISO 7 (Sunday)
+        DateTime conv = a.getTimestamp().withZone(altEscalateTz);
+        if ((conv.getHourOfDay() >= altEscalateHourStart
+                && conv.getHourOfDay() <= altEscalateHourStop)
+            && (conv.getDayOfWeek() != 6 && conv.getDayOfWeek() != 7)) {
+          log.info("{}: using alternate escalation policy", a.getAlertId());
+          // The alert matches the alternate policy; add the supplementary slack notification
+          // details and just return.
+          a.addMetadata(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY, altEscalateChannel);
+          a.addMetadata(
+              AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE,
+              String.format(
+                  "<!channel> critical authentication event observed %s to %s, %s [%s/%s]",
+                  a.getMetadataValue(AlertMeta.Key.USERNAME),
+                  a.getMetadataValue(AlertMeta.Key.OBJECT),
+                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
+                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY)));
+          return;
+        }
+      }
       if (critNotifyEmail != null) {
         log.info(
             "{}: adding direct email notification metadata route for critical object alert to {}",
@@ -984,6 +1036,13 @@ public class AuthProfile implements Serializable {
     Boolean getUseEventTimestampForAlert();
 
     void setUseEventTimestampForAlert(Boolean value);
+
+    @Description(
+        "Alternate Slack based critical object analysis escalation for weekdays; "
+            + "tz:start_hour:end_hour:channel_id")
+    String getAlternateCritSlackEscalation();
+
+    void setAlternateCritSlackEscalation(String value);
   }
 
   /**

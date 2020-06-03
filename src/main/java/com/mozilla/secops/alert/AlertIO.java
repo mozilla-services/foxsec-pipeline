@@ -229,6 +229,11 @@ public class AlertIO {
           }
         }
 
+        // Process any supplementary slack output channels
+        if (!slack.sendToSupplementary(a)) {
+          log.error("failed to send alert to supplementary slack channel");
+        }
+
         String slackEmail = a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_DIRECT);
         if (slackEmail != null) {
           if (alertType.equals("slack_notification")) {

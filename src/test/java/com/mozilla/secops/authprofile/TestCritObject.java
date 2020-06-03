@@ -2,6 +2,7 @@ package com.mozilla.secops.authprofile;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -127,6 +128,63 @@ public class TestCritObject {
               // We should have 2; 3 alerts would have been generated in total with the second one
               // being suppressed
               assertEquals(2L, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void critObjectTestSupplementaryPolicy() throws Exception {
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+
+    options.setGenerateConfigurationTicksInterval(0);
+    options.setAlternateCritSlackEscalation("EST:8:10:test");
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/authprof_critobj3.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Input input = TestAuthProfileUtil.wiredInputStream(options, s);
+    PCollection<Alert> res = AuthProfile.processInput(p.apply(input.simplexReadRaw()), options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              int cnt = 0;
+              int ncnt = 0;
+              int scnt = 0;
+              for (Alert a : results) {
+                long m = a.getTimestamp().getMillis();
+                if (m == 1546349400000L) {
+                  // Will be our alternate escalation
+                  assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                  assertEquals(
+                      "<!channel> critical authentication event observed laforge@mozilla.com to "
+                          + "projects/test, 216.160.83.56 [Milton/US]",
+                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE));
+                  assertEquals(
+                      "test", a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY));
+                  scnt++;
+                } else if (m == 1546383600000L || m == 1546695000000L) {
+                  // Will be a standard escalation
+                  assertEquals(
+                      "section31@mozilla.com",
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE));
+                  assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY));
+                  ncnt++;
+                } else {
+                  fail("unexpected alert timestamp");
+                }
+                cnt++;
+              }
+              assertEquals(2, ncnt);
+              assertEquals(1, scnt);
+              assertEquals(3, cnt);
               return null;
             });
 
