@@ -135,6 +135,15 @@ public class IprepdIO {
     private static HashMap<String, String> decrypted = new HashMap<String, String>();
     private static ReentrantLock decryptedLock = new ReentrantLock();
 
+    /** Reader initial connection timeout */
+    public final int READER_TIMEOUT_CONNECTION = 5000;
+
+    /** Reader connection manager connection request timeout */
+    public final int READER_TIMEOUT_CONNECTION_REQUEST = 5000;
+
+    /** Reader socket timeout */
+    public final int READER_TIMEOUT_SOCKET = 5000;
+
     /**
      * Read a reputation
      *
@@ -247,7 +256,13 @@ public class IprepdIO {
       log = LoggerFactory.getLogger(Reader.class);
       this.iprepdSpec = iprepdSpec;
       this.project = project;
-      httpClient = HttpClientBuilder.create().build();
+      RequestConfig rc =
+          RequestConfig.custom()
+              .setConnectTimeout(READER_TIMEOUT_CONNECTION)
+              .setConnectionRequestTimeout(READER_TIMEOUT_CONNECTION_REQUEST)
+              .setSocketTimeout(READER_TIMEOUT_SOCKET)
+              .build();
+      httpClient = HttpClientBuilder.create().setDefaultRequestConfig(rc).build();
     }
   }
 
