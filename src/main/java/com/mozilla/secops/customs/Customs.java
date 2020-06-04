@@ -49,6 +49,7 @@ public class Customs implements Serializable {
   public static final String CATEGORY_VELOCITY = "velocity";
   public static final String CATEGORY_VELOCITY_MONITOR_ONLY = "velocity_monitor_only";
   public static final String CATEGORY_PASSWORD_RESET_ABUSE = "password_reset_abuse";
+  public static final String CATEGORY_STATUS_COMPARATOR = "status_comparator";
 
   /** Used by keyEvents */
   private enum KeyType {
@@ -83,6 +84,7 @@ public class Customs implements Serializable {
     ret.add(FxaAuth.EventSummary.PASSWORD_FORGOT_SEND_CODE_FAILURE);
     ret.add(FxaAuth.EventSummary.LOGIN_FAILURE);
     ret.add(FxaAuth.EventSummary.LOGIN_SUCCESS);
+    ret.add(FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK_SUCCESS);
     return ret;
   }
 
@@ -272,6 +274,23 @@ public class Customs implements Serializable {
 
     void setEnableSummaryAnalysis(Boolean value);
 
+    @Description("Enable customs status comparator; CustomsStatusComparator")
+    @Default.Boolean(false)
+    Boolean getEnableStatusComparator();
+
+    void setEnableStatusComparator(Boolean value);
+
+    @Description("Enable escalation of status comparator alerts; CustomsStatusComparator")
+    @Default.Boolean(false)
+    Boolean getEscalateStatusComparator();
+
+    void setEscalateStatusComparator(Boolean value);
+
+    @Description("StatusComparator source address list; resource path, gcs path")
+    String getStatusComparatorAddressPath();
+
+    void setStatusComparatorAddressPath(String value);
+
     @Description("Enable velocity analysis; CustomsVelocity")
     @Default.Boolean(false)
     Boolean getEnableVelocityDetector();
@@ -360,6 +379,10 @@ public class Customs implements Serializable {
 
     if (options.getEnableVelocityDetector()) {
       b.withTransformDoc(new CustomsVelocity(options));
+    }
+
+    if (options.getEnableStatusComparator()) {
+      b.withTransformDoc(new CustomsStatusComparator(options));
     }
 
     if (options.getEnablePasswordResetAbuseDetector()) {
@@ -529,6 +552,11 @@ public class Customs implements Serializable {
     if (options.getEnableVelocityDetector()) {
       resultsList =
           resultsList.and(events.apply("location velocity", new CustomsVelocity(options)));
+    }
+
+    if (options.getEnableStatusComparator()) {
+      resultsList =
+          resultsList.and(events.apply("status comparator", new CustomsStatusComparator(options)));
     }
 
     if (options.getEnableSummaryAnalysis()) {

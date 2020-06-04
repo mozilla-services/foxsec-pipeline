@@ -85,6 +85,7 @@ public class CustomsAlert implements Serializable {
               "Large number of password reset requests from single source address for multiple accounts in "
                   + "fixed time frame");
           put(Customs.CATEGORY_VELOCITY, "Login velocity threshold exceeded for given account.");
+          put(Customs.CATEGORY_STATUS_COMPARATOR, "Comparator operation matched status check.");
         }
       };
 
@@ -133,6 +134,8 @@ public class CustomsAlert implements Serializable {
         return convertPasswordResetAbuse(a);
       case "velocity":
         return convertVelocity(a);
+      case "status_comparator":
+        return convertStatusComparator(a);
     }
     return null;
   }
@@ -355,6 +358,33 @@ public class CustomsAlert implements Serializable {
     buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
     buf.setIndicator(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     buf.setSuggestedAction(AlertAction.BLOCK);
+    buf.setReason(reason);
+    ret.add(buf);
+
+    return ret;
+  }
+
+  /**
+   * Convert a status comparator alert
+   *
+   * @param a Alert
+   * @return ArrayList of CustomsAlert
+   */
+  public static ArrayList<CustomsAlert> convertStatusComparator(Alert a) {
+    ArrayList<CustomsAlert> ret = new ArrayList<>();
+
+    String reason =
+        String.format(
+            "%s performed status check on %s",
+            a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+            a.getMetadataValue(AlertMeta.Key.EMAIL));
+
+    CustomsAlert buf = baseAlert(a);
+    buf.setSeverity(AlertSeverity.WARNING);
+    buf.setConfidence(100);
+    buf.setIndicatorType(IndicatorType.EMAIL);
+    buf.setIndicator(a.getMetadataValue(AlertMeta.Key.EMAIL));
+    buf.setSuggestedAction(AlertAction.SUSPECT);
     buf.setReason(reason);
     ret.add(buf);
 
