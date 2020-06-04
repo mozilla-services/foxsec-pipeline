@@ -214,6 +214,15 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
         || (amoData.getUid() == null)) {
       return;
     }
+
+    // AMO can send log messages with the remote address field set to an empty string,
+    // if this happens just stop here and don't classify the event. Also set the value in
+    // the data set to null.
+    if (amoData.getRemoteAddressChain().isEmpty()) {
+      amoData.setRemoteAddressChain(null);
+      return;
+    }
+
     // Set source address; pass null for the normalized component since we don't want to
     // set the fields in there for this event type
     setSourceAddress(amoData.getRemoteAddressChain(), state, null);
