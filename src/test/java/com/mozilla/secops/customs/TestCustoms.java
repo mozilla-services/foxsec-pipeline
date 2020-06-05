@@ -554,4 +554,44 @@ public class TestCustoms {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void statusComparatorTest() throws Exception {
+    testEnv();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_status_comparator1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableStatusComparator(true);
+    options.setStatusComparatorAddressPath("/testdata/customs_status_comparator_address_list.txt");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                System.out.println(a.toJSON());
+                assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                assertEquals("3.3.3.3", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                assertEquals(
+                    "test status check comparator indicates known address", a.getSummary());
+                assertEquals("customs", a.getCategory());
+                assertEquals("status_comparator", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                assertEquals(
+                    "status_comparator", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }

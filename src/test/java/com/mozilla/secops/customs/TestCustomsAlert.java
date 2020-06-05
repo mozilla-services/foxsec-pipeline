@@ -85,5 +85,14 @@ public class TestCustomsAlert {
             + "us_city\",\"value\":\"Milton\"},{\"key\":\"sourceaddress_previous_country\",\"value\":\"US\"}]}";
     c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
     assertEquals(1, c.size());
+
+    buf =
+        "{\"severity\":\"info\",\"id\":\"9b38ee45-09c3-4497-a04f-d1190c7a7c24\",\"summary\":\"test stat"
+            + "us check comparator indicates known address\",\"category\":\"customs\",\"timestamp\":\"2020-06"
+            + "-04T23:48:37.282Z\",\"metadata\":[{\"key\":\"category\",\"value\":\"status_comparator\"},{\"ke"
+            + "y\":\"notify_merge\",\"value\":\"status_comparator\"},{\"key\":\"email\",\"value\":\"spock@moz"
+            + "illa.com\"},{\"key\":\"sourceaddress\",\"value\":\"3.3.3.3\"}]}";
+    c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
+    assertEquals(1, c.size());
   }
 }
