@@ -3,8 +3,13 @@ package com.mozilla.secops.customs;
 import com.mozilla.secops.FileUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.customs.CustomsAtRiskAccountState.CustomsAtRiskAccountStateModel;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
+import com.mozilla.secops.state.DatastoreStateInterface;
+import com.mozilla.secops.state.State;
+import com.mozilla.secops.state.StateCursor;
+import com.mozilla.secops.state.StateException;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
@@ -20,7 +25,11 @@ import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Customs status check comparator */
+/**
+ * Customs status check comparator
+ *
+ * <p>Requires Datastore for state.
+ */
 public class CustomsStatusComparator extends PTransform<PCollection<Event>, PCollection<Alert>>
     implements CustomsDocumentingTransform {
   private static final long serialVersionUID = 1L;
@@ -31,7 +40,6 @@ public class CustomsStatusComparator extends PTransform<PCollection<Event>, PCol
   private final Logger log = LoggerFactory.getLogger(CustomsStatusComparator.class);
 
   private boolean escalate;
-  private boolean checkExperimentalParam;
 
   /** {@inheritDoc} */
   public String getTransformDocDescription() {
@@ -119,11 +127,20 @@ public class CustomsStatusComparator extends PTransform<PCollection<Event>, PCol
                   private static final long serialVersionUID = 1L;
 
                   private ArrayList<String> addrlist;
+                  private State state;
 
                   @Setup
-                  public void setup() throws IOException {
+                  public void setup() throws IOException, StateException {
                     log.info("loading address list from {}", addressPath);
                     addrlist = FileUtil.fileReadLines(addressPath);
+
+                    log.info("using datastore for state management");
+                    state =
+                        new State(
+                            new DatastoreStateInterface(
+                                CustomsLoginFailureForAtRiskAccount.DATASTORE_KIND,
+                                CustomsLoginFailureForAtRiskAccount.DATASTORE_NAMESPACE));
+                    state.initialize();
                   }
 
                   @ProcessElement
@@ -134,6 +151,18 @@ public class CustomsStatusComparator extends PTransform<PCollection<Event>, PCol
                       return;
                     }
                     log.info("comparator match on {} for {}", e.address, e.email);
+
+                    // Store the entry in state for CustomsLoginFailureForAtRiskAccount
+                    try {
+                      StateCursor<CustomsAtRiskAccountStateModel.ScannedByEntry> curs =
+                          state.newCursor(
+                              CustomsAtRiskAccountStateModel.ScannedByEntry.class, false);
+                      CustomsAtRiskAccountStateModel.ScannedByEntry ent =
+                          new CustomsAtRiskAccountStateModel.ScannedByEntry(e.address);
+                      curs.set(e.email, ent);
+                    } catch (StateException exc) {
+                      log.error("error saving comparator state: {}", exc.getMessage());
+                    }
 
                     Alert alert = new Alert();
                     alert.setCategory("customs");

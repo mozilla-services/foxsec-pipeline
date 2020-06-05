@@ -559,16 +559,22 @@ public class TestCustoms {
   public void statusComparatorTest() throws Exception {
     testEnv();
 
+    // Note we also test CustomsLoginFailureForAtRiskAccount here
+
     String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_status_comparator1.txt");
+    String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_status_comparator2.txt");
     TestStream<String> s =
         TestStream.create(StringUtf8Coder.of())
             .advanceWatermarkTo(new Instant(0L))
             .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceProcessingTime(Duration.standardSeconds(30))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
             .advanceWatermarkToInfinity();
 
     Customs.CustomsOptions options = getTestOptions();
     options.setEnableStatusComparator(true);
     options.setStatusComparatorAddressPath("/testdata/customs_status_comparator_address_list.txt");
+    options.setEnableLoginFailureAtRiskAccount(true);
 
     PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
 
@@ -576,19 +582,43 @@ public class TestCustoms {
         .satisfies(
             x -> {
               int cnt = 0;
+              int sccnt = 0;
+              int lfcnt = 0;
               for (Alert a : x) {
                 System.out.println(a.toJSON());
-                assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
-                assertEquals("3.3.3.3", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
-                assertEquals(
-                    "test status check comparator indicates known address", a.getSummary());
-                assertEquals("customs", a.getCategory());
-                assertEquals("status_comparator", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
-                assertEquals(
-                    "status_comparator", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("status_comparator")) {
+                  assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                  assertEquals("3.3.3.3", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals(
+                      "test status check comparator indicates known address", a.getSummary());
+                  assertEquals("customs", a.getCategory());
+                  assertEquals("status_comparator", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  assertEquals(
+                      "status_comparator",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  sccnt++;
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("login_failure_at_risk_account")) {
+                  assertEquals("test login failure for at risk account, 10.0.1.11", a.getSummary());
+                  assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                  assertEquals("10.0.1.11", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals("customs", a.getCategory());
+                  assertEquals(
+                      "login_failure_at_risk_account",
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  assertEquals(
+                      "login_failure_at_risk_account",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  lfcnt++;
+                } else {
+                  fail("unexpected category");
+                }
                 cnt++;
               }
-              assertEquals(1, cnt);
+              assertEquals(2, cnt);
+              assertEquals(1, sccnt);
+              assertEquals(1, lfcnt);
               return null;
             });
 

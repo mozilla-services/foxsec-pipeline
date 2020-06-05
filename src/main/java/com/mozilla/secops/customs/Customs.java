@@ -50,6 +50,8 @@ public class Customs implements Serializable {
   public static final String CATEGORY_VELOCITY_MONITOR_ONLY = "velocity_monitor_only";
   public static final String CATEGORY_PASSWORD_RESET_ABUSE = "password_reset_abuse";
   public static final String CATEGORY_STATUS_COMPARATOR = "status_comparator";
+  public static final String CATEGORY_LOGIN_FAILURE_AT_RISK_ACCOUNT =
+      "login_failure_at_risk_account";
 
   /** Used by keyEvents */
   private enum KeyType {
@@ -291,6 +293,19 @@ public class Customs implements Serializable {
 
     void setStatusComparatorAddressPath(String value);
 
+    @Description("Enable login failure for at risk account; CustomsLoginFailureForAtRiskAccount")
+    @Default.Boolean(false)
+    Boolean getEnableLoginFailureAtRiskAccount();
+
+    void setEnableLoginFailureAtRiskAccount(Boolean value);
+
+    @Description(
+        "Enable escalation of login failure for at risk account; CustomsLoginFailureForAtRiskAccount")
+    @Default.Boolean(false)
+    Boolean getEscalateLoginFailureAtRiskAccount();
+
+    void setEscalateLoginFailureAtRiskAccount(Boolean value);
+
     @Description("Enable velocity analysis; CustomsVelocity")
     @Default.Boolean(false)
     Boolean getEnableVelocityDetector();
@@ -383,6 +398,10 @@ public class Customs implements Serializable {
 
     if (options.getEnableStatusComparator()) {
       b.withTransformDoc(new CustomsStatusComparator(options));
+    }
+
+    if (options.getEnableLoginFailureAtRiskAccount()) {
+      b.withTransformDoc(new CustomsLoginFailureForAtRiskAccount(options));
     }
 
     if (options.getEnablePasswordResetAbuseDetector()) {
@@ -557,6 +576,14 @@ public class Customs implements Serializable {
     if (options.getEnableStatusComparator()) {
       resultsList =
           resultsList.and(events.apply("status comparator", new CustomsStatusComparator(options)));
+    }
+
+    if (options.getEnableLoginFailureAtRiskAccount()) {
+      resultsList =
+          resultsList.and(
+              events.apply(
+                  "login failure at risk account",
+                  new CustomsLoginFailureForAtRiskAccount(options)));
     }
 
     if (options.getEnableSummaryAnalysis()) {
