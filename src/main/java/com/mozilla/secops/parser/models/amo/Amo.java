@@ -48,11 +48,20 @@ public class Amo implements Serializable {
   }
 
   /**
+   * Set remoteAddressChain
+   *
+   * @param remoteAddressChain String
+   */
+  @JsonProperty("remoteAddressChain")
+  public void setRemoteAddressChain(String remoteAddressChain) {
+    this.remoteAddressChain = remoteAddressChain;
+  }
+
+  /**
    * Get remoteAddressChain
    *
    * @return String
    */
-  @JsonProperty("remoteAddressChain")
   public String getRemoteAddressChain() {
     return remoteAddressChain;
   }
