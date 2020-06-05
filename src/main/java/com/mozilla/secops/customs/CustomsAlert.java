@@ -394,6 +394,12 @@ public class CustomsAlert implements Serializable {
     return ret;
   }
 
+  /**
+   * Convert an at risk account alert
+   *
+   * @param a Alert
+   * @return ArrayList of CustomsAlert
+   */
   public static ArrayList<CustomsAlert> convertLoginFailureAtRiskAccount(Alert a) {
     ArrayList<CustomsAlert> ret = new ArrayList<>();
 
