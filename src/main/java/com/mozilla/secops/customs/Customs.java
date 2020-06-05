@@ -291,6 +291,19 @@ public class Customs implements Serializable {
 
     void setStatusComparatorAddressPath(String value);
 
+    @Description("Enable login failure for at risk account; CustomsLoginFailureForAtRiskAccount")
+    @Default.Boolean(false)
+    Boolean getEnableLoginFailureAtRiskAccount();
+
+    void setEnableLoginFailureAtRiskAccount(Boolean value);
+
+    @Description(
+        "Enable escalation of login failure for at risk account; CustomsLoginFailureForAtRiskAccount")
+    @Default.Boolean(false)
+    Boolean getEscalateLoginFailureAtRiskAccount();
+
+    void setEscalateLoginFailureAtRiskAccount(Boolean value);
+
     @Description("Enable velocity analysis; CustomsVelocity")
     @Default.Boolean(false)
     Boolean getEnableVelocityDetector();
@@ -383,6 +396,10 @@ public class Customs implements Serializable {
 
     if (options.getEnableStatusComparator()) {
       b.withTransformDoc(new CustomsStatusComparator(options));
+    }
+
+    if (options.getEnableLoginFailureAtRiskAccount()) {
+      b.withTransformDoc(new CustomsLoginFailureForAtRiskAccount(options));
     }
 
     if (options.getEnablePasswordResetAbuseDetector()) {
@@ -557,6 +574,14 @@ public class Customs implements Serializable {
     if (options.getEnableStatusComparator()) {
       resultsList =
           resultsList.and(events.apply("status comparator", new CustomsStatusComparator(options)));
+    }
+
+    if (options.getEnableLoginFailureAtRiskAccount()) {
+      resultsList =
+          resultsList.and(
+              events.apply(
+                  "login failure at risk account",
+                  new CustomsLoginFailureForAtRiskAccount(options)));
     }
 
     if (options.getEnableSummaryAnalysis()) {
