@@ -86,6 +86,7 @@ public class CustomsAlert implements Serializable {
                   + "fixed time frame");
           put(Customs.CATEGORY_VELOCITY, "Login velocity threshold exceeded for given account.");
           put(Customs.CATEGORY_STATUS_COMPARATOR, "Comparator operation matched status check.");
+          put(Customs.CATEGORY_LOGIN_FAILURE_AT_RISK_ACCOUNT, "Login failure to at risk account.");
         }
       };
 
@@ -136,6 +137,8 @@ public class CustomsAlert implements Serializable {
         return convertVelocity(a);
       case "status_comparator":
         return convertStatusComparator(a);
+      case "login_failure_at_risk_account":
+        return convertLoginFailureAtRiskAccount(a);
     }
     return null;
   }
@@ -384,6 +387,27 @@ public class CustomsAlert implements Serializable {
     buf.setConfidence(100);
     buf.setIndicatorType(IndicatorType.EMAIL);
     buf.setIndicator(a.getMetadataValue(AlertMeta.Key.EMAIL));
+    buf.setSuggestedAction(AlertAction.SUSPECT);
+    buf.setReason(reason);
+    ret.add(buf);
+
+    return ret;
+  }
+
+  public static ArrayList<CustomsAlert> convertLoginFailureAtRiskAccount(Alert a) {
+    ArrayList<CustomsAlert> ret = new ArrayList<>();
+
+    String reason =
+        String.format(
+            "%s failed login to %s",
+            a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+            a.getMetadataValue(AlertMeta.Key.EMAIL));
+
+    CustomsAlert buf = baseAlert(a);
+    buf.setSeverity(AlertSeverity.WARNING);
+    buf.setConfidence(100);
+    buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
+    buf.setIndicator(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     buf.setSuggestedAction(AlertAction.SUSPECT);
     buf.setReason(reason);
     ret.add(buf);

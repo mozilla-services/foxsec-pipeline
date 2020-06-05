@@ -94,5 +94,14 @@ public class TestCustomsAlert {
             + "illa.com\"},{\"key\":\"sourceaddress\",\"value\":\"3.3.3.3\"}]}";
     c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
     assertEquals(1, c.size());
+
+    buf =
+        "{\"severity\":\"info\",\"id\":\"c2786a21-5f6e-41ae-9942-ba723cd22447\",\"summary\":\"test login "
+            + "failure for at risk account, 10.0.1.11\",\"category\":\"customs\",\"timestamp\":\"2020-06-05T20:"
+            + "23:53.123Z\",\"metadata\":[{\"key\":\"category\",\"value\":\"login_failure_at_risk_account\"},"
+            + "{\"key\":\"notify_merge\",\"value\":\"login_failure_at_risk_account\"},{\"key\":\"email\",\"va"
+            + "lue\":\"spock@mozilla.com\"},{\"key\":\"sourceaddress\",\"value\":\"10.0.1.11\"}]}";
+    c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
+    assertEquals(1, c.size());
   }
 }

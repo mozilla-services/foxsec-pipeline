@@ -50,6 +50,8 @@ public class Customs implements Serializable {
   public static final String CATEGORY_VELOCITY_MONITOR_ONLY = "velocity_monitor_only";
   public static final String CATEGORY_PASSWORD_RESET_ABUSE = "password_reset_abuse";
   public static final String CATEGORY_STATUS_COMPARATOR = "status_comparator";
+  public static final String CATEGORY_LOGIN_FAILURE_AT_RISK_ACCOUNT =
+      "login_failure_at_risk_account";
 
   /** Used by keyEvents */
   private enum KeyType {
