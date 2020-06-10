@@ -837,6 +837,7 @@ public class HTTPRequest implements Serializable {
     private final Double requiredMinimumAverage;
     private final Long requiredMinimumClients;
     private final Double clampThresholdMaximum;
+    private final Long requiredMinimumRequestsPerClient;
     private final String monitoredResource;
     private final Boolean enableIprepdDatastoreWhitelist;
     private final String iprepdDatastoreWhitelistProject;
@@ -861,6 +862,7 @@ public class HTTPRequest implements Serializable {
       this.thresholdModifier = toggles.getAnalysisThresholdModifier();
       this.requiredMinimumAverage = toggles.getRequiredMinimumAverage();
       this.requiredMinimumClients = toggles.getRequiredMinimumClients();
+      this.requiredMinimumRequestsPerClient = toggles.getRequiredMinimumRequestsPerClient();
       this.clampThresholdMaximum = toggles.getClampThresholdMaximum();
       this.monitoredResource = toggles.getMonitoredResource();
       this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
@@ -919,7 +921,7 @@ public class HTTPRequest implements Serializable {
 
                     @ProcessElement
                     public void processElement(ProcessContext c) {
-                      if (c.element().getValue() > 1) {
+                      if (c.element().getValue() >= requiredMinimumRequestsPerClient) {
                         c.output(c.element());
                       }
                     }
@@ -1834,6 +1836,12 @@ public class HTTPRequest implements Serializable {
     Double getClampThresholdMaximum();
 
     void setClampThresholdMaximum(Double value);
+
+    @Description("Required minimum number of requests for threshold analysis")
+    @Default.Long(20L)
+    Long getRequiredMinimumRequestsPerClient();
+
+    void setRequiredMinimumRequestsPerClient(Long value);
 
     @Description("Maximum permitted client error rate per window")
     @Default.Long(30L)

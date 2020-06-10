@@ -36,6 +36,7 @@ public class HTTPRequestToggles {
   private Double requiredMinimumAverage;
   private Long requiredMinimumClients;
   private Double clampThresholdMaximum;
+  private Long requiredMinimumRequestsPerClient;
 
   // Error rate settings
   private Long maxClientErrorRate;
@@ -210,6 +211,25 @@ public class HTTPRequestToggles {
    */
   public Double getClampThresholdMaximum() {
     return clampThresholdMaximum;
+  }
+
+  /**
+   * Set required minimum number of requests per client
+   *
+   * @param value Long
+   */
+  @JsonProperty("required_minimum_requests_per_client")
+  public void setRequiredMinimumRequestsPerClient(Long value) {
+    requiredMinimumRequestsPerClient = value;
+  }
+
+  /**
+   * Get required minimum number of requests per client
+   *
+   * @return Long
+   */
+  public Long getRequiredMinimumRequestsPerClient() {
+    return requiredMinimumRequestsPerClient;
   }
 
   /**
@@ -878,6 +898,7 @@ public class HTTPRequestToggles {
     ret.setRequiredMinimumAverage(o.getRequiredMinimumAverage());
     ret.setRequiredMinimumClients(o.getRequiredMinimumClients());
     ret.setClampThresholdMaximum(o.getClampThresholdMaximum());
+    ret.setRequiredMinimumRequestsPerClient(o.getRequiredMinimumRequestsPerClient());
 
     ret.setMaxClientErrorRate(o.getMaxClientErrorRate());
 
@@ -930,6 +951,7 @@ public class HTTPRequestToggles {
     analysisThresholdModifier = 75.0;
     requiredMinimumAverage = 5.0;
     requiredMinimumClients = 5L;
+    requiredMinimumRequestsPerClient = 20L;
 
     maxClientErrorRate = 30L;
 
