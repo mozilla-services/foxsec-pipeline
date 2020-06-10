@@ -31,6 +31,7 @@ public class TestThresholdAnalysis1 {
     ret.setEnableThresholdAnalysis(true);
     ret.setMonitoredResourceIndicator("test");
     ret.setIgnoreInternalRequests(false); // Tests use internal subnets
+    ret.setRequiredMinimumRequestsPerClient(2L);
     ret.setInputFile(
         new String[] {"./target/test-classes/testdata/httpreq_thresholdanalysis1.txt"});
     return ret;

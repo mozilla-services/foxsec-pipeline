@@ -32,6 +32,7 @@ public class TestHTTPRequestSourceCorrelator {
     ret.setAnalysisThresholdModifier(1.0);
     ret.setRequiredMinimumAverage(1.0);
     ret.setEnableThresholdAnalysis(true);
+    ret.setRequiredMinimumRequestsPerClient(2L);
     ret.setMonitoredResourceIndicator("test");
     ret.setIgnoreInternalRequests(false); // Tests use internal subnets
     ret.setMaxmindCityDbPath(ParserTest.TEST_GEOIP_DBPATH);
