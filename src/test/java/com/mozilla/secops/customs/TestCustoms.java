@@ -624,4 +624,52 @@ public class TestCustoms {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void activityMonitorTest() throws Exception {
+    testEnv();
+
+    String[] eb1 =
+        TestUtil.getTestInputArray("/testdata/customs_activity_for_monitored_accounts1.txt");
+    String[] eb2 =
+        TestUtil.getTestInputArray("/testdata/customs_activity_for_monitored_accounts2.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceProcessingTime(Duration.standardSeconds(30))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableActivityMonitor(true);
+    options.setActivityMonitorAccountPath(
+        "/testdata/customs_activity_for_monitored_accounts_account_list.txt");
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int amcnt = 0;
+              for (Alert a : x) {
+                System.out.println(a.toJSON());
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("activity_monitor")) {
+                  assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                  assertEquals("127.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals("test activity on monitored account", a.getSummary());
+                  assertEquals("customs", a.getCategory());
+                  assertEquals("activity_monitor", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  amcnt++;
+                } else {
+                  fail("unexpected category");
+                }
+              }
+              assertEquals(1, amcnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }
