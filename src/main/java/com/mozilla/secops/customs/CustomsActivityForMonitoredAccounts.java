@@ -62,8 +62,9 @@ public class CustomsActivityForMonitoredAccounts
 
                     FxaAuth.EventSummary sum = CustomsUtil.authGetEventSummary(e);
 
-                    // TODO: Make this a pipeline parameter?
-                    if (!(sum == FxaAuth.EventSummary.LOGIN_SUCCESS)) {
+                    // Filter based on event type
+                    if (!(sum == FxaAuth.EventSummary.LOGIN_SUCCESS
+                        || sum == FxaAuth.EventSummary.SESSION_VERIFY_CODE_SUCCESS)) {
                       return;
                     }
 
@@ -97,13 +98,15 @@ public class CustomsActivityForMonitoredAccounts
 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
-                    String email = CustomsUtil.authGetEmail(c.element());
-                    String address = CustomsUtil.authGetSourceAddress(c.element());
+                    Event e = c.element();
+                    String email = CustomsUtil.authGetEmail(e);
+                    String address = CustomsUtil.authGetSourceAddress(e);
 
                     if (!accountlist.contains(email)) {
                       return;
                     }
                     log.info("activity monitor match for {} from {}", email, address);
+                    FxaAuth.EventSummary sum = CustomsUtil.authGetEventSummary(e);
 
                     Alert alert = new Alert();
                     alert.setCategory("customs");
@@ -112,7 +115,9 @@ public class CustomsActivityForMonitoredAccounts
                     alert.addMetadata(AlertMeta.Key.EMAIL, email);
                     alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, address);
                     alert.setSummary(
-                        String.format("%s activity on monitored account", monitoredResource));
+                        String.format(
+                            "%s activity on monitored account - action %s",
+                            monitoredResource, sum));
 
                     c.output(alert);
                   }

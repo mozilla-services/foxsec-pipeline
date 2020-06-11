@@ -88,6 +88,7 @@ public class Customs implements Serializable {
     ret.add(FxaAuth.EventSummary.LOGIN_FAILURE);
     ret.add(FxaAuth.EventSummary.LOGIN_SUCCESS);
     ret.add(FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK_SUCCESS);
+    ret.add(FxaAuth.EventSummary.SESSION_VERIFY_CODE_SUCCESS);
     return ret;
   }
 
