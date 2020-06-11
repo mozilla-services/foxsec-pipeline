@@ -63,8 +63,7 @@ public class CustomsActivityForMonitoredAccounts
                     FxaAuth.EventSummary sum = CustomsUtil.authGetEventSummary(e);
 
                     // Filter based on event type
-                    if (!(sum == FxaAuth.EventSummary.LOGIN_SUCCESS
-                        || sum == FxaAuth.EventSummary.SESSION_VERIFY_CODE_SUCCESS)) {
+                    if (!(sum == FxaAuth.EventSummary.LOGIN_SUCCESS)) {
                       return;
                     }
 

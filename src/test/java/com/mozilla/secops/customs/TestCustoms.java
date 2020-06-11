@@ -656,32 +656,18 @@ public class TestCustoms {
                 System.out.println(a.toJSON());
                 if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                     .equals("activity_monitor")) {
-                  if (a.getMetadataValue(AlertMeta.Key.EMAIL).equals("spock@mozilla.com")) {
-                    assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
-                    assertEquals("127.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
-                    assertEquals(
-                        "test activity on monitored account - action loginSuccess", a.getSummary());
-                    assertEquals("customs", a.getCategory());
-                    assertEquals(
-                        "activity_monitor", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
-                    amcnt++;
-                  }
-                  if (a.getMetadataValue(AlertMeta.Key.EMAIL).equals("kirk@mozilla.com")) {
-                    assertEquals("kirk@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
-                    assertEquals("1.2.3.4", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
-                    assertEquals(
-                        "test activity on monitored account - action sessionVerifyCodeSuccess",
-                        a.getSummary());
-                    assertEquals("customs", a.getCategory());
-                    assertEquals(
-                        "activity_monitor", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
-                    amcnt++;
-                  }
+                  assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
+                  assertEquals("127.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals(
+                      "test activity on monitored account - action loginSuccess", a.getSummary());
+                  assertEquals("customs", a.getCategory());
+                  assertEquals("activity_monitor", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  amcnt++;
                 } else {
                   fail("unexpected category");
                 }
               }
-              assertEquals(2, amcnt);
+              assertEquals(1, amcnt);
               return null;
             });
 
