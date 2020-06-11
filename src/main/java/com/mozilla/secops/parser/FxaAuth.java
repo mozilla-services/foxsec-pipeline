@@ -77,6 +77,12 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
       public String toString() {
         return "certificateSignSuccess";
       }
+    },
+    SESSION_VERIFY_CODE_SUCCESS {
+      @Override
+      public String toString() {
+        return "sessionVerifyCodeSuccess";
+      }
     }
   }
 
@@ -236,6 +242,21 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     return true;
   }
 
+  private Boolean discernSessionVerifyCodeSuccess() {
+    if (!fxaAuthData.getPath().equals("/v1/session/verify_code")) {
+      return false;
+    }
+    if (!fxaAuthData.getStatus().equals(200)) {
+      return false;
+    }
+    if (!fxaAuthData.getMethod().toLowerCase().equals("post")) {
+      return false;
+    }
+
+    eventSummary = EventSummary.SESSION_VERIFY_CODE_SUCCESS;
+    return true;
+  }
+
   private Boolean discernSendRecoveryEmail() {
     if (!fxaAuthData.getPath().equals("/v1/recovery_email")) {
       return false;
@@ -364,6 +385,8 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     } else if (discernPasswordForgotSendCode()) {
       return;
     } else if (discernCertificateSignSuccess()) {
+      return;
+    } else if (discernSessionVerifyCodeSuccess()) {
       return;
     }
   }

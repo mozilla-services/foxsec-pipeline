@@ -52,6 +52,7 @@ public class Customs implements Serializable {
   public static final String CATEGORY_STATUS_COMPARATOR = "status_comparator";
   public static final String CATEGORY_LOGIN_FAILURE_AT_RISK_ACCOUNT =
       "login_failure_at_risk_account";
+  public static final String CATEGORY_ACTIVITY_MONITOR = "activity_monitor";
 
   /** Used by keyEvents */
   private enum KeyType {
@@ -87,6 +88,7 @@ public class Customs implements Serializable {
     ret.add(FxaAuth.EventSummary.LOGIN_FAILURE);
     ret.add(FxaAuth.EventSummary.LOGIN_SUCCESS);
     ret.add(FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK_SUCCESS);
+    ret.add(FxaAuth.EventSummary.SESSION_VERIFY_CODE_SUCCESS);
     return ret;
   }
 
@@ -369,6 +371,18 @@ public class Customs implements Serializable {
     String getCustomsNotificationTopic();
 
     void setCustomsNotificationTopic(String value);
+
+    @Description("Activity monitor account list; resource path, gcs path")
+    String getActivityMonitorAccountPath();
+
+    void setActivityMonitorAccountPath(String value);
+
+    @Description(
+        "Enable activity monitor for monitored accounts; CustomsActivityForMonitoredAccounts")
+    @Default.Boolean(false)
+    Boolean getEnableActivityMonitor();
+
+    void setEnableActivityMonitor(Boolean value);
   }
 
   /**
@@ -398,6 +412,10 @@ public class Customs implements Serializable {
 
     if (options.getEnableStatusComparator()) {
       b.withTransformDoc(new CustomsStatusComparator(options));
+    }
+
+    if (options.getEnableActivityMonitor()) {
+      b.withTransformDoc(new CustomsActivityForMonitoredAccounts(options));
     }
 
     if (options.getEnableLoginFailureAtRiskAccount()) {
@@ -576,6 +594,12 @@ public class Customs implements Serializable {
     if (options.getEnableStatusComparator()) {
       resultsList =
           resultsList.and(events.apply("status comparator", new CustomsStatusComparator(options)));
+    }
+
+    if (options.getEnableActivityMonitor()) {
+      resultsList =
+          resultsList.and(
+              events.apply("activity monitor", new CustomsActivityForMonitoredAccounts(options)));
     }
 
     if (options.getEnableLoginFailureAtRiskAccount()) {
