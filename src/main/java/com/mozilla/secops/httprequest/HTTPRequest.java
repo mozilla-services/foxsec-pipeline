@@ -1384,7 +1384,7 @@ public class HTTPRequest implements Serializable {
       this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
       this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
       this.suppressRecovery = toggles.getPerEndpointErrorRateSuppressRecovery();
-      this.sessionGapDurationMinutes = toggles.getSessionGapDurationMinutes();
+      this.sessionGapDurationMinutes = toggles.getErrorSessionGapDurationMinutes();
       this.alertSuppressionDurationSeconds =
           toggles.getPerEndpointErrorRateAlertSuppressionDurationSeconds();
 
@@ -1569,10 +1569,7 @@ public class HTTPRequest implements Serializable {
     }
   }
 
-  /**
-   * Function to be used with filter transform in order to exclude any events that do not have a
-   * request status in the 400s
-   */
+  /** Function to be used with filter transform in order to include only client errors */
   public static class Has4xxRequestStatus implements SerializableFunction<Event, Boolean> {
     private static final long serialVersionUID = 1L;
 

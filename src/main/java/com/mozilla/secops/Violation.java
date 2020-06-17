@@ -63,6 +63,12 @@ public class Violation {
       public String toString() {
         return "abusive_account_violation";
       }
+    },
+    PER_ENDPOINT_ERROR_RATE_VIOLATION {
+      @Override
+      public String toString() {
+        return "violation75";
+      }
     }
   }
 
@@ -175,6 +181,9 @@ public class Violation {
         "useragent_blacklist",
         new GenericSourceViolationGenerator(ViolationType.USERAGENT_BLACKLIST_VIOLATION));
     vMap.put("hard_limit", new GenericSourceViolationGenerator(ViolationType.HARD_LIMIT_VIOLATION));
+    vMap.put(
+        "per_endpoint_error_rate",
+        new GenericSourceViolationGenerator(ViolationType.PER_ENDPOINT_ERROR_RATE_VIOLATION));
 
     // Customs
     vMap.put(
