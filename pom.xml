@@ -19,7 +19,7 @@
 
         <jackson.version>2.9.10</jackson.version>
         <!-- updated separately to address CVE's -->
-        <jackson-databind.version>2.9.10.4</jackson-databind.version>
+        <jackson-databind.version>2.10.0.pr1</jackson-databind.version>
         
         <jslack.version>1.8.1</jslack.version>
 
