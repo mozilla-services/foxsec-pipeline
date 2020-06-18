@@ -216,7 +216,7 @@ public class Parser {
   public static <T, U> HashMap<T, U> convertJsonToMap(String input, ObjectMapper mapper) {
     HashMap<T, U> fields = new HashMap<T, U>();
     try {
-      fields = mapper.readValue(input, new TypeReference<Map<T, U>>() {});
+      fields = mapper.readValue(input, new TypeReference<HashMap<T, U>>() {});
     } catch (IOException exc) {
       return null;
     }
