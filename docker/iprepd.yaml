@@ -24,6 +24,27 @@ violations:
     penalty: 100
   - name: hard_limit_violation
     penalty: 10
+  - name: violation5
+    penalty: 5
+    decreaselimit: 0
+  - name: violation10
+    penalty: 10
+    decreaselimit: 0
+  - name: violation20
+    penalty: 20
+    decreaselimit: 0
+  - name: violation25
+    penalty: 25
+    decreaselimit: 0
+  - name: violation50
+    penalty: 50
+    decreaselimit: 0
+  - name: violation75
+    penalty: 75
+    decreaselimit: 0
+  - name: violation100
+    penalty: 100
+    decreaselimit: 0
 decay:
   points: 0
   interval: 1s

@@ -3,8 +3,12 @@ package com.mozilla.secops.httprequest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.mozilla.secops.IprepdIO;
+import com.mozilla.secops.OutputOptions;
+import com.mozilla.secops.TestIprepdIO;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.input.Input;
 import java.util.Arrays;
@@ -14,6 +18,8 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.testing.TestStream;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
@@ -128,6 +134,118 @@ public class TestPerEndpointErrorRateAnalysis {
   }
 
   @Test
+  public void perEndpointErrorRateTestStreamWithIprepdEscalation() throws Exception {
+    // this test case is the same as above, but includes escalation to iprepd.
+    String[] eb1 =
+        TestUtil.getTestInputArray(
+            "/testdata/httpreq_perendpointerrorrate1/httpreq_perendpointerrorrate1_1.txt");
+    String[] eb2 =
+        TestUtil.getTestInputArray(
+            "/testdata/httpreq_perendpointerrorrate1/httpreq_perendpointerrorrate1_2.txt");
+    String[] eb3 =
+        TestUtil.getTestInputArray(
+            "/testdata/httpreq_perendpointerrorrate1/httpreq_perendpointerrorrate1_3.txt");
+
+    TestIprepdIO.deleteReputation("ip", "192.168.1.1");
+    TestIprepdIO.deleteReputation("ip", "192.168.1.2");
+    TestIprepdIO.deleteReputation("ip", "192.168.1.3");
+    TestIprepdIO.deleteReputation("ip", "192.168.1.4");
+
+    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
+
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    String v[] = new String[1];
+    v[0] = "4:GET:/test";
+    options.setPerEndpointErrorRatePaths(v);
+    options.setPerEndpointErrorRateAnalysisSuppressRecovery(60);
+    options.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
+
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkTo(new Instant(0L).plus(Duration.standardSeconds(15)))
+            .advanceProcessingTime(Duration.standardSeconds(15))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
+            .advanceWatermarkTo(new Instant(0L).plus(Duration.standardSeconds(45)))
+            .advanceProcessingTime(Duration.standardSeconds(30))
+            .addElements(eb3[0], Arrays.copyOfRange(eb3, 1, eb3.length))
+            .advanceWatermarkToInfinity();
+
+    Input input = HTTPRequestUtil.wiredInputStream(options, s);
+
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(p, HTTPRequest.readInput(p, input, options), options);
+
+    // apply output transforms to test iprepd escalation
+    results
+        .apply(ParDo.of(new AlertFormatter(options)))
+        .apply(MapElements.via(new AlertFormatter.AlertToString()))
+        .apply(OutputOptions.compositeOutput(options));
+
+    PCollection<Long> count = results.apply(Count.globally());
+
+    PAssert.that(count).containsInAnyOrder(1L, 1L);
+
+    PAssert.that(results)
+        .satisfies(
+            i -> {
+              int ip1Count = 0;
+              int ip2Count = 0;
+              for (Alert a : i) {
+                if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("192.168.1.2")) {
+                  assertEquals("1970-01-01T00:00:00.000Z", a.getTimestamp().toString());
+                  assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals(
+                      "test httprequest per_endpoint_error_rate 192.168.1.2 GET /test 5",
+                      a.getSummary());
+                  assertEquals("test per_endpoint_error_rate", a.getNotifyMergeKey());
+                  assertEquals(
+                      "per_endpoint_error_rate",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                  assertEquals(5L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
+                  assertEquals(
+                      "1970-01-01T00:00:59.999Z",
+                      a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
+                  ip2Count++;
+                } else if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("192.168.1.1")) {
+                  assertEquals("1970-01-01T00:00:45.000Z", a.getTimestamp().toString());
+                  assertEquals("192.168.1.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals(
+                      "test httprequest per_endpoint_error_rate 192.168.1.1 GET /test 5",
+                      a.getSummary());
+                  assertEquals("test per_endpoint_error_rate", a.getNotifyMergeKey());
+                  assertEquals(
+                      "per_endpoint_error_rate",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  assertEquals("60", a.getMetadataValue(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY));
+                  assertEquals(5L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT), 10));
+                  assertEquals(
+                      "1970-01-01T00:01:44.999Z",
+                      a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
+                  ip1Count++;
+                }
+              }
+              assertEquals(1, ip1Count);
+              assertEquals(1, ip2Count);
+              return null;
+            });
+
+    assertEquals(100, (int) r.getReputation("ip", "192.168.1.1"));
+    assertEquals(100, (int) r.getReputation("ip", "192.168.1.2"));
+    assertEquals(100, (int) r.getReputation("ip", "192.168.1.3"));
+    assertEquals(100, (int) r.getReputation("ip", "192.168.1.4"));
+
+    p.run().waitUntilFinish();
+
+    assertEquals(25, (int) r.getReputation("ip", "192.168.1.1"));
+    assertEquals(25, (int) r.getReputation("ip", "192.168.1.2"));
+    assertEquals(100, (int) r.getReputation("ip", "192.168.1.3"));
+    assertEquals(100, (int) r.getReputation("ip", "192.168.1.4"));
+  }
+
+  @Test
   public void perEndpointErrorRateTestStream2() throws Exception {
     // this test case contains: IPs that do not make enough bad requests to trigger alert,
     // ip that triggers alert with violations all in one pane, and an ip that triggers alert
@@ -222,7 +340,8 @@ public class TestPerEndpointErrorRateAnalysis {
   public void perEndpointErrorRateTestStream3() throws Exception {
     // this test case contains: IPs that do not make enough bad requests to trigger alert,
     // ip that triggers alert with violations all in one pane, and an ip that does not trigger
-    // an alert as it makes bad requests split into two sessions. Requests match one endpoint.
+    // an alert as it makes bad requests split into two sessions. Requests match one endpoint
+    // and contain 429s which should be ignored.
     String[] eb1 =
         TestUtil.getTestInputArray(
             "/testdata/httpreq_perendpointerrorrate3/httpreq_perendpointerrorrate3_1.txt");
