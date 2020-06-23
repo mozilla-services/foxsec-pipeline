@@ -37,7 +37,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
    * Create new FxaAccountAbuseNewVersion
    *
    * @param monitoredResource Monitored resource indicator
-   * @param banAccounts Blacklisted accounts regex
+   * @param banAccounts Blocked accounts regex
    * @param banAccountsSuppress Optional recovery suppression for ban pattern alerts
    * @param iprepdSpec iprepd spec for reputation lookups
    * @param project Project for KMS secrets decryption of API key if required
@@ -60,7 +60,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
   /** {@inheritDoc} */
   public String getTransformDoc() {
     return String.format(
-        "Correlates AMO addon submissions with abusive FxA account creation alerts via iprepd. Also includes blacklisted accounts regex: %s",
+        "Correlates AMO addon submissions with abusive FxA account creation alerts via iprepd. Also includes blocked accounts regex: %s",
         Arrays.toString(banAccounts));
   }
 

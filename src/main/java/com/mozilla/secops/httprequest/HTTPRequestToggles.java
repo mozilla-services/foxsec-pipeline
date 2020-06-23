@@ -20,7 +20,7 @@ public class HTTPRequestToggles {
   private Boolean enableEndpointAbuseAnalysis;
   private Boolean enableEndpointSequenceAbuseAnalysis;
   private Boolean enableHardLimitAnalysis;
-  private Boolean enableUserAgentBlacklistAnalysis;
+  private Boolean enableUserAgentBlocklistAnalysis;
   private Boolean enablePerEndpointErrorRateAnalysis;
   private Boolean enableNatDetection;
   private Boolean enableSourceCorrelator;
@@ -41,8 +41,8 @@ public class HTTPRequestToggles {
   // Error rate settings
   private Long maxClientErrorRate;
 
-  // User agent blacklist settings
-  private String userAgentBlacklistPath;
+  // User agent blocklist settings
+  private String userAgentBlocklistPath;
 
   // Endpoint abuse settings
   private String[] endpointAbusePath;
@@ -499,41 +499,41 @@ public class HTTPRequestToggles {
   }
 
   /**
-   * Set user agent blacklist analysis setting
+   * Set user agent blocklist analysis setting
    *
-   * @param enableUserAgentBlacklistAnalysis Boolean
+   * @param enableUserAgentBlocklistAnalysis Boolean
    */
-  @JsonProperty("enable_user_agent_blacklist_analysis")
-  public void setEnableUserAgentBlacklistAnalysis(Boolean enableUserAgentBlacklistAnalysis) {
-    this.enableUserAgentBlacklistAnalysis = enableUserAgentBlacklistAnalysis;
+  @JsonProperty("enable_user_agent_blocklist_analysis")
+  public void setEnableUserAgentBlocklistAnalysis(Boolean enableUserAgentBlocklistAnalysis) {
+    this.enableUserAgentBlocklistAnalysis = enableUserAgentBlocklistAnalysis;
   }
 
   /**
-   * Get user agent blacklist analysis setting
+   * Get user agent blocklist analysis setting
    *
    * @return Boolean
    */
-  public Boolean getEnableUserAgentBlacklistAnalysis() {
-    return enableUserAgentBlacklistAnalysis;
+  public Boolean getEnableUserAgentBlocklistAnalysis() {
+    return enableUserAgentBlocklistAnalysis;
   }
 
   /**
-   * Set user agent blacklist path
+   * Set user agent blocklist path
    *
    * @param value String
    */
-  @JsonProperty("user_agent_blacklist_path")
-  public void setUserAgentBlacklistPath(String value) {
-    userAgentBlacklistPath = value;
+  @JsonProperty("user_agent_blocklist_path")
+  public void setUserAgentBlocklistPath(String value) {
+    userAgentBlocklistPath = value;
   }
 
   /**
-   * Get user agent blacklist path
+   * Get user agent blocklist path
    *
    * @return String
    */
-  public String getUserAgentBlacklistPath() {
-    return userAgentBlacklistPath;
+  public String getUserAgentBlocklistPath() {
+    return userAgentBlocklistPath;
   }
 
   /**
@@ -887,7 +887,7 @@ public class HTTPRequestToggles {
     ret.setEnableEndpointAbuseAnalysis(o.getEnableEndpointAbuseAnalysis());
     ret.setEnableEndpointSequenceAbuseAnalysis(o.getEnableEndpointSequenceAbuseAnalysis());
     ret.setEnableHardLimitAnalysis(o.getEnableHardLimitAnalysis());
-    ret.setEnableUserAgentBlacklistAnalysis(o.getEnableUserAgentBlacklistAnalysis());
+    ret.setEnableUserAgentBlocklistAnalysis(o.getEnableUserAgentBlocklistAnalysis());
     ret.setEnablePerEndpointErrorRateAnaysis(o.getEnablePerEndpointErrorRateAnalysis());
     ret.setEnableNatDetection(o.getNatDetection());
     ret.setKnownGatewaysPath(o.getKnownGatewaysPath());
@@ -902,7 +902,7 @@ public class HTTPRequestToggles {
 
     ret.setMaxClientErrorRate(o.getMaxClientErrorRate());
 
-    ret.setUserAgentBlacklistPath(o.getUserAgentBlacklistPath());
+    ret.setUserAgentBlocklistPath(o.getUserAgentBlocklistPath());
 
     ret.setEndpointAbusePath(o.getEndpointAbusePath());
     ret.setEndpointAbuseExtendedVariance(o.getEndpointAbuseExtendedVariance());
@@ -942,7 +942,7 @@ public class HTTPRequestToggles {
     enableEndpointAbuseAnalysis = false;
     enableEndpointSequenceAbuseAnalysis = false;
     enableHardLimitAnalysis = false;
-    enableUserAgentBlacklistAnalysis = false;
+    enableUserAgentBlocklistAnalysis = false;
     enablePerEndpointErrorRateAnalysis = false;
     enableNatDetection = false;
 

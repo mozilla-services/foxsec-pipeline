@@ -52,10 +52,10 @@ public class Violation {
         return "hard_limit_violation";
       }
     },
-    USERAGENT_BLACKLIST_VIOLATION {
+    USERAGENT_BLOCKLIST_VIOLATION {
       @Override
       public String toString() {
-        return "useragent_blacklist_violation";
+        return "violation20";
       }
     },
     ABUSIVE_ACCOUNT_VIOLATION {
@@ -178,8 +178,8 @@ public class Violation {
         "endpoint_abuse",
         new GenericSourceViolationGenerator(ViolationType.ENDPOINT_ABUSE_VIOLATION));
     vMap.put(
-        "useragent_blacklist",
-        new GenericSourceViolationGenerator(ViolationType.USERAGENT_BLACKLIST_VIOLATION));
+        "useragent_blocklist",
+        new GenericSourceViolationGenerator(ViolationType.USERAGENT_BLOCKLIST_VIOLATION));
     vMap.put("hard_limit", new GenericSourceViolationGenerator(ViolationType.HARD_LIMIT_VIOLATION));
     vMap.put(
         "per_endpoint_error_rate",
