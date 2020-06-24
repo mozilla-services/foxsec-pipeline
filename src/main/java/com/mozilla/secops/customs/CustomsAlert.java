@@ -355,12 +355,23 @@ public class CustomsAlert implements Serializable {
             a.getMetadataValue(AlertMeta.Key.KM_DISTANCE),
             a.getMetadataValue(AlertMeta.Key.TIME_DELTA_SECONDS));
 
+    // Create alert for address
     CustomsAlert buf = baseAlert(a);
     buf.setSeverity(AlertSeverity.WARNING);
     buf.setConfidence(100);
     buf.setIndicatorType(IndicatorType.SOURCEADDRESS);
     buf.setIndicator(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
-    buf.setSuggestedAction(AlertAction.BLOCK);
+    buf.setSuggestedAction(AlertAction.SUSPECT);
+    buf.setReason(reason);
+    ret.add(buf);
+
+    // Create alert for account
+    buf = baseAlert(a);
+    buf.setSeverity(AlertSeverity.WARNING);
+    buf.setConfidence(100);
+    buf.setIndicatorType(IndicatorType.EMAIL);
+    buf.setIndicator(a.getMetadataValue(AlertMeta.Key.EMAIL));
+    buf.setSuggestedAction(AlertAction.SUSPECT);
     buf.setReason(reason);
     ret.add(buf);
 

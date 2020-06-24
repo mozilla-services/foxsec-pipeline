@@ -84,7 +84,7 @@ public class TestCustomsAlert {
             + "don\"},{\"key\":\"sourceaddress_country\",\"value\":\"GB\"},{\"key\":\"sourceaddress_previo"
             + "us_city\",\"value\":\"Milton\"},{\"key\":\"sourceaddress_previous_country\",\"value\":\"US\"}]}";
     c = CustomsAlert.fromAlert(Alert.fromJSON(buf));
-    assertEquals(1, c.size());
+    assertEquals(2, c.size());
 
     buf =
         "{\"severity\":\"info\",\"id\":\"9b38ee45-09c3-4497-a04f-d1190c7a7c24\",\"summary\":\"test stat"
