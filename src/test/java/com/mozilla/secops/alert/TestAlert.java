@@ -155,23 +155,23 @@ public class TestAlert {
   }
 
   @Test
-  public void alertToUserAgentBlacklistViolationTest() throws Exception {
+  public void alertToUserAgentBlocklistViolationTest() throws Exception {
     String buf =
         "{\"severity\":\"info\",\"id\":\"620171b5-6597-48a7-94c2-006cc2b83c96\",\"category\""
             + ":\"httprequest\",\"timestamp\":\"2019-01-09T19:47:37.600Z\",\"metadata\":[{\"key\":"
-            + "\"category\",\"value\":\"useragent_blacklist\"},{\"key\":\"sourceaddress\",\"value\""
+            + "\"category\",\"value\":\"useragent_blocklist\"},{\"key\":\"sourceaddress\",\"value\""
             + ":\"10.0.0.2\"},"
             + "{\"key\":\"window_timestamp\",\"value\":\"1970-01-01T00:05:59.999Z\"}]}";
     Alert a = Alert.fromJSON(buf);
     assertNotNull(a);
 
     assertEquals("httprequest", a.getCategory());
-    assertEquals("useragent_blacklist", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+    assertEquals("useragent_blocklist", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
     assertEquals("10.0.0.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
     assertEquals(1, Violation.fromAlert(a).length);
     Violation v = Violation.fromAlert(a)[0];
     assertNotNull(v);
-    assertEquals("useragent_blacklist_violation", v.getViolation());
+    assertEquals("violation20", v.getViolation());
     assertEquals("10.0.0.2", v.getSourceAddress());
     assertEquals("ip", v.getType());
     assertEquals("10.0.0.2", v.getObject());

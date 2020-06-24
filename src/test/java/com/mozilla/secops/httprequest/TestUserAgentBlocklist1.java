@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
-import com.mozilla.secops.httprequest.HTTPRequest.UserAgentBlacklistAnalysis;
+import com.mozilla.secops.httprequest.HTTPRequest.UserAgentBlocklistAnalysis;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.metrics.MetricNameFilter;
 import org.apache.beam.sdk.metrics.MetricResult;
@@ -18,8 +18,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class TestUserAgentBlacklist1 {
-  public TestUserAgentBlacklist1() {}
+public class TestUserAgentBlocklist1 {
+  public TestUserAgentBlocklist1() {}
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
@@ -27,17 +27,17 @@ public class TestUserAgentBlacklist1 {
     HTTPRequest.HTTPRequestOptions ret =
         PipelineOptionsFactory.as(HTTPRequest.HTTPRequestOptions.class);
     ret.setUseEventTimestamp(true); // Use timestamp from events for our testing
-    ret.setUserAgentBlacklistPath("/testdata/uablacklist1.txt");
+    ret.setUserAgentBlocklistPath("/testdata/uablocklist1.txt");
     ret.setMonitoredResourceIndicator("test");
     // Just reuse the hardlimit data set here
     ret.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_hardlimit1.txt"});
     ret.setIgnoreInternalRequests(false); // Tests use internal subnets
-    ret.setEnableUserAgentBlacklistAnalysis(true);
+    ret.setEnableUserAgentBlocklistAnalysis(true);
     return ret;
   }
 
   @Test
-  public void userAgentBlacklistTest() throws Exception {
+  public void userAgentBlocklistTest() throws Exception {
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
 
     PCollection<Alert> results =
@@ -55,10 +55,10 @@ public class TestUserAgentBlacklist1 {
                 assertEquals("192.168.1.4", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 String summary =
                     String.format(
-                        "test httprequest useragent_blacklist %s",
+                        "test httprequest useragent_blocklist %s",
                         a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
-                    "useragent_blacklist",
+                    "useragent_blocklist",
                     a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                 assertEquals(summary, a.getSummary());
                 assertEquals(
@@ -71,7 +71,7 @@ public class TestUserAgentBlacklist1 {
   }
 
   @Test
-  public void userAgentBlacklistTestWithNatDetect() throws Exception {
+  public void userAgentBlocklistTestWithNatDetect() throws Exception {
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setNatDetection(true);
 
@@ -91,7 +91,7 @@ public class TestUserAgentBlacklist1 {
                 MetricsFilter.builder()
                     .addNameFilter(
                         MetricNameFilter.named(
-                            UserAgentBlacklistAnalysis.class.getName(),
+                            UserAgentBlocklistAnalysis.class.getName(),
                             HTTPRequestMetrics.HeuristicMetrics.NAT_DETECTED))
                     .build())
             .getCounters();

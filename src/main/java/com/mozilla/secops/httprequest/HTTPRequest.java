@@ -405,14 +405,14 @@ public class HTTPRequest implements Serializable {
   }
 
   /** Analysis to identify known bad user agents */
-  public static class UserAgentBlacklistAnalysis
+  public static class UserAgentBlocklistAnalysis
       extends PTransform<PCollection<Event>, PCollection<Alert>> implements DocumentingTransform {
     private static final long serialVersionUID = 1L;
 
     private final String monitoredResource;
     private final Boolean enableIprepdDatastoreWhitelist;
     private final String iprepdDatastoreWhitelistProject;
-    private final String uaBlacklistPath;
+    private final String uaBlocklistPath;
 
     private PCollectionView<Map<String, Boolean>> natView = null;
     private final HeuristicMetrics metrics;
@@ -420,14 +420,14 @@ public class HTTPRequest implements Serializable {
     private Logger log;
 
     /**
-     * Initialize new {@link UserAgentBlacklistAnalysis}
+     * Initialize new {@link UserAgentBlocklistAnalysis}
      *
      * @param toggles {@link HTTPRequestToggles}
      * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
      * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
      * @param natView Use {@link DetectNat} view, or null to disable
      */
-    public UserAgentBlacklistAnalysis(
+    public UserAgentBlocklistAnalysis(
         HTTPRequestToggles toggles,
         Boolean enableIprepdDatastoreWhitelist,
         String iprepdDatastoreWhitelistProject,
@@ -436,15 +436,15 @@ public class HTTPRequest implements Serializable {
       this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
       this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
       this.natView = natView;
-      uaBlacklistPath = toggles.getUserAgentBlacklistPath();
-      log = LoggerFactory.getLogger(UserAgentBlacklistAnalysis.class);
-      metrics = new HeuristicMetrics(UserAgentBlacklistAnalysis.class.getName());
+      uaBlocklistPath = toggles.getUserAgentBlocklistPath();
+      log = LoggerFactory.getLogger(UserAgentBlocklistAnalysis.class);
+      metrics = new HeuristicMetrics(UserAgentBlocklistAnalysis.class.getName());
     }
 
     /** {@inheritDoc} */
     public String getTransformDoc() {
       return new String(
-          "Alert if client makes request with user agent that matches entry in blacklist.");
+          "Alert if client makes request with user agent that matches entry in blocklist.");
     }
 
     @Override
@@ -464,7 +464,7 @@ public class HTTPRequest implements Serializable {
 
                     @Setup
                     public void setup() throws IOException {
-                      ArrayList<String> in = FileUtil.fileReadLines(uaBlacklistPath);
+                      ArrayList<String> in = FileUtil.fileReadLines(uaBlocklistPath);
                       uaRegex = new ArrayList<Pattern>();
                       for (String i : in) {
                         uaRegex.add(Pattern.compile(i));
@@ -489,7 +489,7 @@ public class HTTPRequest implements Serializable {
                   }))
           .apply(GroupByKey.<String, String>create())
           .apply(
-              "user agent blacklist analysis",
+              "user agent blocklist analysis",
               ParDo.of(
                       new DoFn<KV<String, Iterable<String>>, Alert>() {
                         private static final long serialVersionUID = 1L;
@@ -515,10 +515,10 @@ public class HTTPRequest implements Serializable {
                           Alert a = new Alert();
                           a.setSummary(
                               String.format(
-                                  "%s httprequest useragent_blacklist %s",
+                                  "%s httprequest useragent_blocklist %s",
                                   monitoredResource, saddr));
                           a.setCategory("httprequest");
-                          a.setSubcategory("useragent_blacklist");
+                          a.setSubcategory("useragent_blocklist");
                           a.addMetadata(AlertMeta.Key.SOURCEADDRESS, saddr);
 
                           try {
@@ -532,7 +532,7 @@ public class HTTPRequest implements Serializable {
                           }
 
                           a.setNotifyMergeKey(
-                              String.format("%s useragent_blacklist", monitoredResource));
+                              String.format("%s useragent_blocklist", monitoredResource));
                           a.addMetadata(
                               AlertMeta.Key.WINDOW_TIMESTAMP,
                               (new DateTime(w.maxTimestamp())).toString());
@@ -1620,7 +1620,7 @@ public class HTTPRequest implements Serializable {
       if (toggles.getEnableThresholdAnalysis()
           || toggles.getEnableErrorRateAnalysis()
           || toggles.getEnableHardLimitAnalysis()
-          || toggles.getEnableUserAgentBlacklistAnalysis()
+          || toggles.getEnableUserAgentBlocklistAnalysis()
           || toggles.getEnableEndpointSequenceAbuseAnalysis()) {
         PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
 
@@ -1670,19 +1670,19 @@ public class HTTPRequest implements Serializable {
                       .apply("error rate analysis global triggers", new GlobalTriggers<Alert>(5)));
         }
 
-        if (toggles.getEnableUserAgentBlacklistAnalysis()) {
+        if (toggles.getEnableUserAgentBlocklistAnalysis()) {
           resultsList =
               resultsList.and(
                   fwEvents
                       .apply(
-                          "ua blacklist analysis",
-                          new UserAgentBlacklistAnalysis(
+                          "ua blocklist analysis",
+                          new UserAgentBlocklistAnalysis(
                               toggles,
                               enableIprepdDatastoreWhitelist,
                               iprepdDatastoreWhitelistProject,
                               natView))
                       .apply(
-                          "ua blacklist analysis global triggers", new GlobalTriggers<Alert>(5)));
+                          "ua blocklist analysis global triggers", new GlobalTriggers<Alert>(5)));
         }
         if (toggles.getEnableEndpointSequenceAbuseAnalysis()) {
           resultsList =
@@ -1791,11 +1791,11 @@ public class HTTPRequest implements Serializable {
 
     void setEnableHardLimitAnalysis(Boolean value);
 
-    @Description("Enable user agent blacklist analysis")
+    @Description("Enable user agent blocklist analysis")
     @Default.Boolean(false)
-    Boolean getEnableUserAgentBlacklistAnalysis();
+    Boolean getEnableUserAgentBlocklistAnalysis();
 
-    void setEnableUserAgentBlacklistAnalysis(Boolean value);
+    void setEnableUserAgentBlocklistAnalysis(Boolean value);
 
     @Description("Enable per endpoint error rate analysis")
     @Default.Boolean(false)
@@ -1858,10 +1858,10 @@ public class HTTPRequest implements Serializable {
     void setKnownGatewaysPath(String value);
 
     @Description(
-        "Path to load user agent blacklist from for UA blacklist analysis; resource path, gcs path")
-    String getUserAgentBlacklistPath();
+        "Path to load user agent blocklist from for UA blocklist analysis; resource path, gcs path")
+    String getUserAgentBlocklistPath();
 
-    void setUserAgentBlacklistPath(String value);
+    void setUserAgentBlocklistPath(String value);
 
     @Description(
         "Endpoint abuse analysis paths for monitoring (multiple allowed); e.g., threshold:method:/path")
@@ -2020,9 +2020,9 @@ public class HTTPRequest implements Serializable {
               options.getOutputIprepdEnableDatastoreWhitelist(),
               options.getOutputIprepdDatastoreWhitelistProject()));
     }
-    if (toggles.getEnableUserAgentBlacklistAnalysis()) {
+    if (toggles.getEnableUserAgentBlocklistAnalysis()) {
       b.withTransformDoc(
-          new UserAgentBlacklistAnalysis(
+          new UserAgentBlocklistAnalysis(
               toggles,
               options.getOutputIprepdEnableDatastoreWhitelist(),
               options.getOutputIprepdDatastoreWhitelistProject(),

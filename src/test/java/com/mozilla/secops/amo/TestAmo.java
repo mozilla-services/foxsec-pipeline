@@ -267,7 +267,7 @@ public class TestAmo {
                   }
                 } else if (a.getCategory().equals("amo-cfgtick")) {
                   assertEquals(
-                      "Correlates AMO addon submissions with abusive FxA account creation alerts via iprepd. Also includes blacklisted accounts regex: [locutus.*]",
+                      "Correlates AMO addon submissions with abusive FxA account creation alerts via iprepd. Also includes blocked accounts regex: [locutus.*]",
                       a.getCustomMetadataValue("heuristic_FxaAccountAbuseNewVersion"));
                   assertEquals(
                       "Reports on request restrictions from AMO",
