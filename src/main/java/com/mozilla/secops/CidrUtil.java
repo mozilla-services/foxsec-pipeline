@@ -34,7 +34,7 @@ public class CidrUtil {
 
   /** Load exclusion list from path resource */
   public static final int CIDRUTIL_FILE = 1;
-  /** Load exclusion list with whitelisted cloud providers */
+  /** Load exclusion list with allowed cloud providers */
   public static final int CIDRUTIL_CLOUDPROVIDERS = 1 << 1;
   /** Load exclusion list for internal/RFC1918 subnets */
   public static final int CIDRUTIL_INTERNAL = 1 << 2;

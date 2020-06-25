@@ -209,7 +209,7 @@ public class AlertMeta implements Serializable {
     USERNAME("username"),
     URL_TO_FINDING("url_to_finding"),
     WINDOW_TIMESTAMP("window_timestamp"),
-    WHITELISTED_ENTRY_CREATED_BY("whitelisted_entry_created_by"),
+    EXEMPTION_CREATED_BY("exemption_created_by"),
     SOURCEADDRESS(
         "sourceaddress",
         true,

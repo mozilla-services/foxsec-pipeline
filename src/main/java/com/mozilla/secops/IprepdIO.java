@@ -486,9 +486,12 @@ public class IprepdIO {
     a.addMetadata(AlertMeta.Key.IPREPD_SUPPRESS_RECOVERY, value.toString());
   }
 
-  /** WhitelistedObject contains the metadata associated with a whitelisted objects. */
+  /**
+   * ExemptedObject contains the metadata associated with a objects excluded from reporting to
+   * iprepd.
+   */
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class WhitelistedObject {
+  public static class ExemptedObject {
     private String ip;
     private String obj;
     private String type;
@@ -591,28 +594,28 @@ public class IprepdIO {
     }
   }
 
-  /** Kind for whitelisted IP entry in Datastore */
-  public static final String whitelistedIpKind = "ip";
+  /** Kind for exempted IP entry in Datastore */
+  public static final String exemptedIpKind = "ip";
 
-  /** Kind for whitelisted email entry in Datastore */
-  public static final String whitelistedEmailKind = "email";
+  /** Kind for exempted email entry in Datastore */
+  public static final String exemptedEmailKind = "email";
 
-  /** Namespace for whitelisted objects in Datastore */
-  public static final String whitelistedObjectNamespace = "whitelisted_object";
+  /** Namespace for exempted objects in Datastore */
+  public static final String exemptedObjectNamespace = "exempted_object";
 
   /**
-   * Add whitelisted IP metadata if the IP address is whitelisted.
+   * Add IP metadata if the IP address is exempt from reporting to iprepd.
    *
    * @param ip IP address to check
    * @param a Alert to add metadata to
    * @throws IOException IOException
    */
-  public static void addMetadataIfIpWhitelisted(String ip, Alert a) throws IOException {
-    addMetadataIfObjectWhitelisted(ip, whitelistedIpKind, a, null);
+  public static void addMetadataIfIpIsExempt(String ip, Alert a) throws IOException {
+    addMetadataIfObjectIsExempt(ip, exemptedIpKind, a, null);
   }
 
   /**
-   * Add whitelisted IP metadata if the IP address is whitelisted.
+   * Add IP metadata if the IP address is exempt from reporting to iprepd.
    *
    * <p>This variant allows specification of a project ID, for cases where the datastore instance
    * lives in another GCP project.
@@ -622,31 +625,31 @@ public class IprepdIO {
    * @param datastoreProject If Datastore is in another project, non-null project ID
    * @throws IOException IOException
    */
-  public static void addMetadataIfIpWhitelisted(String ip, Alert a, String datastoreProject)
+  public static void addMetadataIfIpIsExempt(String ip, Alert a, String datastoreProject)
       throws IOException {
-    addMetadataIfObjectWhitelisted(ip, whitelistedIpKind, a, datastoreProject);
+    addMetadataIfObjectIsExempt(ip, exemptedIpKind, a, datastoreProject);
   }
 
   /**
-   * Add whitelisted metadata if the object is whitelisted.
+   * Add metadata if the object is exempt from reporting to iprepd.
    *
    * @param obj Object to check (usually an IP or email)
    * @param type Type of object (usually "ip" or "email")
    * @param a Alert to add metadata to
    * @throws IOException IOException
    */
-  public static void addMetadataIfObjectWhitelisted(String obj, String type, Alert a)
+  public static void addMetadataIfObjectIsExempt(String obj, String type, Alert a)
       throws IOException {
-    addMetadataIfObjectWhitelisted(obj, type, a, null);
+    addMetadataIfObjectIsExempt(obj, type, a, null);
   }
 
   /**
-   * Add whitelisted metadata if the object is whitelisted.
+   * Add metadata if the object is exempt from reporting to iprepd.
    *
    * <p>This variant allows specification of a project ID, for cases where the datastore instance
    * lives in another GCP project.
    *
-   * <p>If for some reason the whitelist state lookup fails, an {@link IOException} will be thrown.
+   * <p>If for some reason the exemption state lookup fails, an {@link IOException} will be thrown.
    *
    * @param obj Object to check (usually an IP or email)
    * @param type Type of object (usually "ip" or "email")
@@ -654,23 +657,22 @@ public class IprepdIO {
    * @param datastoreProject If Datastore is in another project, non-null project ID
    * @throws IOException IOException
    */
-  public static void addMetadataIfObjectWhitelisted(
+  public static void addMetadataIfObjectIsExempt(
       String obj, String type, Alert a, String datastoreProject) throws IOException {
     if (obj == null || type == null || a == null) {
       return;
     }
 
-    if (!type.equals(whitelistedIpKind) && !type.equals(whitelistedEmailKind)) {
+    if (!type.equals(exemptedIpKind) && !type.equals(exemptedEmailKind)) {
       return;
     }
 
     State state;
     if (datastoreProject != null) {
       state =
-          new State(
-              new DatastoreStateInterface(type, whitelistedObjectNamespace, datastoreProject));
+          new State(new DatastoreStateInterface(type, exemptedObjectNamespace, datastoreProject));
     } else {
-      state = new State(new DatastoreStateInterface(type, whitelistedObjectNamespace));
+      state = new State(new DatastoreStateInterface(type, exemptedObjectNamespace));
     }
 
     Logger log = LoggerFactory.getLogger(IprepdIO.class);
@@ -682,16 +684,16 @@ public class IprepdIO {
       throw new IOException(exc.getMessage());
     }
 
-    StateCursor<WhitelistedObject> sc = null;
+    StateCursor<ExemptedObject> sc = null;
     try {
-      sc = state.newCursor(WhitelistedObject.class, false);
-      WhitelistedObject wobj = sc.get(obj);
+      sc = state.newCursor(ExemptedObject.class, false);
+      ExemptedObject wobj = sc.get(obj);
       if (wobj != null) {
         a.addMetadata(AlertMeta.Key.IPREPD_EXEMPT, "true");
         a.addMetadata(AlertMeta.Key.IPREPD_EXEMPT_CREATED_BY, wobj.getCreatedBy());
       }
     } catch (StateException exc) {
-      log.error("error getting whitelisted object: {}", exc.getMessage());
+      log.error("error getting exempted object: {}", exc.getMessage());
       throw new IOException(exc.getMessage());
     } finally {
       state.done();

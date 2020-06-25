@@ -10,21 +10,21 @@ const (
 	EMAIL_TYPE = "email"
 )
 
-type WhitelistedObject struct {
+type ExemptedObject struct {
 	Object    string    `json:"object"`
 	Type      string    `json:"type"`
 	ExpiresAt time.Time `json:"expires_at"`
 	CreatedBy string    `json:"created_by"`
 }
 
-func NewWhitelistedObject(object, typestr string, expiresAt time.Time, createdBy string) (*WhitelistedObject, error) {
+func NewExemptedObject(object, typestr string, expiresAt time.Time, createdBy string) (*ExemptedObject, error) {
 	if typestr != IP_TYPE && typestr != EMAIL_TYPE {
 		return nil, fmt.Errorf("Invalid typestr %s. Only %s and %s allowed", typestr, IP_TYPE, EMAIL_TYPE)
 	}
 	if expiresAt.IsZero() {
 		expiresAt = time.Now().Add(time.Hour * 24)
 	}
-	return &WhitelistedObject{
+	return &ExemptedObject{
 		Object:    object,
 		Type:      typestr,
 		ExpiresAt: expiresAt,
@@ -32,6 +32,6 @@ func NewWhitelistedObject(object, typestr string, expiresAt time.Time, createdBy
 	}, nil
 }
 
-func (wo *WhitelistedObject) IsExpired() bool {
-	return wo.ExpiresAt.Before(time.Now())
+func (eo *ExemptedObject) IsExpired() bool {
+	return eo.ExpiresAt.Before(time.Now())
 }

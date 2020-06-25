@@ -179,8 +179,8 @@ public class HTTPRequest implements Serializable {
 
     private final Long maxErrorRate;
     private final String monitoredResource;
-    private final Boolean enableIprepdDatastoreWhitelist;
-    private final String iprepdDatastoreWhitelistProject;
+    private final Boolean enableIprepdDatastoreExemptions;
+    private final String iprepdDatastoreExemptionsProject;
 
     private Logger log;
 
@@ -188,17 +188,17 @@ public class HTTPRequest implements Serializable {
      * Static initializer for {@link ErrorRateAnalysis}
      *
      * @param toggles {@link HTTPRequestToggles}
-     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
-     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param enableIprepdDatastoreExemptions True to enable datastore exemptions
+     * @param iprepdDatastoreExemptionsProject Project to look for datastore entities in
      */
     public ErrorRateAnalysis(
         HTTPRequestToggles toggles,
-        Boolean enableIprepdDatastoreWhitelist,
-        String iprepdDatastoreWhitelistProject) {
+        Boolean enableIprepdDatastoreExemptions,
+        String iprepdDatastoreExemptionsProject) {
       maxErrorRate = toggles.getMaxClientErrorRate();
       monitoredResource = toggles.getMonitoredResource();
-      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
-      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      this.enableIprepdDatastoreExemptions = enableIprepdDatastoreExemptions;
+      this.iprepdDatastoreExemptionsProject = iprepdDatastoreExemptionsProject;
       log = LoggerFactory.getLogger(ErrorRateAnalysis.class);
     }
 
@@ -255,12 +255,12 @@ public class HTTPRequest implements Serializable {
                       a.setSubcategory("error_rate");
                       a.addMetadata(AlertMeta.Key.SOURCEADDRESS, c.element().getKey());
 
-                      if (enableIprepdDatastoreWhitelist) {
+                      if (enableIprepdDatastoreExemptions) {
                         try {
-                          IprepdIO.addMetadataIfIpWhitelisted(
-                              c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                          IprepdIO.addMetadataIfIpIsExempt(
+                              c.element().getKey(), a, iprepdDatastoreExemptionsProject);
                         } catch (IOException exc) {
-                          log.error("error checking whitelist: {}", exc.getMessage());
+                          log.error("error checking iprepd exemptions: {}", exc.getMessage());
                           return;
                         }
                       }
@@ -287,8 +287,8 @@ public class HTTPRequest implements Serializable {
 
     private final Long maxCount;
     private final String monitoredResource;
-    private final Boolean enableIprepdDatastoreWhitelist;
-    private final String iprepdDatastoreWhitelistProject;
+    private final Boolean enableIprepdDatastoreExemptions;
+    private final String iprepdDatastoreExemptionsProject;
     private PCollectionView<Map<String, Boolean>> natView = null;
     private final HeuristicMetrics metrics;
 
@@ -298,19 +298,19 @@ public class HTTPRequest implements Serializable {
      * Static initializer for {@link HardLimitAnalysis}
      *
      * @param toggles {@link HTTPRequestToggles}
-     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
-     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param enableIprepdDatastoreExemptions True to enable datastore exemptions
+     * @param iprepdDatastoreExemptionsProject Project to look for datastore entities in
      * @param natView Use {@link DetectNat} view, or null to disable
      */
     public HardLimitAnalysis(
         HTTPRequestToggles toggles,
-        Boolean enableIprepdDatastoreWhitelist,
-        String iprepdDatastoreWhitelistProject,
+        Boolean enableIprepdDatastoreExemptions,
+        String iprepdDatastoreExemptionsProject,
         PCollectionView<Map<String, Boolean>> natView) {
       maxCount = toggles.getHardLimitRequestCount();
       monitoredResource = toggles.getMonitoredResource();
-      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
-      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      this.enableIprepdDatastoreExemptions = enableIprepdDatastoreExemptions;
+      this.iprepdDatastoreExemptionsProject = iprepdDatastoreExemptionsProject;
       this.natView = natView;
       log = LoggerFactory.getLogger(HardLimitAnalysis.class);
       metrics = new HeuristicMetrics(HardLimitAnalysis.class.getName());
@@ -377,12 +377,12 @@ public class HTTPRequest implements Serializable {
                           a.addMetadata(AlertMeta.Key.SOURCEADDRESS, c.element().getKey());
 
                           try {
-                            if (enableIprepdDatastoreWhitelist) {
-                              IprepdIO.addMetadataIfIpWhitelisted(
-                                  c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                            if (enableIprepdDatastoreExemptions) {
+                              IprepdIO.addMetadataIfIpIsExempt(
+                                  c.element().getKey(), a, iprepdDatastoreExemptionsProject);
                             }
                           } catch (IOException exc) {
-                            log.error("error checking whitelist: {}", exc.getMessage());
+                            log.error("error checking iprepd exemptions: {}", exc.getMessage());
                             return;
                           }
 
@@ -410,8 +410,8 @@ public class HTTPRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String monitoredResource;
-    private final Boolean enableIprepdDatastoreWhitelist;
-    private final String iprepdDatastoreWhitelistProject;
+    private final Boolean enableIprepdDatastoreExemptions;
+    private final String iprepdDatastoreExemptionsProject;
     private final String uaBlocklistPath;
 
     private PCollectionView<Map<String, Boolean>> natView = null;
@@ -423,18 +423,18 @@ public class HTTPRequest implements Serializable {
      * Initialize new {@link UserAgentBlocklistAnalysis}
      *
      * @param toggles {@link HTTPRequestToggles}
-     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
-     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param enableIprepdDatastoreExemptions True to enable datastore exemptions
+     * @param iprepdDatastoreExemptionsProject Project to look for datastore entities in
      * @param natView Use {@link DetectNat} view, or null to disable
      */
     public UserAgentBlocklistAnalysis(
         HTTPRequestToggles toggles,
-        Boolean enableIprepdDatastoreWhitelist,
-        String iprepdDatastoreWhitelistProject,
+        Boolean enableIprepdDatastoreExemptions,
+        String iprepdDatastoreExemptionsProject,
         PCollectionView<Map<String, Boolean>> natView) {
       monitoredResource = toggles.getMonitoredResource();
-      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
-      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      this.enableIprepdDatastoreExemptions = enableIprepdDatastoreExemptions;
+      this.iprepdDatastoreExemptionsProject = iprepdDatastoreExemptionsProject;
       this.natView = natView;
       uaBlocklistPath = toggles.getUserAgentBlocklistPath();
       log = LoggerFactory.getLogger(UserAgentBlocklistAnalysis.class);
@@ -522,12 +522,12 @@ public class HTTPRequest implements Serializable {
                           a.addMetadata(AlertMeta.Key.SOURCEADDRESS, saddr);
 
                           try {
-                            if (enableIprepdDatastoreWhitelist) {
-                              IprepdIO.addMetadataIfIpWhitelisted(
-                                  saddr, a, iprepdDatastoreWhitelistProject);
+                            if (enableIprepdDatastoreExemptions) {
+                              IprepdIO.addMetadataIfIpIsExempt(
+                                  saddr, a, iprepdDatastoreExemptionsProject);
                             }
                           } catch (IOException exc) {
-                            log.error("error checking whitelist: {}", exc.getMessage());
+                            log.error("error checking iprepd exemptions: {}", exc.getMessage());
                             return;
                           }
 
@@ -564,10 +564,10 @@ public class HTTPRequest implements Serializable {
 
     private final EndpointAbuseEndpointInfo[] endpoints;
     private final String monitoredResource;
-    private final Boolean enableIprepdDatastoreWhitelist;
+    private final Boolean enableIprepdDatastoreExemptions;
     private final Boolean varianceSupportingOnly;
     private final String[] customVarianceSubstrings;
-    private final String iprepdDatastoreWhitelistProject;
+    private final String iprepdDatastoreExemptionsProject;
     private final Integer suppressRecovery;
     private final Long sessionGapDurationMinutes;
     private final Long alertSuppressionDurationSeconds;
@@ -600,18 +600,18 @@ public class HTTPRequest implements Serializable {
      * Static initializer for {@link EndpointAbuseAnalysis}
      *
      * @param toggles {@link HTTPRequestToggles}
-     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
-     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param enableIprepdDatastoreExemptions True to enable datastore exemptions
+     * @param iprepdDatastoreExemptionsProject Project to look for datastore entities in
      */
     public EndpointAbuseAnalysis(
         HTTPRequestToggles toggles,
-        Boolean enableIprepdDatastoreWhitelist,
-        String iprepdDatastoreWhitelistProject) {
+        Boolean enableIprepdDatastoreExemptions,
+        String iprepdDatastoreExemptionsProject) {
       log = LoggerFactory.getLogger(EndpointAbuseAnalysis.class);
 
       monitoredResource = toggles.getMonitoredResource();
-      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
-      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      this.enableIprepdDatastoreExemptions = enableIprepdDatastoreExemptions;
+      this.iprepdDatastoreExemptionsProject = iprepdDatastoreExemptionsProject;
       varianceSupportingOnly = toggles.getEndpointAbuseExtendedVariance();
       suppressRecovery = toggles.getEndpointAbuseSuppressRecovery();
       customVarianceSubstrings = toggles.getEndpointAbuseCustomVarianceSubstrings();
@@ -766,12 +766,12 @@ public class HTTPRequest implements Serializable {
                       a.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
 
                       try {
-                        if (enableIprepdDatastoreWhitelist) {
-                          IprepdIO.addMetadataIfIpWhitelisted(
-                              remoteAddress, a, iprepdDatastoreWhitelistProject);
+                        if (enableIprepdDatastoreExemptions) {
+                          IprepdIO.addMetadataIfIpIsExempt(
+                              remoteAddress, a, iprepdDatastoreExemptionsProject);
                         }
                       } catch (IOException exc) {
-                        log.error("error checking whitelist: {}", exc.getMessage());
+                        log.error("error checking iprepd exemptions: {}", exc.getMessage());
                         return;
                       }
 
@@ -839,8 +839,8 @@ public class HTTPRequest implements Serializable {
     private final Double clampThresholdMaximum;
     private final Long requiredMinimumRequestsPerClient;
     private final String monitoredResource;
-    private final Boolean enableIprepdDatastoreWhitelist;
-    private final String iprepdDatastoreWhitelistProject;
+    private final Boolean enableIprepdDatastoreExemptions;
+    private final String iprepdDatastoreExemptionsProject;
     private PCollectionView<Map<String, Boolean>> natView = null;
 
     private final HeuristicMetrics metrics;
@@ -850,14 +850,14 @@ public class HTTPRequest implements Serializable {
      * Static initializer for {@link ThresholdAnalysis}.
      *
      * @param toggles {@link HTTPRequestToggles}
-     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
-     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param enableIprepdDatastoreExemptions True to enable datastore exemptions
+     * @param iprepdDatastoreExemptionsProject Project to look for datastore entities in
      * @param natView Use {@link DetectNat} view, or null to disable
      */
     public ThresholdAnalysis(
         HTTPRequestToggles toggles,
-        Boolean enableIprepdDatastoreWhitelist,
-        String iprepdDatastoreWhitelistProject,
+        Boolean enableIprepdDatastoreExemptions,
+        String iprepdDatastoreExemptionsProject,
         PCollectionView<Map<String, Boolean>> natView) {
       this.thresholdModifier = toggles.getAnalysisThresholdModifier();
       this.requiredMinimumAverage = toggles.getRequiredMinimumAverage();
@@ -865,8 +865,8 @@ public class HTTPRequest implements Serializable {
       this.requiredMinimumRequestsPerClient = toggles.getRequiredMinimumRequestsPerClient();
       this.clampThresholdMaximum = toggles.getClampThresholdMaximum();
       this.monitoredResource = toggles.getMonitoredResource();
-      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
-      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      this.enableIprepdDatastoreExemptions = enableIprepdDatastoreExemptions;
+      this.iprepdDatastoreExemptionsProject = iprepdDatastoreExemptionsProject;
       this.natView = natView;
       this.metrics = new HeuristicMetrics(ThresholdAnalysis.class.getName());
       log = LoggerFactory.getLogger(ThresholdAnalysis.class);
@@ -976,12 +976,12 @@ public class HTTPRequest implements Serializable {
                             a.addMetadata(AlertMeta.Key.SOURCEADDRESS, c.element().getKey());
 
                             try {
-                              if (enableIprepdDatastoreWhitelist) {
-                                IprepdIO.addMetadataIfIpWhitelisted(
-                                    c.element().getKey(), a, iprepdDatastoreWhitelistProject);
+                              if (enableIprepdDatastoreExemptions) {
+                                IprepdIO.addMetadataIfIpIsExempt(
+                                    c.element().getKey(), a, iprepdDatastoreExemptionsProject);
                               }
                             } catch (IOException exc) {
-                              log.error("error checking whitelist: {}", exc.getMessage());
+                              log.error("error checking iprepd exemptions: {}", exc.getMessage());
                               return;
                             }
 
@@ -1021,8 +1021,8 @@ public class HTTPRequest implements Serializable {
 
     private final EndpointSequenceAbuseTimingInfo[] endpointPatterns;
     private final String monitoredResource;
-    private final Boolean enableIprepdDatastoreWhitelist;
-    private final String iprepdDatastoreWhitelistProject;
+    private final Boolean enableIprepdDatastoreExemptions;
+    private final String iprepdDatastoreExemptionsProject;
     private final Integer suppressRecovery;
     private PCollectionView<Map<String, Boolean>> natView = null;
     private final HeuristicMetrics metrics;
@@ -1057,19 +1057,19 @@ public class HTTPRequest implements Serializable {
      * Static initializer for {@link EndpointAbuseAnalysis}
      *
      * @param toggles {@link HTTPRequestToggles}
-     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
-     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param enableIprepdDatastoreExemptions True to enable datastore exemptions
+     * @param iprepdDatastoreExemptionsProject Project to look for datastore entities in
      * @param natView Use {@link DetectNat} view, or null to disable
      */
     public EndpointSequenceAbuse(
         HTTPRequestToggles toggles,
-        Boolean enableIprepdDatastoreWhitelist,
-        String iprepdDatastoreWhitelistProject,
+        Boolean enableIprepdDatastoreExemptions,
+        String iprepdDatastoreExemptionsProject,
         PCollectionView<Map<String, Boolean>> natView) {
       log = LoggerFactory.getLogger(EndpointSequenceAbuse.class);
       monitoredResource = toggles.getMonitoredResource();
-      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
-      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      this.enableIprepdDatastoreExemptions = enableIprepdDatastoreExemptions;
+      this.iprepdDatastoreExemptionsProject = iprepdDatastoreExemptionsProject;
       suppressRecovery = toggles.getEndpointSequenceAbuseSuppressRecovery();
       this.natView = natView;
       metrics = new HeuristicMetrics(EndpointSequenceAbuse.class.getName());
@@ -1272,12 +1272,12 @@ public class HTTPRequest implements Serializable {
                           a.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
 
                           try {
-                            if (enableIprepdDatastoreWhitelist) {
-                              IprepdIO.addMetadataIfIpWhitelisted(
-                                  remoteAddress, a, iprepdDatastoreWhitelistProject);
+                            if (enableIprepdDatastoreExemptions) {
+                              IprepdIO.addMetadataIfIpIsExempt(
+                                  remoteAddress, a, iprepdDatastoreExemptionsProject);
                             }
                           } catch (IOException exc) {
-                            log.error("error checking whitelist: {}", exc.getMessage());
+                            log.error("error checking iprepd exemptions: {}", exc.getMessage());
                             return;
                           }
 
@@ -1360,8 +1360,8 @@ public class HTTPRequest implements Serializable {
 
     private Logger log;
     private final String monitoredResource;
-    private final Boolean enableIprepdDatastoreWhitelist;
-    private final String iprepdDatastoreWhitelistProject;
+    private final Boolean enableIprepdDatastoreExemptions;
+    private final String iprepdDatastoreExemptionsProject;
     private final EndpointErrorInfo[] endpointInfo;
     private final Integer suppressRecovery;
     private final Long sessionGapDurationMinutes;
@@ -1371,18 +1371,18 @@ public class HTTPRequest implements Serializable {
      * Initializer for {@link PerEndpointErrorRateAnalysis}
      *
      * @param toggles {@link HTTPRequestToggles}
-     * @param enableIprepdDatastoreWhitelist True to enable datastore whitelist
-     * @param iprepdDatastoreWhitelistProject Project to look for datastore entities in
+     * @param enableIprepdDatastoreExemptions True to enable datastore exemptions
+     * @param iprepdDatastoreExemptionsProject Project to look for datastore entities in
      */
     public PerEndpointErrorRateAnalysis(
         HTTPRequestToggles toggles,
-        Boolean enableIprepdDatastoreWhitelist,
-        String iprepdDatastoreWhitelistProject) {
+        Boolean enableIprepdDatastoreExemptions,
+        String iprepdDatastoreExemptionsProject) {
       log = LoggerFactory.getLogger(PerEndpointErrorRateAnalysis.class);
 
       this.monitoredResource = toggles.getMonitoredResource();
-      this.enableIprepdDatastoreWhitelist = enableIprepdDatastoreWhitelist;
-      this.iprepdDatastoreWhitelistProject = iprepdDatastoreWhitelistProject;
+      this.enableIprepdDatastoreExemptions = enableIprepdDatastoreExemptions;
+      this.iprepdDatastoreExemptionsProject = iprepdDatastoreExemptionsProject;
       this.suppressRecovery = toggles.getPerEndpointErrorRateSuppressRecovery();
       this.sessionGapDurationMinutes = toggles.getErrorSessionGapDurationMinutes();
       this.alertSuppressionDurationSeconds =
@@ -1535,12 +1535,12 @@ public class HTTPRequest implements Serializable {
                       a.setSubcategory("per_endpoint_error_rate");
                       a.addMetadata(AlertMeta.Key.SOURCEADDRESS, remoteAddress);
 
-                      if (enableIprepdDatastoreWhitelist) {
+                      if (enableIprepdDatastoreExemptions) {
                         try {
-                          IprepdIO.addMetadataIfIpWhitelisted(
-                              remoteAddress, a, iprepdDatastoreWhitelistProject);
+                          IprepdIO.addMetadataIfIpIsExempt(
+                              remoteAddress, a, iprepdDatastoreExemptionsProject);
                         } catch (IOException exc) {
-                          log.error("error checking whitelist: {}", exc.getMessage());
+                          log.error("error checking iprepd exemptions: {}", exc.getMessage());
                           return;
                         }
                       }
@@ -1589,8 +1589,8 @@ public class HTTPRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final transient HTTPRequestToggles toggles;
-    private final Boolean enableIprepdDatastoreWhitelist;
-    private final String iprepdDatastoreWhitelistProject;
+    private final Boolean enableIprepdDatastoreExemptions;
+    private final String iprepdDatastoreExemptionsProject;
     private final String monitoredResource;
     private final String maxmindCityDbPath;
     private final String maxmindIspDbPath;
@@ -1605,8 +1605,8 @@ public class HTTPRequest implements Serializable {
     public HTTPRequestAnalysis(HTTPRequestOptions options, HTTPRequestToggles toggles) {
       this.toggles = toggles;
 
-      enableIprepdDatastoreWhitelist = options.getOutputIprepdEnableDatastoreWhitelist();
-      iprepdDatastoreWhitelistProject = options.getOutputIprepdDatastoreWhitelistProject();
+      enableIprepdDatastoreExemptions = options.getOutputIprepdEnableDatastoreExemptions();
+      iprepdDatastoreExemptionsProject = options.getOutputIprepdDatastoreExemptionsProject();
       monitoredResource = toggles.getMonitoredResource();
       maxmindCityDbPath = options.getMaxmindCityDbPath();
       maxmindIspDbPath = options.getMaxmindIspDbPath();
@@ -1637,8 +1637,8 @@ public class HTTPRequest implements Serializable {
                           "threshold analysis",
                           new ThresholdAnalysis(
                               toggles,
-                              enableIprepdDatastoreWhitelist,
-                              iprepdDatastoreWhitelistProject,
+                              enableIprepdDatastoreExemptions,
+                              iprepdDatastoreExemptionsProject,
                               natView))
                       .apply("threshold analysis global triggers", new GlobalTriggers<Alert>(5)));
         }
@@ -1651,8 +1651,8 @@ public class HTTPRequest implements Serializable {
                           "hard limit analysis",
                           new HardLimitAnalysis(
                               toggles,
-                              enableIprepdDatastoreWhitelist,
-                              iprepdDatastoreWhitelistProject,
+                              enableIprepdDatastoreExemptions,
+                              iprepdDatastoreExemptionsProject,
                               natView))
                       .apply("hard limit analysis global triggers", new GlobalTriggers<Alert>(5)));
         }
@@ -1665,8 +1665,8 @@ public class HTTPRequest implements Serializable {
                           "error rate analysis",
                           new ErrorRateAnalysis(
                               toggles,
-                              enableIprepdDatastoreWhitelist,
-                              iprepdDatastoreWhitelistProject))
+                              enableIprepdDatastoreExemptions,
+                              iprepdDatastoreExemptionsProject))
                       .apply("error rate analysis global triggers", new GlobalTriggers<Alert>(5)));
         }
 
@@ -1678,8 +1678,8 @@ public class HTTPRequest implements Serializable {
                           "ua blocklist analysis",
                           new UserAgentBlocklistAnalysis(
                               toggles,
-                              enableIprepdDatastoreWhitelist,
-                              iprepdDatastoreWhitelistProject,
+                              enableIprepdDatastoreExemptions,
+                              iprepdDatastoreExemptionsProject,
                               natView))
                       .apply(
                           "ua blocklist analysis global triggers", new GlobalTriggers<Alert>(5)));
@@ -1692,8 +1692,8 @@ public class HTTPRequest implements Serializable {
                           "endpoint abuse timing analysis",
                           new EndpointSequenceAbuse(
                               toggles,
-                              enableIprepdDatastoreWhitelist,
-                              iprepdDatastoreWhitelistProject,
+                              enableIprepdDatastoreExemptions,
+                              iprepdDatastoreExemptionsProject,
                               natView))
                       .apply(
                           "endpoint sequence abuse global triggers", new GlobalTriggers<Alert>(5)));
@@ -1711,8 +1711,8 @@ public class HTTPRequest implements Serializable {
                         "endpoint abuse analysis",
                         new EndpointAbuseAnalysis(
                             toggles,
-                            enableIprepdDatastoreWhitelist,
-                            iprepdDatastoreWhitelistProject)));
+                            enableIprepdDatastoreExemptions,
+                            iprepdDatastoreExemptionsProject)));
       }
       if (toggles.getEnablePerEndpointErrorRateAnalysis()) {
         resultsList =
@@ -1727,8 +1727,8 @@ public class HTTPRequest implements Serializable {
                         "per endpoint error rate analysis",
                         new PerEndpointErrorRateAnalysis(
                             toggles,
-                            enableIprepdDatastoreWhitelist,
-                            iprepdDatastoreWhitelistProject)));
+                            enableIprepdDatastoreExemptions,
+                            iprepdDatastoreExemptionsProject)));
       }
 
       PCollection<Alert> allAlerts =
@@ -1949,7 +1949,7 @@ public class HTTPRequest implements Serializable {
 
     void setAlertSuppressionDurationSeconds(Long value);
 
-    @Description("Ignore requests from whitelisted cloud providers (GCP, AWS)")
+    @Description("Ignore requests from major cloud providers (GCP, AWS)")
     @Default.Boolean(true)
     Boolean getIgnoreCloudProviderRequests();
 
@@ -2001,39 +2001,39 @@ public class HTTPRequest implements Serializable {
       b.withTransformDoc(
           new ThresholdAnalysis(
               toggles,
-              options.getOutputIprepdEnableDatastoreWhitelist(),
-              options.getOutputIprepdDatastoreWhitelistProject(),
+              options.getOutputIprepdEnableDatastoreExemptions(),
+              options.getOutputIprepdDatastoreExemptionsProject(),
               null));
     }
     if (toggles.getEnableHardLimitAnalysis()) {
       b.withTransformDoc(
           new HardLimitAnalysis(
               toggles,
-              options.getOutputIprepdEnableDatastoreWhitelist(),
-              options.getOutputIprepdDatastoreWhitelistProject(),
+              options.getOutputIprepdEnableDatastoreExemptions(),
+              options.getOutputIprepdDatastoreExemptionsProject(),
               null));
     }
     if (toggles.getEnableErrorRateAnalysis()) {
       b.withTransformDoc(
           new ErrorRateAnalysis(
               toggles,
-              options.getOutputIprepdEnableDatastoreWhitelist(),
-              options.getOutputIprepdDatastoreWhitelistProject()));
+              options.getOutputIprepdEnableDatastoreExemptions(),
+              options.getOutputIprepdDatastoreExemptionsProject()));
     }
     if (toggles.getEnableUserAgentBlocklistAnalysis()) {
       b.withTransformDoc(
           new UserAgentBlocklistAnalysis(
               toggles,
-              options.getOutputIprepdEnableDatastoreWhitelist(),
-              options.getOutputIprepdDatastoreWhitelistProject(),
+              options.getOutputIprepdEnableDatastoreExemptions(),
+              options.getOutputIprepdDatastoreExemptionsProject(),
               null));
     }
     if (toggles.getEnableEndpointAbuseAnalysis()) {
       b.withTransformDoc(
           new EndpointAbuseAnalysis(
               toggles,
-              options.getOutputIprepdEnableDatastoreWhitelist(),
-              options.getOutputIprepdDatastoreWhitelistProject()));
+              options.getOutputIprepdEnableDatastoreExemptions(),
+              options.getOutputIprepdDatastoreExemptionsProject()));
     }
     if (toggles.getEnableSourceCorrelator()) {
       b.withTransformDoc(new SourceCorrelation.SourceCorrelator(toggles));
@@ -2042,16 +2042,16 @@ public class HTTPRequest implements Serializable {
       b.withTransformDoc(
           new EndpointSequenceAbuse(
               toggles,
-              options.getOutputIprepdEnableDatastoreWhitelist(),
-              options.getOutputIprepdDatastoreWhitelistProject(),
+              options.getOutputIprepdEnableDatastoreExemptions(),
+              options.getOutputIprepdDatastoreExemptionsProject(),
               null));
     }
     if (toggles.getEnablePerEndpointErrorRateAnalysis()) {
       b.withTransformDoc(
           new PerEndpointErrorRateAnalysis(
               toggles,
-              options.getOutputIprepdEnableDatastoreWhitelist(),
-              options.getOutputIprepdDatastoreWhitelistProject()));
+              options.getOutputIprepdEnableDatastoreExemptions(),
+              options.getOutputIprepdDatastoreExemptionsProject()));
     }
 
     return b.build();

@@ -17,10 +17,10 @@ import (
 )
 
 const (
-	WHITELIST_IP_SLASH_COMMAND            = "/whitelist_ip"
-	STAGING_WHITELIST_IP_SLASH_COMMAND    = "/staging_whitelist_ip"
-	WHITELIST_EMAIL_SLASH_COMMAND         = "/whitelist_email"
-	STAGING_WHITELIST_EMAIL_SLASH_COMMAND = "/staging_whitelist_email"
+	EXEMPT_IP_SLASH_COMMAND            = "/exempt_ip"
+	STAGING_EXEMPT_IP_SLASH_COMMAND    = "/staging_exempt_ip"
+	EXEMPT_EMAIL_SLASH_COMMAND         = "/exempt_email"
+	STAGING_EXEMPT_EMAIL_SLASH_COMMAND = "/staging_exempt_email"
 
 	SECOPS_911_COMMAND         = "/secops911"
 	STAGING_SECOPS_911_COMMAND = "/staging_secops911"
@@ -31,7 +31,7 @@ const (
 		"Valid time units are 'm' and 'h'. If you omit a duration, " +
 		"the default (24 hours) is used. If your duration is under " +
 		"5 minutes, it is increased to 5 minutes. If you do not want the " +
-		"whitelisted IP to expire, put 'never' as the expiration. This " +
+		"exempted IP to expire, put 'never' as the expiration. This " +
 		"will make the expiration duration roughly ten years from now."
 
 	FOURTEEN_DAYS_AGO = time.Hour * 24 * 14
@@ -45,10 +45,10 @@ var (
 	config = &common.Configuration{}
 
 	ALLOWED_COMMANDS = []string{
-		WHITELIST_IP_SLASH_COMMAND,
-		STAGING_WHITELIST_IP_SLASH_COMMAND,
-		WHITELIST_EMAIL_SLASH_COMMAND,
-		STAGING_WHITELIST_EMAIL_SLASH_COMMAND,
+		EXEMPT_IP_SLASH_COMMAND,
+		STAGING_EXEMPT_IP_SLASH_COMMAND,
+		EXEMPT_EMAIL_SLASH_COMMAND,
+		STAGING_EXEMPT_EMAIL_SLASH_COMMAND,
 		SECOPS_911_COMMAND,
 		STAGING_SECOPS_911_COMMAND,
 	}
@@ -180,8 +180,8 @@ func SlackbotBackground(ctx context.Context, psmsg pubsub.Message) error {
 		switch td.SlashCommand.Cmd {
 		case SECOPS_911_COMMAND, STAGING_SECOPS_911_COMMAND:
 			resp, err = handle911Cmd(ctx, td.SlashCommand, DB)
-		case WHITELIST_EMAIL_SLASH_COMMAND, WHITELIST_IP_SLASH_COMMAND, STAGING_WHITELIST_EMAIL_SLASH_COMMAND, STAGING_WHITELIST_IP_SLASH_COMMAND:
-			resp, err = handleWhitelistCmd(ctx, td.SlashCommand, DB)
+		case EXEMPT_EMAIL_SLASH_COMMAND, EXEMPT_IP_SLASH_COMMAND, STAGING_EXEMPT_EMAIL_SLASH_COMMAND, STAGING_EXEMPT_IP_SLASH_COMMAND:
+			resp, err = handleExemptCmd(ctx, td.SlashCommand, DB)
 		default:
 			resp, err = nil, errors.New("Unsupported slash command")
 		}
@@ -220,9 +220,9 @@ func SlackbotBackground(ctx context.Context, psmsg pubsub.Message) error {
 		if err != nil {
 			log.Errorf("Error escalating alerts: %s", err)
 		}
-		err = DB.RemoveExpiredWhitelistedObjects(ctx)
+		err = DB.RemoveExpiredExemptedObjects(ctx)
 		if err != nil {
-			log.Errorf("Error purging expired whitelisted ips: %s", err)
+			log.Errorf("Error purging expired exempted ips: %s", err)
 		}
 		err = DB.RemoveAlertsOlderThan(ctx, FOURTEEN_DAYS_AGO)
 		if err != nil {
