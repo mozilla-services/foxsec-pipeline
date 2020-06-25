@@ -352,6 +352,7 @@ public class Parser {
     try {
       CloudWatchEvent cwe = mapper.readValue(input, CloudWatchEvent.class);
       if (cwe == null) {
+        log.warn("CloudWatchEvent is null - input = {}", input);
         return input;
       }
       if (cwe.getDetail() == null || cwe.getDetailType() == null || cwe.getAccount() == null) {
