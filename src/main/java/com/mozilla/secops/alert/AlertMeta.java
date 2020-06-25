@@ -208,8 +208,8 @@ public class AlertMeta implements Serializable {
     USERAGENT("useragent"),
     USERNAME("username"),
     URL_TO_FINDING("url_to_finding"),
+    WATCHLIST_CREATED_BY("watchlist_created_by"),
     WINDOW_TIMESTAMP("window_timestamp"),
-    EXEMPTION_CREATED_BY("exemption_created_by"),
     SOURCEADDRESS(
         "sourceaddress",
         true,
