@@ -351,6 +351,9 @@ public class Parser {
   private String stripCloudWatch(Event e, String input, ParserState state) {
     try {
       CloudWatchEvent cwe = mapper.readValue(input, CloudWatchEvent.class);
+      if (cwe == null) {
+        return input;
+      }
       if (cwe.getDetail() == null || cwe.getDetailType() == null || cwe.getAccount() == null) {
         return input;
       }
