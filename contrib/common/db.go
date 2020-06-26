@@ -12,7 +12,7 @@ const (
 	ALERT_NAMESPACE = "alerts"
 	ALERT_KIND      = ALERT_NAMESPACE
 
-	WHITELISTED_OBJ_NAMESPACE = "whitelisted_object"
+	EXEMPTED_OBJ_NAMESPACE = "exempted_object"
 )
 
 type DBClient struct {
@@ -35,16 +35,16 @@ type StateField struct {
 	State string `datastore:"state,noindex" json:"state"`
 }
 
-func WhitelistedObjectToState(wobj *WhitelistedObject) (*StateField, error) {
-	buf, err := json.Marshal(wobj)
+func ExemptedObjectToState(eobj *ExemptedObject) (*StateField, error) {
+	buf, err := json.Marshal(eobj)
 	if err != nil {
 		return nil, err
 	}
 	return &StateField{string(buf)}, nil
 }
 
-func StateToWhitelistedObject(sf *StateField) (*WhitelistedObject, error) {
-	var wobj WhitelistedObject
+func StateToExemptedObject(sf *StateField) (*ExemptedObject, error) {
+	var wobj ExemptedObject
 	err := json.Unmarshal([]byte(sf.State), &wobj)
 	if err != nil {
 		return nil, err
@@ -52,20 +52,20 @@ func StateToWhitelistedObject(sf *StateField) (*WhitelistedObject, error) {
 	return &wobj, nil
 }
 
-func (db *DBClient) whitelistedObjectKey(whitelistedObj *WhitelistedObject) *datastore.Key {
-	nk := datastore.NameKey(whitelistedObj.Type, whitelistedObj.Object, nil)
-	nk.Namespace = WHITELISTED_OBJ_NAMESPACE
+func (db *DBClient) ExemptedObjectKey(exemptedObj *ExemptedObject) *datastore.Key {
+	nk := datastore.NameKey(exemptedObj.Type, exemptedObj.Object, nil)
+	nk.Namespace = EXEMPTED_OBJ_NAMESPACE
 	return nk
 }
 
-func (db *DBClient) RemoveExpiredWhitelistedObjects(ctx context.Context) error {
-	ips, err := db.GetAllWhitelistedObjects(ctx)
+func (db *DBClient) RemoveExpiredExemptedObjects(ctx context.Context) error {
+	ips, err := db.GetAllExemptedObjects(ctx)
 	if err != nil {
 		return err
 	}
 	for _, ip := range ips {
 		if ip.IsExpired() {
-			err = db.DeleteWhitelistedObject(ctx, ip)
+			err = db.DeleteExemptedObject(ctx, ip)
 			if err != nil {
 				return err
 			}
@@ -74,17 +74,17 @@ func (db *DBClient) RemoveExpiredWhitelistedObjects(ctx context.Context) error {
 	return nil
 }
 
-func (db *DBClient) GetAllWhitelistedObjects(ctx context.Context) ([]*WhitelistedObject, error) {
-	var wos []*WhitelistedObject
+func (db *DBClient) GetAllExemptedObjects(ctx context.Context) ([]*ExemptedObject, error) {
+	var wos []*ExemptedObject
 	for _, kind := range []string{IP_TYPE, EMAIL_TYPE} {
-		nq := datastore.NewQuery(kind).Namespace(WHITELISTED_OBJ_NAMESPACE)
+		nq := datastore.NewQuery(kind).Namespace(EXEMPTED_OBJ_NAMESPACE)
 		states := []*StateField{}
 		_, err := db.dsClient.GetAll(ctx, nq, &states)
 		if err != nil {
 			return nil, err
 		}
 		for _, state := range states {
-			wo, err := StateToWhitelistedObject(state)
+			wo, err := StateToExemptedObject(state)
 			if err != nil {
 				return nil, err
 			}
@@ -94,18 +94,18 @@ func (db *DBClient) GetAllWhitelistedObjects(ctx context.Context) ([]*Whiteliste
 	return wos, nil
 }
 
-func (db *DBClient) SaveWhitelistedObject(ctx context.Context, whitelistedObject *WhitelistedObject) error {
+func (db *DBClient) SaveExemptedObject(ctx context.Context, ExemptedObject *ExemptedObject) error {
 	tx, err := db.dsClient.NewTransaction(ctx)
 	if err != nil {
 		return err
 	}
 
-	sf, err := WhitelistedObjectToState(whitelistedObject)
+	sf, err := ExemptedObjectToState(ExemptedObject)
 	if err != nil {
 		return err
 	}
 
-	if _, err = tx.Put(db.whitelistedObjectKey(whitelistedObject), sf); err != nil {
+	if _, err = tx.Put(db.ExemptedObjectKey(ExemptedObject), sf); err != nil {
 		return err
 	}
 	if _, err := tx.Commit(); err != nil {
@@ -114,8 +114,8 @@ func (db *DBClient) SaveWhitelistedObject(ctx context.Context, whitelistedObject
 	return nil
 }
 
-func (db *DBClient) DeleteWhitelistedObject(ctx context.Context, whitelistedObject *WhitelistedObject) error {
-	return db.dsClient.Delete(ctx, db.whitelistedObjectKey(whitelistedObject))
+func (db *DBClient) DeleteExemptedObject(ctx context.Context, ExemptedObject *ExemptedObject) error {
+	return db.dsClient.Delete(ctx, db.ExemptedObjectKey(ExemptedObject))
 }
 
 func (db *DBClient) alertKey(ip string) *datastore.Key {

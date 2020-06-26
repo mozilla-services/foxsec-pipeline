@@ -100,8 +100,8 @@ const (
 	META_USERAGENT                         = "useragent"
 	META_USERNAME                          = "username"
 	META_URL_TO_FINDING                    = "url_to_finding"
+	META_WATCHLIST_CREATED_BY              = "watchlist_created_by"
 	META_WINDOW_TIMESTAMP                  = "window_timestamp"
-	META_WHITELISTED_ENTRY_CREATED_BY      = "whitelisted_entry_created_by"
 	META_SOURCEADDRESS                     = "sourceaddress"
 	META_SOURCEADDRESS_PREVIOUS            = "sourceaddress_previous"
 )

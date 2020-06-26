@@ -35,7 +35,7 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
 /**
  * HTTPRequest hard limit transform tests
  *
- * <p>Note we also test some IprepdIO submission and IP whitelisting here.
+ * <p>Note we also test some IprepdIO submission and IP exemptions here.
  */
 public class TestHardLimit1 {
   @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
@@ -128,7 +128,7 @@ public class TestHardLimit1 {
   }
 
   @Test
-  public void hardLimitTestDatastoreIprepdWhitelist() throws Exception {
+  public void hardLimitTestDatastoreIprepdExemptions() throws Exception {
     testEnv();
 
     TestIprepdIO.deleteReputation("ip", "192.168.1.1");
@@ -139,24 +139,23 @@ public class TestHardLimit1 {
 
     IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
 
-    // Create whitelisted ip in datastore
+    // Create exempted ip in datastore
     State state =
         new State(
-            new DatastoreStateInterface(
-                IprepdIO.whitelistedIpKind, IprepdIO.whitelistedObjectNamespace));
+            new DatastoreStateInterface(IprepdIO.exemptedIpKind, IprepdIO.exemptedObjectNamespace));
     state.initialize();
-    IprepdIO.WhitelistedObject wobj = new IprepdIO.WhitelistedObject();
+    IprepdIO.ExemptedObject wobj = new IprepdIO.ExemptedObject();
     wobj.setObject("192.168.1.4");
     wobj.setType("ip");
     wobj.setExpiresAt(new DateTime().plusDays(1));
     wobj.setCreatedBy("test");
-    StateCursor<IprepdIO.WhitelistedObject> cur =
-        state.newCursor(IprepdIO.WhitelistedObject.class, false);
+    StateCursor<IprepdIO.ExemptedObject> cur =
+        state.newCursor(IprepdIO.ExemptedObject.class, false);
     cur.set("192.168.1.4", wobj);
     state.done();
 
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
-    options.setOutputIprepdEnableDatastoreWhitelist(true);
+    options.setOutputIprepdEnableDatastoreExemptions(true);
     options.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
 
     PCollection<Alert> results =

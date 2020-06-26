@@ -361,7 +361,7 @@ public class PostProcessing implements Serializable {
       a.addMetadata(AlertMeta.Key.MATCHED_METADATA_VALUE, k.value);
       a.addMetadata(AlertMeta.Key.MATCHED_TYPE, entry.getType());
       a.addMetadata(AlertMeta.Key.MATCHED_OBJECT, entry.getObject());
-      a.addMetadata(AlertMeta.Key.WHITELISTED_ENTRY_CREATED_BY, entry.getCreatedBy());
+      a.addMetadata(AlertMeta.Key.WATCHLIST_CREATED_BY, entry.getCreatedBy());
       return a;
     }
   }
