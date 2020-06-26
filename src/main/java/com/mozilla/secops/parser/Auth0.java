@@ -25,6 +25,7 @@ public class Auth0 extends SourcePayloadBase implements Serializable {
   private LogEvent event;
 
   private static ArrayList<String> AuthTypes;
+  private static JacksonFactory jfmatcher = new JacksonFactory();
 
   // List of auth0 type codes that are auth events
   // https://auth0.com/docs/logs#log-data-event-listing
@@ -170,7 +171,6 @@ public class Auth0 extends SourcePayloadBase implements Serializable {
   private LogEvent parseInput(String input) throws IOException {
     JsonParser jp = null;
     try {
-      JacksonFactory jfmatcher = new JacksonFactory();
       jp = jfmatcher.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
       Map<String, Object> m = entry.getJsonPayload();
@@ -191,6 +191,9 @@ public class Auth0 extends SourcePayloadBase implements Serializable {
 
     try {
       LogEvent _event = mapper.readValue(input, LogEvent.class);
+      if (_event == null) {
+        return null;
+      }
       if (_event.getClientId() != null) {
         return _event;
       }

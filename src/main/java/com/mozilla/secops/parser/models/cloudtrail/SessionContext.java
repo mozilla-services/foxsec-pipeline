@@ -1,10 +1,12 @@
 package com.mozilla.secops.parser.models.cloudtrail;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import java.io.Serializable;
 import java.util.HashMap;
 
 /** Model for sessionContext element in Cloudtrail Events */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SessionContext implements Serializable {
   private static final long serialVersionUID = 1L;
 

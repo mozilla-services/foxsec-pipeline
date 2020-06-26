@@ -65,6 +65,21 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseJsonNull() throws Exception {
+    // The string "null" is valid JSON and represents a null object. Ensure proper handling
+    // of this case.
+    String buf = "null";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(p);
+    assertEquals(Payload.PayloadType.RAW, e.getPayloadType());
+    Raw r = e.getPayload();
+    assertNotNull(r);
+    assertEquals("null", r.getRaw());
+  }
+
+  @Test
   public void testParseRaw() throws Exception {
     Parser p = getTestParser();
     assertNotNull(p);

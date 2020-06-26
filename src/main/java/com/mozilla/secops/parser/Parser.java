@@ -268,6 +268,15 @@ public class Parser {
       jp = jf.createJsonParser(input);
       LogEntry entry = jp.parse(LogEntry.class);
 
+      // For us to consider this a valid Stackdriver log entry, we need to have either the
+      // textPayload, jsonPayload, or protoPayload value set. If none of these are set, just
+      // return the value as is.
+      if ((entry.getTextPayload() == null)
+          && (entry.getJsonPayload() == null)
+          && (entry.getProtoPayload() == null)) {
+        return input;
+      }
+
       e.setStackdriverProject(getStackdriverProject(entry));
       e.setStackdriverLabels(entry.getLabels());
       if (entry.getTimestamp() != null) {
@@ -351,7 +360,8 @@ public class Parser {
   private String stripCloudWatch(Event e, String input, ParserState state) {
     try {
       CloudWatchEvent cwe = mapper.readValue(input, CloudWatchEvent.class);
-      if (cwe.getDetail() == null || cwe.getDetailType() == null || cwe.getAccount() == null) {
+      if ((cwe == null)
+          || (cwe.getDetail() == null || cwe.getDetailType() == null || cwe.getAccount() == null)) {
         return input;
       }
       state.setCloudWatchEvent(cwe);
