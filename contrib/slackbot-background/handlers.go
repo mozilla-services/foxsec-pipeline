@@ -44,7 +44,7 @@ func handleExemptCmd(ctx context.Context, cmd common.SlashCommandData, db *commo
 		return msg, err
 	}
 
-	exemptedObject.Object, exemptedObject.ExpiresAt, errMsg, err = parseWhitelistText(cmd.Text, exemptedObject.Type)
+	exemptedObject.Object, exemptedObject.ExpiresAt, errMsg, err = parseExemptText(cmd.Text, exemptedObject.Type)
 	if err != nil {
 		msg.Text = errMsg
 		return msg, err

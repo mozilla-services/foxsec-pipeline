@@ -54,7 +54,7 @@ func checkUsersGroups(email string) (bool, error) {
 	return false, nil
 }
 
-func parseWhitelistText(text, typestr string) (string, time.Time, string, error) {
+func parseExemptText(text, typestr string) (string, time.Time, string, error) {
 	splitCmd := strings.Split(text, " ")
 
 	obj := splitCmd[0]
