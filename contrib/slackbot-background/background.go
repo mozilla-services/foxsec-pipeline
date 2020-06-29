@@ -121,7 +121,7 @@ func InitConfig() {
 		}
 	}()
 
-	log.Infof("Allowed LDAP Groups for Whitelist Command: %v", config.AllowedLDAPGroups)
+	log.Infof("Allowed LDAP Groups for Exempt Command: %v", config.AllowedLDAPGroups)
 }
 
 func allowedCommand(cmd string) bool {
