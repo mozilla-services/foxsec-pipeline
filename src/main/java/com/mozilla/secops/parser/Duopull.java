@@ -30,6 +30,9 @@ public class Duopull extends SourcePayloadBase implements Serializable {
     } catch (IOException exc) {
       return false;
     }
+    if (d == null) {
+      return false;
+    }
     String msg = d.getMsg();
     if (msg != null && msg.equals("duopull event")) {
       return true;

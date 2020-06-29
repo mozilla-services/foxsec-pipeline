@@ -1,8 +1,5 @@
 package com.mozilla.secops.parser;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
@@ -19,8 +16,6 @@ import org.joda.time.DateTime;
 /** Payload parser for Cloudtrail events */
 public class Cloudtrail extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
-
-  private ObjectMapper mapper;
 
   private CloudtrailEvent event;
 
@@ -42,9 +37,7 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
   }
 
   /** Construct matcher object. */
-  public Cloudtrail() {
-    mapper = getObjectMapper();
-  }
+  public Cloudtrail() {}
 
   /**
    * Construct parser object.
@@ -54,7 +47,6 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
    * @param state State
    */
   public Cloudtrail(String input, Event e, ParserState state) {
-    mapper = getObjectMapper();
     try {
       event = parseInput(input, state);
       if (event.getEventTime() != null) {
@@ -108,7 +100,7 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
         // that can then be parsed by ObjectMapper into CloudtrailEvent. This
         // should probably be done within Parser.
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        mapper.writeValue(buf, m);
+        state.getObjectMapper().writeValue(buf, m);
         input = buf.toString();
       }
     } catch (IOException exc) {
@@ -122,7 +114,10 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
     }
 
     try {
-      CloudtrailEvent _event = mapper.readValue(input, CloudtrailEvent.class);
+      CloudtrailEvent _event = state.getObjectMapper().readValue(input, CloudtrailEvent.class);
+      if (_event == null) {
+        return null;
+      }
       if (_event.getEventVersion() != null) {
         return _event;
       }
@@ -131,14 +126,6 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
     }
 
     return null;
-  }
-
-  private ObjectMapper getObjectMapper() {
-    ObjectMapper _mapper = new ObjectMapper();
-    _mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    // Allows for null values in the JsonPayload in a LogEntry when mapping to a Map<String, Object>
-    _mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-    return _mapper;
   }
 
   /**

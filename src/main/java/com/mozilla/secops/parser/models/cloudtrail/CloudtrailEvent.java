@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser.models.cloudtrail;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.HashMap;
  * <p>Read about Cloudtrail events here:
  * https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-record-contents.html
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CloudtrailEvent implements Serializable {
   private static final long serialVersionUID = 1L;
 
