@@ -169,7 +169,7 @@ func createMockServer(t *testing.T) *httptest.Server {
 			err = json.Unmarshal(body, cb)
 			assert.NoError(t, err)
 			assert.Equal(t, cb.Product, "TEST_PRODUCT")
-			assert.Contains(t, cb.Summary, "gatekeeper:aws alerts")
+			assert.Contains(t, cb.Summary, "gatekeeper:aws-dev alerts")
 			assert.Contains(t, cb.Description, "lowtestunique")
 			assert.NotContains(t, cb.Description, "hightestunique")
 			assert.Equal(t, cb.Blocks, "123")
@@ -212,6 +212,7 @@ func TestBugzillaAlertManager(t *testing.T) {
 	client := pagerduty.NewClient("testkey", pagerduty.WithAPIEndpoint(server.URL))
 	globals.pagerdutyClient = client
 	globals.bugzillaClient = common.NewBugzillaClient(config.BugzillaConfig, server.URL)
+	globals.environment = config.Environment
 
 	// Start test with high sev
 	err = BugzillaAlertManager(ctx, generateHighSevTestAlert())

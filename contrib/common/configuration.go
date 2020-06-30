@@ -21,6 +21,8 @@ import (
 // either a local file or from GCS. If it is encrypted with sops, it will
 // decrypt it.
 type Configuration struct {
+	Environment string `yaml:"env,omitempty"`
+
 	AwsAccessKeyId     string `yaml:"aws_access_key_id"`
 	AwsSecretAccessKey string `yaml:"aws_secret_access_key"`
 	AwsRegion          string `yaml:"aws_region"`
