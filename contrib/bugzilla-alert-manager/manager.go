@@ -59,11 +59,16 @@ func InitConfig() {
 
 	globals.pagerdutyClient = pagerduty.NewClient(config.PagerdutyAuthToken)
 	globals.bugzillaClient = common.NewBugzillaClient(config.BugzillaConfig, "https://bugzilla.mozilla.org")
+	globals.environment = "dev"
+	if config.Environment != "" {
+		globals.environment = config.Environment
+	}
 }
 
 type Globals struct {
 	pagerdutyClient *pagerduty.Client
 	bugzillaClient  *common.BugzillaClient
+	environment     string
 }
 
 func userOnTicketDuty() (string, error) {
@@ -116,6 +121,9 @@ func BugzillaAlertManager(ctx context.Context, psmsg pubsub.Message) error {
 		log.Errorf("Error decoding pubsub message: %s", err)
 		return nil
 	}
+
+	// Append the env to the alert category.
+	alert.Category = fmt.Sprintf("%s-%s", alert.Category, globals.environment)
 
 	// Check if we should process this alert
 	if alert.GetMetadata(common.META_ALERT_HANDLING_SEVERITY) != "low" {
