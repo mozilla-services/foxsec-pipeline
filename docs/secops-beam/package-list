@@ -6,11 +6,11 @@ com.mozilla.secops.authstate
 com.mozilla.secops.awsbehavior
 com.mozilla.secops.crypto
 com.mozilla.secops.customs
+com.mozilla.secops.customs.CustomsAtRiskAccountState
 com.mozilla.secops.gatekeeper
 com.mozilla.secops.httprequest
 com.mozilla.secops.identity
 com.mozilla.secops.input
-com.mozilla.secops.kinesis
 com.mozilla.secops.metrics
 com.mozilla.secops.parser
 com.mozilla.secops.parser.models.amo
