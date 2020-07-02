@@ -71,7 +71,7 @@ func handleExemptCmd(ctx context.Context, cmd common.SlashCommandData, db *commo
 	}
 
 	exemptedObject.CreatedBy = userProfile.Email
-	auditMsg := fmt.Sprintf("%s submitted %s to be exempted from violation reporting until %s", userProfile.Email, exemptedObject.Object, exemptedObject.ExpiresAt.Format(time.UnixDate))
+	auditMsg := fmt.Sprintf("%s submitted %s to be exempt from iprepd reporting until %s", userProfile.Email, exemptedObject.Object, exemptedObject.ExpiresAt.Format(time.UnixDate))
 	log.Info(auditMsg)
 	err = db.SaveExemptedObject(ctx, exemptedObject)
 	if err != nil {
