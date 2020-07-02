@@ -129,8 +129,7 @@ public class AuthProfile implements Serializable {
     public Parse(AuthProfileOptions options) {
       log = LoggerFactory.getLogger(Parse.class);
       ignoreUserRegex = options.getIgnoreUserRegex();
-      autoignoreUsers =
-          new String[] {"cluster-autoscaler", "system:unsecured", "system:kube-proxy"};
+      autoignoreUsers = new String[] {"cluster-autoscaler"};
       auth0ClientIds = options.getAuth0ClientIds();
       cfg = ParserCfg.fromInputOptions(options);
     }
@@ -225,8 +224,7 @@ public class AuthProfile implements Serializable {
                         }
 
                         // Auto-ignore certain GCP audit records for service accounts
-                        if (n.getSubjectUser().startsWith("system:serviceaccount:")
-                            || n.getSubjectUser().startsWith("system:node:")
+                        if (n.getSubjectUser().startsWith("system:")
                             || n.getSubjectUser()
                                 .endsWith("@gcp-sa-logging.iam.gserviceaccount.com")
                             || n.getSubjectUser().endsWith("@system.gserviceaccount.com")) {
