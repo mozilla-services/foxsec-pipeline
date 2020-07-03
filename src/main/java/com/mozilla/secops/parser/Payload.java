@@ -50,6 +50,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     AUTH0,
     /** Phabricator audit log */
     PHABRICATOR_AUDIT,
+    /** Private Relay */
+    PRIVATE_RELAY,
     /** Raw */
     RAW
   }

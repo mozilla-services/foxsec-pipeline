@@ -560,6 +560,7 @@ public class Parser {
     payloads.add(new GuardDuty());
     payloads.add(new ETDBeta());
     payloads.add(new CfgTick());
+    payloads.add(new PrivateRelay());
     payloads.add(new Auth0());
     payloads.add(new Phabricator());
     payloads.add(new Raw());
