@@ -152,7 +152,7 @@ func BugzillaAlertManager(ctx context.Context, psmsg pubsub.Message) error {
 				contextLogger.Infof("Adding %s to bugzilla bug %d", alert.Id, newestBug.Id)
 				// If bug is closed, re-open
 				if !newestBug.IsOpen {
-					err := globals.bugzillaClient.UpdateBug(newestBug.Id, &common.UpdateBugReq{Status: common.ASSIGNED})
+					err := globals.bugzillaClient.UpdateBug(newestBug.Id, &common.UpdateBugReq{Status: common.REOPENED})
 					if err != nil {
 						log.Errorf("Error re-opening closed bug: %s", err)
 					}

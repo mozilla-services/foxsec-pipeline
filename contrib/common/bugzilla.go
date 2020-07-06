@@ -219,6 +219,7 @@ type UpdateBugReq struct {
 }
 
 const ASSIGNED = "ASSIGNED"
+const REOPENED = "REOPENED"
 
 func (bc *BugzillaClient) UpdateBug(bugId int, updateReq *UpdateBugReq) error {
 	updateJson, err := json.Marshal(updateReq)
