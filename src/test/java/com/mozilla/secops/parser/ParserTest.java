@@ -2367,4 +2367,76 @@ public class ParserTest {
     assertEquals("216.160.83.56", n.getSourceAddress());
     assertEquals("phabricator", n.getObject());
   }
+
+  @Test
+  public void testPrivateRelayNotification() throws Exception {
+    String buf =
+        "{\"insertId\":\"2gx64yb2zqdscfkfw\",\"jsonPayload\":{\"Logger\":\"fx-private-rela"
+            + "y\",\"Type\":\"events\",\"Fields\":{\"relay_address_id\":1111,\"relay_address\":"
+            + "\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"real_addr"
+            + "ess\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"msg"
+            + "\":\"email_relay\",\"fxa_uid\":\"00000000000000000000000000000000\"},\"EnvVersio"
+            + "n\":\"2.0\",\"Timestamp\":1593802867786856200,\"Severity\":6,\"Pid\":9,\"Hostnam"
+            + "e\":\"fxprivaterelay-prod-fxprivaterelay\"},\"resource\":{\"type\":\"k8s_contain"
+            + "er\",\"labels\":{\"pod_name\":\"fxprivaterelay-prod-fxprivaterelay\",\"project_i"
+            + "d\":\"moz-fx-fxprivaterel\",\"location\":\"us-west1\",\"namespace_name\":\"prod-"
+            + "fxprivate\",\"cluster_name\":\"fxprivaterelay\",\"container_name\":\"fxprivatere"
+            + "lay\"}},\"timestamp\":\"2020-07-03T19:01:07.787221009Z\",\"severity\":\"ERROR\","
+            + "\"labels\":{\"k8s-pod/app_kubernetes_io/name\":\"fxprivaterelay\",\"k8s-pod/full"
+            + "name\":\"fxprivaterelay\",\"k8s-pod/app_kubernetes_io/part-of\":\"fxprivaterelay"
+            + "\",\"k8s-pod/app_kubernetes_io/instance\":\"prod\",\"k8s-pod/pod-template-hash\""
+            + ":\"000000000\",\"k8s-pod/jenkins-build-id\":\"121\",\"k8s-pod/app_kubernetes_io/"
+            + "version\":\"1.0.0\",\"k8s-pod/app_kubernetes_io/managed-by\":\"jenkins\",\"k8s-p"
+            + "od/app_kubernetes_io/component\":\"app\"},\"logName\":\"projects/moz-fx-fxprivat"
+            + "erel/logs/stderr\",\"receiveTimestamp\":\"2020-07-03T19:01:11.000024423Z\"}";
+    Parser p = getTestParser();
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.PRIVATE_RELAY, e.getPayloadType());
+
+    PrivateRelay d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", d.getRealAddress());
+    assertEquals(
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", d.getRelayAddress());
+    assertEquals(1111, (int) d.getRelayAddressId());
+    assertEquals("email_relay", d.getMsg());
+    assertEquals("00000000000000000000000000000000", d.getUid());
+    assertEquals(PrivateRelay.EventType.EMAIL_RELAY, d.getEventType());
+  }
+
+  public void testPrivateRelayRpEvent() throws Exception {
+    String buf =
+        "{\"insertId\":\"2gx64yb2zqdscfkfw\",\"jsonPayload\":{\"Logger\":\"fx-private-rela"
+            + "y\",\"Type\":\"events\",\"Fields\":{\"real_address\":\"aaaaaaaaaaaaaaaaaaaaaaaaaa"
+            + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"msg\":\"fxa_rp_event\",\"fxa_uid\":\"0"
+            + "0000000000000000000000000000000\"},\"EnvVersion\":\"2.0\",\"Timestamp\":159380286"
+            + "7786856200,\"Severity\":6,\"Pid\":9,\"Hostname\":\"fxprivaterelay-prod-fxprivater"
+            + "elay\"},\"resource\":{\"type\":\"k8s_container\",\"labels\":{\"pod_name\":\"fxpri"
+            + "vaterelay-prod-fxprivaterelay\",\"project_id\":\"moz-fx-fxprivaterel\",\"location"
+            + "\":\"us-west1\",\"namespace_name\":\"prod-fxprivate\",\"cluster_name\":\"fxprivat"
+            + "erelay\",\"container_name\":\"fxprivaterelay\"}},\"timestamp\":\"2020-07-03T19:01"
+            + ":07.787221009Z\",\"severity\":\"ERROR\",\"labels\":{\"k8s-pod/app_kubernetes_io/n"
+            + "ame\":\"fxprivaterelay\",\"k8s-pod/fullname\":\"fxprivaterelay\",\"k8s-pod/app_ku"
+            + "bernetes_io/part-of\":\"fxprivaterelay\",\"k8s-pod/app_kubernetes_io/instance\":"
+            + "\"prod\",\"k8s-pod/pod-template-hash\":\"000000000\",\"k8s-pod/jenkins-build-id"
+            + "\":\"121\",\"k8s-pod/app_kubernetes_io/version\":\"1.0.0\",\"k8s-pod/app_kubern"
+            + "etes_io/managed-by\":\"jenkins\",\"k8s-pod/app_kubernetes_io/component\":\"app\""
+            + "},\"logName\":\"projects/moz-fx-fxprivaterel/logs/stderr\",\"receiveTimestamp\":\"2020"
+            + "-07-03T19:01:11.000024423Z\"}";
+
+    Parser p = getTestParser();
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.PRIVATE_RELAY, e.getPayloadType());
+
+    PrivateRelay d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", d.getRealAddress());
+    assertEquals("fxa_rp_event", d.getMsg());
+    assertEquals("00000000000000000000000000000000", d.getUid());
+    assertEquals(PrivateRelay.EventType.FXA_RP_EVENT, d.getEventType());
+  }
 }
