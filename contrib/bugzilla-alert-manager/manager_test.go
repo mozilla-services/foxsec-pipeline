@@ -155,7 +155,7 @@ func createMockServer(t *testing.T) *httptest.Server {
 		ub := &common.UpdateBugReq{}
 		err = json.Unmarshal(body, ub)
 		assert.NoError(t, err)
-		assert.Equal(t, ub.Status, common.ASSIGNED)
+		assert.Equal(t, ub.Status, common.REOPENED)
 	})
 
 	// Bugzilla Bug Mock
