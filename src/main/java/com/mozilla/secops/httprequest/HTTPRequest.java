@@ -460,15 +460,12 @@ public class HTTPRequest implements Serializable {
                   new DoFn<Event, KV<String, String>>() {
                     private static final long serialVersionUID = 1L;
 
-                    private ArrayList<Pattern> uaRegex;
+                    private Pattern uaRegex;
 
                     @Setup
                     public void setup() throws IOException {
                       ArrayList<String> in = FileUtil.fileReadLines(uaBlocklistPath);
-                      uaRegex = new ArrayList<Pattern>();
-                      for (String i : in) {
-                        uaRegex.add(Pattern.compile(i));
-                      }
+                      uaRegex = Pattern.compile(String.join("|", in));
                     }
 
                     @ProcessElement
@@ -479,11 +476,9 @@ public class HTTPRequest implements Serializable {
                       if (ua == null) {
                         return;
                       }
-                      for (Pattern p : uaRegex) {
-                        if (p.matcher(ua).matches()) {
-                          c.output(KV.of(n.getSourceAddress(), ua));
-                          return;
-                        }
+                      if (uaRegex.matcher(ua).matches()) {
+                        c.output(KV.of(n.getSourceAddress(), ua));
+                        return;
                       }
                     }
                   }))
