@@ -1,1 +1,8 @@
+one
+two
+three
 ^.*Variance.*$
+four
+five
+six
+seven
