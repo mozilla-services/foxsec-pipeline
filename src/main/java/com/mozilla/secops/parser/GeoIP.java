@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser;
 
+import com.maxmind.db.CHMCache;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
@@ -64,7 +65,7 @@ public class GeoIP {
       return null;
     }
     InputStream in = FileUtil.getStreamFromPath(path);
-    return new DatabaseReader.Builder(in).build();
+    return new DatabaseReader.Builder(in).withCache(new CHMCache()).build();
   }
 
   private static synchronized void initialize(String cityPath, String ispPath) throws IOException {
