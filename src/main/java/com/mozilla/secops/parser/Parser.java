@@ -289,6 +289,8 @@ public class Parser {
       // We were able to deserialize the LogEntry so store it as a hint in the state
       state.setLogEntryHint(entry);
 
+      // If this has a text payload, simply return the text payload for use in the payload
+      // parsers
       String ret = entry.getTextPayload();
       if (ret != null && !ret.isEmpty()) {
         return ret;
@@ -301,10 +303,10 @@ public class Parser {
         // Pull @type off the event if it exists to optimize downstream code paths
         state.setStackdriverTypeValue((String) jret.get("@type"));
 
-        // XXX Serialize the Stackdriver JSON data and emit a string for use in the
-        // matchers. This is inefficient and we could probably look at changing this
-        // to return a different type to avoid having to deserialize the data twice.
-        return entry.toString();
+        // Return the entire input here; it may be useful to simply discard the envelope and
+        // only return the relevant jsonPayload or protoPayload component but for now we will
+        // just return the input event as is since this is what the parsers expect.
+        return input;
       }
     } catch (IOException exc) {
       // pass
