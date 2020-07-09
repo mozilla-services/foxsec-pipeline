@@ -1,5 +1,7 @@
 package com.mozilla.secops.parser;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
@@ -8,14 +10,20 @@ import com.mozilla.secops.FileUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** GeoIP resolution */
 public class GeoIP {
   private static DatabaseReader geoipCityDb = null;
   private static DatabaseReader geoipIspDb = null;
+  private static Cache<InetAddress, CityResponse> cityCache = null;
+  private static Cache<InetAddress, IspResponse> ispCache = null;
   private static AtomicBoolean cityInitialized = new AtomicBoolean(false);
   private static AtomicBoolean ispInitialized = new AtomicBoolean(false);
+
+  private static final int CACHE_MAX_SIZE = 16384;
+  private static final int EXPIRY_MINUTES = 15;
 
   /**
    * Lookup city/country from IP address string
@@ -30,10 +38,18 @@ public class GeoIP {
 
     try {
       InetAddress ia = InetAddress.getByName(ip);
-      return geoipCityDb.city(ia);
+      return cityCache.get(
+          ia,
+          x -> {
+            try {
+              return geoipCityDb.city(ia);
+            } catch (IOException exc) {
+              return null;
+            } catch (GeoIp2Exception exc) {
+              return null;
+            }
+          });
     } catch (IOException exc) {
-      return null;
-    } catch (GeoIp2Exception exc) {
       return null;
     }
   }
@@ -51,10 +67,18 @@ public class GeoIP {
 
     try {
       InetAddress ia = InetAddress.getByName(ip);
-      return geoipIspDb.isp(ia);
+      return ispCache.get(
+          ia,
+          x -> {
+            try {
+              return geoipIspDb.isp(ia);
+            } catch (IOException exc) {
+              return null;
+            } catch (GeoIp2Exception exc) {
+              return null;
+            }
+          });
     } catch (IOException exc) {
-      return null;
-    } catch (GeoIp2Exception exc) {
       return null;
     }
   }
@@ -71,6 +95,11 @@ public class GeoIP {
     if (cityPath != null && !cityInitialized.get()) {
       if (!cityInitialized.get()) {
         geoipCityDb = getDatabaseFromPath(cityPath);
+        cityCache =
+            Caffeine.newBuilder()
+                .maximumSize(CACHE_MAX_SIZE)
+                .expireAfterWrite(EXPIRY_MINUTES, TimeUnit.MINUTES)
+                .build();
         if (geoipCityDb != null) {
           cityInitialized.set(true);
         }
@@ -78,6 +107,11 @@ public class GeoIP {
     }
     if (ispPath != null && !ispInitialized.get()) {
       geoipIspDb = getDatabaseFromPath(ispPath);
+      ispCache =
+          Caffeine.newBuilder()
+              .maximumSize(CACHE_MAX_SIZE)
+              .expireAfterWrite(EXPIRY_MINUTES, TimeUnit.MINUTES)
+              .build();
       if (geoipIspDb != null) {
         ispInitialized.set(true);
       }
