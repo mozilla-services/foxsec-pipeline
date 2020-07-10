@@ -469,6 +469,11 @@ public class HTTPRequest implements Serializable {
                       if (ua == null) {
                         return;
                       }
+                      // As an optimization, anything resembling a Firefox user agent we will
+                      // just exclude from further analysis in this transform.
+                      if (ua.contains("Firefox/")) {
+                        return;
+                      }
                       c.output(KV.of(n.getSourceAddress(), ua));
                     }
                   }))
