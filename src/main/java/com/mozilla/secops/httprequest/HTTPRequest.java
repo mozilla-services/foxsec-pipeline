@@ -38,6 +38,7 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.Flatten;
@@ -460,6 +461,24 @@ public class HTTPRequest implements Serializable {
                   new DoFn<Event, KV<String, String>>() {
                     private static final long serialVersionUID = 1L;
 
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      Normalized n = c.element().getNormalized();
+
+                      String ua = n.getUserAgent();
+                      if (ua == null) {
+                        return;
+                      }
+                      c.output(KV.of(n.getSourceAddress(), ua));
+                    }
+                  }))
+          .apply("distinct agent and source", Distinct.<KV<String, String>>create())
+          .apply(
+              "isolate matching agents",
+              ParDo.of(
+                  new DoFn<KV<String, String>, KV<String, String>>() {
+                    private static final long serialVersionUID = 1L;
+
                     private Pattern uaRegex;
 
                     @Setup
@@ -470,15 +489,8 @@ public class HTTPRequest implements Serializable {
 
                     @ProcessElement
                     public void processElement(ProcessContext c) {
-                      Normalized n = c.element().getNormalized();
-
-                      String ua = n.getUserAgent();
-                      if (ua == null) {
-                        return;
-                      }
-                      if (uaRegex.matcher(ua).matches()) {
-                        c.output(KV.of(n.getSourceAddress(), ua));
-                        return;
+                      if (uaRegex.matcher(c.element().getValue()).matches()) {
+                        c.output(c.element());
                       }
                     }
                   }))
