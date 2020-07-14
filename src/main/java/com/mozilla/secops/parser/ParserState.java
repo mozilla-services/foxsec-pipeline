@@ -13,6 +13,82 @@ class ParserState {
   private com.google.api.client.json.jackson2.JacksonFactory googleJacksonFactory;
   private ObjectMapper mapper;
   private String stackdriverTypeValue;
+  private GeoIP geoIp;
+  private boolean deferGeoIpResolution = false;
+  private String maxmindCityDbPath;
+  private String maxmindIspDbPath;
+
+  /**
+   * Indicate in state if geo-ip resolution should be deferred
+   *
+   * @param deferGeoIpResolution True to defer geo-ip resolution
+   */
+  public void setDeferGeoIpResolution(boolean deferGeoIpResolution) {
+    this.deferGeoIpResolution = deferGeoIpResolution;
+  }
+
+  /**
+   * Get setting for geo-ip resolution deferral
+   *
+   * @return True if resolution should be deferred
+   */
+  public boolean getDeferGeoIpResolution() {
+    return deferGeoIpResolution;
+  }
+
+  /**
+   * Store GeoIP reference in state
+   *
+   * @param geoIp GeoIP
+   */
+  public void setGeoIp(GeoIP geoIp) {
+    this.geoIp = geoIp;
+  }
+
+  /**
+   * Get GeoIP reference from state
+   *
+   * @return GeoIP or null if unset
+   */
+  public GeoIP getGeoIp() {
+    return geoIp;
+  }
+
+  /**
+   * Cache maxmind city DB path
+   *
+   * @param maxmindCityDbPath String
+   */
+  public void setMaxmindCityDbPath(String maxmindCityDbPath) {
+    this.maxmindCityDbPath = maxmindCityDbPath;
+  }
+
+  /**
+   * Get maxmind city DB path
+   *
+   * @return String
+   */
+  public String getMaxmindCityDbPath() {
+    return maxmindCityDbPath;
+  }
+
+  /**
+   * Set maxmind ISP DB path
+   *
+   * @param maxmindIspDbPath String
+   */
+  public void setMaxmindIspDbPath(String maxmindIspDbPath) {
+    this.maxmindIspDbPath = maxmindIspDbPath;
+  }
+
+  /**
+   * Get maxmind ISP DB path
+   *
+   * @return String
+   */
+  public String getMaxmindIspDbPath() {
+    return maxmindIspDbPath;
+  }
 
   /**
    * Set Stackdriver type value

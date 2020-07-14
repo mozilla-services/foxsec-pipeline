@@ -23,14 +23,7 @@ public class Normalized implements Serializable {
 
   private String subjectUser;
   private String sourceAddress;
-  private String sourceAddressCity;
-  private String sourceAddressCountry;
-  private Double sourceAddressLatitude;
-  private Double sourceAddressLongitude;
-  private String sourceAddressTimeZone;
-  private String sourceAddressIsp;
-  private Integer sourceAddressAsn;
-  private String sourceAddressAsOrg;
+  private GeoIP.GeoIPData geoIpData;
   private Double sourceAddressRiskScore;
   private Boolean sourceAddressIsAnonymous;
   private Boolean sourceAddressIsAnonymousVpn;
@@ -52,6 +45,7 @@ public class Normalized implements Serializable {
 
   Normalized() {
     types = EnumSet.noneOf(Type.class);
+    geoIpData = new GeoIP.GeoIPData();
   }
 
   /**
@@ -133,9 +127,25 @@ public class Normalized implements Serializable {
    * Set source address field
    *
    * @param addr Source address
+   * @param state Parser state
+   */
+  public void setSourceAddress(String addr, ParserState state) {
+    sourceAddress = addr;
+
+    GeoIP.GeoIPData.GeoResolutionMode mode = GeoIP.GeoIPData.GeoResolutionMode.ON_CREATION;
+    if (state != null && state.getDeferGeoIpResolution()) {
+      mode = GeoIP.GeoIPData.GeoResolutionMode.DEFERRED;
+    }
+    geoIpData.setSourceAddress(sourceAddress, mode, state);
+  }
+
+  /**
+   * Set source address field
+   *
+   * @param addr Source address
    */
   public void setSourceAddress(String addr) {
-    sourceAddress = addr;
+    setSourceAddress(addr, null);
   }
 
   /**
@@ -193,21 +203,12 @@ public class Normalized implements Serializable {
   }
 
   /**
-   * Set source address city field
-   *
-   * @param sourceAddressCity City string value
-   */
-  public void setSourceAddressCity(String sourceAddressCity) {
-    this.sourceAddressCity = sourceAddressCity;
-  }
-
-  /**
    * Get source address city field
    *
    * @return Source address city string
    */
   public String getSourceAddressCity() {
-    return sourceAddressCity;
+    return geoIpData.getSourceAddressCity();
   }
 
   /**
@@ -216,16 +217,7 @@ public class Normalized implements Serializable {
    * @return Source address country string
    */
   public String getSourceAddressCountry() {
-    return sourceAddressCountry;
-  }
-
-  /**
-   * Set source address country field
-   *
-   * @param sourceAddressCountry Country string value
-   */
-  public void setSourceAddressCountry(String sourceAddressCountry) {
-    this.sourceAddressCountry = sourceAddressCountry;
+    return geoIpData.getSourceAddressCountry();
   }
 
   /**
@@ -234,16 +226,7 @@ public class Normalized implements Serializable {
    * @return Source address time zone, or null if not present
    */
   public String getSourceAddressTimeZone() {
-    return sourceAddressTimeZone;
-  }
-
-  /**
-   * Set source address time zone field
-   *
-   * @param sourceAddressTimeZone IANA time zone string, e.g., Europe/London
-   */
-  public void setSourceAddressTimeZone(String sourceAddressTimeZone) {
-    this.sourceAddressTimeZone = sourceAddressTimeZone;
+    return geoIpData.getSourceAddressTimeZone();
   }
 
   /**
@@ -252,16 +235,7 @@ public class Normalized implements Serializable {
    * @return Source address latitude
    */
   public Double getSourceAddressLatitude() {
-    return sourceAddressLatitude;
-  }
-
-  /**
-   * Set source address latitude
-   *
-   * @param sourceAddressLatitude Latitude value
-   */
-  void setSourceAddressLatitude(Double sourceAddressLatitude) {
-    this.sourceAddressLatitude = sourceAddressLatitude;
+    return geoIpData.getSourceAddressLatitude();
   }
 
   /**
@@ -270,25 +244,7 @@ public class Normalized implements Serializable {
    * @return Source address longitude
    */
   public Double getSourceAddressLongitude() {
-    return sourceAddressLongitude;
-  }
-
-  /**
-   * Set source address longitude
-   *
-   * @param sourceAddressLongitude Longitude value
-   */
-  void setSourceAddressLongitude(Double sourceAddressLongitude) {
-    this.sourceAddressLongitude = sourceAddressLongitude;
-  }
-
-  /**
-   * Set source address ISP
-   *
-   * @param sourceAddressIsp ISP
-   */
-  public void setSourceAddressIsp(String sourceAddressIsp) {
-    this.sourceAddressIsp = sourceAddressIsp;
+    return geoIpData.getSourceAddressLongitude();
   }
 
   /**
@@ -297,16 +253,7 @@ public class Normalized implements Serializable {
    * @return ISP string or null if unset
    */
   public String getSourceAddressIsp() {
-    return sourceAddressIsp;
-  }
-
-  /**
-   * Set source address ASN
-   *
-   * @param sourceAddressAsn ASN integer
-   */
-  public void setSourceAddressAsn(Integer sourceAddressAsn) {
-    this.sourceAddressAsn = sourceAddressAsn;
+    return geoIpData.getSourceAddressIsp();
   }
 
   /**
@@ -315,16 +262,7 @@ public class Normalized implements Serializable {
    * @return ASN integer or null if unset
    */
   public Integer getSourceAddressAsn() {
-    return sourceAddressAsn;
-  }
-
-  /**
-   * Set source address AS organization
-   *
-   * @param sourceAddressAsOrg AS organization string
-   */
-  public void setSourceAddressAsOrg(String sourceAddressAsOrg) {
-    this.sourceAddressAsOrg = sourceAddressAsOrg;
+    return geoIpData.getSourceAddressAsn();
   }
 
   /**
@@ -333,7 +271,7 @@ public class Normalized implements Serializable {
    * @return AS organization string or null if unset
    */
   public String getSourceAddressAsOrg() {
-    return sourceAddressAsOrg;
+    return geoIpData.getSourceAddressAsOrg();
   }
 
   /**

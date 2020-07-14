@@ -30,6 +30,8 @@ public class ParserCfg implements Serializable {
   private String stackdriverProjectFilter;
   private String[] stackdriverLabelFilters;
 
+  private Boolean deferGeoIpResolution;
+
   /**
    * Create a parser configuration from pipeline {@link InputOptions}
    *
@@ -41,6 +43,7 @@ public class ParserCfg implements Serializable {
     cfg.setUseEventTimestamp(options.getUseEventTimestamp());
     cfg.setMaxmindCityDbPath(options.getMaxmindCityDbPath());
     cfg.setMaxmindIspDbPath(options.getMaxmindIspDbPath());
+    cfg.setDeferGeoIpResolution(options.getDeferGeoIpResolution());
     cfg.setIdentityManagerPath(options.getIdentityManagerPath());
     cfg.setParserFastMatcher(options.getParserFastMatcher());
     if (options.getXffAddressSelector() != null) {
@@ -265,6 +268,7 @@ public class ParserCfg implements Serializable {
     useEventTimestamp = false;
     disableCloudwatchStrip = false;
     disableMozlogStrip = false;
+    deferGeoIpResolution = false;
   }
 
   /**
@@ -335,5 +339,28 @@ public class ParserCfg implements Serializable {
    */
   public Integer getMaxTimestampDifference() {
     return maxTimestampDifference;
+  }
+
+  /**
+   * Set defer GeoIP resolution
+   *
+   * <p>If set, GeoIP resolution on events will not actually occur until a GeoIP related field is
+   * read. Otherwise, it will occur immediately when a source address field is set if GeoIP is
+   * enabled.
+   *
+   * @param deferGeoIpResolution Boolean
+   */
+  @JsonProperty("defer_geoip_resolution")
+  public void setDeferGeoIpResolution(Boolean deferGeoIpResolution) {
+    this.deferGeoIpResolution = deferGeoIpResolution;
+  }
+
+  /**
+   * Get defer GeoIP resolution setting
+   *
+   * @return Boolean
+   */
+  public Boolean getDeferGeoIpResolution() {
+    return deferGeoIpResolution;
   }
 }
