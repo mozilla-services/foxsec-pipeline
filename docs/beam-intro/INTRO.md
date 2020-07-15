@@ -11,10 +11,10 @@ Fetch the [foxsec-pipeline](https://github.com/mozilla-services/foxsec-pipeline)
 git clone https://github.com/mozilla-services/foxsec-pipeline.git
 ```
 
-Build the docker image.
+Build the docker images.
 
 ```
-docker build -t foxsec-pipeline:latest .
+docker build -f Dockerfile-base -t foxsec-pipeline-base:latest .
 ```
 
 Run a simple parser test just to make sure your environment is working correctly. This will also
