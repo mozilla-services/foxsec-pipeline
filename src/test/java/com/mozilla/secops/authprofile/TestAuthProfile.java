@@ -141,6 +141,7 @@ public class TestAuthProfile {
     options.setGenerateConfigurationTicksInterval(1);
     options.setGenerateConfigurationTicksMaximum(5L);
     options.setEnableCritObjectAnalysis(false);
+    options.setDeferGeoIpResolution(true);
     PCollection<String> input =
         p.apply(
             "input",

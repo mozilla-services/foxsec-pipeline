@@ -1820,6 +1820,37 @@ public class ParserTest {
   }
 
   @Test
+  public void testGeoIpResolutionModes() throws Exception {
+    String buf =
+        "\"216.160.83.56\" - - [19/Mar/2019:14:52:39 -0500] \"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"
+            + " 3697 \"https://mozilla.org/item/10\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:"
+            + "65.0) Gecko/20100101 Firefox/65.0\"";
+
+    // Create default configuration (for ON_CREATION)
+    ParserCfg cfg = new ParserCfg();
+    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
+    cfg.setMaxmindIspDbPath(TEST_ISP_DBPATH);
+    Parser p = new Parser(cfg);
+    Event e = p.parse(buf);
+    ApacheCombined d = e.getPayload();
+    assertEquals("Milton", d.getSourceAddressCity());
+    Normalized n = e.getNormalized();
+    assertEquals("Milton", n.getSourceAddressCity());
+
+    // Create modified configuration (for DEFERRED)
+    cfg = new ParserCfg();
+    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
+    cfg.setMaxmindIspDbPath(TEST_ISP_DBPATH);
+    cfg.setDeferGeoIpResolution(true);
+    p = new Parser(cfg);
+    e = p.parse(buf);
+    d = e.getPayload();
+    assertEquals("Milton", d.getSourceAddressCity());
+    n = e.getNormalized();
+    assertEquals("Milton", n.getSourceAddressCity());
+  }
+
+  @Test
   public void testParseApacheCombined() throws Exception {
     String buf =
         "\"216.160.83.56\" - - [19/Mar/2019:14:52:39 -0500] \"GET /assets/scripts/main.js?t=t HTTP/1.1\" 200"

@@ -1,7 +1,5 @@
 package com.mozilla.secops.parser;
 
-import com.maxmind.geoip2.model.CityResponse;
-import com.maxmind.geoip2.model.IspResponse;
 import java.io.Serializable;
 
 /**
@@ -14,23 +12,21 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
   private static final long serialVersionUID = 1L;
 
   private String sourceAddress;
-  private String sourceAddressCity;
-  private String sourceAddressCountry;
-  private Double sourceAddressLatitude;
-  private Double sourceAddressLongitude;
-  private String sourceTimeZone;
+  private GeoIP.GeoIPData geoIpData;
 
-  private String sourceAddressIsp;
-  private Integer sourceAddressAsn;
-  private String sourceAddressAsOrg;
+  /** Initialize SourcePayloadBase */
+  public SourcePayloadBase() {
+    geoIpData = new GeoIP.GeoIPData();
+  }
 
   /**
    * Set source address field
    *
-   * <p>If the state value is non-null, this function will also attempt to utilize the parser GeoIP
-   * instance to set the city and country fields.
+   * <p>If the state value is non-null, elements within the parser state such as an initialized
+   * GeoIP object will be used as part of geo-ip resolution.
    *
-   * <p>If n is non-null, the values will also be mirrored into the normalized event fields.*
+   * <p>If n is non-null, the source address value will also be mirrored into the normalized event
+   * field.
    *
    * @param sourceAddress Source address
    * @param state Parser state
@@ -42,60 +38,16 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
     }
     this.sourceAddress = sourceAddress;
 
-    if (state != null) {
-      // If we have parser state attempt to resolve GeoIP information
-      CityResponse cr = state.getParser().geoIp(sourceAddress);
-      if (cr != null) {
-        // Note that even with a valid response, sometimes the city and country fields we want can
-        // be returned as empty strings. If we see empty strings here treat them the same as if they
-        // were null. Also do the same for the ISP related lookups.
-        if (cr.getCity() != null) {
-          if (cr.getCity().getName() != null && !cr.getCity().getName().isEmpty()) {
-            sourceAddressCity = cr.getCity().getName();
-          }
-        }
-        if (cr.getCountry() != null) {
-          if (cr.getCountry().getIsoCode() != null && !cr.getCountry().getIsoCode().isEmpty()) {
-            sourceAddressCountry = cr.getCountry().getIsoCode();
-          }
-        }
-
-        if ((cr.getLocation() != null)
-            && (cr.getLocation().getLatitude() != null)
-            && (cr.getLocation().getLongitude() != null)) {
-          sourceAddressLatitude = cr.getLocation().getLatitude();
-          sourceAddressLongitude = cr.getLocation().getLongitude();
-
-          if (cr.getLocation().getTimeZone() != null && !cr.getLocation().getTimeZone().isEmpty()) {
-            sourceTimeZone = cr.getLocation().getTimeZone();
-          }
-        }
-      }
-
-      IspResponse ir = state.getParser().geoIpIsp(sourceAddress);
-      if (ir != null) {
-        if (ir.getIsp() != null && !ir.getIsp().isEmpty()) {
-          sourceAddressIsp = ir.getIsp();
-        }
-        sourceAddressAsn = ir.getAutonomousSystemNumber();
-        if (ir.getAutonomousSystemOrganization() != null
-            && !ir.getAutonomousSystemOrganization().isEmpty()) {
-          sourceAddressAsOrg = ir.getAutonomousSystemOrganization();
-        }
-      }
+    GeoIP.GeoIPData.GeoResolutionMode mode = GeoIP.GeoIPData.GeoResolutionMode.ON_CREATION;
+    if (state != null && state.getDeferGeoIpResolution()) {
+      mode = GeoIP.GeoIPData.GeoResolutionMode.DEFERRED;
     }
+    geoIpData.setSourceAddress(sourceAddress, mode, state);
 
-    // If our normalized event is non-null, also set information there
+    // If we also have a normalized event object here, also set the source address field
+    // for that object.
     if (n != null) {
-      n.setSourceAddress(sourceAddress);
-      n.setSourceAddressCity(sourceAddressCity);
-      n.setSourceAddressCountry(sourceAddressCountry);
-      n.setSourceAddressLatitude(sourceAddressLatitude);
-      n.setSourceAddressLongitude(sourceAddressLongitude);
-      n.setSourceAddressTimeZone(sourceTimeZone);
-      n.setSourceAddressIsp(sourceAddressIsp);
-      n.setSourceAddressAsn(sourceAddressAsn);
-      n.setSourceAddressAsOrg(sourceAddressAsOrg);
+      n.setSourceAddress(sourceAddress, state);
     }
   }
 
@@ -123,7 +75,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
    * @return Source address city field or null if unset
    */
   public String getSourceAddressCity() {
-    return sourceAddressCity;
+    return geoIpData.getSourceAddressCity();
   }
 
   /**
@@ -132,7 +84,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
    * @return Source address country field or null if unset
    */
   public String getSourceAddressCountry() {
-    return sourceAddressCountry;
+    return geoIpData.getSourceAddressCountry();
   }
 
   /**
@@ -141,7 +93,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
    * @return Latitude or null if unset
    */
   public Double getSourceAddressLatitude() {
-    return sourceAddressLatitude;
+    return geoIpData.getSourceAddressLatitude();
   }
 
   /**
@@ -150,7 +102,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
    * @return Longitude or null if unset
    */
   public Double getSourceAddressLongitude() {
-    return sourceAddressLongitude;
+    return geoIpData.getSourceAddressLongitude();
   }
 
   /**
@@ -159,7 +111,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
    * @return Time zone or null if unset
    */
   public String getSourceAddressTimeZone() {
-    return sourceTimeZone;
+    return geoIpData.getSourceAddressTimeZone();
   }
 
   /**
@@ -168,7 +120,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
    * @return ISP or null if unset
    */
   public String getSourceAddressIsp() {
-    return sourceAddressIsp;
+    return geoIpData.getSourceAddressIsp();
   }
 
   /**
@@ -177,7 +129,7 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
    * @return ASN or null if unset
    */
   public Integer getSourceAddressAsn() {
-    return sourceAddressAsn;
+    return geoIpData.getSourceAddressAsn();
   }
 
   /**
@@ -186,6 +138,6 @@ public abstract class SourcePayloadBase extends PayloadBase implements Serializa
    * @return AS organization or null if unset
    */
   public String getSourceAddressAsOrg() {
-    return sourceAddressAsOrg;
+    return geoIpData.getSourceAddressAsOrg();
   }
 }

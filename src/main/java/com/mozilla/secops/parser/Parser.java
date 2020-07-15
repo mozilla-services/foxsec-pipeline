@@ -473,6 +473,10 @@ public class Parser {
     ParserState state = new ParserState(this);
     state.setGoogleJacksonFactory(googleJacksonFactory);
     state.setObjectMapper(mapper);
+    state.setDeferGeoIpResolution(cfg.getDeferGeoIpResolution());
+    state.setGeoIp(geoip);
+    state.setMaxmindCityDbPath(cfg.getMaxmindCityDbPath());
+    state.setMaxmindIspDbPath(cfg.getMaxmindIspDbPath());
 
     if (input == null) {
       input = "";

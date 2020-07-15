@@ -72,6 +72,12 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
 
   void setMaxmindIspDbPath(String value);
 
+  @Description("Defer GeoIP resolution until lookup in parser")
+  @Default.Boolean(false)
+  Boolean getDeferGeoIpResolution();
+
+  void setDeferGeoIpResolution(Boolean value);
+
   @Description("Enable XFF address selector; comma delimited list of trusted CIDR format subnets")
   String getXffAddressSelector();
 
