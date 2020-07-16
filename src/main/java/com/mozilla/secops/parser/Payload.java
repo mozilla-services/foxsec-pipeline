@@ -52,6 +52,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     PHABRICATOR_AUDIT,
     /** Private Relay */
     PRIVATE_RELAY,
+    /** GCP VPC flow logs */
+    GCP_VPC_FLOW,
     /** Raw */
     RAW
   }

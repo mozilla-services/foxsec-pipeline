@@ -2437,6 +2437,7 @@ public class ParserTest {
     assertEquals(PrivateRelay.EventType.EMAIL_RELAY, d.getEventType());
   }
 
+  @Test
   public void testPrivateRelayRpEvent() throws Exception {
     String buf =
         "{\"insertId\":\"2gx64yb2zqdscfkfw\",\"jsonPayload\":{\"Logger\":\"fx-private-rela"
@@ -2469,5 +2470,37 @@ public class ParserTest {
     assertEquals("fxa_rp_event", d.getMsg());
     assertEquals("00000000000000000000000000000000", d.getUid());
     assertEquals(PrivateRelay.EventType.FXA_RP_EVENT, d.getEventType());
+  }
+
+  @Test
+  public void testGcpVpcFlow() throws Exception {
+    String buf =
+        "{\"insertId\":\"00000000000000\",\"jsonPayload\":{\"bytes_sent\":\"100875973\",\"conn"
+            + "ection\":{\"dest_ip\":\"10.0.0.1\",\"dest_port\":48478,\"protocol\":6,\"src_ip\":\"19"
+            + "2.168.1.1\",\"src_port\":22},\"dest_instance\":{},\"dest_location\":{\"asn\":15169,\""
+            + "continent\":\"America\",\"country\":\"usa\"},\"dest_vpc\":{},\"end_time\":\"2020-07-1"
+            + "6T14:59:56.802008850Z\",\"packets_sent\":\"5903\",\"reporter\":\"SRC\",\"rtt_msec\":\""
+            + "0\",\"src_instance\":{\"project_id\":\"moz\",\"region\":\"us-west1\",\"vm_name\":\"in"
+            + "stancename\",\"zone\":\"us-west1-b\"},\"src_location\":{},\"src_vpc\":{\"project_id\""
+            + ":\"moz\",\"subnetwork_name\":\"subnetwork\",\"vpc_name\":\"default\"},\"start_time\":"
+            + "\"2020-07-16T14:57:08.768882451Z\"},\"logName\":\"projects/moz/logs/compute.googleapi"
+            + "s.com%2Fvpc_flows\",\"receiveTimestamp\":\"2020-07-16T15:00:19.600881658Z\",\"resourc"
+            + "e\":{\"labels\":{\"location\":\"us-west1-b\",\"project_id\":\"moz\",\"subnetwork_id\""
+            + ":\"9999999999999999999\",\"subnetwork_name\":\"subnetwork\"},\"type\":\"gce_subnetwor"
+            + "k\"},\"timestamp\":\"2020-07-16T15:00:19.600881658Z\"}";
+
+    Parser p = getTestParser();
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.GCP_VPC_FLOW, e.getPayloadType());
+
+    GcpVpcFlow d = e.getPayload();
+    assertNotNull(d);
+    assertEquals("192.168.1.1", d.getSrcIp());
+    assertEquals(22, (int) d.getSrcPort());
+    assertEquals("10.0.0.1", d.getDestIp());
+    assertEquals(48478, (int) d.getDestPort());
+    assertEquals(100875973, (int) d.getBytesSent());
+    assertEquals("instancename", d.getSrcInstanceName());
   }
 }
