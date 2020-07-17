@@ -190,7 +190,7 @@ public class Pioneer implements Serializable {
                           alert.addMetadata(
                               AlertMeta.Key.END, events.get(j).getTimestamp().toString());
                           alert.addMetadata(
-                              AlertMeta.Key.INSTANCENAME, sample.getSrcInstanceName());
+                              AlertMeta.Key.INSTANCE_NAME, sample.getSrcInstanceName());
                           alert.setSummary(
                               String.format(
                                   "%s data exfiltration %s:%d -> %s:%d (%s)",

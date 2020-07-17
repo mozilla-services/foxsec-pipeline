@@ -147,7 +147,7 @@ public class AlertMeta implements Serializable {
     IDENTITY_KEY("identity_key"),
     IDENTITY_UNTRACKED("identity_untracked"),
     INDICATOR("indicator"),
-    INSTANCENAME("instancename"),
+    INSTANCE_NAME("instance_name"),
     IPREPD_EXEMPT("iprepd_exempt"),
     IPREPD_EXEMPT_CREATED_BY("iprepd_exempt_created_by"),
     IPREPD_SUPPRESS_RECOVERY("iprepd_suppress_recovery"),

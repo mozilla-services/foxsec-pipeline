@@ -39,7 +39,7 @@ const (
 	META_IDENTITY_KEY                      = "identity_key"
 	META_IDENTITY_UNTRACKED                = "identity_untracked"
 	META_INDICATOR                         = "indicator"
-	META_INSTANCENAME                      = "instancename"
+	META_INSTANCE_NAME                     = "instance_name"
 	META_IPREPD_EXEMPT                     = "iprepd_exempt"
 	META_IPREPD_EXEMPT_CREATED_BY          = "iprepd_exempt_created_by"
 	META_IPREPD_SUPPRESS_RECOVERY          = "iprepd_suppress_recovery"

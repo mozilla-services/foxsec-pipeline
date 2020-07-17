@@ -77,7 +77,7 @@ public class TestPioneer {
                   assertEquals("1000009000", a.getMetadataValue(AlertMeta.Key.BYTES));
                   assertEquals("2020-01-01T00:02:00.000Z", a.getMetadataValue(AlertMeta.Key.START));
                   assertEquals("2020-01-01T00:18:00.000Z", a.getMetadataValue(AlertMeta.Key.END));
-                  assertEquals("instancename", a.getMetadataValue(AlertMeta.Key.INSTANCENAME));
+                  assertEquals("instancename", a.getMetadataValue(AlertMeta.Key.INSTANCE_NAME));
                   alertcnt++;
                 }
                 totalcnt++;
