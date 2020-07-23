@@ -110,7 +110,9 @@ func handleAlertConfirm(ctx context.Context, callback common.InteractionData, db
 	}
 
 	if !alert.IsStatus(common.ALERT_NEW) {
-		response.Text = fmt.Sprintf("Thank you for responding! Alert has already been marked as %s.\nalert id: %s", alert.GetMetadata(common.META_STATUS), alert.Id)
+		alertStatus := alert.GetMetadata(common.META_STATUS)
+		log.Infof("Alert %s has already been marked as %s", alert.Id, alertStatus)
+		response.Text = fmt.Sprintf("Thank you for responding! Alert has already been marked as %s.\nalert id: %s", alertStatus, alert.Id)
 		return response, nil
 	}
 
@@ -121,6 +123,7 @@ func handleAlertConfirm(ctx context.Context, callback common.InteractionData, db
 			log.Errorf("Error marking alert (%s) as acknowledged. Err: %s", alert.Id, err)
 			return response, err
 		}
+		log.Infof("Alert %s has been acknowledged", alert.Id)
 		response.Text = fmt.Sprintf("Thank you for responding! Alert has been acknowledged.\nalert id: %s", alert.Id)
 	} else if callback.ActionName == "alert_no" {
 		// Override `escalate_to` to use the default (which should be the security teams main pagerduty email)
@@ -136,6 +139,7 @@ func handleAlertConfirm(ctx context.Context, callback common.InteractionData, db
 			log.Errorf("Error updating alert as escalated (%s). Err: %s", alert.Id, err)
 			return response, err
 		}
+		log.Infof("Alert %s has been escalated", alert.Id)
 		response.Text = fmt.Sprintf("Thank you for responding! Alert has been escalated.\nalert id: %s", alert.Id)
 	}
 
