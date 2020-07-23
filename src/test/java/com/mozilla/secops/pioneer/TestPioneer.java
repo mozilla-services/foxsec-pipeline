@@ -71,7 +71,8 @@ public class TestPioneer {
                   assertEquals("exfiltration", a.getSubcategory());
                   assertEquals("exfiltration", a.getNotifyMergeKey());
                   assertEquals(
-                      "test data exfiltration 192.168.1.1:22 -> 10.0.0.1:40000 (instancename)",
+                      "test data exfiltration 192.168.1.1:22 -> 10.0.0.1:40000 "
+                          + "1000009000 bytes (instancename)",
                       a.getSummary());
                   assertEquals("192.168.1.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("1000009000", a.getMetadataValue(AlertMeta.Key.BYTES));
