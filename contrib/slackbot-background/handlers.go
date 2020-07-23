@@ -106,7 +106,7 @@ func handleAlertConfirm(ctx context.Context, callback common.InteractionData, db
 
 	response := &slack.Msg{
 		Text:            "Error responding; please contact SecOps (secops@mozilla.com)",
-		ReplaceOriginal: true,
+		ReplaceOriginal: false,
 	}
 
 	if !alert.IsStatus(common.ALERT_NEW) {
