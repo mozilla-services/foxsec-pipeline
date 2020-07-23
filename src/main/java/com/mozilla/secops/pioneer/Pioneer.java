@@ -193,12 +193,13 @@ public class Pioneer implements Serializable {
                               AlertMeta.Key.INSTANCE_NAME, sample.getSrcInstanceName());
                           alert.setSummary(
                               String.format(
-                                  "%s data exfiltration %s:%d -> %s:%d (%s)",
+                                  "%s data exfiltration %s:%d -> %s:%d %d bytes (%s)",
                                   monitoredResource,
                                   sample.getSrcIp(),
                                   sample.getSrcPort(),
                                   sample.getDestIp(),
                                   sample.getDestPort(),
+                                  bytes,
                                   sample.getSrcInstanceName()));
                           c.output(alert);
                           break;
