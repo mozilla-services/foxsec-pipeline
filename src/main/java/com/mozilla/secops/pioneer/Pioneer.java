@@ -63,6 +63,7 @@ public class Pioneer implements Serializable {
     private final int thresholdBytes;
     private final int thresholdMillis;
     private final String monitoredResource;
+    private final Boolean slackChannelNotification;
 
     // The gap duration for us to consider a flow session as expired
     private static final Duration SESSION_GAP_DURATION = Duration.standardMinutes(30);
@@ -83,6 +84,7 @@ public class Pioneer implements Serializable {
       thresholdBytes = options.getExfiltrationThresholdBytes();
       thresholdMillis = options.getExfiltrationThresholdSeconds() * 1000;
       monitoredResource = options.getMonitoredResourceIndicator();
+      slackChannelNotification = options.getSlackChannelNotification();
     }
 
     @Override
@@ -193,8 +195,9 @@ public class Pioneer implements Serializable {
                               AlertMeta.Key.INSTANCE_NAME, sample.getSrcInstanceName());
                           alert.setSummary(
                               String.format(
-                                  "%s data exfiltration %s:%d -> %s:%d %d bytes (%s)",
+                                  "%s%s data exfiltration %s:%d -> %s:%d %d bytes (%s)",
                                   monitoredResource,
+                                  slackChannelNotification ? " <!channel>" : "",
                                   sample.getSrcIp(),
                                   sample.getSrcPort(),
                                   sample.getDestIp(),
@@ -262,6 +265,12 @@ public class Pioneer implements Serializable {
     Integer getExfiltrationThresholdSeconds();
 
     void setExfiltrationThresholdSeconds(Integer value);
+
+    @Description("If true, include @channel notification in Slack messages")
+    @Default.Boolean(true)
+    Boolean getSlackChannelNotification();
+
+    void setSlackChannelNotification(Boolean value);
   }
 
   /**
