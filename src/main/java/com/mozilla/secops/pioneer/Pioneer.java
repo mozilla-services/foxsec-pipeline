@@ -43,6 +43,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.format.PeriodFormat;
 
 /** Pioneer analysis pipeline */
 public class Pioneer implements Serializable {
@@ -63,6 +64,7 @@ public class Pioneer implements Serializable {
     private final int thresholdBytes;
     private final int thresholdMillis;
     private final String monitoredResource;
+    private final Boolean slackChannelNotification;
 
     // The gap duration for us to consider a flow session as expired
     private static final Duration SESSION_GAP_DURATION = Duration.standardMinutes(30);
@@ -70,8 +72,11 @@ public class Pioneer implements Serializable {
     // How often to fire early panes
     private static final Duration SESSION_PANE_TRIGGER_DELAY = Duration.standardMinutes(5);
 
+    /** {@inheritDoc} */
     public String getTransformDoc() {
-      return "";
+      return String.format(
+          "Alert if %d bytes of data are transferred from an SSH instance " + "over IAP in %s",
+          thresholdBytes, PeriodFormat.getDefault().print(SESSION_GAP_DURATION.toPeriod()));
     }
 
     /**
@@ -83,6 +88,7 @@ public class Pioneer implements Serializable {
       thresholdBytes = options.getExfiltrationThresholdBytes();
       thresholdMillis = options.getExfiltrationThresholdSeconds() * 1000;
       monitoredResource = options.getMonitoredResourceIndicator();
+      slackChannelNotification = options.getSlackChannelNotification();
     }
 
     @Override
@@ -193,8 +199,9 @@ public class Pioneer implements Serializable {
                               AlertMeta.Key.INSTANCE_NAME, sample.getSrcInstanceName());
                           alert.setSummary(
                               String.format(
-                                  "%s data exfiltration %s:%d -> %s:%d %d bytes (%s)",
+                                  "%s%s data exfiltration %s:%d -> %s:%d %d bytes (%s)",
                                   monitoredResource,
+                                  slackChannelNotification ? " <!channel>" : "",
                                   sample.getSrcIp(),
                                   sample.getSrcPort(),
                                   sample.getDestIp(),
@@ -262,6 +269,12 @@ public class Pioneer implements Serializable {
     Integer getExfiltrationThresholdSeconds();
 
     void setExfiltrationThresholdSeconds(Integer value);
+
+    @Description("If true, include @channel notification in Slack messages")
+    @Default.Boolean(true)
+    Boolean getSlackChannelNotification();
+
+    void setSlackChannelNotification(Boolean value);
   }
 
   /**
@@ -273,7 +286,7 @@ public class Pioneer implements Serializable {
    */
   public static String buildConfigurationTick(PioneerOptions options) throws IOException {
     CfgTickBuilder b = new CfgTickBuilder().includePipelineOptions(options);
-
+    b.withTransformDoc(new PioneerExfiltration(options));
     return b.build();
   }
 
