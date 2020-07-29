@@ -152,7 +152,6 @@ public class AlertMeta implements Serializable {
     IPREPD_EXEMPT_CREATED_BY("iprepd_exempt_created_by"),
     IPREPD_SUPPRESS_RECOVERY("iprepd_suppress_recovery"),
     KM_DISTANCE("km_distance"),
-    MASKED_SUMMARY("masked_summary"),
     MATCHED_METADATA_KEY("matched_metadata_key"),
     MATCHED_METADATA_VALUE("matched_metadata_value"),
     MATCHED_OBJECT("matched_object"),
