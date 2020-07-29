@@ -44,7 +44,6 @@ const (
 	META_IPREPD_EXEMPT_CREATED_BY          = "iprepd_exempt_created_by"
 	META_IPREPD_SUPPRESS_RECOVERY          = "iprepd_suppress_recovery"
 	META_KM_DISTANCE                       = "km_distance"
-	META_MASKED_SUMMARY                    = "masked_summary"
 	META_MATCHED_METADATA_KEY              = "matched_metadata_key"
 	META_MATCHED_METADATA_VALUE            = "matched_metadata_value"
 	META_MATCHED_OBJECT                    = "matched_object"

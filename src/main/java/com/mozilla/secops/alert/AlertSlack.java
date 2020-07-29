@@ -84,9 +84,6 @@ public class AlertSlack {
   /**
    * Send alert to slack catchall channel
    *
-   * <p>If a masked summary is present in the alert, this function will prefer that summary to the
-   * primary summary field.
-   *
    * @param a Alert
    * @return Boolean on whether the alert was sent successfully
    */
