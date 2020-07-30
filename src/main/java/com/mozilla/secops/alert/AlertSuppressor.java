@@ -3,9 +3,14 @@ package com.mozilla.secops.alert;
 import java.io.Serializable;
 import org.apache.beam.sdk.state.StateSpec;
 import org.apache.beam.sdk.state.StateSpecs;
+import org.apache.beam.sdk.state.TimeDomain;
+import org.apache.beam.sdk.state.Timer;
+import org.apache.beam.sdk.state.TimerSpec;
+import org.apache.beam.sdk.state.TimerSpecs;
 import org.apache.beam.sdk.state.ValueState;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
+import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +53,9 @@ public class AlertSuppressor extends DoFn<KV<String, Alert>, Alert> {
   @StateId("counter")
   private final StateSpec<ValueState<AlertSuppressionState>> counterState = StateSpecs.value();
 
+  @TimerId("expiryState")
+  private final TimerSpec counterExpiry = TimerSpecs.timer(TimeDomain.PROCESSING_TIME);
+
   /**
    * Initialize new AlertSuppressor
    *
@@ -70,9 +78,24 @@ public class AlertSuppressor extends DoFn<KV<String, Alert>, Alert> {
     return true;
   }
 
+  private void updateTimer(Timer timer) {
+    // Update the expiry timer for the state entry. This is only used to clear old state we
+    // don't want anymore, so to be safe set it to one minute beyond the actual expiry time
+    // for the entry.
+    timer.offset(Duration.millis(expiry + 60000L)).setRelative();
+  }
+
+  @OnTimer("expiryState")
+  public void onExpiry(
+      OnTimerContext c, @StateId("counter") ValueState<AlertSuppressionState> counter) {
+    counter.clear();
+  }
+
   @ProcessElement
   public void processElement(
-      ProcessContext c, @StateId("counter") ValueState<AlertSuppressionState> counter) {
+      ProcessContext c,
+      @StateId("counter") ValueState<AlertSuppressionState> counter,
+      @TimerId("expiryState") Timer counterExpiry) {
     String key = c.element().getKey();
     Alert a = c.element().getValue();
 
@@ -89,9 +112,12 @@ public class AlertSuppressor extends DoFn<KV<String, Alert>, Alert> {
     if (ss == null) {
       // This is a new alert, set values in state and emit
       counter.write(newss);
+      updateTimer(counterExpiry);
       c.output(a);
       return;
     }
+
+    updateTimer(counterExpiry);
 
     if (isExpired(ss, newss)) {
       // If the state data is too old for consideration, update state with new information
