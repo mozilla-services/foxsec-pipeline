@@ -56,6 +56,13 @@ public class TestCustoms {
     state.initialize();
     state.deleteAll();
     state.done();
+    state =
+        new State(
+            new DatastoreStateInterface(
+                PrivateRelayForward.DATASTORE_KIND, PrivateRelayForward.DATASTORE_NAMESPACE));
+    state.initialize();
+    state.deleteAll();
+    state.done();
   }
 
   public TestCustoms() {}
@@ -653,7 +660,6 @@ public class TestCustoms {
             x -> {
               int amcnt = 0;
               for (Alert a : x) {
-                System.out.println(a.toJSON());
                 if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                     .equals("activity_monitor")) {
                   assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
@@ -668,6 +674,71 @@ public class TestCustoms {
                 }
               }
               assertEquals(1, amcnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void privateRelayForwardTest() throws Exception {
+    testEnv();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/privaterelay/privaterelay1.txt");
+    String[] eb2 = TestUtil.getTestInputArray("/testdata/privaterelay/privaterelay2.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkTo(new Instant(120000L))
+            .advanceProcessingTime(Duration.standardSeconds(120))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnablePrivateRelayForward(true);
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int totalcnt = 0;
+              for (Alert a : x) {
+                System.out.println(a.toJSON());
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("private_relay_forward")) {
+                  if (a.getSummary().contains("11111111111111111111111111111111")) {
+                    assertEquals(
+                        "test private relay address hash mismatch for 11111111111111111111111111111111",
+                        a.getSummary());
+                    assertEquals(
+                        "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                        a.getMetadataValue(AlertMeta.Key.REAL_ADDRESS_HASH_ACTUAL));
+                    assertEquals(
+                        "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                        a.getMetadataValue(AlertMeta.Key.REAL_ADDRESS_HASH_EXPECTED));
+                    assertEquals(
+                        "11111111111111111111111111111111", a.getMetadataValue(AlertMeta.Key.UID));
+                  } else if (a.getSummary().contains("00000000000000000000000000000000")) {
+                    assertEquals(
+                        "test private relay address hash mismatch for 00000000000000000000000000000000",
+                        a.getSummary());
+                    assertEquals(
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        a.getMetadataValue(AlertMeta.Key.REAL_ADDRESS_HASH_ACTUAL));
+                    assertEquals(
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        a.getMetadataValue(AlertMeta.Key.REAL_ADDRESS_HASH_EXPECTED));
+                    assertEquals(
+                        "00000000000000000000000000000000", a.getMetadataValue(AlertMeta.Key.UID));
+                  }
+                } else {
+                  fail("unexpected category");
+                }
+                totalcnt++;
+              }
+              assertEquals(2, totalcnt);
               return null;
             });
 

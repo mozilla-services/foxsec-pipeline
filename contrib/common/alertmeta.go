@@ -60,6 +60,8 @@ const (
 	META_PROJECT_ID                        = "project_id"
 	META_PROJECT_NUMBER                    = "project_number"
 	META_PROVIDER                          = "provider"
+	META_REAL_ADDRESS_HASH_ACTUAL          = "real_address_hash_actual"
+	META_REAL_ADDRESS_HASH_EXPECTED        = "real_address_hash_expected"
 	META_REQUEST_THRESHOLD                 = "request_threshold"
 	META_RESOURCE                          = "resource"
 	META_RESTRICTED_VALUE                  = "restricted_value"

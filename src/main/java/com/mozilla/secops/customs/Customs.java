@@ -9,9 +9,12 @@ import com.mozilla.secops.input.Input;
 import com.mozilla.secops.metrics.CfgTickBuilder;
 import com.mozilla.secops.metrics.CfgTickProcessor;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.EventFilter;
+import com.mozilla.secops.parser.EventFilterRule;
 import com.mozilla.secops.parser.FxaAuth;
 import com.mozilla.secops.parser.ParserCfg;
 import com.mozilla.secops.parser.ParserDoFn;
+import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
@@ -34,6 +37,8 @@ import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.TupleTagList;
 import org.joda.time.Duration;
 
 /** Implements various analysis heuristics on {@link com.mozilla.secops.parser.FxaAuth} streams */
@@ -53,6 +58,7 @@ public class Customs implements Serializable {
   public static final String CATEGORY_LOGIN_FAILURE_AT_RISK_ACCOUNT =
       "login_failure_at_risk_account";
   public static final String CATEGORY_ACTIVITY_MONITOR = "activity_monitor";
+  public static final String CATEGORY_PRIVATE_RELAY_FORWARD = "private_relay_forward";
 
   /** Used by keyEvents */
   private enum KeyType {
@@ -383,6 +389,12 @@ public class Customs implements Serializable {
     Boolean getEnableActivityMonitor();
 
     void setEnableActivityMonitor(Boolean value);
+
+    @Description("Enable private relay forward analysis; PrivateRelayForward")
+    @Default.Boolean(false)
+    Boolean getEnablePrivateRelayForward();
+
+    void setEnablePrivateRelayForward(Boolean value);
   }
 
   /**
@@ -428,6 +440,10 @@ public class Customs implements Serializable {
 
     if (options.getEnableSummaryAnalysis()) {
       b.withTransformDoc(new CustomsSummary(options));
+    }
+
+    if (options.getEnablePrivateRelayForward()) {
+      b.withTransformDoc(new PrivateRelayForward(options));
     }
 
     return b.build();
@@ -562,12 +578,29 @@ public class Customs implements Serializable {
    */
   public static PCollection<Alert> executePipeline(
       Pipeline p, PCollection<String> input, CustomsOptions options) throws IOException {
-    PCollection<Event> events =
-        input
-            .apply(
-                "parse",
-                ParDo.of(new ParserDoFn().withConfiguration(ParserCfg.fromInputOptions(options))))
-            .apply("prefilter", new CustomsPreFilter());
+    EventFilter filter = new EventFilter().passConfigurationTicks();
+    filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.PRIVATE_RELAY));
+    filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.FXAAUTH));
+
+    PCollection<Event> inputEvents =
+        input.apply(
+            "parse",
+            ParDo.of(
+                new ParserDoFn()
+                    .withConfiguration(ParserCfg.fromInputOptions(options))
+                    .withInlineEventFilter(filter)));
+
+    // Run input events through our prefilter, which will also split the events up based on
+    // type
+    PCollectionTuple inputTuple =
+        inputEvents.apply(
+            "prefilter",
+            ParDo.of(new CustomsPreFilter())
+                .withOutputTags(
+                    CustomsPreFilter.TAG_FXA_AUTH_EVENTS,
+                    TupleTagList.of(CustomsPreFilter.TAG_RELAY_EVENTS)));
+    PCollection<Event> events = inputTuple.get(CustomsPreFilter.TAG_FXA_AUTH_EVENTS);
+    PCollection<Event> relayEvents = inputTuple.get(CustomsPreFilter.TAG_RELAY_EVENTS);
 
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
     CollectionInfo ci = new CollectionInfo();
@@ -612,6 +645,12 @@ public class Customs implements Serializable {
 
     if (options.getEnableSummaryAnalysis()) {
       resultsList = resultsList.and(events.apply("summary", new CustomsSummary(options)));
+    }
+
+    if (options.getEnablePrivateRelayForward()) {
+      resultsList =
+          resultsList.and(
+              relayEvents.apply("private relay forward", new PrivateRelayForward(options)));
     }
 
     // If configuration ticks were enabled, enable the processor here too
