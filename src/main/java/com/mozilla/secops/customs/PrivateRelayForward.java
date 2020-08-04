@@ -185,8 +185,10 @@ public class PrivateRelayForward extends PTransform<PCollection<Event>, PCollect
                         return;
                       }
                       if (prfs == null) {
-                        // No state for the UID was found, so initialize a new state instance but
-                        // don't set the real address value which will indicate it is new
+                        // No state for the UID was found. Initialize a brand new state instance
+                        // and leave the real address value unset (null). Code later on in this
+                        // function can tell it was a brand new state value be examining the value
+                        // of this field, if it's null it was new.
                         prfs = new PrivateRelayForwardState();
                         prfs.setUid(uid);
                       }
