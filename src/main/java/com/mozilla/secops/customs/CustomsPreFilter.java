@@ -11,7 +11,7 @@ import org.apache.beam.sdk.values.TupleTag;
  * Basic filtering of ingested events prior to analysis application
  *
  * <p>This DoFn will split events up based on type. Configuration ticks are emitted in the main
- * output collection with contains FxA authentication server events.
+ * output collection which contains FxA authentication server events.
  *
  * <p>For FXAAUTH events, this DoFn will filter any events from the input collection that are not
  * returned in {@link Customs#featureSummaryRegistration}.
