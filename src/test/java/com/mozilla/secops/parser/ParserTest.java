@@ -1211,6 +1211,36 @@ public class ParserTest {
   }
 
   @Test
+  public void testCloudtrailRawGetSessionToken() throws Exception {
+    String buf =
+        "{\"awsRegion\": \"us-east-1\" ,\"eventID\": \"000000000-000000\", "
+            + "\"eventName\": \"GetSessionToken\", \"eventSource\": \"sts.amazonaws.com\", "
+            + "\"eventTime\": \"2020-08-17T18:54:15Z\", \"eventType\": \"AwsApiCall\", "
+            + "\"eventVersion\": \"1.05\", \"recipientAccountId\": \"XXXXXXXX\", "
+            + "\"requestID\": \"ABCD-EFGH\", \"sourceIPAddress\": \"127.0.0.1\", "
+            + "\"userAgent\": \"aws-sdk-go/1.25.40 (go1.13.4; linux; amd64)\", "
+            + "\"userIdentity\": {\"accessKeyId\": \"ACCESSKEYID\", \"accountId\": \"XXXXXXXXXXXXX\","
+            + "\"arn\": \"arn:aws:iam::XXXXXXXXXX:user/riker\", \"principalId\": \"XXXXXXXXXXXX\","
+            + "\"type\": \"IAMUser\",\"userName\": \"riker\"}}";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2020-08-17T18:54:15.000Z", e.getTimestamp().toString());
+    Cloudtrail ct = e.getPayload();
+    assertNotNull(ct);
+    assertEquals("riker", ct.getUser());
+    assertEquals("127.0.0.1", ct.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("riker", n.getSubjectUser());
+    assertEquals("127.0.0.1", n.getSourceAddress());
+    assertEquals("XXXXXXXX", n.getObject());
+  }
+
+  @Test
   public void testCloudtrailStackdriverAuthConsoleLogin() throws Exception {
     String buf =
         "{\"insertId\": \"x1958zfskvv0x\", \"jsonPayload\": "
@@ -1292,6 +1322,41 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH));
     assertEquals("10.0.0.1", n.getSourceAddress());
     assertEquals("1234567890", n.getObject());
+  }
+
+  @Test
+  public void testCloudtrailStackDriverGetSessionToken() throws Exception {
+    String buf =
+        "{\"insertId\": \"ak64xfucxo62\",\"jsonPayload\":"
+            + "{\"awsRegion\": \"us-east-1\" ,\"eventID\": \"000000000-000000\", "
+            + "\"eventName\": \"GetSessionToken\", \"eventSource\": \"sts.amazonaws.com\", "
+            + "\"eventTime\": \"2020-08-17T18:54:15Z\", \"eventType\": \"AwsApiCall\", "
+            + "\"eventVersion\": \"1.05\", \"recipientAccountId\": \"XXXXXXXX\", "
+            + "\"requestID\": \"ABCD-EFGH\", \"sourceIPAddress\": \"127.0.0.1\", "
+            + "\"userAgent\": \"aws-sdk-go/1.25.40 (go1.13.4; linux; amd64)\", "
+            + "\"userIdentity\": {\"accessKeyId\": \"ACCESSKEYID\", \"accountId\": \"XXXXXXXXXXXXX\","
+            + "\"arn\": \"arn:aws:iam::XXXXXXXXXX:user/riker\", \"principalId\": \"XXXXXXXXXXXX\","
+            + "\"type\": \"IAMUser\",\"userName\": \"riker\"}},"
+            + "\"logName\": \"projects/foxsec-pipeline-ingestion/logs/cloudtrail-streamer\","
+            + "\"receiveTimestamp\": \"2020-08-17T19:06:34.325105975Z\","
+            + "\"resource\": {\"labels\": {\"project_id\": \"foxsec-pipeline-ingestion\"},"
+            + "\"type\": \"project\"}, \"timestamp\": \"2020-08-17T19:06:34.206199754Z\"}";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2020-08-17T18:54:15.000Z", e.getTimestamp().toString());
+    Cloudtrail ct = e.getPayload();
+    assertNotNull(ct);
+    assertEquals("riker", ct.getUser());
+    assertEquals("127.0.0.1", ct.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("riker", n.getSubjectUser());
+    assertEquals("127.0.0.1", n.getSourceAddress());
+    assertEquals("XXXXXXXX", n.getObject());
   }
 
   @Test

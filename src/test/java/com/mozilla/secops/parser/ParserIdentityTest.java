@@ -86,6 +86,48 @@ public class ParserIdentityTest {
   }
 
   @Test
+  public void testCloudtrailStackdriverGetSessionTokenWithIdentity() throws Exception {
+    String buf =
+        "{\"insertId\": \"ak64xfucxo62\",\"jsonPayload\":"
+            + "{\"awsRegion\": \"us-east-1\" ,\"eventID\": \"000000000-000000\", "
+            + "\"eventName\": \"GetSessionToken\", \"eventSource\": \"sts.amazonaws.com\", "
+            + "\"eventTime\": \"2020-08-17T18:54:15Z\", \"eventType\": \"AwsApiCall\", "
+            + "\"eventVersion\": \"1.05\", \"recipientAccountId\": \"123456789\", "
+            + "\"requestID\": \"ABCD-EFGH\", \"sourceIPAddress\": \"127.0.0.1\", "
+            + "\"userAgent\": \"aws-sdk-go/1.25.40 (go1.13.4; linux; amd64)\", "
+            + "\"userIdentity\": {\"accessKeyId\": \"ACCESSKEYID\", \"accountId\": \"XXXXXXXXXXXXX\","
+            + "\"arn\": \"arn:aws:iam::XXXXXXXXXX:user/riker\", \"principalId\": \"XXXXXXXXXXXX\","
+            + "\"type\": \"IAMUser\",\"userName\": \"riker\"}},"
+            + "\"logName\": \"projects/foxsec-pipeline-ingestion/logs/cloudtrail-streamer\","
+            + "\"receiveTimestamp\": \"2020-08-17T19:06:34.325105975Z\","
+            + "\"resource\": {\"labels\": {\"project_id\": \"foxsec-pipeline-ingestion\"},"
+            + "\"type\": \"project\"}, \"timestamp\": \"2020-08-17T19:06:34.206199754Z\"}";
+
+    IdentityManager mgr = IdentityManager.load("/testdata/identitymanager.json");
+    Parser p = new Parser();
+    p.setIdentityManager(mgr);
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    Cloudtrail ct = e.getPayload();
+    assertNotNull(ct);
+    assertEquals("riker", ct.getUser());
+    assertEquals("127.0.0.1", ct.getSourceAddress());
+    assertNull(ct.getSourceAddressCity());
+    assertNull(ct.getSourceAddressCountry());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("riker", n.getSubjectUser());
+    assertEquals("127.0.0.1", n.getSourceAddress());
+    assertEquals("wriker@mozilla.com", n.getSubjectUserIdentity());
+    assertEquals("riker-vacationing-on-risa", n.getObject());
+    assertNull(n.getSourceAddressCity());
+    assertNull(n.getSourceAddressCountry());
+  }
+
+  @Test
   public void testDuopullStackdriverAdminLoginWithIdentity() throws Exception {
     String buf =
         "{\"insertId\": \"gh39djdfyz4lya\",\"jsonPayload\": {\"Fields\": {\"event_object\": null,"

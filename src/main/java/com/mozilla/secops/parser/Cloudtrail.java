@@ -151,7 +151,8 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
       }
     }
 
-    if (event.getEventName().equals("AssumeRole")) {
+    if (event.getEventName().equals("AssumeRole")
+        || event.getEventName().equals("GetSessionToken")) {
       if (event.getUserType() != null
           && event.getUserType().equals("IAMUser")
           && event.getErrorCode() == null) {
