@@ -18,56 +18,42 @@ import (
 )
 
 var (
-	globalConfig Config
-	KEYNAME      string
 	PROJECT_ID   string
+	pubsubClient *pubsub.Client
+	config       = &common.Configuration{}
 
 	// dirty hack to disable init in unit tests
 	_testing = false
 )
 
 func init() {
+	mozlogrus.Enable("slackbot-http")
 	if _testing {
 		return
 	}
-	mozlogrus.Enable("slackbot-http")
-	KEYNAME = os.Getenv("KMS_KEYNAME")
 	PROJECT_ID = os.Getenv("GCP_PROJECT")
 	InitConfig()
 }
 
-type Config struct {
-	pubsubClient       *pubsub.Client
-	slackSigningSecret string
-	triggerTopicName   string
-}
-
 func InitConfig() {
-	kms, err := common.NewKMSClient()
+	log.Info("Starting up...")
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		log.Fatal("$CONFIG_PATH must be set.")
+	}
+	err := config.LoadFrom(configPath)
 	if err != nil {
-		log.Fatalf("Could not create kms client. Err: %s", err)
+		log.Fatalf("Could not load config file from `%s`: %s", configPath, err)
 	}
 
-	globalConfig.slackSigningSecret, err = kms.DecryptEnvVar(KEYNAME, "SLACK_SIGNING_SECRET")
-	if err != nil {
-		log.Fatalf("Could not decrypt slack signing secret. Err: %s", err)
-	}
-
-	globalConfig.pubsubClient, err = pubsub.NewClient(context.Background(), PROJECT_ID)
-	if err != nil {
-		log.Fatalf("Could not create pubsub client. Err: %s", err)
-	}
-
-	globalConfig.triggerTopicName = os.Getenv("TRIGGER_TOPIC_NAME")
-
-	topic := globalConfig.pubsubClient.Topic(globalConfig.triggerTopicName)
+	topic := pubsubClient.Topic(config.SlackbotTriggerTopicName)
 	ok, err := topic.Exists(context.Background())
 	if err != nil {
-		log.Errorf("Error checking whether topic (%s) exists. Err: %s", globalConfig.triggerTopicName, err)
+		log.Errorf("Error checking whether topic (%s) exists. Err: %s", config.SlackbotTriggerTopicName, err)
 		return
 	}
 	if !ok {
-		log.Fatalf("Topic `%s` does not exist.", globalConfig.triggerTopicName)
+		log.Fatalf("Topic `%s` does not exist.", config.SlackbotTriggerTopicName)
 	}
 }
 
@@ -85,7 +71,7 @@ func InteractionCallbackParse(reqBody []byte) (*slack.InteractionCallback, error
 
 func verifySignature(r *http.Request) ([]byte, error) {
 	// Check signature
-	sv, err := slack.NewSecretsVerifier(r.Header, globalConfig.slackSigningSecret)
+	sv, err := slack.NewSecretsVerifier(r.Header, config.SlackSigningSecret)
 	if err != nil {
 		log.Errorf("Error creating secrets verifier: %s", err)
 		return nil, err
@@ -143,7 +129,7 @@ func SlackbotHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if data != nil {
-		topic := globalConfig.pubsubClient.Topic(globalConfig.triggerTopicName)
+		topic := pubsubClient.Topic(config.SlackbotTriggerTopicName)
 		defer topic.Stop()
 
 		psmsg, err := data.ToPubSubMessage()

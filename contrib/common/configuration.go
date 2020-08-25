@@ -32,8 +32,11 @@ type Configuration struct {
 	AlertEscalationTTL     time.Duration `yaml:"alert_escalation_ttl"`
 	EmergencyCcEmail       string        `yaml:"emergency_cc_email"`
 
-	SlackAuthToken string `yaml:"slack_auth_token"`
-	SlackChannelId string `yaml:"slack_channel_id"`
+	SlackAuthToken     string `yaml:"slack_auth_token"`
+	SlackChannelId     string `yaml:"slack_channel_id"`
+	SlackSigningSecret string `yaml:"slack_signing_secret"`
+
+	SlackbotTriggerTopicName string `yaml:"slackbot_trigger_topic_name"`
 
 	PersonsClientId     string   `yaml:"persons_client_id"`
 	PersonsClientSecret string   `yaml:"persons_client_secret"`
@@ -51,6 +54,10 @@ type Configuration struct {
 	PagerdutyTicketDutyScheduleId string `yaml:"pagerduty_ticket_duty_schedule_id"`
 
 	BugzillaConfig BugzillaConfig `yaml:"bugzilla_config"`
+
+	DuoAPIHost        string `yaml:"duo_api_host"`
+	DuoIntegrationKey string `yaml:"duo_integration_key"`
+	DuoSecretKey      string `yaml:"duo_secret_key"`
 }
 
 type IprepdInstance struct {
