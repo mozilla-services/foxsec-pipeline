@@ -659,21 +659,31 @@ public class TestCustoms {
         .satisfies(
             x -> {
               int amcnt = 0;
+              int amlscnt = 0;
+              int amlfcnt = 0;
               for (Alert a : x) {
                 if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                     .equals("activity_monitor")) {
                   assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
                   assertEquals("127.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
-                  assertEquals(
-                      "test activity on monitored account - action loginSuccess", a.getSummary());
                   assertEquals("customs", a.getCategory());
                   assertEquals("activity_monitor", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  if (a.getSummary()
+                      .equals("test activity on monitored account - action loginSuccess")) {
+                    amlscnt++;
+                  }
+                  if (a.getSummary()
+                      .equals("test activity on monitored account - action loginFailure")) {
+                    amlfcnt++;
+                  }
                   amcnt++;
                 } else {
                   fail("unexpected category");
                 }
               }
-              assertEquals(1, amcnt);
+              assertEquals(3, amcnt);
+              assertEquals(1, amlscnt);
+              assertEquals(2, amlfcnt);
               return null;
             });
 
