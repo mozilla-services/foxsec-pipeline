@@ -1,5 +1,6 @@
 package com.mozilla.secops.customs;
 
+import com.google.common.collect.ImmutableSet;
 import com.mozilla.secops.FileUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
@@ -7,7 +8,6 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.FxaAuth;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
-import java.util.ArrayList;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -88,12 +88,12 @@ public class CustomsActivityForMonitoredAccounts
                 new DoFn<Event, Alert>() {
                   private static final long serialVersionUID = 1L;
 
-                  private ArrayList<String> accountlist;
+                  private ImmutableSet<String> accountlist;
 
                   @Setup
                   public void setup() throws IOException {
                     log.info("loading address list from {}", accountsPath);
-                    accountlist = FileUtil.fileReadLines(accountsPath);
+                    accountlist = ImmutableSet.copyOf(FileUtil.fileReadLines(accountsPath));
                   }
 
                   @ProcessElement
