@@ -5,6 +5,12 @@ import (
 	"testing"
 )
 
+var _ = (func() interface{} {
+	_testing = true
+
+	return nil
+}())
+
 var sample = []string{
 	`{"path":"/admin/v1/logs/authentication","event":{"device":"Nexus 5 (000-000-0000)",
 	"factor":"Duo Push","integration":"AWS SSH Access","ip":"127.0.0.1",

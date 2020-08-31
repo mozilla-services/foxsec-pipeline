@@ -49,15 +49,26 @@ const (
 
 var (
 	PROJECT_ID string
-	KEYNAME    string
 
-	cfg config
+	// dirty hack to disable init in unit tests
+	_testing = false
+
+	config = &common.Configuration{}
+
+	// Allocated during initialization
+	duo               *duoInterface // Duo authorization header generator
+	stackdriverClient *stackdriver.Client
+	datastoreClient   *datastore.Client
 )
 
 func init() {
 	mozlogrus.Enable("duopull")
+
+	if _testing {
+		return
+	}
+
 	PROJECT_ID = os.Getenv("GCP_PROJECT")
-	KEYNAME = os.Getenv("KMS_KEYNAME")
 
 	if os.Getenv("DEBUGDUO") == "1" {
 		debug = debugDuo
@@ -73,89 +84,60 @@ func init() {
 		if PROJECT_ID == "" {
 			log.Fatal("GCP_PROJECT must be set (when running locally)")
 		}
-		if KEYNAME == "" {
-			log.Fatal("KEYNAME must be set")
-		}
 	}
 
-	err := cfg.init()
-	if err != nil {
-		log.Fatalf("config.init() errored: %s", err)
-	}
+	InitConfig()
 }
 
-// config is the global configuration structure for the function
-type config struct {
-	// Set from environment
-	duoAPIHost string // Duo API hostname
-	duoIKey    string // Duo API ikey
-	duoSKey    string // Duo API skey
-
-	// Allocated during initialization
-	duo               *duoInterface // Duo authorization header generator
-	stackdriverClient *stackdriver.Client
-	datastoreClient   *datastore.Client
-}
-
-// init loads configuration from the environment
-func (c *config) init() error {
-	kms, err := common.NewKMSClient()
-	if err != nil {
-		if debug != debugDuo {
-			log.Fatalf("Could not create kms client. Err: %s", err)
-		} else {
-			kms = &common.KMSClient{}
-		}
+// InitConfig loads the config for duopull using the common config module
+func InitConfig() {
+	log.Info("Starting up...")
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		log.Fatal("$CONFIG_PATH must be set.")
 	}
-
-	c.duoAPIHost = os.Getenv("DUOPULL_HOST")
-	c.duoIKey, err = kms.DecryptEnvVar(KEYNAME, "DUOPULL_IKEY")
+	err := config.LoadFrom(configPath)
 	if err != nil {
-		log.Fatalf("Could not decrypt duopull ikey. Err: %s", err)
-	}
-	c.duoSKey, err = kms.DecryptEnvVar(KEYNAME, "DUOPULL_SKEY")
-	if err != nil {
-		log.Fatalf("Could not decrypt duopull skey. Err: %s", err)
-	}
-
-	err = c.validate()
-	if err != nil {
-		return err
+		log.Fatalf("Could not load config file from `%s`: %s", configPath, err)
 	}
 
 	if debug != debugDuo {
-		c.stackdriverClient, err = stackdriver.NewClient(context.Background(), PROJECT_ID)
+		stackdriverClient, err = stackdriver.NewClient(context.Background(), PROJECT_ID)
 		if err != nil {
-			return err
+			log.Fatalf("Cannot create stackriver client: %s", err)
 		}
-		c.datastoreClient, err = datastore.NewClient(context.Background(), PROJECT_ID)
+		datastoreClient, err = datastore.NewClient(context.Background(), PROJECT_ID)
 		if err != nil {
-			return err
+			log.Fatalf("Cannot create datastore client: %s", err)
 		}
+	}
+
+	err = validateDuo(config)
+	if err != nil {
+		log.Fatalf("Cannot crete duo interface: %s", err)
 	}
 
 	if debug != debugGCP {
-		c.duo = &duoInterface{
-			apiHost: cfg.duoAPIHost,
-			iKey:    cfg.duoIKey,
-			sKey:    cfg.duoSKey,
+		duo = &duoInterface{
+			apiHost: config.DuoAPIHost,
+			iKey:    config.DuoIntegrationKey,
+			sKey:    config.DuoSecretKey,
 		}
 	}
 
-	return nil
 }
 
-// validate verifies the config structure is valid given the operating mode
-func (c *config) validate() error {
+// validateDuo verifies the config structure for Duo is valid given the operating mode
+func validateDuo(c *common.Configuration) error {
 	if debug != debugGCP {
-		if c.duoAPIHost == "" {
-			return fmt.Errorf("DUOPULL_HOST must be set")
+		if c.DuoAPIHost == "" {
+			return fmt.Errorf("duo_api_host must be set")
 		}
-		if c.duoIKey == "" {
-			return fmt.Errorf("DUOPULL_IKEY must be set")
+		if c.DuoIntegrationKey == "" {
+			return fmt.Errorf("duo_integration_key must be set")
 		}
-		if c.duoSKey == "" {
-			return fmt.Errorf("DUOPULL_SKEY must be set")
+		if c.DuoSecretKey == "" {
+			return fmt.Errorf("duo_secret_key must be set")
 		}
 	}
 	return nil
@@ -289,7 +271,7 @@ func (e *emitter) emit() error {
 		return nil
 	}
 
-	logger := cfg.stackdriverClient.Logger(LOGGER_NAME)
+	logger := stackdriverClient.Logger(LOGGER_NAME)
 
 	for _, v := range e.events {
 		cv, err := v.toInterface()
@@ -342,7 +324,7 @@ func (m *minTime) load(ctx context.Context) error {
 	var sf common.StateField
 	nk := datastore.NameKey(MINTIME_KIND, MINTIME_KEY, nil)
 	nk.Namespace = MINTIME_NAMESPACE
-	err := cfg.datastoreClient.Get(ctx, nk, &sf)
+	err := datastoreClient.Get(ctx, nk, &sf)
 	if err != nil {
 		return err
 	}
@@ -369,7 +351,7 @@ func (m *minTime) save(ctx context.Context) error {
 	nk := datastore.NameKey(MINTIME_KIND, MINTIME_KEY, nil)
 	nk.Namespace = MINTIME_NAMESPACE
 
-	tx, err := cfg.datastoreClient.NewTransaction(ctx)
+	tx, err := datastoreClient.NewTransaction(ctx)
 	if err != nil {
 		return err
 	}
@@ -655,7 +637,7 @@ func Duopull(ctx context.Context, psmsg PubSubMessage) error {
 
 	// Request administrator logs and adjust mintime
 	log.Infof("requesting admin logs from %v\n", m.Administrator)
-	e, err := logRequestAdmin(cfg.duo, m.Administrator)
+	e, err := logRequestAdmin(duo, m.Administrator)
 	if err != nil {
 		log.Errorf("Error requesting admin logs: %s", err)
 		return err
@@ -672,7 +654,7 @@ func Duopull(ctx context.Context, psmsg PubSubMessage) error {
 
 	// Request authentication logs and adjust mintime
 	log.Infof("requesting authentication logs from %v\n", m.Authentication)
-	e, err = logRequestAuth(cfg.duo, m.Authentication)
+	e, err = logRequestAuth(duo, m.Authentication)
 	if err != nil {
 		log.Errorf("Error requesting auth logs: %s", err)
 		return err
@@ -689,7 +671,7 @@ func Duopull(ctx context.Context, psmsg PubSubMessage) error {
 
 	// Request telephony logs and adjust mintime
 	log.Infof("requesting telephony logs from %v\n", m.Telephony)
-	e, err = logRequestTele(cfg.duo, m.Telephony)
+	e, err = logRequestTele(duo, m.Telephony)
 	if err != nil {
 		log.Errorf("Error requesting telephony logs: %s", err)
 		return err

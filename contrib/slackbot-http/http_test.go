@@ -43,17 +43,17 @@ func createHeaders(body []byte) http.Header {
 
 func TestSlackbotHTTP(t *testing.T) {
 	var err error
-	globalConfig.pubsubClient, err = pubsub.NewClient(context.Background(), "testing")
+	pubsubClient, err = pubsub.NewClient(context.Background(), "testing")
 	assert.NoError(t, err)
-	globalConfig.triggerTopicName = "slackbothttp-testing"
-	globalConfig.slackSigningSecret = SECRET
+	config.SlackbotTriggerTopicName = "slackbothttp-testing"
+	config.SlackSigningSecret = SECRET
 
-	topic, err := globalConfig.pubsubClient.CreateTopic(context.Background(), globalConfig.triggerTopicName)
+	topic, err := pubsubClient.CreateTopic(context.Background(), config.SlackbotTriggerTopicName)
 	assert.NoError(t, err)
 
 	// Create a new subscription to the previously created topic
 	// with the given name.
-	sub, err := globalConfig.pubsubClient.CreateSubscription(context.Background(), "slackbothttp-sub", pubsub.SubscriptionConfig{
+	sub, err := pubsubClient.CreateSubscription(context.Background(), "slackbothttp-sub", pubsub.SubscriptionConfig{
 		Topic:            topic,
 		AckDeadline:      10 * time.Second,
 		ExpirationPolicy: 5 * time.Minute,
