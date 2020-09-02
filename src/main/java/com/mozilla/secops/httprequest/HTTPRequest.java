@@ -58,7 +58,10 @@ import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TupleTagList;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
@@ -1418,6 +1421,7 @@ public class HTTPRequest implements Serializable {
         endpointInfo[i] = ninfo;
       }
     }
+
     /** Internal class for configured endpoints in PEERA */
     public static class EndpointErrorInfo implements Serializable {
       private static final long serialVersionUID = 1L;
@@ -2152,63 +2156,73 @@ public class HTTPRequest implements Serializable {
    * @param options Pipeline options
    * @return Map of element name/event collection
    */
-  public static HashMap<String, PCollection<Event>> readInput(
-      Pipeline p, Input input, HTTPRequestOptions options) {
+  public static PCollectionTuple readInput(Pipeline p, Input input, HTTPRequestOptions options) {
     // Perform the multiplexed read operations
     PCollection<KV<String, Event>> col = p.apply("input", input.multiplexRead());
+    TupleTagList tupleTagList = TupleTagList.empty();
 
-    HashMap<String, PCollection<Event>> ret = new HashMap<>();
-    // For each configured element, extract the resulting collection and associate it with
-    // a key in our input map.
-    for (InputElement e : input.getInputElements()) {
-      if (!toggleCache.containsKey(e.getName())) {
-        throw new RuntimeException(String.format("no toggle cache entry for %s", e.getName()));
-      }
-      PCollection<Event> t =
-          col.apply(
-              String.format("filter %s", e.getName()),
-              new HTTPRequestElementFilter(e.getName(), toggleCache.get(e.getName())));
-      ret.put(e.getName(), t);
+    for (HTTPRequestToggles toggle : toggleCache.values()) {
+      tupleTagList = tupleTagList.and(tagForResourceIndicator(toggle.getMonitoredResource()));
     }
 
-    return ret;
+    PCollectionTuple allResources =
+        col.apply(
+            "filter and tag each monitored resource",
+            ParDo.of(
+                    new DoFn<KV<String, Event>, Event>() {
+                      private static final long serialVersionUID = 1L;
+
+                      @ProcessElement
+                      public void processElement(ProcessContext c) {
+                        KV<String, Event> e = c.element();
+                        c.output(tagForResourceIndicator(e.getKey()), e.getValue());
+                      }
+                    })
+                .withOutputTags(new TupleTag<Event>(), tupleTagList));
+
+    return allResources;
   }
 
   /**
    * Expand the input map, executing analysis transforms for each element
    *
    * @param p Pipeline
-   * @param inputMap Map of service name to input collection
+   * @param input PCollectionTuple using resource name as tag id
    * @param options Pipeline options
    * @return Flattened alerts in the global window
    */
   public static PCollection<Alert> expandInputMap(
-      Pipeline p, HashMap<String, PCollection<Event>> inputMap, HTTPRequestOptions options) {
+      Pipeline p, PCollectionTuple input, HTTPRequestOptions options) {
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
 
-    for (Map.Entry<String, PCollection<Event>> entry : inputMap.entrySet()) {
+    for (HTTPRequestToggles toggles : toggleCache.values()) {
+      String name = toggles.getMonitoredResource();
+      final TupleTag<Event> tag = tagForResourceIndicator(name);
       resultsList =
           resultsList
               .and(
-                  entry
-                      .getValue()
+                  input
+                      .get(tag)
                       .apply(
-                          String.format("analyze %s", entry.getKey()),
-                          new HTTPRequestAnalysis(options, toggleCache.get(entry.getKey())))
+                          String.format("pre-analysis filter %s", name),
+                          new HTTPRequestElementFilter(toggleCache.get(name)))
                       .apply(
-                          String.format("tag %s", entry.getKey()),
-                          ParDo.of(new HTTPRequestResourceTag(entry.getKey()))))
+                          String.format("analyze %s", name),
+                          new HTTPRequestAnalysis(options, toggleCache.get(name)))
+                      .apply(
+                          String.format("tag %s", name),
+                          ParDo.of(new HTTPRequestResourceTag(name))))
               .and(
-                  entry
-                      .getValue()
+                  input
+                      .get(tag)
                       .apply(
-                          String.format("cfgtick process %s", entry.getKey()),
+                          String.format("cfgtick process %s", name),
                           ParDo.of(new CfgTickProcessor("httprequest-cfgtick")))
                       .apply(
-                          String.format("cfgtick tag %s", entry.getKey()),
-                          ParDo.of(new HTTPRequestResourceTag(entry.getKey())))
+                          String.format("cfgtick tag %s", name),
+                          ParDo.of(new HTTPRequestResourceTag(name)))
                       .apply(
-                          String.format("cfgtick globaltriggers %s", entry.getKey()),
+                          String.format("cfgtick globaltriggers %s", name),
                           new GlobalTriggers<Alert>(5)));
     }
 
@@ -2226,10 +2240,21 @@ public class HTTPRequest implements Serializable {
     Pipeline p = Pipeline.create(options);
 
     Input input = getInput(p, options);
-    HashMap<String, PCollection<Event>> inputMap = readInput(p, input, options);
+    PCollectionTuple inputMap = readInput(p, input, options);
     standardOutput(expandInputMap(p, inputMap, options), options);
 
     p.run();
+  }
+
+  /**
+   * Helper to create the tuple tag for a resource
+   *
+   * <p>This exists because we need to prevent type erasure of the tagged output.
+   */
+  private static TupleTag<Event> tagForResourceIndicator(String name) {
+    return new TupleTag<Event>(name) {
+      private static final long serialVersionUID = 1L;
+    };
   }
 
   /**

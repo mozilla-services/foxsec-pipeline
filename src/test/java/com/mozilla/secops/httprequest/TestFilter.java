@@ -8,6 +8,7 @@ import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TupleTag;
 import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class TestFilter {
 
     PCollection<Event> events =
         HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
-            .get("test")
+            .get(new TupleTag<Event>("test"))
             .apply(new HTTPRequest.WindowForFixed());
 
     PCollection<Long> count =
@@ -54,7 +55,7 @@ public class TestFilter {
 
     PCollection<Event> events =
         HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
-            .get("test")
+            .get(new TupleTag<Event>("test"))
             .apply(new HTTPRequest.WindowForFixed());
 
     PCollection<Long> count =
@@ -75,7 +76,7 @@ public class TestFilter {
 
     PCollection<Event> events =
         HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
-            .get("test")
+            .get(new TupleTag<Event>("test"))
             .apply(new HTTPRequest.WindowForFixed());
 
     PCollection<Long> count =
@@ -93,10 +94,11 @@ public class TestFilter {
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
     options.setInputFile(new String[] {"./target/test-classes/testdata/httpreq_filter.txt"});
     options.setCidrExclusionList("/testdata/cidrutil2.txt");
-
+    HTTPRequestToggles toggles = HTTPRequestToggles.fromPipelineOptions(options);
     PCollection<Event> events =
         HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
-            .get("test")
+            .get(new TupleTag<Event>("test"))
+            .apply(new HTTPRequestElementFilter(toggles))
             .apply(new HTTPRequest.WindowForFixed());
 
     PCollection<Long> count =
@@ -117,7 +119,7 @@ public class TestFilter {
 
     PCollection<Event> events =
         HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
-            .get("test")
+            .get(new TupleTag<Event>("test"))
             .apply(new HTTPRequest.WindowForFixed());
 
     PCollection<Long> count =
@@ -135,7 +137,7 @@ public class TestFilter {
 
     PCollection<Event> events =
         HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
-            .get("test")
+            .get(new TupleTag<Event>("test"))
             .apply(new HTTPRequest.WindowForFixed());
 
     PCollection<Long> count =
@@ -156,7 +158,7 @@ public class TestFilter {
 
     PCollection<Event> events =
         HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
-            .get("test")
+            .get(new TupleTag<Event>("test"))
             .apply(new HTTPRequest.WindowForFixed());
 
     PCollection<Long> count =
@@ -177,7 +179,7 @@ public class TestFilter {
 
     PCollection<Event> events =
         HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options)
-            .get("test")
+            .get(new TupleTag<Event>("test"))
             .apply(new HTTPRequest.WindowForFixed());
 
     PCollection<Long> count =
