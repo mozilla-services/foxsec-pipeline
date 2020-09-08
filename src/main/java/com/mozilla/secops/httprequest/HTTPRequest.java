@@ -2145,16 +2145,15 @@ public class HTTPRequest implements Serializable {
   }
 
   /**
-   * Read from a configured {@link Input} object, returning a map of events
+   * Read from a configured {@link Input} object, returning a PCollectionTuple of events
    *
-   * <p>The map that is returned will have a string key that reflects the element name (which should
-   * correspond to the monitored resource), and the value will be a collection of events for that
-   * element.
+   * <p>The PCollectionTuple that is returned contains PCollections tagged by resource indicator.
+   * Each PCollection contains only events and uses the resource indicator as the TupleTag id.
    *
    * @param p Pipeline
    * @param input Configured {@link Input} object
    * @param options Pipeline options
-   * @return Map of element name/event collection
+   * @return PCollectionTuple with each event collection tagged by resource indicator
    */
   public static PCollectionTuple readInput(Pipeline p, Input input, HTTPRequestOptions options) {
     // Perform the multiplexed read operations
@@ -2184,7 +2183,7 @@ public class HTTPRequest implements Serializable {
   }
 
   /**
-   * Expand the input map, executing analysis transforms for each element
+   * Expand the input collection tuple, executing analysis transforms for each element
    *
    * @param p Pipeline
    * @param input PCollectionTuple using resource name as tag id
