@@ -1,0 +1,95 @@
+{
+    "input": {
+      "mode": "MULTIPLEX",
+      "elements": [
+        {
+          "name": "resource1",
+          "file_inputs": [
+            "./target/test-classes/testdata/httpreq_errorrate1.txt"
+          ],
+          "parser_configuration": {
+            "parser_fast_matcher": "prod-send",
+            "stackdriver_project_filter": "test",
+            "use_event_timestamp": true
+          },
+          "filter": {
+            "rules": [
+              {
+                "subtype": "CFGTICK"
+              },
+              {
+                "normalized_type": "HTTP_REQUEST"
+              }
+            ],
+            "want_utc": true,
+            "match_any": false
+          }
+        },
+        {
+          "name": "resource2",
+          "file_inputs": [
+            "./target/test-classes/testdata/httpreq_hardlimit1.txt"
+          ],
+          "parser_configuration": {
+            "parser_fast_matcher": "stage-send",
+            "stackdriver_project_filter": "test2",
+            "use_event_timestamp": true
+          },
+          "filter": {
+            "rules": [
+              {
+                "subtype": "CFGTICK"
+              },
+              {
+                "normalized_type": "HTTP_REQUEST"
+              }
+            ],
+            "want_utc": true,
+            "match_any": false
+          }
+        },
+        {
+            "name": "resource3",
+            "file_inputs": [
+              "./target/test-classes/testdata/httpreq_errorrate1.txt"
+            ],
+            "parser_configuration": {
+              "use_event_timestamp": true
+            },
+            "filter": {
+              "rules": [
+                {
+                  "subtype": "CFGTICK"
+                },
+                {
+                  "normalized_type": "HTTP_REQUEST"
+                }
+              ],
+              "want_utc": true,
+              "match_any": false
+            }
+          }
+      ]
+    },
+    "service_toggles": {
+      "resource1": {
+        "enable_error_rate_analysis": true,
+        "enable_threshold_analysis": true,
+        "enable_nat_detection": true,
+        "ignore_internal_requests": false
+      },
+      "resource2": {
+        "enable_error_rate_analysis": true,
+        "enable_threshold_analysis": true,
+        "enable_nat_detection": true,
+        "ignore_internal_requests": false
+      },
+      "resource3": {
+        "enable_error_rate_analysis": true,
+        "enable_threshold_analysis": true,
+        "enable_nat_detection": true,
+        "ignore_internal_requests": false
+      }
+    }
+  }
+  
