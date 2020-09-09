@@ -327,6 +327,23 @@ public class HTTPRequest implements Serializable {
           maxCount);
     }
 
+    /**
+     * Function to be used with filter transform to filter out only ip, count pairs where the count
+     * is higher than the hard limit. This is used we only need the side input when an ip address is
+     * over the hard limit.
+     */
+    private class HasCountGreaterThan implements SerializableFunction<KV<String, Long>, Boolean> {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public Boolean apply(KV<String, Long> kv) {
+        if (kv.getValue() <= maxCount) {
+          return false;
+        }
+        return true;
+      }
+    }
+
     @Override
     public PCollection<Alert> expand(PCollection<Event> input) {
       if (natView == null) {
@@ -350,6 +367,7 @@ public class HTTPRequest implements Serializable {
                     }
                   }))
           .apply(Count.<String>perElement())
+          .apply(Filter.by(new HasCountGreaterThan()))
           .apply(
               "per-source hard limit analysis",
               ParDo.of(
@@ -359,9 +377,6 @@ public class HTTPRequest implements Serializable {
                         @ProcessElement
                         public void processElement(ProcessContext c, BoundedWindow w) {
                           Map<String, Boolean> nv = c.sideInput(natView);
-                          if (c.element().getValue() <= maxCount) {
-                            return;
-                          }
                           Boolean isNat = nv.get(c.element().getKey());
                           if (isNat != null && isNat) {
                             log.info(
