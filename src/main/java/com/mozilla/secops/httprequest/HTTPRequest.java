@@ -345,6 +345,7 @@ public class HTTPRequest implements Serializable {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public PCollection<Alert> expand(PCollection<Event> input) {
       if (natView == null) {
         // If natView was not set then we just create an empty view for use as the side input
@@ -352,7 +353,7 @@ public class HTTPRequest implements Serializable {
       }
       return input
           .apply(
-              "hard limit per client count",
+              "extract client ip",
               ParDo.of(
                   new DoFn<Event, String>() {
                     private static final long serialVersionUID = 1L;
@@ -366,8 +367,11 @@ public class HTTPRequest implements Serializable {
                       c.output(n.getSourceAddress());
                     }
                   }))
-          .apply(Count.<String>perElement())
-          .apply(Filter.by(new HasCountGreaterThan()))
+          .apply("hard limit per client count", Count.<String>perElement())
+          .apply("filter clients above limit", Filter.by(new HasCountGreaterThan()))
+          // Reshuffle to prevent fusion of steps with large input that do not need side input
+          // with low volume step that needs side input
+          .apply("force materialization of input", org.apache.beam.sdk.transforms.Reshuffle.of())
           .apply(
               "per-source hard limit analysis",
               ParDo.of(
