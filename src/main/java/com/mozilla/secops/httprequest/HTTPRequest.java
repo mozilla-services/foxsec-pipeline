@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -352,7 +353,7 @@ public class HTTPRequest implements Serializable {
       }
       return input
           .apply(
-              "hard limit per client count",
+              "extract client ip",
               ParDo.of(
                   new DoFn<Event, String>() {
                     private static final long serialVersionUID = 1L;
@@ -366,8 +367,22 @@ public class HTTPRequest implements Serializable {
                       c.output(n.getSourceAddress());
                     }
                   }))
-          .apply(Count.<String>perElement())
-          .apply(Filter.by(new HasCountGreaterThan()))
+          .apply("hard limit per client count", Count.<String>perElement())
+          .apply("filter clients above limit", Filter.by(new HasCountGreaterThan()))
+          .apply("force materialization of input", GroupByKey.create())
+          .apply(
+              "ungroup keys",
+              ParDo.of(
+                  new DoFn<KV<String, Iterable<Long>>, KV<String, Long>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c, BoundedWindow w) {
+                      String key = c.element().getKey();
+                      Iterator<Long> vals = c.element().getValue().iterator();
+                      vals.forEachRemaining(v -> c.output(KV.of(key, v)));
+                    }
+                  }))
           .apply(
               "per-source hard limit analysis",
               ParDo.of(
