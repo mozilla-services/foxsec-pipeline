@@ -26,7 +26,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -346,6 +345,7 @@ public class HTTPRequest implements Serializable {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public PCollection<Alert> expand(PCollection<Event> input) {
       if (natView == null) {
         // If natView was not set then we just create an empty view for use as the side input
@@ -369,20 +369,9 @@ public class HTTPRequest implements Serializable {
                   }))
           .apply("hard limit per client count", Count.<String>perElement())
           .apply("filter clients above limit", Filter.by(new HasCountGreaterThan()))
-          .apply("force materialization of input", GroupByKey.create())
-          .apply(
-              "ungroup keys",
-              ParDo.of(
-                  new DoFn<KV<String, Iterable<Long>>, KV<String, Long>>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @ProcessElement
-                    public void processElement(ProcessContext c, BoundedWindow w) {
-                      String key = c.element().getKey();
-                      Iterator<Long> vals = c.element().getValue().iterator();
-                      vals.forEachRemaining(v -> c.output(KV.of(key, v)));
-                    }
-                  }))
+          // Reshuffle to prevent fusion of steps with large input that do not need side input
+          // with low volume step that needs side input
+          .apply("force materialization of input", org.apache.beam.sdk.transforms.Reshuffle.of())
           .apply(
               "per-source hard limit analysis",
               ParDo.of(
