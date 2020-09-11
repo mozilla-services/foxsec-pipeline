@@ -2134,10 +2134,12 @@ public class HTTPRequest implements Serializable {
           throw new RuntimeException(
               String.format("input element for %s not found", entry.getKey()));
         }
-        el.setConfigurationTicks(
-            buildConfigurationTick(options, entry.getValue()),
-            options.getGenerateConfigurationTicksInterval(),
-            options.getGenerateConfigurationTicksMaximum());
+        if (options.getGenerateConfigurationTicksInterval() > 0) {
+          el.setConfigurationTicks(
+              buildConfigurationTick(options, entry.getValue()),
+              options.getGenerateConfigurationTicksInterval(),
+              options.getGenerateConfigurationTicksMaximum());
+        }
       }
     } else {
       // We are using pipeline options based input configuration. Start with a new input element
