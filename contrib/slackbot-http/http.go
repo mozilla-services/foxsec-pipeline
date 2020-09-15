@@ -46,6 +46,11 @@ func InitConfig() {
 		log.Fatalf("Could not load config file from `%s`: %s", configPath, err)
 	}
 
+	pubsubClient, err = pubsub.NewClient(context.Background(), PROJECT_ID)
+	if err != nil {
+		log.Fatalf("Could not create pubsub client. Err: %s", err)
+	}
+
 	topic := pubsubClient.Topic(config.SlackbotTriggerTopicName)
 	ok, err := topic.Exists(context.Background())
 	if err != nil {
