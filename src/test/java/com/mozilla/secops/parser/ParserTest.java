@@ -2568,4 +2568,121 @@ public class ParserTest {
     assertEquals(100875973, (int) d.getBytesSent());
     assertEquals("instancename", d.getSrcInstanceName());
   }
+
+  @Test
+  public void testFxaContent() throws Exception {
+    Parser p = getTestParser();
+
+    // test case for "other"/catchall request type
+    String buf =
+        "{\"insertId\":\"12345\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields\":{\"clientAddress\":\"192.168.0.1\", \"contentLength\":\"500\",\"method\":\"GET\",\"path\":\"/test/path\",\"remoteAddressChain\":\"[\\\"192.168.0.1\\\",\\\"127.0.0.1\\\"]\",\"status\":\"200\",\"t\":\"3.306\",\"userAgent\":\"MozacFetch/54.0.6\"},\"Logger\":\"fxa-content-server\",\"Pid\":1,\"Severity\":6,\"Timestamp\":1.6003907999980001e+18,\"Type\":\"server.requests.route\"},\"labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa-prod-default-content_server\",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"content_server\"},\"logName\":\"projects/fxa_project_id/logs/docker.fxa-content\",\"receiveTimestamp\":\"2020-09-18T01:00:02.78510269Z\",\"resource\":{\"labels\":{\"instance_id\":\"i-12345\",\"project_id\":\"fxa_project_id\",\"zone\":\"us\"},\"type\":\"gce_instance\"},\"timestamp\":\"2020-09-18T01:00:00.001582016Z\"}";
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXACONTENT, e.getPayloadType());
+    FxaContent d = e.getPayload();
+    assertEquals(FxaContent.RequestType.OTHER, d.getRequestType());
+    assertEquals("192.168.0.1", d.getSourceAddress());
+    com.mozilla.secops.parser.models.fxacontent.FxaContent cd = d.getFxaContentData();
+    assertEquals("192.168.0.1", cd.getClientAddress());
+    assertEquals("/test/path", cd.getPath());
+    assertEquals("MozacFetch/54.0.6", cd.getUserAgent());
+    assertEquals("GET", cd.getMethod());
+    assertEquals(200, (int) cd.getStatus());
+
+    // test case for metrics-flow request type
+    buf =
+        "{\"insertId\":\"12345\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields\":{\"clientAddress\":\"192.168.0.1\", \"contentLength\":\"500\",\"method\":\"GET\",\"path\":\"/metrics-flow?origin=whatever\",\"remoteAddressChain\":\"[\\\"192.168.0.1\\\",\\\"127.0.0.1\\\"]\",\"status\":\"200\",\"t\":\"3.306\",\"userAgent\":\"MozacFetch/54.0.6\"},\"Logger\":\"fxa-content-server\",\"Pid\":1,\"Severity\":6,\"Timestamp\":1.6003907999980001e+18,\"Type\":\"server.requests.route\"},\"labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa-prod-default-content_server\",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"content_server\"},\"logName\":\"projects/fxa_project_id/logs/docker.fxa-content\",\"receiveTimestamp\":\"2020-09-18T01:00:02.78510269Z\",\"resource\":{\"labels\":{\"instance_id\":\"i-12345\",\"project_id\":\"fxa_project_id\",\"zone\":\"us\"},\"type\":\"gce_instance\"},\"timestamp\":\"2020-09-18T01:00:00.001582016Z\"}";
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXACONTENT, e.getPayloadType());
+    d = e.getPayload();
+    assertEquals(FxaContent.RequestType.METRICS_FLOW, d.getRequestType());
+    assertEquals("192.168.0.1", d.getSourceAddress());
+    cd = d.getFxaContentData();
+    assertEquals("192.168.0.1", cd.getClientAddress());
+    assertEquals("/metrics-flow?origin=whatever", cd.getPath());
+    assertEquals("MozacFetch/54.0.6", cd.getUserAgent());
+    assertEquals("GET", cd.getMethod());
+    assertEquals(200, (int) cd.getStatus());
+
+    // test case for metrics request type
+    buf =
+        "{\"insertId\":\"12345\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields\":{\"clientAddress\":\"192.168.0.1\", \"contentLength\":\"500\",\"method\":\"GET\",\"path\":\"/metrics\",\"remoteAddressChain\":\"[\\\"192.168.0.1\\\",\\\"127.0.0.1\\\"]\",\"status\":\"200\",\"t\":\"3.306\",\"userAgent\":\"MozacFetch/54.0.6\"},\"Logger\":\"fxa-content-server\",\"Pid\":1,\"Severity\":6,\"Timestamp\":1.6003907999980001e+18,\"Type\":\"server.requests.route\"},\"labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa-prod-default-content_server\",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"content_server\"},\"logName\":\"projects/fxa_project_id/logs/docker.fxa-content\",\"receiveTimestamp\":\"2020-09-18T01:00:02.78510269Z\",\"resource\":{\"labels\":{\"instance_id\":\"i-12345\",\"project_id\":\"fxa_project_id\",\"zone\":\"us\"},\"type\":\"gce_instance\"},\"timestamp\":\"2020-09-18T01:00:00.001582016Z\"}";
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXACONTENT, e.getPayloadType());
+    d = e.getPayload();
+    assertEquals(FxaContent.RequestType.METRICS, d.getRequestType());
+    assertEquals("192.168.0.1", d.getSourceAddress());
+    cd = d.getFxaContentData();
+    assertEquals("192.168.0.1", cd.getClientAddress());
+    assertEquals("/metrics", cd.getPath());
+    assertEquals("MozacFetch/54.0.6", cd.getUserAgent());
+    assertEquals("GET", cd.getMethod());
+    assertEquals(200, (int) cd.getStatus());
+
+    // test case for authorization request type
+    buf =
+        "{\"insertId\":\"12345\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields\":{\"clientAddress\":\"192.168.0.1\", \"contentLength\":\"500\",\"method\":\"GET\",\"path\":\"/authorization?service=sync\",\"remoteAddressChain\":\"[\\\"192.168.0.1\\\",\\\"127.0.0.1\\\"]\",\"status\":\"200\",\"t\":\"3.306\",\"userAgent\":\"MozacFetch/54.0.6\"},\"Logger\":\"fxa-content-server\",\"Pid\":1,\"Severity\":6,\"Timestamp\":1.6003907999980001e+18,\"Type\":\"server.requests.route\"},\"labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa-prod-default-content_server\",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"content_server\"},\"logName\":\"projects/fxa_project_id/logs/docker.fxa-content\",\"receiveTimestamp\":\"2020-09-18T01:00:02.78510269Z\",\"resource\":{\"labels\":{\"instance_id\":\"i-12345\",\"project_id\":\"fxa_project_id\",\"zone\":\"us\"},\"type\":\"gce_instance\"},\"timestamp\":\"2020-09-18T01:00:00.001582016Z\"}";
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXACONTENT, e.getPayloadType());
+    d = e.getPayload();
+    assertEquals(FxaContent.RequestType.AUTHORIZATION, d.getRequestType());
+    assertEquals("192.168.0.1", d.getSourceAddress());
+    cd = d.getFxaContentData();
+    assertEquals("192.168.0.1", cd.getClientAddress());
+    assertEquals("/authorization?service=sync", cd.getPath());
+    assertEquals("MozacFetch/54.0.6", cd.getUserAgent());
+    assertEquals("GET", cd.getMethod());
+    assertEquals(200, (int) cd.getStatus());
+
+    // test case for signin request type
+    buf =
+        "{\"insertId\":\"12345\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields\":{\"clientAddress\":\"192.168.0.1\", \"contentLength\":\"500\",\"method\":\"GET\",\"path\":\"/signin\",\"remoteAddressChain\":\"[\\\"192.168.0.1\\\",\\\"127.0.0.1\\\"]\",\"status\":\"200\",\"t\":\"3.306\",\"userAgent\":\"MozacFetch/54.0.6\"},\"Logger\":\"fxa-content-server\",\"Pid\":1,\"Severity\":6,\"Timestamp\":1.6003907999980001e+18,\"Type\":\"server.requests.route\"},\"labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa-prod-default-content_server\",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"content_server\"},\"logName\":\"projects/fxa_project_id/logs/docker.fxa-content\",\"receiveTimestamp\":\"2020-09-18T01:00:02.78510269Z\",\"resource\":{\"labels\":{\"instance_id\":\"i-12345\",\"project_id\":\"fxa_project_id\",\"zone\":\"us\"},\"type\":\"gce_instance\"},\"timestamp\":\"2020-09-18T01:00:00.001582016Z\"}";
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXACONTENT, e.getPayloadType());
+    d = e.getPayload();
+    assertEquals(FxaContent.RequestType.SIGNIN, d.getRequestType());
+    assertEquals("192.168.0.1", d.getSourceAddress());
+    cd = d.getFxaContentData();
+    assertEquals("192.168.0.1", cd.getClientAddress());
+    assertEquals("/signin", cd.getPath());
+    assertEquals("MozacFetch/54.0.6", cd.getUserAgent());
+    assertEquals("GET", cd.getMethod());
+    assertEquals(200, (int) cd.getStatus());
+
+    // test case for signup request type
+    buf =
+        "{\"insertId\":\"12345\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields\":{\"clientAddress\":\"192.168.0.1\", \"contentLength\":\"500\",\"method\":\"GET\",\"path\":\"/signup\",\"remoteAddressChain\":\"[\\\"192.168.0.1\\\",\\\"127.0.0.1\\\"]\",\"status\":\"200\",\"t\":\"3.306\",\"userAgent\":\"MozacFetch/54.0.6\"},\"Logger\":\"fxa-content-server\",\"Pid\":1,\"Severity\":6,\"Timestamp\":1.6003907999980001e+18,\"Type\":\"server.requests.route\"},\"labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa-prod-default-content_server\",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"content_server\"},\"logName\":\"projects/fxa_project_id/logs/docker.fxa-content\",\"receiveTimestamp\":\"2020-09-18T01:00:02.78510269Z\",\"resource\":{\"labels\":{\"instance_id\":\"i-12345\",\"project_id\":\"fxa_project_id\",\"zone\":\"us\"},\"type\":\"gce_instance\"},\"timestamp\":\"2020-09-18T01:00:00.001582016Z\"}";
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXACONTENT, e.getPayloadType());
+    d = e.getPayload();
+    assertEquals(FxaContent.RequestType.SIGNUP, d.getRequestType());
+    assertEquals("192.168.0.1", d.getSourceAddress());
+    cd = d.getFxaContentData();
+    assertEquals("192.168.0.1", cd.getClientAddress());
+    assertEquals("/signup", cd.getPath());
+    assertEquals("MozacFetch/54.0.6", cd.getUserAgent());
+    assertEquals("GET", cd.getMethod());
+    assertEquals(200, (int) cd.getStatus());
+
+    // test case for signup request type
+    buf =
+        "{\"insertId\":\"12345\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields\":{\"clientAddress\":\"192.168.0.1\", \"contentLength\":\"500\",\"method\":\"GET\",\"path\":\"/validate-email-domain?domain=test\",\"remoteAddressChain\":\"[\\\"192.168.0.1\\\",\\\"127.0.0.1\\\"]\",\"status\":\"200\",\"t\":\"3.306\",\"userAgent\":\"MozacFetch/54.0.6\"},\"Logger\":\"fxa-content-server\",\"Pid\":1,\"Severity\":6,\"Timestamp\":1.6003907999980001e+18,\"Type\":\"server.requests.route\"},\"labels\":{\"application\":\"fxa\",\"compute.googleapis.com/resource_name\":\"fxa-prod-default-content_server\",\"env\":\"prod\",\"stack\":\"default\",\"type\":\"content_server\"},\"logName\":\"projects/fxa_project_id/logs/docker.fxa-content\",\"receiveTimestamp\":\"2020-09-18T01:00:02.78510269Z\",\"resource\":{\"labels\":{\"instance_id\":\"i-12345\",\"project_id\":\"fxa_project_id\",\"zone\":\"us\"},\"type\":\"gce_instance\"},\"timestamp\":\"2020-09-18T01:00:00.001582016Z\"}";
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.FXACONTENT, e.getPayloadType());
+    d = e.getPayload();
+    assertEquals(FxaContent.RequestType.VALIDATE_EMAIL_DOMAIN, d.getRequestType());
+    assertEquals("192.168.0.1", d.getSourceAddress());
+    cd = d.getFxaContentData();
+    assertEquals("192.168.0.1", cd.getClientAddress());
+    assertEquals("/validate-email-domain?domain=test", cd.getPath());
+    assertEquals("MozacFetch/54.0.6", cd.getUserAgent());
+    assertEquals("GET", cd.getMethod());
+    assertEquals(200, (int) cd.getStatus());
+  }
 }

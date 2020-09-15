@@ -553,6 +553,7 @@ public class Parser {
     payloads.add(new GLB());
     payloads.add(new Nginx());
     payloads.add(new FxaAuth());
+    payloads.add(new FxaContent());
     payloads.add(new Cloudtrail());
     payloads.add(new GcpAudit());
     payloads.add(new GcpVpcFlow());

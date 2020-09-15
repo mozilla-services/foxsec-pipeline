@@ -592,7 +592,6 @@ public class TestCustoms {
               int sccnt = 0;
               int lfcnt = 0;
               for (Alert a : x) {
-                System.out.println(a.toJSON());
                 if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                     .equals("status_comparator")) {
                   assertEquals("spock@mozilla.com", a.getMetadataValue(AlertMeta.Key.EMAIL));
@@ -715,7 +714,6 @@ public class TestCustoms {
             x -> {
               int totalcnt = 0;
               for (Alert a : x) {
-                System.out.println(a.toJSON());
                 if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                     .equals("private_relay_forward")) {
                   if (a.getSummary().contains("11111111111111111111111111111111")) {
@@ -751,6 +749,243 @@ public class TestCustoms {
               assertEquals(2, totalcnt);
               return null;
             });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void accountStatusCheckAbuseWithoutContentServerVarianceTest() throws Exception {
+    testEnv();
+
+    /*
+     * Test set contains multiple ips:
+     * 10.0.0.1 crosses the threshold with a mix of successful and blocked requests
+     * 10.0.0.2 does not cross the threshold
+     * 10.0.0.3 crosses the threshold with only successful requests
+     * 10.0.0.4 crosses the request count threshold but doesn't have enough distinct accounts checked to trigger an alert
+     */
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse1.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableAccountEnumerationDetector(true);
+    options.setAccountEnumerationThreshold(3);
+    options.setXffAddressSelector("127.0.0.1/32");
+    options.setEnableContentServerVarianceDetection(false);
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              int ip1Cnt = 0;
+              int ip3Cnt = 0;
+              for (Alert a : x) {
+                if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.1")) {
+                  assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals(
+                      "test 10.0.0.1 account status check abuse threshold exceeded, 3 in 10 minutes",
+                      a.getSummary());
+                  assertEquals("customs", a.getCategory());
+                  assertEquals(
+                      "account_enumeration",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  assertEquals(
+                      "account_enumeration", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  ip1Cnt++;
+                }
+                if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.3")) {
+                  assertEquals("10.0.0.3", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals(
+                      "test 10.0.0.3 account status check abuse threshold exceeded, 3 in 10 minutes",
+                      a.getSummary());
+                  assertEquals("customs", a.getCategory());
+                  assertEquals(
+                      "account_enumeration",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  assertEquals(
+                      "account_enumeration", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  ip3Cnt++;
+                }
+                cnt++;
+              }
+              assertEquals(1, ip1Cnt);
+              assertEquals(1, ip3Cnt);
+              assertEquals(2, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void accountStatusCheckAbuseWithContentServerVarianceTest() throws Exception {
+    testEnv();
+
+    /**
+     * Test set contains multiple ips: 10.0.0.1 crosses the threshold with a mix of successful and
+     * blocked requests 10.0.0.2 does not cross the threshold 10.0.0.3 crosses the threshold with
+     * only successful requests 10.0.0.4 crosses the request count threshold but doesn't have enough
+     * distinct accounts checked to trigger an alert
+     */
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse1.txt");
+    /**
+     * Test set containing content server events within same window Contains events for 10.0.0.2 and
+     * 10.0.0.3. No events for 10.0.0.1
+     */
+    String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_contentserver.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
+            .advanceProcessingTime(Duration.standardSeconds(1))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceProcessingTime(Duration.standardSeconds(1))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableAccountEnumerationDetector(true);
+    options.setAccountEnumerationThreshold(3);
+    options.setXffAddressSelector("127.0.0.1/32");
+    options.setEnableContentServerVarianceDetection(true);
+    options.setContentServerVarianceMinClients(3L);
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.1")) {
+                  assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals(
+                      "test 10.0.0.1 account status check abuse threshold exceeded, 3 in 10 minutes",
+                      a.getSummary());
+                  assertEquals("customs", a.getCategory());
+                  assertEquals(
+                      "account_enumeration",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  assertEquals(
+                      "account_enumeration", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                }
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void accountStatusCheckAbuseMultiWindowWithContentServerVarianceTest() throws Exception {
+    testEnv();
+
+    /**
+     * Test set contains multiple ips: 10.0.0.1 crosses the threshold with a mix of successful and
+     * blocked requests 10.0.0.2 does not cross the threshold 10.0.0.3 crosses the threshold with
+     * only successful requests 10.0.0.4 crosses the request count threshold but doesn't have enough
+     * distinct accounts checked to trigger an alert
+     */
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse1.txt");
+    /**
+     * Test set containing content server events within same window Contains events for 10.0.0.2 and
+     * 10.0.0.3. No events for 10.0.0.1
+     */
+    String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_contentserver.txt");
+    /**
+     * Test set for a second window contains multiple ips: 10.0.0.1 crosses the threshold with a mix
+     * of successful and blocked requests 10.0.0.5 does not cross the threshold 10.0.0.6 crosses the
+     * threshold with only successful requests 10.0.0.7 crosses the request count threshold but
+     * doesn't have enough distinct accounts checked to trigger an alert
+     */
+    String[] eb3 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse2.txt");
+    /**
+     * Test set containing content server events within the second window Contains events for
+     * 10.0.0.1 and 10.0.0.6.
+     */
+    String[] eb4 = TestUtil.getTestInputArray("/testdata/customs_contentserver2.txt");
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
+            .advanceProcessingTime(Duration.standardSeconds(1))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceProcessingTime(Duration.standardSeconds(1))
+            .addElements(eb4[0], Arrays.copyOfRange(eb4, 1, eb4.length))
+            .addElements(eb3[0], Arrays.copyOfRange(eb3, 1, eb3.length))
+            .advanceProcessingTime(Duration.standardMinutes(10))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableAccountEnumerationDetector(true);
+    options.setAccountEnumerationThreshold(3);
+    options.setXffAddressSelector("127.0.0.1/32");
+    options.setEnableContentServerVarianceDetection(true);
+    options.setContentServerVarianceMinClients(3L);
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              int cnt = 0;
+              for (Alert a : x) {
+                if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.1")) {
+                  assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals(
+                      "test 10.0.0.1 account status check abuse threshold exceeded, 3 in 10 minutes",
+                      a.getSummary());
+                  assertEquals("customs", a.getCategory());
+                  assertEquals(
+                      "account_enumeration",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  assertEquals(
+                      "account_enumeration", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                }
+                cnt++;
+              }
+              assertEquals(1, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void accountStatusCheckAbuseDoesNotAlertIfMissingContentServerEventsTest()
+      throws Exception {
+    testEnv();
+
+    /**
+     * Test set contains multiple ips: 10.0.0.1 crosses the threshold with a mix of successful and
+     * blocked requests 10.0.0.2 does not cross the threshold 10.0.0.3 crosses the threshold with
+     * only successful requests 10.0.0.4 crosses the request count threshold but doesn't have enough
+     * distinct accounts checked to trigger an alert
+     */
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse1.txt");
+
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    Customs.CustomsOptions options = getTestOptions();
+    options.setEnableAccountEnumerationDetector(true);
+    options.setAccountEnumerationThreshold(3);
+    options.setXffAddressSelector("127.0.0.1/32");
+    options.setEnableContentServerVarianceDetection(true);
+    options.setContentServerVarianceMinClients(3L);
+
+    PCollection<Alert> alerts = Customs.executePipeline(p, p.apply(s), options);
+    PAssert.that(alerts).empty();
 
     p.run().waitUntilFinish();
   }

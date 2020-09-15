@@ -64,7 +64,6 @@ public class TestPioneer {
               int totalcnt = 0;
               int alertcnt = 0;
               for (Alert a : i) {
-                System.out.println(a.toJSON());
                 if (a.getCategory().equals("pioneer-cfgtick")) {
                   tickcnt++;
                 } else {

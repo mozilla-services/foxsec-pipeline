@@ -31,6 +31,11 @@ public class CustomsPreFilter extends DoFn<Event, Event> {
         private static final long serialVersionUID = 1L;
       };
 
+  public static final TupleTag<Event> TAG_FXA_CONTENT_EVENTS =
+      new TupleTag<Event>() {
+        private static final long serialVersionUID = 1L;
+      };
+
   private ArrayList<FxaAuth.EventSummary> types;
 
   @Setup
@@ -50,6 +55,11 @@ public class CustomsPreFilter extends DoFn<Event, Event> {
 
     if (e.getPayloadType().equals(Payload.PayloadType.PRIVATE_RELAY)) {
       c.output(TAG_RELAY_EVENTS, e);
+      return;
+    }
+
+    if (e.getPayloadType().equals(Payload.PayloadType.FXACONTENT)) {
+      c.output(TAG_FXA_CONTENT_EVENTS, e);
       return;
     }
 

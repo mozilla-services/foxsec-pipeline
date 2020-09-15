@@ -36,6 +36,8 @@ public class Payload<T extends PayloadBase> implements Serializable {
     IPREPD_LOG,
     /** FxA auth */
     FXAAUTH,
+    /** FxA content */
+    FXACONTENT,
     /** Apache Combined */
     APACHE_COMBINED,
     /** Taskcluster */
