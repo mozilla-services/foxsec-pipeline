@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.Event;
+import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.parser.PrivateRelay;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
@@ -122,9 +123,13 @@ public class PrivateRelayForward extends PTransform<PCollection<Event>, PCollect
                   public void processElement(ProcessContext c) {
                     Event e = c.element();
 
+                    if (!e.getPayloadType().equals(Payload.PayloadType.PRIVATE_RELAY)) {
+                      return;
+                    }
                     PrivateRelay d = e.getPayload();
-                    if (!d.getEventType().equals(PrivateRelay.EventType.EMAIL_RELAY)
-                        && !d.getEventType().equals(PrivateRelay.EventType.FXA_RP_EVENT)) {
+                    if ((d.getEventType() == null)
+                        || (!d.getEventType().equals(PrivateRelay.EventType.EMAIL_RELAY)
+                            && !d.getEventType().equals(PrivateRelay.EventType.FXA_RP_EVENT))) {
                       return;
                     }
                     // We need to have a UID to proceed with the event
