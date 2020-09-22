@@ -600,7 +600,10 @@ public class Customs implements Serializable {
                     CustomsPreFilter.TAG_FXA_AUTH_EVENTS,
                     TupleTagList.of(CustomsPreFilter.TAG_RELAY_EVENTS)));
     PCollection<Event> events = inputTuple.get(CustomsPreFilter.TAG_FXA_AUTH_EVENTS);
-    PCollection<Event> relayEvents = inputTuple.get(CustomsPreFilter.TAG_RELAY_EVENTS);
+    PCollection<Event> relayEvents = null;
+    if (options.getEnablePrivateRelayForward()) {
+      relayEvents = inputTuple.get(CustomsPreFilter.TAG_RELAY_EVENTS);
+    }
 
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
     CollectionInfo ci = new CollectionInfo();
