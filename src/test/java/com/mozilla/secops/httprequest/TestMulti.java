@@ -222,4 +222,75 @@ public class TestMulti implements Serializable {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void testCfgTicksCanBeDisabled() throws Exception {
+    HTTPRequest.HTTPRequestOptions options = getTestOptions();
+    options.setGenerateConfigurationTicksInterval(0);
+    options.setPipelineMultimodeConfiguration("/testdata/httpreq_multi1.json");
+
+    // Run the analysis; at the end plug the alert formatter in so we can validate the monitored
+    // resource metadata is set correct for the common output transforms
+    PCollection<Alert> results =
+        HTTPRequest.expandInputMap(
+                p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options)
+            .apply(ParDo.of(new AlertFormatter(options)));
+
+    PCollection<Long> resultCount =
+        results.apply(Combine.globally(Count.<Alert>combineFn()).withoutDefaults());
+    PAssert.thatSingleton(resultCount)
+        .isEqualTo(2L); // Should have two alerts and 0 configuration events
+
+    PAssert.that(results)
+        .satisfies(
+            i -> {
+              int hlAlerts = 0;
+              int erAlerts = 0;
+
+              int ticks = 0;
+              for (Alert a : i) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("hard_limit")) {
+                  assertEquals("192.168.1.2", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals("resource2 httprequest hard_limit 192.168.1.2 11", a.getSummary());
+                  assertEquals(11L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT)));
+                  assertEquals(
+                      10L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.REQUEST_THRESHOLD)));
+                  assertEquals(
+                      "1970-01-01T00:00:59.999Z",
+                      a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
+                  assertEquals("resource2", a.getMetadataValue(AlertMeta.Key.MONITORED_RESOURCE));
+                  assertEquals(
+                      "resource2 hard_limit_count", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  hlAlerts++;
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("error_rate")) {
+                  assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals("resource1 httprequest error_rate 10.0.0.1 35", a.getSummary());
+                  assertEquals(
+                      "error_rate", a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  assertEquals(
+                      35L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.ERROR_COUNT), 10));
+                  assertEquals(
+                      30L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.ERROR_THRESHOLD), 10));
+                  assertEquals(
+                      "1970-01-01T00:00:59.999Z",
+                      a.getMetadataValue(AlertMeta.Key.WINDOW_TIMESTAMP));
+                  assertEquals("resource1", a.getMetadataValue(AlertMeta.Key.MONITORED_RESOURCE));
+                  assertEquals(
+                      "resource1 error_count", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  erAlerts++;
+                } else if (a.getCategory().equals("httprequest-cfgtick")) {
+                  ticks++;
+                }
+              }
+              assertEquals(1, hlAlerts);
+              assertEquals(1, erAlerts);
+
+              assertEquals(0, ticks);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }
