@@ -427,7 +427,7 @@ public class Customs implements Serializable {
 
     @Description(
         "Min number of clients in content server logs to require before it can be used for variance; currently only for CustomsAccountEnumeration")
-    @Default.Long(20000L)
+    @Default.Long(500L)
     Long getContentServerVarianceMinClients();
 
     void setContentServerVarianceMinClients(Long value);
