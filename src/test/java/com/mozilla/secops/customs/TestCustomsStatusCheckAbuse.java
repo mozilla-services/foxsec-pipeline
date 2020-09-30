@@ -17,7 +17,7 @@ public class TestCustomsStatusCheckAbuse {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert if single source address checks if %d or more distinct emails are FxA accounts within 10 minute"
+            "Alert if single source address checks %d or more distinct emails are FxA accounts within 10 minute"
                 + " fixed window, using content server variance.",
             options.getAccountEnumerationThreshold());
     assertEquals(expected, doc);
@@ -33,7 +33,7 @@ public class TestCustomsStatusCheckAbuse {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert if single source address checks if %d or more distinct emails are FxA accounts within 10 minute"
+            "Alert if single source address checks %d or more distinct emails are FxA accounts within 10 minute"
                 + " fixed window, without using content server variance.",
             options.getAccountEnumerationThreshold());
     assertEquals(expected, doc);
@@ -49,7 +49,7 @@ public class TestCustomsStatusCheckAbuse {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert if single source address checks if %d or more distinct emails are FxA accounts within 10 minute"
+            "Alert if single source address checks %d or more distinct emails are FxA accounts within 10 minute"
                 + " fixed window, using content server variance. (Experimental)",
             options.getAccountEnumerationThreshold());
     assertEquals(expected, doc);
@@ -65,7 +65,7 @@ public class TestCustomsStatusCheckAbuse {
     String doc = sut.getTransformDoc();
     String expected =
         String.format(
-            "Alert if single source address checks if %d or more distinct emails are FxA accounts within 10 minute"
+            "Alert if single source address checks %d or more distinct emails are FxA accounts within 10 minute"
                 + " fixed window, without using content server variance. (Experimental)",
             options.getAccountEnumerationThreshold());
     assertEquals(expected, doc);

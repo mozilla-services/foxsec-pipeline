@@ -25,11 +25,11 @@ public class FxaContent extends SourcePayloadBase {
     String path = fxaContentData.getPath();
 
     if (path != null) {
-      if (path.startsWith("/metrics-flow?")) {
+      if (path.startsWith("/metrics-flow")) {
         requestType = RequestType.METRICS_FLOW;
       } else if (path.startsWith("/metrics")) {
         requestType = RequestType.METRICS;
-      } else if (path.startsWith("/authorization?")) {
+      } else if (path.startsWith("/authorization")) {
         requestType = RequestType.AUTHORIZATION;
       } else if (path.startsWith("/signin")) {
         requestType = RequestType.SIGNIN;

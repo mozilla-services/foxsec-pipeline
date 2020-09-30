@@ -60,7 +60,7 @@ public class CustomsAccountEnumeration
             ? ", using content server variance"
             : ", without using content server variance";
     return String.format(
-        "Alert if single source address checks if %d or more distinct emails are FxA accounts within 10 minute"
+        "Alert if single source address checks %d or more distinct emails are FxA accounts within 10 minute"
             + " fixed window%s.",
         threshold, varDesc);
   }
@@ -77,8 +77,8 @@ public class CustomsAccountEnumeration
                       public void processElement(ProcessContext c) {
                         String ipAddr = c.element().getKey();
                         CustomsFeatures cf = c.element().getValue();
-                        // If the total status checks is less than threshold we
-                        // don't need to continue
+                        // If the total status check count is less than the threshold
+                        // we don't need to continue
                         if (cf.getTotalAccountStatusCheckCount() < threshold) {
                           return;
                         }

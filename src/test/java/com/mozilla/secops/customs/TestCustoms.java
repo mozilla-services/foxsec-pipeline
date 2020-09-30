@@ -861,6 +861,7 @@ public class TestCustoms {
         .satisfies(
             x -> {
               int cnt = 0;
+              int ip1Cnt = 0;
               for (Alert a : x) {
                 if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.1")) {
                   assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
@@ -873,10 +874,12 @@ public class TestCustoms {
                       a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       "account_enumeration", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  ip1Cnt++;
                 }
                 cnt++;
               }
               assertEquals(1, cnt);
+              assertEquals(1, ip1Cnt);
               return null;
             });
 
@@ -936,6 +939,7 @@ public class TestCustoms {
         .satisfies(
             x -> {
               int cnt = 0;
+              int ip1Cnt = 0;
               for (Alert a : x) {
                 if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.1")) {
                   assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
@@ -948,10 +952,16 @@ public class TestCustoms {
                       a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       "account_enumeration", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  assertEquals("1970-01-01T00:00:00.000Z", a.getTimestamp().toString());
+                  assertEquals(
+                      "riker1@mozilla.com, riker2@mozilla.com, riker3@mozilla.com",
+                      a.getMetadataValue(AlertMeta.Key.EMAIL));
+                  ip1Cnt++;
                 }
                 cnt++;
               }
               assertEquals(1, cnt);
+              assertEquals(1, ip1Cnt);
               return null;
             });
 
