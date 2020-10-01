@@ -21,6 +21,15 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.joda.time.Duration;
 
+/**
+ * Provides transforms to detect if an ip is making a variety of requests to the content server or
+ * is just abusing auth server APIs. This is similar to the variance substrings for {@link
+ * com.mozilla.secops.httprequest.HTTPRequest.EndpointAbuseAnalysis} in the HTTPRequest pipeline.
+ *
+ * <p>Currently, this has only one transform, whether an ip exists in the content server logs.
+ * Eventually this could be extended to only consider certain events (such as metrics) or meet more
+ * complex conditions.
+ */
 public class ContentServerVarianceDetector {
 
   /**
@@ -43,7 +52,7 @@ public class ContentServerVarianceDetector {
    *
    * <p>This is currently meant to work with the fixed 10 minute window based heuristics.
    *
-   * @param events
+   * @param events Input events
    * @return {@link PCollectionView} representing output of analysis
    */
   public static PCollectionView<Map<String, Boolean>> getView(PCollection<Event> events) {
