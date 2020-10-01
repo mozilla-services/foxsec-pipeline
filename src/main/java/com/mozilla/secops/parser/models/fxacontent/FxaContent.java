@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
+/** FxA content server event */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FxaContent implements Serializable {
   private static final long serialVersionUID = 1L;

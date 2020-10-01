@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/** Payload parser for FxA content server log data */
 public class FxaContent extends SourcePayloadBase {
   private static final long serialVersionUID = 1L;
 
@@ -29,7 +30,7 @@ public class FxaContent extends SourcePayloadBase {
         requestType = RequestType.METRICS_FLOW;
       } else if (path.startsWith("/metrics")) {
         requestType = RequestType.METRICS;
-      } else if (path.startsWith("/authorization")) {
+      } else if (path.startsWith("/authorization?")) {
         requestType = RequestType.AUTHORIZATION;
       } else if (path.startsWith("/signin")) {
         requestType = RequestType.SIGNIN;
