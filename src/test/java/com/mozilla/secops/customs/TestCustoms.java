@@ -763,6 +763,7 @@ public class TestCustoms {
      * 10.0.0.2 does not cross the threshold
      * 10.0.0.3 crosses the threshold with only successful requests
      * 10.0.0.4 crosses the request count threshold but doesn't have enough distinct accounts checked to trigger an alert
+     * 10.0.0.5 crosses the request threshold but has made requests to other auth server endpoints so it doesn't trigger an alert
      */
     String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse1.txt");
     TestStream<String> s =
@@ -827,16 +828,19 @@ public class TestCustoms {
   public void accountStatusCheckAbuseWithContentServerVarianceTest() throws Exception {
     testEnv();
 
-    /**
-     * Test set contains multiple ips: 10.0.0.1 crosses the threshold with a mix of successful and
-     * blocked requests 10.0.0.2 does not cross the threshold 10.0.0.3 crosses the threshold with
-     * only successful requests 10.0.0.4 crosses the request count threshold but doesn't have enough
-     * distinct accounts checked to trigger an alert
+    /*
+     * Test set contains multiple ips:
+     * 10.0.0.1 crosses the threshold with a mix of successful and blocked requests
+     * 10.0.0.2 does not cross the threshold
+     * 10.0.0.3 crosses the threshold with only successful requests
+     * 10.0.0.4 crosses the request count threshold but doesn't have enough distinct accounts checked to trigger an alert
+     * 10.0.0.5 crosses the request threshold but has made requests to other auth server endpoints so it doesn't trigger an alert
      */
     String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse1.txt");
-    /**
-     * Test set containing content server events within same window Contains events for 10.0.0.2 and
-     * 10.0.0.3. No events for 10.0.0.1
+    /*
+     * Test set containing content server events within same window
+     * Contains events for 10.0.0.2 and 10.0.0.3.
+     * No events for 10.0.0.1
      */
     String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_contentserver.txt");
     TestStream<String> s =
@@ -890,23 +894,27 @@ public class TestCustoms {
   public void accountStatusCheckAbuseMultiWindowWithContentServerVarianceTest() throws Exception {
     testEnv();
 
-    /**
-     * Test set contains multiple ips: 10.0.0.1 crosses the threshold with a mix of successful and
-     * blocked requests 10.0.0.2 does not cross the threshold 10.0.0.3 crosses the threshold with
-     * only successful requests 10.0.0.4 crosses the request count threshold but doesn't have enough
-     * distinct accounts checked to trigger an alert
+    /*
+     * Test set contains multiple ips:
+     * 10.0.0.1 crosses the threshold with a mix of successful and blocked requests
+     * 10.0.0.2 does not cross the threshold
+     * 10.0.0.3 crosses the threshold with only successful requests
+     * 10.0.0.4 crosses the request count threshold but doesn't have enough distinct accounts checked to trigger an alert
+     * 10.0.0.5 crosses the request threshold but has made requests to other auth server endpoints so it doesn't trigger an alert
      */
     String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse1.txt");
-    /**
-     * Test set containing content server events within same window Contains events for 10.0.0.2 and
-     * 10.0.0.3. No events for 10.0.0.1
+    /*
+     * Test set containing content server events within same window
+     * Contains events for 10.0.0.2 and 10.0.0.3.
+     * No events for 10.0.0.1
      */
     String[] eb2 = TestUtil.getTestInputArray("/testdata/customs_contentserver.txt");
-    /**
-     * Test set for a second window contains multiple ips: 10.0.0.1 crosses the threshold with a mix
-     * of successful and blocked requests 10.0.0.5 does not cross the threshold 10.0.0.6 crosses the
-     * threshold with only successful requests 10.0.0.7 crosses the request count threshold but
-     * doesn't have enough distinct accounts checked to trigger an alert
+    /*
+     * Test set for a second window contains multiple ips:
+     * 10.0.0.1 crosses the threshold with a mix of successful and blocked requests
+     * 10.0.0.5 does not cross the threshold
+     * 10.0.0.6 crosses the threshold with only successful requests
+     * 10.0.0.7 crosses the request count threshold but doesn't have enough distinct accounts checked to trigger an alert
      */
     String[] eb3 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse2.txt");
     /**
@@ -973,11 +981,13 @@ public class TestCustoms {
       throws Exception {
     testEnv();
 
-    /**
-     * Test set contains multiple ips: 10.0.0.1 crosses the threshold with a mix of successful and
-     * blocked requests 10.0.0.2 does not cross the threshold 10.0.0.3 crosses the threshold with
-     * only successful requests 10.0.0.4 crosses the request count threshold but doesn't have enough
-     * distinct accounts checked to trigger an alert
+    /*
+     * Test set contains multiple ips:
+     * 10.0.0.1 crosses the threshold with a mix of successful and blocked requests
+     * 10.0.0.2 does not cross the threshold
+     * 10.0.0.3 crosses the threshold with only successful requests
+     * 10.0.0.4 crosses the request count threshold but doesn't have enough distinct accounts checked to trigger an alert
+     * 10.0.0.5 crosses the request threshold but has made requests to other auth server endpoints so it doesn't trigger an alert
      */
     String[] eb1 = TestUtil.getTestInputArray("/testdata/customs_account_status_abuse1.txt");
 

@@ -83,6 +83,17 @@ public class CustomsAccountEnumeration
                           return;
                         }
 
+                        // Check if the ip address has made requests other than the status
+                        // check endpoint
+                        int numPaths = cf.getUniquePathRequestCount().size();
+                        if (numPaths > 1) {
+                          log.info(
+                              "{}: skipping notification, ip has requested {} endpoints",
+                              ipAddr,
+                              numPaths);
+                          return;
+                        }
+
                         // Check the number of distinct accounts checked between all
                         // successful and blocked requests
                         ArrayList<Event> events =
@@ -95,14 +106,6 @@ public class CustomsAccountEnumeration
                         long distinctAccts =
                             accts.stream().distinct().filter(Objects::nonNull).count();
                         if (distinctAccts < threshold) {
-                          return;
-                        }
-
-                        if (cf.nominalVariance()) {
-                          log.info(
-                              "{}: skipping notification, variance index {}",
-                              ipAddr,
-                              cf.getVarianceIndex());
                           return;
                         }
 

@@ -12,6 +12,7 @@ public class FxaContent extends SourcePayloadBase {
   private com.mozilla.secops.parser.models.fxacontent.FxaContent fxaContentData;
   private RequestType requestType;
 
+  /** Type of server.request.route event based on path */
   public enum RequestType {
     METRICS,
     METRICS_FLOW,
@@ -77,6 +78,11 @@ public class FxaContent extends SourcePayloadBase {
     return fxaContentData;
   }
 
+  /**
+   * Get request type
+   *
+   * @return Request Type
+   */
   public RequestType getRequestType() {
     return requestType;
   }

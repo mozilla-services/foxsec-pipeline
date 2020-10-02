@@ -11,15 +11,10 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
-import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
-import org.apache.beam.sdk.transforms.windowing.FixedWindows;
-import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptors;
-import org.joda.time.Duration;
 
 /**
  * Provides transforms to detect if an ip is making a variety of requests to the content server or
@@ -50,25 +45,11 @@ public class ContentServerVarianceDetector {
    * Execute transform returning a {@link PCollectionView} of ips accessing content server
    * resources, that can be used as a side input.
    *
-   * <p>This is currently meant to work with the fixed 10 minute window based heuristics.
-   *
    * @param events Input events
    * @return {@link PCollectionView} representing output of analysis
    */
   public static PCollectionView<Map<String, Boolean>> getView(PCollection<Event> events) {
-    return events
-        .apply(
-            "fixed ten min variance window",
-            Window.<Event>into(FixedWindows.of(Duration.standardMinutes(10)))
-                .triggering(
-                    AfterWatermark.pastEndOfWindow()
-                        .withEarlyFirings(
-                            AfterProcessingTime.pastFirstElementInPane()
-                                .plusDelayOf(Duration.standardSeconds(30))))
-                .withAllowedLateness(Duration.ZERO)
-                .accumulatingFiredPanes())
-        .apply("variance view", new PresenceBased())
-        .apply(View.<String, Boolean>asMap());
+    return events.apply("variance view", new PresenceBased()).apply(View.<String, Boolean>asMap());
   }
 
   /** Provides a basic transform for detecting variance based on whether an ip exists */
@@ -80,9 +61,9 @@ public class ContentServerVarianceDetector {
     public PCollection<KV<String, Boolean>> expand(PCollection<Event> events) {
       return events
           .apply(
-              "extract source ip",
+              "key by source address",
               ParDo.of(
-                  new DoFn<Event, KV<String, Boolean>>() {
+                  new DoFn<Event, KV<String, Event>>() {
                     private static final long serialVersionUID = 1L;
 
                     @ProcessElement
@@ -92,9 +73,21 @@ public class ContentServerVarianceDetector {
                       if (e.getPayloadType().equals(PayloadType.FXACONTENT)) {
                         FxaContent d = e.getPayload();
                         if (d.getSourceAddress() != null) {
-                          c.output(KV.of(d.getSourceAddress(), true));
+                          c.output(KV.of(d.getSourceAddress(), e));
                         }
                       }
+                    }
+                  }))
+          .apply("fixed ten min variance window", new CustomsWindow.FixedTenMinutes())
+          .apply(
+              ParDo.of(
+                  new DoFn<KV<String, Event>, KV<String, Boolean>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @ProcessElement
+                    public void processElement(ProcessContext c) {
+                      KV<String, Event> kv = c.element();
+                      c.output(KV.of(kv.getKey(), true));
                     }
                   }))
           .apply(Distinct.create());
