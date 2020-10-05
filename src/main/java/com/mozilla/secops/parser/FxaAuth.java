@@ -24,6 +24,12 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
         return "accountStatusCheckSuccess";
       }
     },
+    ACCOUNT_STATUS_CHECK_BLOCKED {
+      @Override
+      public String toString() {
+        return "accountStatusCheckBlocked";
+      }
+    },
     RECOVERY_EMAIL_VERIFY_CODE_FAILURE {
       @Override
       public String toString() {
@@ -205,7 +211,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     return true;
   }
 
-  private Boolean discernStatusCheck() {
+  private Boolean discernStatusCheckSuccess() {
     if (!fxaAuthData.getPath().equals("/v1/account/status")) {
       return false;
     }
@@ -217,6 +223,21 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
       return false;
     }
     eventSummary = EventSummary.ACCOUNT_STATUS_CHECK_SUCCESS;
+    return true;
+  }
+
+  private Boolean discernStatusCheckBlocked() {
+    if (!fxaAuthData.getPath().equals("/v1/account/status")) {
+      return false;
+    }
+    if (!fxaAuthData.getStatus().equals(429)) {
+      return false;
+    }
+    if (!((fxaAuthData.getMethod().toLowerCase().equals("post"))
+        || (fxaAuthData.getMethod().toLowerCase().equals("get")))) {
+      return false;
+    }
+    eventSummary = EventSummary.ACCOUNT_STATUS_CHECK_BLOCKED;
     return true;
   }
 
@@ -370,7 +391,7 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
 
     if (discernLoginFailure()) {
       return;
-    } else if (discernStatusCheck()) {
+    } else if (discernStatusCheckSuccess()) {
       return;
     } else if (discernRecoveryEmailVerifyCodeFailure()) {
       return;
@@ -387,6 +408,8 @@ public class FxaAuth extends SourcePayloadBase implements Serializable {
     } else if (discernCertificateSignSuccess()) {
       return;
     } else if (discernSessionVerifyCodeSuccess()) {
+      return;
+    } else if (discernStatusCheckBlocked()) {
       return;
     }
   }

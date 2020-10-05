@@ -27,6 +27,7 @@ public class CustomsFeatures implements Serializable {
   private int totalAccountCreateSuccess;
   private int totalPasswordForgotSendCodeSuccess;
   private int totalPasswordForgotSendCodeFailure;
+  private int totalAccountStatusCheckCount;
 
   private HashMap<FxaAuth.EventSummary, Integer> summarizedEventCounters;
   private int unknownEventCounter;
@@ -96,6 +97,7 @@ public class CustomsFeatures implements Serializable {
     totalAccountCreateSuccess += cf.getTotalAccountCreateSuccess();
     totalPasswordForgotSendCodeSuccess += cf.getTotalPasswordForgotSendCodeSuccess();
     totalPasswordForgotSendCodeFailure += cf.getTotalPasswordForgotSendCodeFailure();
+    totalAccountStatusCheckCount += cf.getTotalAccountStatusCheckCount();
 
     for (Map.Entry<String, Integer> entry : cf.getSourceAddressEventCount().entrySet()) {
       Integer cur =
@@ -244,6 +246,15 @@ public class CustomsFeatures implements Serializable {
   }
 
   /**
+   * Get total account status check for event set
+   *
+   * @return int
+   */
+  public int getTotalAccountStatusCheckCount() {
+    return totalAccountStatusCheckCount;
+  }
+
+  /**
    * Add a single event to the event list
    *
    * @param e Event
@@ -268,6 +279,12 @@ public class CustomsFeatures implements Serializable {
           break;
         case PASSWORD_FORGOT_SEND_CODE_FAILURE:
           totalPasswordForgotSendCodeFailure++;
+          break;
+        case ACCOUNT_STATUS_CHECK_SUCCESS:
+          totalAccountStatusCheckCount++;
+          break;
+        case ACCOUNT_STATUS_CHECK_BLOCKED:
+          totalAccountStatusCheckCount++;
           break;
       }
       // This is something we have a summary for, if it's registered for storage add it
@@ -357,6 +374,7 @@ public class CustomsFeatures implements Serializable {
     totalAccountCreateSuccess = 0;
     totalPasswordForgotSendCodeSuccess = 0;
     totalPasswordForgotSendCodeFailure = 0;
+    totalAccountStatusCheckCount = 0;
 
     summarizedEventCounters = new HashMap<FxaAuth.EventSummary, Integer>();
     unknownEventCounter = 0;

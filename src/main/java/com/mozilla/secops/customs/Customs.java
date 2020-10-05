@@ -19,6 +19,7 @@ import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -30,14 +31,13 @@ import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
-import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTagList;
 import org.joda.time.Duration;
 
@@ -59,6 +59,7 @@ public class Customs implements Serializable {
       "login_failure_at_risk_account";
   public static final String CATEGORY_ACTIVITY_MONITOR = "activity_monitor";
   public static final String CATEGORY_PRIVATE_RELAY_FORWARD = "private_relay_forward";
+  public static final String CATEGORY_ACCOUNT_STATUS_CHECK_ABUSE = "account_enumeration";
 
   /** Used by keyEvents */
   private enum KeyType {
@@ -94,6 +95,7 @@ public class Customs implements Serializable {
     ret.add(FxaAuth.EventSummary.LOGIN_FAILURE);
     ret.add(FxaAuth.EventSummary.LOGIN_SUCCESS);
     ret.add(FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK_SUCCESS);
+    ret.add(FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK_BLOCKED);
     ret.add(FxaAuth.EventSummary.SESSION_VERIFY_CODE_SUCCESS);
     return ret;
   }
@@ -395,6 +397,38 @@ public class Customs implements Serializable {
     Boolean getEnablePrivateRelayForward();
 
     void setEnablePrivateRelayForward(Boolean value);
+
+    @Description("Enable status account enumeration detection; CustomsAccountEnumeration")
+    @Default.Boolean(false)
+    Boolean getEnableAccountEnumerationDetector();
+
+    void setEnableAccountEnumerationDetector(Boolean value);
+
+    @Description("Enable escalation of account enumeration alerts; CustomsAccountEnumeration")
+    @Default.Boolean(false)
+    Boolean getEscalateAccountEnumerationDetector();
+
+    void setEscalateAccountEnumerationDetector(Boolean value);
+
+    @Description("Number of distinct emails used as threshold for CustomsAccountEnumeration")
+    @Default.Integer(3)
+    Integer getAccountEnumerationThreshold();
+
+    void setAccountEnumerationThreshold(Integer value);
+
+    @Description(
+        "Enable use of content server events for variance; currently only for CustomsAccountEnumeration")
+    @Default.Boolean(true)
+    Boolean getEnableContentServerVarianceDetection();
+
+    void setEnableContentServerVarianceDetection(Boolean value);
+
+    @Description(
+        "Min number of clients in content server logs to require before it can be used for variance; currently only for CustomsAccountEnumeration")
+    @Default.Long(500L)
+    Long getContentServerVarianceMinClients();
+
+    void setContentServerVarianceMinClients(Long value);
   }
 
   /**
@@ -446,6 +480,10 @@ public class Customs implements Serializable {
       b.withTransformDoc(new PrivateRelayForward(options));
     }
 
+    if (options.getEnableAccountEnumerationDetector()) {
+      b.withTransformDoc(new CustomsAccountEnumeration(options, null));
+    }
+
     return b.build();
   }
 
@@ -491,56 +529,33 @@ public class Customs implements Serializable {
   }
 
   private static PCollectionList<Alert> fixedTenMinutes(
-      PCollectionList<Alert> ret, CollectionInfo ci, CustomsOptions options) {
+      PCollectionList<Alert> ret,
+      CollectionInfo ci,
+      CustomsOptions options,
+      PCollectionView<Map<String, Boolean>> varianceView) {
     PCollection<KV<String, CustomsFeatures>> sourceWindowed = null;
     PCollection<KV<String, CustomsFeatures>> emailWindowed = null;
     PCollection<KV<String, CustomsFeatures>> domainWindowed = null;
 
     if (options.getEnablePasswordResetAbuseDetector()
         || options.getEnableSourceLoginFailureDetector()
-        || options.getEnableAccountCreationAbuseDetector()) {
+        || options.getEnableAccountCreationAbuseDetector()
+        || options.getEnableAccountEnumerationDetector()) {
       sourceWindowed =
           ci.sourceKey
-              .apply(
-                  "fixed ten source address",
-                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10)))
-                      .triggering(
-                          AfterWatermark.pastEndOfWindow()
-                              .withEarlyFirings(
-                                  AfterProcessingTime.pastFirstElementInPane()
-                                      .plusDelayOf(Duration.standardSeconds(30))))
-                      .withAllowedLateness(Duration.ZERO)
-                      .accumulatingFiredPanes())
+              .apply("fixed ten source address", new CustomsWindow.FixedTenMinutes())
               .apply("fixed ten source address features", new CustomsFeaturesCombiner());
     }
     if (options.getEnableSourceLoginFailureDetector()) {
       emailWindowed =
           ci.emailKey
-              .apply(
-                  "fixed ten email",
-                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10)))
-                      .triggering(
-                          AfterWatermark.pastEndOfWindow()
-                              .withEarlyFirings(
-                                  AfterProcessingTime.pastFirstElementInPane()
-                                      .plusDelayOf(Duration.standardSeconds(30))))
-                      .withAllowedLateness(Duration.ZERO)
-                      .accumulatingFiredPanes())
+              .apply("fixed ten email", new CustomsWindow.FixedTenMinutes())
               .apply("fixed ten email features", new CustomsFeaturesCombiner());
     }
     if (options.getEnableAccountCreationAbuseDetector()) {
       domainWindowed =
           ci.domainKey
-              .apply(
-                  "fixed ten domain",
-                  Window.<KV<String, Event>>into(FixedWindows.of(Duration.standardMinutes(10)))
-                      .triggering(
-                          AfterWatermark.pastEndOfWindow()
-                              .withEarlyFirings(
-                                  AfterProcessingTime.pastFirstElementInPane()
-                                      .plusDelayOf(Duration.standardSeconds(30))))
-                      .withAllowedLateness(Duration.ZERO)
-                      .accumulatingFiredPanes())
+              .apply("fixed ten domain", new CustomsWindow.FixedTenMinutes())
               .apply("fixed ten domain features", new CustomsFeaturesCombiner());
     }
 
@@ -563,6 +578,12 @@ public class Customs implements Serializable {
                   domainWindowed.apply(
                       "account creation distributed", new CustomsAccountCreationDist(options)));
     }
+    if (options.getEnableAccountEnumerationDetector()) {
+      ret =
+          ret.and(
+              sourceWindowed.apply(
+                  "account status check", new CustomsAccountEnumeration(options, varianceView)));
+    }
 
     return ret;
   }
@@ -581,6 +602,7 @@ public class Customs implements Serializable {
     EventFilter filter = new EventFilter().passConfigurationTicks();
     filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.PRIVATE_RELAY));
     filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.FXAAUTH));
+    filter.addRule(new EventFilterRule().wantSubtype(Payload.PayloadType.FXACONTENT));
 
     PCollection<Event> inputEvents =
         input.apply(
@@ -598,19 +620,29 @@ public class Customs implements Serializable {
             ParDo.of(new CustomsPreFilter())
                 .withOutputTags(
                     CustomsPreFilter.TAG_FXA_AUTH_EVENTS,
-                    TupleTagList.of(CustomsPreFilter.TAG_RELAY_EVENTS)));
+                    TupleTagList.of(CustomsPreFilter.TAG_RELAY_EVENTS)
+                        .and(CustomsPreFilter.TAG_FXA_CONTENT_EVENTS)));
     PCollection<Event> events = inputTuple.get(CustomsPreFilter.TAG_FXA_AUTH_EVENTS);
     PCollection<Event> relayEvents = null;
     if (options.getEnablePrivateRelayForward()) {
       relayEvents = inputTuple.get(CustomsPreFilter.TAG_RELAY_EVENTS);
     }
+    PCollection<Event> contentEvents = inputTuple.get(CustomsPreFilter.TAG_FXA_CONTENT_EVENTS);
 
     PCollectionList<Alert> resultsList = PCollectionList.empty(p);
     CollectionInfo ci = new CollectionInfo();
 
+    PCollectionView<Map<String, Boolean>> varianceView = null;
+    if (options.getEnableContentServerVarianceDetection()) {
+      varianceView = ContentServerVarianceDetector.getView(contentEvents);
+    } else {
+      varianceView = ContentServerVarianceDetector.getEmptyView(p);
+    }
+
     if (options.getEnablePasswordResetAbuseDetector()
         || options.getEnableSourceLoginFailureDetector()
-        || options.getEnableAccountCreationAbuseDetector()) {
+        || options.getEnableAccountCreationAbuseDetector()
+        || options.getEnableAccountEnumerationDetector()) {
       ci.sourceKey = keyEvents(events, KeyType.SOURCEADDRESS, "source address key");
     }
     if (options.getEnableSourceLoginFailureDetector()) {
@@ -620,7 +652,7 @@ public class Customs implements Serializable {
       ci.domainKey = keyEvents(events, KeyType.DOMAIN, "domain key");
     }
 
-    resultsList = fixedTenMinutes(resultsList, ci, options);
+    resultsList = fixedTenMinutes(resultsList, ci, options, varianceView);
 
     if (options.getEnableVelocityDetector()) {
       resultsList =
