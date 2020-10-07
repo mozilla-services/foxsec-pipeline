@@ -31,7 +31,8 @@
     },
     "aws_account_map": {
         "123456789": "riker-vacationing-on-risa",
-        "123456789012": "mock-aws-account-name"
+        "123456789012": "mock-aws-account-name",
+        "999999999999": "super-important-account"
     },
     "named_subnets": {
       "office": "fd00:0:0:0:0:0:0:0/48"

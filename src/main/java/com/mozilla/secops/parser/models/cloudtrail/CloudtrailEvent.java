@@ -28,10 +28,12 @@ public class CloudtrailEvent implements Serializable {
   private Boolean readOnly;
   private String recipientAccountId;
   private String requestID;
+  private String sharedEventID;
   private String sourceIPAddress;
   private String userAgent;
 
   private UserIdentity userIdentity;
+  private HashMap<String, Object> additionalEventData;
 
   private HashMap<String, Object> responseElements;
   private HashMap<String, Object> requestParameters;
@@ -88,6 +90,10 @@ public class CloudtrailEvent implements Serializable {
     return requestID;
   }
 
+  public String getSharedEventID() {
+    return sharedEventID;
+  }
+
   public String getSourceIPAddress() {
     return sourceIPAddress;
   }
@@ -103,6 +109,11 @@ public class CloudtrailEvent implements Serializable {
   @JsonProperty("userIdentity")
   public UserIdentity getUserIdentity() {
     return userIdentity;
+  }
+
+  @JsonProperty("additionalEventData")
+  public HashMap<String, Object> getAdditionalEventData() {
+    return additionalEventData;
   }
 
   @JsonProperty("responseElements")
@@ -139,5 +150,12 @@ public class CloudtrailEvent implements Serializable {
       return null;
     }
     return responseElements.get(key);
+  }
+
+  public Object getAdditionalEventDataValue(String key) {
+    if (additionalEventData == null) {
+      return null;
+    }
+    return additionalEventData.get(key);
   }
 }

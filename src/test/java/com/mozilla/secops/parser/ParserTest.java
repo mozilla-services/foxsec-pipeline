@@ -66,8 +66,8 @@ public class ParserTest {
 
   @Test
   public void testParseJsonNull() throws Exception {
-    // The string "null" is valid JSON and represents a null object. Ensure proper handling
-    // of this case.
+    /* The string "null" is valid JSON and represents a null object. Ensure proper handling
+    of this case. */
     String buf = "null";
     Parser p = getTestParser();
     assertNotNull(p);
@@ -332,8 +332,8 @@ public class ParserTest {
 
   @Test
   public void testStackdriverJsonNoType() throws Exception {
-    // Verify Stackdriver message with a JSON payload and no @type field is returned as a
-    // raw event.
+    /* Verify Stackdriver message with a JSON payload and no @type field is returned as a
+    raw event. */
     String buf =
         "{\"httpRequest\":{\"referer\":\"https://send.firefox.com/\",\"remoteIp\":"
             + "\"127.0.0.1\",\"requestMethod\":\"GET\",\"requestSize\":\"43\",\"requestUrl\":\"htt"
@@ -1322,6 +1322,40 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH));
     assertEquals("10.0.0.1", n.getSourceAddress());
     assertEquals("1234567890", n.getObject());
+    assertFalse(n.hasTag(Normalized.Tag.NEEDS_FIXUP));
+
+    // AssumeRole account from another aws account
+    buf =
+        "{\"insertId\": \"1i3z52pg1suxug8\", \"jsonPayload\":{\"eventTime\": \"2020-10-20T15:21:40Z\","
+            + "\"requestParameters\":{\"roleArn\": \"arn:aws:iam::999999999999:role/role-name\", \"durationSeconds\": 3600, "
+            + "\"roleSessionName\": \"12345\"}, \"userAgent\": \"aws-sdk-go/1.34.13 (go1.15.2; linux; amd64)\", "
+            + "\"requestID\": \"78a1455e-a46f-4d6c-b2a3-6142e868c398\", \"eventSource\": \"sts.amazonaws.com\", "
+            + "\"responseElements\":{\"assumedRoleUser\":{\"arn\": \"arn:aws:sts::999999999999:assumed-role/role-name/12345\", "
+            + "\"assumedRoleId \": \"ASSUMEDROLEID:12345\"}, \"credentials \":{\"accessKeyId\": \"ACCESSKEYID\", "
+            + "\"expiration\": \"Oct 20, 2020 4:21:40 PM\", \"sessionToken\": \"SESSIONTOKEN\"}}, "
+            + "\"userIdentity\":{\"accountId\": \"000000000000\", \"principalId\": \"PRINCIPALID\", \"type\": \"AWSAccount\"},"
+            + "\"sourceIPAddress\": \"127.0.0.1\", \"sharedEventID\": \"1bfc7fd0-0c12-441d-b155-fe2442532683\", \"eventVersion\":\"1.05 \","
+            + "\"awsRegion\": \"us-east-1\", \"eventName\": \"AssumeRole\", \"eventType\": \"AwsApiCall\", "
+            + "\"eventID\": \"fa1b3d9a-7070-4f5a-bd44-01572f488268 \", \"recipientAccountId\": \"999999999999\", "
+            + "\"resources\": [{\"type\": \"AWS::IAM::Role\", \"ARN \": \"arn:aws:iam::999999999999:role/role-name\", "
+            + "\"accountId\": \"999999999999\"}]}, \"resource\":{\"type\": \"project \", \"labels\":{\"project_id\": \"project-name\"}},"
+            + "\"timestamp\": \"2020-10-20T15:36:11.328745600Z \", \"logName\": \"projects/project-name/logs/cloudtrail-streamer\", "
+            + "\"receiveTimestamp\": \"2020-10-20T15:36:11.427643185Z\"}";
+
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2020-10-20T15:21:40.000Z", e.getTimestamp().toString());
+    ct = e.getPayload();
+    assertNotNull(ct);
+    assertEquals("000000000000", ct.getUser());
+    assertEquals("127.0.0.1", ct.getSourceAddress());
+    n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("127.0.0.1", n.getSourceAddress());
+    assertEquals("999999999999", n.getObject());
+    assertTrue(n.hasTag(Normalized.Tag.NEEDS_FIXUP));
   }
 
   @Test
@@ -1390,6 +1424,71 @@ public class ParserTest {
     assertNotNull(ct);
     assertEquals("uhura", ct.getUser());
     assertEquals("127.0.0.1", ct.getSourceAddress());
+  }
+
+  @Test
+  public void testCloudtrailStackdriverSwitchRole() throws Exception {
+    // This is the SwitchRole event from the trusting account. Instead of using userIdentity
+    // to get the subject user, we use the originating user which we extract from the SwitchFrom
+    // field in the additional event data.
+    String buf =
+        "{\"insertId\": \"1p1zr54g12tu7av\", \"jsonPayload\": {\"additionalEventData\": "
+            + "{\"RedirectTo\": \"https://us-west-2.console.aws.amazon.com/console/home?region=us-west-2#\", "
+            + "\"SwitchFrom\": \"arn:aws:iam::000000000000:user/uhura\"},\"awsRegion\": \"us-east-1\", "
+            + "\"eventID\": \"fdbb2209-3fc9-4304-bcde-00634c0b7889\", \"eventName\": \"SwitchRole\", \"eventSource\": \"signin.amazonaws.com\", "
+            + "\"eventTime\": \"2020-10-20T14:05:37Z\", \"eventType\": \"AwsConsoleSignIn\", \"eventVersion\": \"1.05\", "
+            + "\"recipientAccountId\": \"999999999999\", \"requestParameters\": null, \"responseElements\": {"
+            + "\"SwitchRole\": \"Success\"}, \"sourceIPAddress\": \"127.0.0.1\", "
+            + "\"userAgent\": \"Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0\","
+            + "\"userIdentity\": {\"accountId\": \"999999999999\", \"arn\": \"arn:aws:sts::999999999999:assumed-role/role-name/uhura\", "
+            + "\"principalId\": \"PRINCIPALID:uhura\", \"type\": \"AssumedRole\"}}, "
+            + "\"logName\": \"projects/sandbox/logs/cloudtrail-streamer\", \"receiveTimestamp\": \"2020-10-20T14:21:28.313193568Z\", "
+            + "\"resource\": {\"labels\": {\"project_id\": \"sandbox\"}, \"type\": \"project\"}, \"timestamp\": \"2020-10-20T14:21:28.281083008Z\"}";
+    Parser p = getTestParser();
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2020-10-20T14:05:37.000Z", e.getTimestamp().toString());
+    Cloudtrail ct = e.getPayload();
+    assertNotNull(ct);
+    assertEquals("uhura", ct.getUser());
+    assertEquals("127.0.0.1", ct.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("uhura", n.getSubjectUser());
+    assertEquals("127.0.0.1", n.getSourceAddress());
+    assertEquals("999999999999", n.getObject());
+
+    // This is the SwitchRole event from the trusted account.
+    buf =
+        "{\"insertId\": \"1e894gxg1vmni86\", \"jsonPayload\":"
+            + "{\"additionalEventData\": {\"RedirectTo\": \"https://us-west-2.console.aws.amazon.com/console/home?region=us-west-2#\","
+            + "\"SwitchTo\": \"arn:aws:iam::000000000000:role/role-name\"}, "
+            + "\"awsRegion\": \"us-east-1\", \"eventID\": \"60fdb466-fbf7-4da0-b521-0e9979e73c5d\", \"eventName\": \"SwitchRole\","
+            + "\"eventSource\": \"signin.amazonaws.com\", \"eventTime\": \"2020-10-20T14:04:51Z\", \"eventType\": \"AwsConsoleSignIn\","
+            + "\"eventVersion\": \"1.05\", \"recipientAccountId\": \"000000000000\", \"requestParameters\": null,"
+            + "\"responseElements\": {\"SwitchRole\": \"Success\"},"
+            + "\"sourceIPAddress\": \"127.0.0.1\", \"userAgent\": \"Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0\","
+            + "\"userIdentity\": {\"accountId\": \"000000000000\", \"arn\": \"arn:aws:iam::000000000000:user/uhura\", \"principalId\": \"PRINCIPALID\","
+            + "\"type\": \"IAMUser\", \"userName\": \"uhura\"}},\"logName\": \"projects/project-name/logs/cloudtrail-streamer\","
+            + "\"receiveTimestamp\": \"2020-10-20T14:17:51.014353984Z\", \"resource\": {\"labels\": {\"project_id\": \"project-name\"},"
+            + "\"type\": \"project\"},\"timestamp\": \"2020-10-20T14:17:50.900847317Z\"}";
+    e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.CLOUDTRAIL, e.getPayloadType());
+    assertEquals("2020-10-20T14:04:51.000Z", e.getTimestamp().toString());
+    ct = e.getPayload();
+    assertNotNull(ct);
+    assertEquals("uhura", ct.getUser());
+    assertEquals("127.0.0.1", ct.getSourceAddress());
+    n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.AUTH));
+    assertEquals("uhura", n.getSubjectUser());
+    assertEquals("127.0.0.1", n.getSourceAddress());
+    assertEquals("000000000000", n.getObject());
   }
 
   @Test

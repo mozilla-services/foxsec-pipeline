@@ -19,7 +19,19 @@ public class Normalized implements Serializable {
     HTTP_REQUEST
   }
 
+  /**
+   * Tags that can be used to track state for example if an event needs additional processing after
+   * the parsing step
+   */
+  public enum Tag {
+    /** An event that is missing key information and needs some sort of modification */
+    NEEDS_FIXUP,
+    /** An event that has been fixed up after the parsing step */
+    FIXED_UP
+  }
+
   private EnumSet<Type> types;
+  private EnumSet<Tag> tags;
 
   private String subjectUser;
   private String sourceAddress;
@@ -45,6 +57,7 @@ public class Normalized implements Serializable {
 
   Normalized() {
     types = EnumSet.noneOf(Type.class);
+    tags = EnumSet.noneOf(Tag.class);
     geoIpData = new GeoIP.GeoIPData();
   }
 
@@ -112,6 +125,34 @@ public class Normalized implements Serializable {
    */
   public void setType(Type t) {
     types = EnumSet.of(t);
+  }
+
+  /**
+   * Test if normalized event has a given Tag
+   *
+   * @param t {@link Normalized.Tag}
+   * @return True if tag is set for this event
+   */
+  public Boolean hasTag(Tag t) {
+    return tags.contains(t);
+  }
+
+  /**
+   * Add a tag to normalized event
+   *
+   * @param t {@link Normalized.Tag}
+   */
+  public void addTag(Tag t) {
+    tags.add(t);
+  }
+
+  /**
+   * Set normalized tag
+   *
+   * @param t {@link Normalized.Tag}
+   */
+  public void setTag(Tag t) {
+    tags = EnumSet.of(t);
   }
 
   /**
