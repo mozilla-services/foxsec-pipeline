@@ -2,16 +2,14 @@ package com.mozilla.secops.state;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
-import org.junit.rules.ExpectedException;
 
 public class StateDatastoreTest {
   @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
-
-  @Rule public ExpectedException expectEx = ExpectedException.none();
 
   private void testEnv() {
     environmentVariables.set("DATASTORE_EMULATOR_HOST", "localhost:8081");
@@ -22,9 +20,6 @@ public class StateDatastoreTest {
 
   @Test
   public void testStateGetSetConcurrent() throws Exception {
-    expectEx.expect(StateException.class);
-    expectEx.expectMessage("too much contention on these datastore entities. please try again.");
-
     testEnv();
     State s = new State(new DatastoreStateInterface("test", "statetest"));
     assertNotNull(s);
@@ -57,6 +52,9 @@ public class StateDatastoreTest {
 
     t.str = "changed";
     c1.set("testing", t);
-    c1.commit();
+    assertThrows(
+        "too much contention on these datastore entities. please try again.",
+        StateException.class,
+        c1::commit);
   }
 }
