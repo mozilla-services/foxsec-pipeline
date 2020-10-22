@@ -6,7 +6,7 @@ import com.mozilla.secops.customs.Customs.CustomsOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.junit.Test;
 
-public class TestCustomsStatusCheckAbuse {
+public class TestCustomsAccountEnumeration {
   @Test
   public void TestTransformDocWithVarianceWithEscalation() {
     CustomsOptions options = PipelineOptionsFactory.as(Customs.CustomsOptions.class);

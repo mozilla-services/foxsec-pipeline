@@ -68,7 +68,7 @@ public class CustomsAccountEnumeration
   @Override
   public PCollection<Alert> expand(PCollection<KV<String, CustomsFeatures>> col) {
     return col.apply(
-            "status check analysis",
+            "account enumeration analysis",
             ParDo.of(
                     new DoFn<KV<String, CustomsFeatures>, KV<String, Alert>>() {
                       private static final long serialVersionUID = 1L;
@@ -134,7 +134,7 @@ public class CustomsAccountEnumeration
                         alert.addMetadata(AlertMeta.Key.COUNT, Long.toString(distinctAccts));
                         alert.setSummary(
                             String.format(
-                                "%s %s account status check abuse threshold exceeded, %d in 10 minutes",
+                                "%s %s account enumeration threshold exceeded, %d in 10 minutes",
                                 monitoredResource, ipAddr, distinctAccts));
                         ArrayList<String> buf = new ArrayList<>();
                         for (String s : accts) {
@@ -145,7 +145,7 @@ public class CustomsAccountEnumeration
                       }
                     })
                 .withSideInputs(varianceView))
-        .apply("status check abuse global windows", new GlobalTriggers<KV<String, Alert>>(5))
+        .apply("account enumeration global windows", new GlobalTriggers<KV<String, Alert>>(5))
         .apply(ParDo.of(new AlertSuppressorCount(600L)));
   }
 

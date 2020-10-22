@@ -754,7 +754,7 @@ public class TestCustoms {
   }
 
   @Test
-  public void accountStatusCheckAbuseWithoutContentServerVarianceTest() throws Exception {
+  public void accountEnumerationWithoutContentServerVarianceTest() throws Exception {
     testEnv();
 
     /*
@@ -790,7 +790,7 @@ public class TestCustoms {
                 if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.1")) {
                   assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals(
-                      "test 10.0.0.1 account status check abuse threshold exceeded, 3 in 10 minutes",
+                      "test 10.0.0.1 account enumeration threshold exceeded, 3 in 10 minutes",
                       a.getSummary());
                   assertEquals("customs", a.getCategory());
                   assertEquals(
@@ -803,7 +803,7 @@ public class TestCustoms {
                 if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.3")) {
                   assertEquals("10.0.0.3", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals(
-                      "test 10.0.0.3 account status check abuse threshold exceeded, 3 in 10 minutes",
+                      "test 10.0.0.3 account enumeration threshold exceeded, 3 in 10 minutes",
                       a.getSummary());
                   assertEquals("customs", a.getCategory());
                   assertEquals(
@@ -825,7 +825,7 @@ public class TestCustoms {
   }
 
   @Test
-  public void accountStatusCheckAbuseWithContentServerVarianceTest() throws Exception {
+  public void accountEnumerationWithContentServerVarianceTest() throws Exception {
     testEnv();
 
     /*
@@ -870,7 +870,7 @@ public class TestCustoms {
                 if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.1")) {
                   assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals(
-                      "test 10.0.0.1 account status check abuse threshold exceeded, 3 in 10 minutes",
+                      "test 10.0.0.1 account enumeration threshold exceeded, 3 in 10 minutes",
                       a.getSummary());
                   assertEquals("customs", a.getCategory());
                   assertEquals(
@@ -891,7 +891,7 @@ public class TestCustoms {
   }
 
   @Test
-  public void accountStatusCheckAbuseMultiWindowWithContentServerVarianceTest() throws Exception {
+  public void accountEnumerationMultiWindowWithContentServerVarianceTest() throws Exception {
     testEnv();
 
     /*
@@ -952,7 +952,7 @@ public class TestCustoms {
                 if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.1")) {
                   assertEquals("10.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals(
-                      "test 10.0.0.1 account status check abuse threshold exceeded, 3 in 10 minutes",
+                      "test 10.0.0.1 account enumeration threshold exceeded, 3 in 10 minutes",
                       a.getSummary());
                   assertEquals("customs", a.getCategory());
                   assertEquals(
@@ -977,8 +977,7 @@ public class TestCustoms {
   }
 
   @Test
-  public void accountStatusCheckAbuseDoesNotAlertIfMissingContentServerEventsTest()
-      throws Exception {
+  public void accountEnumerationDoesNotAlertIfMissingContentServerEventsTest() throws Exception {
     testEnv();
 
     /*
