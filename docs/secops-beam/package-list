@@ -20,6 +20,7 @@ com.mozilla.secops.parser.models.cloudwatch
 com.mozilla.secops.parser.models.duopull
 com.mozilla.secops.parser.models.etd
 com.mozilla.secops.parser.models.fxaauth
+com.mozilla.secops.parser.models.fxacontent
 com.mozilla.secops.parser.models.gcpvpcflow
 com.mozilla.secops.parser.models.nginxstackdriver
 com.mozilla.secops.parser.models.taskcluster
