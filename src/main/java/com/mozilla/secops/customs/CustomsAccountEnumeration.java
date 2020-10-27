@@ -8,8 +8,10 @@ import com.mozilla.secops.parser.FxaAuth;
 import com.mozilla.secops.parser.Parser;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -101,11 +103,16 @@ public class CustomsAccountEnumeration
                         events.addAll(
                             cf.getEventsOfType(FxaAuth.EventSummary.ACCOUNT_STATUS_CHECK_BLOCKED));
 
-                        ArrayList<String> accts = new ArrayList<>();
-                        events.forEach(e -> accts.add(CustomsUtil.authGetEmail(e)));
-                        long distinctAccts =
-                            accts.stream().distinct().filter(Objects::nonNull).count();
-                        if (distinctAccts < threshold) {
+                        List<String> emails =
+                            events
+                                .stream()
+                                .map(e -> CustomsUtil.authGetEmail(e))
+                                .filter(Objects::nonNull)
+                                .distinct()
+                                .collect(Collectors.toList());
+
+                        long emailCount = emails.size();
+                        if (emailCount < threshold) {
                           return;
                         }
 
@@ -127,17 +134,17 @@ public class CustomsAccountEnumeration
 
                         Alert alert = new Alert();
                         alert.setCategory("customs");
-                        alert.setSubcategory(Customs.CATEGORY_ACCOUNT_STATUS_CHECK_ABUSE);
+                        alert.setSubcategory(Customs.CATEGORY_ACCOUNT_ENUMERATION);
                         alert.setTimestamp(Parser.getLatestTimestamp(events));
-                        alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_STATUS_CHECK_ABUSE);
+                        alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_ENUMERATION);
                         alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, ipAddr);
-                        alert.addMetadata(AlertMeta.Key.COUNT, Long.toString(distinctAccts));
+                        alert.addMetadata(AlertMeta.Key.COUNT, Long.toString(emailCount));
                         alert.setSummary(
                             String.format(
                                 "%s %s account enumeration threshold exceeded, %d in 10 minutes",
-                                monitoredResource, ipAddr, distinctAccts));
+                                monitoredResource, ipAddr, emailCount));
                         ArrayList<String> buf = new ArrayList<>();
-                        for (String s : accts) {
+                        for (String s : emails) {
                           buf.add(s);
                         }
                         alert.addMetadata(AlertMeta.Key.EMAIL, buf);
