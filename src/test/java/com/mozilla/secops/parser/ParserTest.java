@@ -956,7 +956,7 @@ public class ParserTest {
     assertNotNull(d);
     com.mozilla.secops.parser.models.taskcluster.Taskcluster data = d.getTaskclusterData();
     assertNotNull(data);
-    assertEquals(data.getApiVersion(), "v1");
+    assertEquals(data.getApiVersion(), "v2");
     assertEquals("mozilla-auth0/ad|Mozilla-LDAP|riker/services", data.getClientId());
     assertEquals(20159.03, (double) data.getDuration(), 0.5);
     assertEquals("3017-02-01T05:00:00.000Z", data.getExpires());
