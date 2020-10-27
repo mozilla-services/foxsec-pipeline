@@ -932,9 +932,9 @@ public class ParserTest {
   public void testParseTaskcluster() throws Exception {
     String buf =
         "{\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
-            + "\":{\"apiVersion\":\"v1\",\"clientId\":\"mozilla-auth0/ad|Mozilla-LDAP|riker/servi"
-            + "ces\",\"duration\":20159.035803,\"expires\":\"3017-02-01T05:00:00.000Z\",\"hasAuth"
-            + "ed\":true,\"method\":\"POST\",\"name\":\"claimWork\",\"public\":false,\"resource\""
+            + "\":{\"apiVersion\":\"v2\",\"clientId\":\"mozilla-auth0/ad|Mozilla-LDAP|riker/servi"
+            + "ces\",\"duration\":20159.035803,\"expires\":\"3017-02-01T05:00:00.000Z\",\"authenti"
+            + "cated\":true,\"method\":\"POST\",\"name\":\"claimWork\",\"public\":false,\"resource\""
             + ":\"/v1/claim-work/test-provisioner/macos-workers\",\"satisfyingScopes\":[\"queue:c"
             + "laim-work:test-provisioner/macos-workers\",\"queue:worker-id:test-worker-group/test\""
             + "],\"sourceIp\":\"216.160.83.56\",\"statusCode\":200,\"v\":1},\"Hostname\":\"000000"
@@ -956,10 +956,11 @@ public class ParserTest {
     assertNotNull(d);
     com.mozilla.secops.parser.models.taskcluster.Taskcluster data = d.getTaskclusterData();
     assertNotNull(data);
+    assertEquals(data.getApiVersion(), "v1");
     assertEquals("mozilla-auth0/ad|Mozilla-LDAP|riker/services", data.getClientId());
     assertEquals(20159.03, (double) data.getDuration(), 0.5);
     assertEquals("3017-02-01T05:00:00.000Z", data.getExpires());
-    assertTrue(data.getHasAuthed());
+    assertTrue(data.getAuthenticated());
     assertEquals("216.160.83.56", data.getSourceIp());
     assertEquals(200, (int) data.getStatusCode());
     assertEquals("riker", d.getResolvedSubject());
