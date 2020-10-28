@@ -274,7 +274,15 @@ public class PostProcessing implements Serializable {
       for (AlertMeta.Key i : emailKeys) {
         String v = a.getMetadataValue(i);
         if (v != null) {
-          ret.add(new KeyData(i.getKey(), v, Watchlist.watchlistEmailKind));
+          // Some keys we may check are multi valued. Attempt to split the list and if its
+          // not a list value, it must be a single value and can be added to the list.
+          try {
+            AlertMeta.splitListValues(i, v)
+                .forEach(
+                    email -> ret.add(new KeyData(i.getKey(), email, Watchlist.watchlistEmailKind)));
+          } catch (IOException e) {
+            ret.add(new KeyData(i.getKey(), v, Watchlist.watchlistEmailKind));
+          }
         }
       }
       return ret;

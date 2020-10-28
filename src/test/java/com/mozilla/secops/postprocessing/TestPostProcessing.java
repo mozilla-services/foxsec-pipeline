@@ -188,6 +188,90 @@ public class TestPostProcessing {
   }
 
   @Test
+  public void testWatchlistAnalyzeMultiValueEmailKey() throws Exception {
+    testEnv();
+    addWatchlistEntries();
+
+    PostProcessing.PostProcessingOptions options = getTestOptions();
+    options.setInputFile(
+        new String[] {"./target/test-classes/testdata/watchlist_analyze_buffer2.txt"});
+    options.setGenerateConfigurationTicksInterval(1);
+    options.setGenerateConfigurationTicksMaximum(5L);
+    PCollection<String> input =
+        p.apply(
+            "input",
+            Input.compositeInputAdapter(options, PostProcessing.buildConfigurationTick(options)));
+
+    PCollection<Alert> res = PostProcessing.processInput(input, options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              int emailCnt = 0;
+              int ipCnt = 0;
+              int cfgTickCnt = 0;
+              for (Alert a : results) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD).equals("watchlist")) {
+                  assertEquals("postprocessing", a.getCategory());
+                  assertEquals(
+                      "e116e0ee-5747-4cd5-a1b1-d36d91ac62b9",
+                      a.getMetadataValue(AlertMeta.Key.SOURCE_ALERT));
+                  if (a.getMetadataValue(AlertMeta.Key.MATCHED_TYPE).equals("email")) {
+                    emailCnt++;
+                    assertEquals(Alert.AlertSeverity.WARNING, a.getSeverity());
+                    assertEquals("email", a.getMetadataValue(AlertMeta.Key.MATCHED_TYPE));
+                    assertEquals("email", a.getMetadataValue(AlertMeta.Key.MATCHED_METADATA_KEY));
+                    assertEquals(
+                        "picard@enterprise.com",
+                        a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                    assertEquals(
+                        "example@enterprise.com",
+                        a.getMetadataValue(AlertMeta.Key.MATCHED_METADATA_VALUE));
+                  } else if (a.getMetadataValue(AlertMeta.Key.MATCHED_TYPE).equals("ip")) {
+                    ipCnt++;
+                  }
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("cfgtick")) {
+                  cfgTickCnt++;
+                  assertEquals("postprocessing-cfgtick", a.getCategory());
+                  assertEquals(
+                      "./target/test-classes/testdata/watchlist_analyze_buffer2.txt",
+                      a.getCustomMetadataValue("inputFile"));
+                  assertEquals("5", a.getCustomMetadataValue("generateConfigurationTicksMaximum"));
+                } else {
+                  fail("unexpected category");
+                }
+              }
+
+              assertEquals(5, cfgTickCnt);
+              assertEquals(2, emailCnt);
+              assertEquals(0, ipCnt);
+
+              return null;
+            });
+
+    PipelineResult pResult = p.run();
+    pResult.waitUntilFinish();
+
+    Iterable<MetricResult<DistributionResult>> alertTimes =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            PostProcessing.METRICS_NAMESPACE,
+                            PostProcessing.WATCHLIST_ALERT_PROCESSING_TIME_METRIC))
+                    .build())
+            .getDistributions();
+
+    for (MetricResult<DistributionResult> x : alertTimes) {
+      DistributionResult dr = x.getCommitted();
+      assertEquals(3, dr.getCount());
+    }
+  }
+
+  @Test
   public void testAlertSummary() throws Exception {
     PostProcessing.PostProcessingOptions options = getTestOptions();
     options.setEnableWatchlistAnalysis(false);
