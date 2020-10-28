@@ -798,6 +798,8 @@ public class TestCustoms {
                       a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       "account_enumeration", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  assertEquals("3", a.getMetadataValue(AlertMeta.Key.THRESHOLD));
+                  assertEquals("3", a.getMetadataValue(AlertMeta.Key.COUNT));
                   ip1Cnt++;
                 }
                 if (a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS).equals("10.0.0.3")) {
@@ -811,6 +813,8 @@ public class TestCustoms {
                       a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       "account_enumeration", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  assertEquals("3", a.getMetadataValue(AlertMeta.Key.THRESHOLD));
+                  assertEquals("3", a.getMetadataValue(AlertMeta.Key.COUNT));
                   ip3Cnt++;
                 }
                 cnt++;
@@ -878,6 +882,8 @@ public class TestCustoms {
                       a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
                   assertEquals(
                       "account_enumeration", a.getMetadataValue(AlertMeta.Key.NOTIFY_MERGE));
+                  assertEquals("3", a.getMetadataValue(AlertMeta.Key.THRESHOLD));
+                  assertEquals("3", a.getMetadataValue(AlertMeta.Key.COUNT));
                   ip1Cnt++;
                 }
                 cnt++;
@@ -964,6 +970,8 @@ public class TestCustoms {
                   assertEquals(
                       "riker1@mozilla.com, riker2@mozilla.com, riker3@mozilla.com",
                       a.getMetadataValue(AlertMeta.Key.EMAIL));
+                  assertEquals("3", a.getMetadataValue(AlertMeta.Key.THRESHOLD));
+                  assertEquals("3", a.getMetadataValue(AlertMeta.Key.COUNT));
                   ip1Cnt++;
                 }
                 cnt++;

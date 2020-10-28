@@ -139,6 +139,7 @@ public class CustomsAccountEnumeration
                         alert.setNotifyMergeKey(Customs.CATEGORY_ACCOUNT_ENUMERATION);
                         alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, ipAddr);
                         alert.addMetadata(AlertMeta.Key.COUNT, Long.toString(emailCount));
+                        alert.addMetadata(AlertMeta.Key.THRESHOLD, Integer.toString(threshold));
                         alert.setSummary(
                             String.format(
                                 "%s %s account enumeration threshold exceeded, %d in 10 minutes",
