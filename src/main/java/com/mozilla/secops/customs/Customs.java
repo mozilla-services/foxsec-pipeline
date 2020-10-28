@@ -59,7 +59,7 @@ public class Customs implements Serializable {
       "login_failure_at_risk_account";
   public static final String CATEGORY_ACTIVITY_MONITOR = "activity_monitor";
   public static final String CATEGORY_PRIVATE_RELAY_FORWARD = "private_relay_forward";
-  public static final String CATEGORY_ACCOUNT_STATUS_CHECK_ABUSE = "account_enumeration";
+  public static final String CATEGORY_ACCOUNT_ENUMERATION = "account_enumeration";
 
   /** Used by keyEvents */
   private enum KeyType {
@@ -582,7 +582,8 @@ public class Customs implements Serializable {
       ret =
           ret.and(
               sourceWindowed.apply(
-                  "account status check", new CustomsAccountEnumeration(options, varianceView)));
+                  "account enumeration analysis",
+                  new CustomsAccountEnumeration(options, varianceView)));
     }
 
     return ret;
