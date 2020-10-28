@@ -930,7 +930,23 @@ public class ParserTest {
 
   @Test
   public void testParseTaskcluster() throws Exception {
-    String buf =
+    String bufV1 =
+        "{\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
+            + "\":{\"apiVersion\":\"v1\",\"clientId\":\"mozilla-auth0/ad|Mozilla-LDAP|riker/servi"
+            + "ces\",\"duration\":20159.035803,\"expires\":\"3017-02-01T05:00:00.000Z\",\"hasAuth"
+            + "ed\":true,\"method\":\"POST\",\"name\":\"claimWork\",\"public\":false,\"resource\""
+            + ":\"/v1/claim-work/test-provisioner/macos-workers\",\"satisfyingScopes\":[\"queue:c"
+            + "laim-work:test-provisioner/macos-workers\",\"queue:worker-id:test-worker-group/test\""
+            + "],\"sourceIp\":\"216.160.83.56\",\"statusCode\":200,\"v\":1},\"Hostname\":\"000000"
+            + "00-0000-0000-0000-000000000000\",\"Logger\":\"taskcluster.queue.api\",\"Pid\":37,\""
+            + "Severity\":5,\"Timestamp\":1558469098790000000,\"Type\":\"monitor.apiMethod\",\"ser"
+            + "viceContext\":{\"service\":\"queue\",\"version\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            + "aaaaaaaa\"}},\"labels\":{\"compute.googleapis.com/resource_name\":\"00000000-0000-0"
+            + "000-0000-000000000000\"},\"logName\":\"projects/logging/logs/queue\",\"receiveTimes"
+            + "tamp\":\"2019-05-21T20:05:00.544662934Z\",\"resource\":{\"labels\":{\"instance_id\""
+            + ":\"test\",\"project_id\":\"test-logging\",\"zone\":\"test\"},\"type\":\"gce_instanc"
+            + "e\"},\"severity\":\"NOTICE\",\"timestamp\":\"2019-05-21T20:04:58.790308Z\"}";
+    String bufV2 =
         "{\"insertId\":\"AAAAAAAAAAAAAAA\",\"jsonPayload\":{\"EnvVersion\":\"2.0\",\"Fields"
             + "\":{\"apiVersion\":\"v2\",\"clientId\":\"mozilla-auth0/ad|Mozilla-LDAP|riker/servi"
             + "ces\",\"duration\":20159.035803,\"expires\":\"3017-02-01T05:00:00.000Z\",\"authenti"
@@ -947,33 +963,46 @@ public class ParserTest {
             + ":\"test\",\"project_id\":\"test-logging\",\"zone\":\"test\"},\"type\":\"gce_instanc"
             + "e\"},\"severity\":\"NOTICE\",\"timestamp\":\"2019-05-21T20:04:58.790308Z\"}";
 
+    String[] bufs = {bufV1, bufV2};
+
     Parser p = getTestParser();
     assertNotNull(p);
-    Event e = p.parse(buf);
-    assertNotNull(e);
-    assertEquals(Payload.PayloadType.TASKCLUSTER, e.getPayloadType());
-    Taskcluster d = e.getPayload();
-    assertNotNull(d);
-    com.mozilla.secops.parser.models.taskcluster.Taskcluster data = d.getTaskclusterData();
-    assertNotNull(data);
-    assertEquals(data.getApiVersion(), "v2");
-    assertEquals("mozilla-auth0/ad|Mozilla-LDAP|riker/services", data.getClientId());
-    assertEquals(20159.03, (double) data.getDuration(), 0.5);
-    assertEquals("3017-02-01T05:00:00.000Z", data.getExpires());
-    assertTrue(data.getAuthenticated());
-    assertEquals("216.160.83.56", data.getSourceIp());
-    assertEquals(200, (int) data.getStatusCode());
-    assertEquals("riker", d.getResolvedSubject());
-    Normalized n = e.getNormalized();
-    assertNotNull(n);
-    assertTrue(n.isOfType(Normalized.Type.AUTH_SESSION));
-    assertEquals("riker", n.getSubjectUser());
-    assertEquals("216.160.83.56", n.getSourceAddress());
-    assertEquals("Milton", n.getSourceAddressCity());
-    assertEquals("US", n.getSourceAddressCountry());
-    assertEquals(47.25, n.getSourceAddressLatitude(), 0.5);
-    assertEquals(-122.31, n.getSourceAddressLongitude(), 0.5);
-    assertEquals("taskcluster-/v1/claim-work/test-provisioner/macos-workers", n.getObject());
+    for (String buf : bufs) {
+      Event e = p.parse(buf);
+      assertNotNull(e);
+      assertEquals(Payload.PayloadType.TASKCLUSTER, e.getPayloadType());
+      Taskcluster d = e.getPayload();
+      assertNotNull(d);
+      com.mozilla.secops.parser.models.taskcluster.Taskcluster data = d.getTaskclusterData();
+      assertNotNull(data);
+      assertEquals("mozilla-auth0/ad|Mozilla-LDAP|riker/services", data.getClientId());
+      assertEquals(20159.03, (double) data.getDuration(), 0.5);
+      assertEquals("3017-02-01T05:00:00.000Z", data.getExpires());
+      assertTrue(data.getAuthenticated());
+      assertEquals("216.160.83.56", data.getSourceIp());
+      assertEquals(200, (int) data.getStatusCode());
+      assertEquals("riker", d.getResolvedSubject());
+      Normalized n = e.getNormalized();
+      assertNotNull(n);
+      assertTrue(n.isOfType(Normalized.Type.AUTH_SESSION));
+      assertEquals("riker", n.getSubjectUser());
+      assertEquals("216.160.83.56", n.getSourceAddress());
+      assertEquals("Milton", n.getSourceAddressCity());
+      assertEquals("US", n.getSourceAddressCountry());
+      assertEquals(47.25, n.getSourceAddressLatitude(), 0.5);
+      assertEquals(-122.31, n.getSourceAddressLongitude(), 0.5);
+      assertEquals("taskcluster-/v1/claim-work/test-provisioner/macos-workers", n.getObject());
+    }
+
+    Event eV1 = p.parse(bufV1);
+    Taskcluster dV1 = eV1.getPayload();
+    com.mozilla.secops.parser.models.taskcluster.Taskcluster dataV1 = dV1.getTaskclusterData();
+    assertEquals(dataV1.getApiVersion(), "v1");
+
+    Event eV2 = p.parse(bufV2);
+    Taskcluster dV2 = eV2.getPayload();
+    com.mozilla.secops.parser.models.taskcluster.Taskcluster dataV2 = dV2.getTaskclusterData();
+    assertEquals(dataV2.getApiVersion(), "v2");
   }
 
   @Test
