@@ -143,11 +143,7 @@ public class CustomsAccountEnumeration
                             String.format(
                                 "%s %s account enumeration threshold exceeded, %d in 10 minutes",
                                 monitoredResource, ipAddr, emailCount));
-                        ArrayList<String> buf = new ArrayList<>();
-                        for (String s : emails) {
-                          buf.add(s);
-                        }
-                        alert.addMetadata(AlertMeta.Key.EMAIL, buf);
+                        alert.addMetadata(AlertMeta.Key.EMAIL, emails);
                         c.output(KV.of(ipAddr, alert));
                       }
                     })
