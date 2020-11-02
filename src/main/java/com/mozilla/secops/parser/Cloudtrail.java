@@ -1,9 +1,12 @@
 package com.mozilla.secops.parser;
 
+import com.amazonaws.arn.Arn;
+import com.amazonaws.arn.ArnResource;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.mozilla.secops.identity.IdentityManager;
+import com.mozilla.secops.parser.Normalized.StatusTag;
 import com.mozilla.secops.parser.models.cloudtrail.CloudtrailEvent;
 import com.mozilla.secops.parser.models.cloudtrail.UserIdentity;
 import java.io.ByteArrayOutputStream;
@@ -16,6 +19,20 @@ import org.joda.time.DateTime;
 /** Payload parser for Cloudtrail events */
 public class Cloudtrail extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
+
+  /* Event Types */
+  private static final String SWITCH_ROLE = "SwitchRole";
+  private static final String ASSUME_ROLE = "AssumeRole";
+  private static final String AWS_CONSOLE_SIGNIN = "AwsConsoleSignIn";
+  private static final String GET_SESSION_TOKEN = "GetSessionToken";
+
+  /* User Types */
+  private static final String IAM_USER = "IAMUser";
+  private static final String AWS_ACCOUNT = "AWSAccount";
+
+  /* Response Elements */
+  private static final String SUCCESS = "Success";
+  private static final String CONSOLE_LOGIN = "ConsoleLogin";
 
   private CloudtrailEvent event;
 
@@ -65,6 +82,12 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
         n.setSubjectUser(getUser());
         n.setObject(event.getRecipientAccountId());
 
+        // if this is not an event for an IAMUser than tag
+        // the event as needing fix up
+        if (isAssumeRoleFromAnotherAccount()) {
+          n.setStatusTag(StatusTag.REQUIRES_SUBJECT_USER_FIXUP);
+        }
+
         // TODO: Consider moving identity management into Normalized
 
         // If we have an instance of IdentityManager in the parser, see if we can
@@ -89,10 +112,8 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
   }
 
   private CloudtrailEvent parseInput(String input, ParserState state) throws IOException {
-    JsonParser jp = null;
-    try {
-      JacksonFactory jfmatcher = state.getGoogleJacksonFactory();
-      jp = jfmatcher.createJsonParser(input);
+    JacksonFactory jfmatcher = state.getGoogleJacksonFactory();
+    try (JsonParser jp = jfmatcher.createJsonParser(input); ) {
       LogEntry entry = jp.parse(LogEntry.class);
       Map<String, Object> m = entry.getJsonPayload();
       if (m != null) {
@@ -103,14 +124,8 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
         state.getObjectMapper().writeValue(buf, m);
         input = buf.toString();
       }
-    } catch (IOException exc) {
+    } catch (IOException | IllegalArgumentException exc) {
       // pass
-    } catch (IllegalArgumentException exc) {
-      // pass
-    } finally {
-      if (jp != null) {
-        jp.close();
-      }
     }
 
     try {
@@ -134,6 +149,23 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
    * @return Username
    */
   public String getUser() {
+    // if this is a SwitchRole event for a role not in
+    // the account then use the switchFrom field instead
+    // of userIdentity
+    if (isSwitchRoleEvent()) {
+      String switchFrom = getSwitchFrom();
+      if (switchFrom != null) {
+        try {
+          Arn arn = Arn.fromString(switchFrom);
+          ArnResource arnResource = arn.getResource();
+          if (arnResource.getResourceType().equals("user")) {
+            return arnResource.getResource();
+          }
+        } catch (IllegalArgumentException e) {
+          // if invalid arn, just use the normal identity
+        }
+      }
+    }
     return event.getIdentityName();
   }
 
@@ -142,20 +174,54 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
       return false;
     }
 
-    if (event.getEventName().equals("ConsoleLogin")) {
+    if (event.getEventName().equals(CONSOLE_LOGIN)) {
       if (event.getEventType() != null
-          && event.getEventType().equals("AwsConsoleSignIn")
-          && event.getResponseElementsValue("ConsoleLogin") != null
-          && event.getResponseElementsValue("ConsoleLogin").equals("Success")) {
+          && event.getEventType().equals(AWS_CONSOLE_SIGNIN)
+          && event.getResponseElementsValue(CONSOLE_LOGIN) != null
+          && event.getResponseElementsValue(CONSOLE_LOGIN).equals(SUCCESS)) {
         return true;
       }
     }
 
-    if (event.getEventName().equals("AssumeRole")
-        || event.getEventName().equals("GetSessionToken")) {
+    if (event.getEventName().equals(GET_SESSION_TOKEN)) {
       if (event.getUserType() != null
-          && event.getUserType().equals("IAMUser")
+          && event.getUserType().equals(IAM_USER)
           && event.getErrorCode() == null) {
+        return true;
+      }
+    }
+
+    // consider events from both an IAMUser as well as
+    // another account to be auth events
+    // those from another account can be fixed up later
+    if (event.getEventName().equals(ASSUME_ROLE)) {
+      if (event.getUserType() != null
+          && (event.getUserType().equals(IAM_USER))
+          && event.getErrorCode() == null) {
+        return true;
+      }
+    }
+
+    return isAssumeRoleFromAnotherAccount() || isSwitchRoleEvent();
+  }
+
+  private boolean isAssumeRoleFromAnotherAccount() {
+    if (event.getEventName().equals(ASSUME_ROLE)) {
+      if (event.getUserType() != null
+          && event.getUserType().equals(AWS_ACCOUNT)
+          && event.getErrorCode() == null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean isSwitchRoleEvent() {
+    if (event.getEventName().equals(SWITCH_ROLE)) {
+      if (event.getEventType() != null
+          && event.getEventType().equals(AWS_CONSOLE_SIGNIN)
+          && event.getResponseElementsValue(SWITCH_ROLE) != null
+          && event.getResponseElementsValue(SWITCH_ROLE).equals(SUCCESS)) {
         return true;
       }
     }
@@ -186,6 +252,23 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
     return null;
   }
 
+  private String getSwitchFrom() {
+    Object switchFrom = event.getAdditionalEventDataValue("SwitchFrom");
+    if (switchFrom != null) {
+      return (String) switchFrom;
+    }
+    return null;
+  }
+
+  /**
+   * Returns the shared event id of the cloudtrail event
+   *
+   * @return value of sharedEventID field
+   */
+  public String getSharedEventID() {
+    return event.getSharedEventID();
+  }
+
   /**
    * Utility method for returning the resource the event was acting on, used for adding context to
    * an {@link com.mozilla.secops.alert.Alert}.
@@ -194,14 +277,20 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
    * @return Value of the resource selector.
    */
   public String getResource(String resource) {
+    HashMap<String, Object> rp = event.getRequestParameters();
     switch (resource) {
       case "requestParameters.userName":
-        HashMap<String, Object> rp = event.getRequestParameters();
         Object u = rp.get("userName");
         if (u == null) {
           return null;
         }
         return (String) u;
+      case "requestParameters.roleArn":
+        Object r = rp.get("roleArn");
+        if (r == null) {
+          return null;
+        }
+        return (String) r;
     }
     return null;
   }

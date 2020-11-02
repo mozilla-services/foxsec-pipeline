@@ -19,7 +19,19 @@ public class Normalized implements Serializable {
     HTTP_REQUEST
   }
 
+  /**
+   * Status tags is used to track processing state, for example if an event needs additional
+   * analysis after the parsing step
+   */
+  public enum StatusTag {
+    /* An event that is missing key information and needs some sort of modification */
+    REQUIRES_SUBJECT_USER_FIXUP,
+    /* An event that has been fixed up after the parsing step */
+    SUBJECT_USER_HAS_BEEN_FIXED
+  }
+
   private EnumSet<Type> types;
+  private EnumSet<StatusTag> statusTags;
 
   private String subjectUser;
   private String sourceAddress;
@@ -45,6 +57,7 @@ public class Normalized implements Serializable {
 
   Normalized() {
     types = EnumSet.noneOf(Type.class);
+    statusTags = EnumSet.noneOf(StatusTag.class);
     geoIpData = new GeoIP.GeoIPData();
   }
 
@@ -112,6 +125,34 @@ public class Normalized implements Serializable {
    */
   public void setType(Type t) {
     types = EnumSet.of(t);
+  }
+
+  /**
+   * Test if normalized event has a given StatusTag
+   *
+   * @param st {@link Normalized.StatusTag}
+   * @return True if tag is set for this event
+   */
+  public Boolean hasStatusTag(StatusTag st) {
+    return statusTags.contains(st);
+  }
+
+  /**
+   * Add a StatusTag to a normalized event
+   *
+   * @param st {@link Normalized.StatusTag}
+   */
+  public void addStatusTag(StatusTag st) {
+    statusTags.add(st);
+  }
+
+  /**
+   * Set normalized status tag
+   *
+   * @param st {@link Normalized.StatusTag}
+   */
+  public void setStatusTag(StatusTag st) {
+    statusTags = EnumSet.of(st);
   }
 
   /**

@@ -33,7 +33,6 @@ import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.Pipeline;
@@ -43,6 +42,7 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -233,7 +233,6 @@ public class AuthProfile implements Serializable {
                           return;
                         }
                       }
-
                       c.output(e);
                     }
                   }));
@@ -303,190 +302,6 @@ public class AuthProfile implements Serializable {
           c.output(KV.of(n.getSubjectUser(), e));
         }
       }
-    }
-  }
-
-  /**
-   * Analysis for authentication involving critical objects
-   *
-   * <p>Analyze events to determine if they are related to any objects configured as being critical
-   * objects. Where identified, generate critical level alerts.
-   */
-  public static class CritObjectAnalyze extends DoFn<Event, KV<String, Alert>>
-      implements DocumentingTransform {
-    private static final long serialVersionUID = 1L;
-
-    private final String[] critObjects;
-    private final String critNotifyEmail;
-    private final String contactEmail;
-    private final String docLink;
-    private final String alternateCritSlackEscalation;
-    private final boolean useEventTimestampForAlert;
-
-    private DateTimeZone altEscalateTz;
-    private int altEscalateHourStart;
-    private int altEscalateHourStop;
-    private String altEscalateChannel;
-
-    private Logger log;
-    private Pattern[] critObjectPat;
-
-    /**
-     * Initialize new critical object analysis
-     *
-     * @param options Pipeline options
-     */
-    public CritObjectAnalyze(AuthProfileOptions options) {
-      critObjects = options.getCritObjects();
-      critNotifyEmail = options.getCriticalNotificationEmail();
-      contactEmail = options.getContactEmail();
-      docLink = options.getDocLink();
-      alternateCritSlackEscalation = options.getAlternateCritSlackEscalation();
-      useEventTimestampForAlert = options.getUseEventTimestampForAlert();
-
-      if (alternateCritSlackEscalation != null) {
-        String[] parts = alternateCritSlackEscalation.split(":");
-        if (parts.length != 4) {
-          throw new IllegalArgumentException(
-              "invalid format for alternate escalation policy, "
-                  + "must be <tz>:<start_hour>:<end_hour>:<channel_id>");
-        }
-        altEscalateTz = DateTimeZone.forID(parts[0]);
-        if (altEscalateTz == null) {
-          throw new IllegalArgumentException(
-              "alternate escalation policy timezone lookup returned null");
-        }
-        altEscalateHourStart = Integer.parseInt(parts[1]);
-        altEscalateHourStop = Integer.parseInt(parts[2]);
-        altEscalateChannel = parts[3];
-      }
-    }
-
-    /** {@inheritDoc} */
-    public String getTransformDoc() {
-      return String.format(
-          "Alert via %s immediately on auth events to specified objects: %s",
-          critNotifyEmail, Arrays.toString(critObjects));
-    }
-
-    @Setup
-    public void setup() {
-      log = LoggerFactory.getLogger(StateAnalyze.class);
-      if (critObjects != null) {
-        critObjectPat = new Pattern[critObjects.length];
-        for (int i = 0; i < critObjects.length; i++) {
-          critObjectPat[i] = Pattern.compile(critObjects[i]);
-        }
-      }
-    }
-
-    private void addEscalationMetadata(Alert a) {
-      if (alternateCritSlackEscalation != null) {
-        // We have an alternate escalation policy specified. Convert the alert timestamp
-        // to match our policy timestamp, and see if it falls within the specified boundary.
-        //
-        // Note the policy is only applied if the resulting conversion falls on a weekday.
-        //
-        // ISO 6 (Saturday)
-        // ISO 7 (Sunday)
-        DateTime conv = a.getTimestamp().withZone(altEscalateTz);
-        if ((conv.getHourOfDay() >= altEscalateHourStart
-                && conv.getHourOfDay() <= altEscalateHourStop)
-            && (conv.getDayOfWeek() != 6 && conv.getDayOfWeek() != 7)) {
-          log.info("{}: using alternate escalation policy", a.getAlertId());
-          // The alert matches the alternate policy; add the supplementary slack notification
-          // details and just return.
-          a.addMetadata(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY, altEscalateChannel);
-          a.addMetadata(
-              AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE,
-              String.format(
-                  "<!channel> critical authentication event observed %s to %s, %s [%s/%s]",
-                  a.getMetadataValue(AlertMeta.Key.USERNAME),
-                  a.getMetadataValue(AlertMeta.Key.OBJECT),
-                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
-                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
-                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY)));
-          return;
-        }
-      }
-      if (critNotifyEmail != null) {
-        log.info(
-            "{}: adding direct email notification metadata route for critical object alert to {}",
-            a.getAlertId().toString(),
-            critNotifyEmail);
-        a.addMetadata(AlertMeta.Key.NOTIFY_EMAIL_DIRECT, critNotifyEmail);
-      }
-    }
-
-    private void buildAlertSummary(Event e, Alert a) {
-      String summary =
-          String.format(
-              "critical authentication event observed %s to %s, ",
-              e.getNormalized().getSubjectUser(), e.getNormalized().getObject());
-      summary =
-          summary
-              + String.format(
-                  "%s [%s/%s]",
-                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
-                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
-                  a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
-      a.setSummary(summary);
-    }
-
-    private void buildAlertPayload(Event e, Alert a) {
-      String msg =
-          "An authentication event for user %s was detected to access %s from %s [%s/%s]. "
-              + "This destination object is configured as a critical resource for which alerts are always"
-              + " generated.";
-      String payload =
-          String.format(
-              msg,
-              a.getMetadataValue(AlertMeta.Key.USERNAME),
-              a.getMetadataValue(AlertMeta.Key.OBJECT),
-              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
-              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
-              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
-      a.addToPayload(payload);
-    }
-
-    @ProcessElement
-    public void processElement(ProcessContext c) {
-      if (critObjectPat == null) {
-        return;
-      }
-
-      Event e = c.element();
-      Normalized n = e.getNormalized();
-
-      String o = n.getObject();
-      if (o == null) {
-        return;
-      }
-
-      String matchobj = null;
-      for (Pattern p : critObjectPat) {
-        if (p.matcher(o).matches()) {
-          matchobj = o;
-        }
-      }
-      if (matchobj == null) {
-        return;
-      }
-
-      log.info(
-          "escalating critical object alert for {} {}",
-          e.getNormalized().getSubjectUser(),
-          e.getNormalized().getObject());
-      Alert a = AuthProfile.createBaseAlert(e, contactEmail, docLink);
-      a.setSubcategory("critical_object_analyze");
-      a.setSeverity(Alert.AlertSeverity.CRITICAL);
-      buildAlertSummary(e, a);
-      buildAlertPayload(e, a);
-      if (useEventTimestampForAlert) {
-        a.setTimestamp(e.getTimestamp());
-      }
-      addEscalationMetadata(a);
-      c.output(KV.of(e.getNormalized().getSubjectUser(), a));
     }
   }
 
@@ -963,6 +778,12 @@ public class AuthProfile implements Serializable {
 
     void setEnableCritObjectAnalysis(Boolean value);
 
+    @Description("Enable correlation of AWS cross account role assumption")
+    @Default.Boolean(true)
+    Boolean getEnableAwsAssumeRoleCorrelator();
+
+    void setEnableAwsAssumeRoleCorrelator(Boolean value);
+
     @Description("Use memcached state; hostname of memcached server")
     String getMemcachedHost();
 
@@ -1041,6 +862,12 @@ public class AuthProfile implements Serializable {
     String getAlternateCritSlackEscalation();
 
     void setAlternateCritSlackEscalation(String value);
+
+    @Description("When correlating cross account AWS events session gap duration to use; seconds")
+    @Default.Long(120L)
+    Long getAwsAssumeRoleCorrelatorSessionGapDurationSeconds();
+
+    void setAwsAssumeRoleCorrelatorSessionGapDurationSeconds(Long value);
   }
 
   /**
@@ -1185,6 +1012,13 @@ public class AuthProfile implements Serializable {
     PCollectionList<Alert> alertList = PCollectionList.empty(input.getPipeline());
 
     PCollection<Event> events = input.apply("parse", new Parse(options));
+    PCollection<Event> filteredEvents =
+        events.apply(
+            "filter events needing fix up",
+            Filter.by(
+                (Event e) ->
+                    !e.getNormalized()
+                        .hasStatusTag(Normalized.StatusTag.REQUIRES_SUBJECT_USER_FIXUP)));
 
     // Log any warnings related to the identity manager here during graph construction
     try {
@@ -1196,7 +1030,7 @@ public class AuthProfile implements Serializable {
     if (options.getEnableStateAnalysis()) {
       alertList =
           alertList.and(
-              events
+              filteredEvents
                   .apply("extract identity", ParDo.of(new ExtractIdentity(options)))
                   .apply("window for state analyze", new GlobalTriggers<KV<String, Event>>(60))
                   .apply("state analyze gbk", GroupByKey.<String, Event>create())
@@ -1207,11 +1041,28 @@ public class AuthProfile implements Serializable {
     if (options.getEnableCritObjectAnalysis()) {
       alertList =
           alertList.and(
-              events
-                  .apply("critical object analyze", ParDo.of(new CritObjectAnalyze(options)))
+              filteredEvents
+                  .apply("critical object analyze", new CritObjectAnalyze(options))
                   .apply("critical object suppression", ParDo.of(new AlertSuppressor(1800L)))
                   .apply(
                       "critical object analyze rewindow for output", new GlobalTriggers<Alert>(5)));
+      if (options.getEnableAwsAssumeRoleCorrelator()) {
+        alertList =
+            alertList.and(
+                events
+                    .apply(
+                        "correlate cross aws account events", new AwsAssumeRoleCorrelator(options))
+                    .apply(
+                        "critical object analyze for cross account events",
+                        new CritObjectAnalyze(options))
+                    .apply("rewindow for state", new GlobalTriggers<KV<String, Alert>>(5))
+                    .apply(
+                        "critical object suppression for cross account events",
+                        ParDo.of(new AlertSuppressor(1800L)))
+                    .apply(
+                        "critical object analyze rewindow for output for cross account events",
+                        new GlobalTriggers<Alert>(5)));
+      }
     }
 
     // If configuration ticks were enabled, enable the processor here too
