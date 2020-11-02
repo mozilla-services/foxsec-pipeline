@@ -1322,7 +1322,7 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH));
     assertEquals("10.0.0.1", n.getSourceAddress());
     assertEquals("1234567890", n.getObject());
-    assertFalse(n.hasTag(Normalized.Tag.NEEDS_FIXUP));
+    assertFalse(n.hasStatusTag(Normalized.StatusTag.REQUIRES_SUBJECT_USER_FIXUP));
 
     // AssumeRole account from another aws account
     buf =
@@ -1355,7 +1355,7 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH));
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("999999999999", n.getObject());
-    assertTrue(n.hasTag(Normalized.Tag.NEEDS_FIXUP));
+    assertTrue(n.hasStatusTag(Normalized.StatusTag.REQUIRES_SUBJECT_USER_FIXUP));
   }
 
   @Test

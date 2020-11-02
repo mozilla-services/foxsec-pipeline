@@ -6,7 +6,7 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.mozilla.secops.identity.IdentityManager;
-import com.mozilla.secops.parser.Normalized.Tag;
+import com.mozilla.secops.parser.Normalized.StatusTag;
 import com.mozilla.secops.parser.models.cloudtrail.CloudtrailEvent;
 import com.mozilla.secops.parser.models.cloudtrail.UserIdentity;
 import java.io.ByteArrayOutputStream;
@@ -85,7 +85,7 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
         // if this is not an event for an IAMUser than tag
         // the event as needing fix up
         if (isAssumeRoleFromAnotherAccount()) {
-          n.setTag(Tag.NEEDS_FIXUP);
+          n.setStatusTag(StatusTag.REQUIRES_SUBJECT_USER_FIXUP);
         }
 
         // TODO: Consider moving identity management into Normalized

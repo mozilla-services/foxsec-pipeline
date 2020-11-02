@@ -1015,7 +1015,10 @@ public class AuthProfile implements Serializable {
     PCollection<Event> filteredEvents =
         events.apply(
             "filter events needing fix up",
-            Filter.by((Event e) -> !e.getNormalized().hasTag(Normalized.Tag.NEEDS_FIXUP)));
+            Filter.by(
+                (Event e) ->
+                    !e.getNormalized()
+                        .hasStatusTag(Normalized.StatusTag.REQUIRES_SUBJECT_USER_FIXUP)));
 
     // Log any warnings related to the identity manager here during graph construction
     try {

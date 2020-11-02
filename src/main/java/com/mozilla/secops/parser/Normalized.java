@@ -20,18 +20,18 @@ public class Normalized implements Serializable {
   }
 
   /**
-   * Tags that can be used to track state for example if an event needs additional processing after
-   * the parsing step
+   * Status tags is used to track processing state, for example if an event needs additional
+   * analysis after the parsing step
    */
-  public enum Tag {
-    /** An event that is missing key information and needs some sort of modification */
-    NEEDS_FIXUP,
-    /** An event that has been fixed up after the parsing step */
-    FIXED_UP
+  public enum StatusTag {
+    /* An event that is missing key information and needs some sort of modification */
+    REQUIRES_SUBJECT_USER_FIXUP,
+    /* An event that has been fixed up after the parsing step */
+    SUBJECT_USER_HAS_BEEN_FIXED
   }
 
   private EnumSet<Type> types;
-  private EnumSet<Tag> tags;
+  private EnumSet<StatusTag> statusTags;
 
   private String subjectUser;
   private String sourceAddress;
@@ -57,7 +57,7 @@ public class Normalized implements Serializable {
 
   Normalized() {
     types = EnumSet.noneOf(Type.class);
-    tags = EnumSet.noneOf(Tag.class);
+    statusTags = EnumSet.noneOf(StatusTag.class);
     geoIpData = new GeoIP.GeoIPData();
   }
 
@@ -128,31 +128,31 @@ public class Normalized implements Serializable {
   }
 
   /**
-   * Test if normalized event has a given Tag
+   * Test if normalized event has a given StatusTag
    *
-   * @param t {@link Normalized.Tag}
+   * @param st {@link Normalized.StatusTag}
    * @return True if tag is set for this event
    */
-  public Boolean hasTag(Tag t) {
-    return tags.contains(t);
+  public Boolean hasStatusTag(StatusTag st) {
+    return statusTags.contains(st);
   }
 
   /**
-   * Add a tag to normalized event
+   * Add a StatusTag to a normalized event
    *
-   * @param t {@link Normalized.Tag}
+   * @param st {@link Normalized.StatusTag}
    */
-  public void addTag(Tag t) {
-    tags.add(t);
+  public void addStatusTag(StatusTag st) {
+    statusTags.add(st);
   }
 
   /**
-   * Set normalized tag
+   * Set normalized status tag
    *
-   * @param t {@link Normalized.Tag}
+   * @param st {@link Normalized.StatusTag}
    */
-  public void setTag(Tag t) {
-    tags = EnumSet.of(t);
+  public void setStatusTag(StatusTag st) {
+    statusTags = EnumSet.of(st);
   }
 
   /**

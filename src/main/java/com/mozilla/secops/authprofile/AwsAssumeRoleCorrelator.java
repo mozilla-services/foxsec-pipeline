@@ -89,7 +89,10 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
       Event trustedAccountEvent =
           events
               .stream()
-              .filter(e -> !e.getNormalized().hasTag(Normalized.Tag.NEEDS_FIXUP))
+              .filter(
+                  e ->
+                      !e.getNormalized()
+                          .hasStatusTag(Normalized.StatusTag.REQUIRES_SUBJECT_USER_FIXUP))
               .filter(e -> accessesRoleInDifferentAccount(e))
               .findAny()
               .orElse(null);
@@ -97,7 +100,10 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
       Event trustingAccountEvent =
           events
               .stream()
-              .filter(e -> e.getNormalized().hasTag(Normalized.Tag.NEEDS_FIXUP))
+              .filter(
+                  e ->
+                      e.getNormalized()
+                          .hasStatusTag(Normalized.StatusTag.REQUIRES_SUBJECT_USER_FIXUP))
               .findAny()
               .orElse(null);
 
@@ -112,7 +118,7 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
       Normalized n = trustingAccountEvent.getNormalized();
       n.setSubjectUser(trustedAccountEvent.getNormalized().getSubjectUser());
       n.setSubjectUserIdentity(trustedAccountEvent.getNormalized().getSubjectUserIdentity());
-      n.addTag(Normalized.Tag.FIXED_UP);
+      n.addStatusTag(Normalized.StatusTag.SUBJECT_USER_HAS_BEEN_FIXED);
       c.output(trustingAccountEvent);
     }
 
