@@ -1,5 +1,6 @@
 package com.mozilla.secops.parser.models.taskcluster;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
@@ -9,10 +10,11 @@ import java.io.Serializable;
 public class Taskcluster implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  private String apiVersion;
   private String clientId;
   private Double duration;
   private String expires;
-  private Boolean hasAuthed;
+  private Boolean authenticated;
   private String method;
   private String name;
   private Boolean isPublic;
@@ -20,6 +22,16 @@ public class Taskcluster implements Serializable {
   private String[] satisfyingScopes;
   private String sourceIp;
   private Integer statusCode;
+
+  /**
+   * Get api version
+   *
+   * @return String
+   */
+  @JsonProperty("apiVersion")
+  public String getApiVersion() {
+    return apiVersion;
+  }
 
   /**
    * Get client ID
@@ -52,13 +64,14 @@ public class Taskcluster implements Serializable {
   }
 
   /**
-   * Get hasAuthed
+   * Get authenticated
    *
    * @return Boolean
    */
-  @JsonProperty("hasAuthed")
-  public Boolean getHasAuthed() {
-    return hasAuthed;
+  @JsonProperty("authenticated")
+  @JsonAlias("hasAuthed")
+  public Boolean getAuthenticated() {
+    return authenticated;
   }
 
   /**
