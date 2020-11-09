@@ -1,5 +1,5 @@
 package com.mozilla.secops;
 
 public class Version {
-  public static final String PIPELINE = "0.13.2";
+  public static final String PIPELINE = "0.14.0";
 }
