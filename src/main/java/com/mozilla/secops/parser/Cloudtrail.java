@@ -270,6 +270,15 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
   }
 
   /**
+   * Returns the event id of the cloudtrail event
+   *
+   * @return value of eventID field
+   */
+  public String getEventID() {
+    return event.getEventID();
+  }
+
+  /**
    * Utility method for returning the resource the event was acting on, used for adding context to
    * an {@link com.mozilla.secops.alert.Alert}.
    *

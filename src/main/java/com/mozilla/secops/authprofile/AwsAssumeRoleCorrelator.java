@@ -8,10 +8,12 @@ import com.mozilla.secops.parser.EventFilterPayload.StringProperty;
 import com.mozilla.secops.parser.Normalized;
 import com.mozilla.secops.parser.Payload.PayloadType;
 import java.util.ArrayList;
+import org.apache.beam.sdk.transforms.Deduplicate;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.windowing.AfterPane;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.Sessions;
@@ -46,6 +48,9 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
     return input
         .apply("filter assume role events", ParDo.of(new CrossAccountAssumeRoleFilter()))
         .apply(
+            Deduplicate.<KV<String, Event>, String>withRepresentativeValueFn(new ExtractEventID())
+                .withDuration(Duration.standardMinutes(2)))
+        .apply(
             Window.<KV<String, Event>>into(
                     Sessions.withGapDuration(Duration.standardSeconds(sessionGapDuration)))
                 .triggering(
@@ -57,6 +62,28 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
         .apply(ParDo.of(new FixUpNormalized()));
   }
 
+  private class ExtractEventID implements SerializableFunction<KV<String, Event>, String> {
+
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public String apply(KV<String, Event> input) {
+      Event e = input.getValue();
+      String account = e.getNormalized().getObject();
+      if (e.getPayloadType().equals(PayloadType.CLOUDTRAIL)) {
+        Cloudtrail ct = e.getPayload();
+        String eventID = ct.getEventID();
+        if (eventID != null) {
+          // use account_cloudtrailEventID as deduplicaton key
+          return String.format("%s_%s", account, eventID);
+        }
+      }
+      // events have been already filtered so this shouldn't be possible
+      // but if we can't get id, use empty string and allow the collision
+      log.error("Event is not a cloudtrail event with id. SharedID: {}", input.getKey());
+      return "";
+    }
+  }
   /**
    * Creates an auth event using the assume role events from both the trusted and trusting account
    * that allows us to analyze which user was accessing the trusting account
@@ -76,7 +103,7 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
       // but we may want to output it so we can determine
       // if we are missing the source event for any critical objects
       if (events.size() == 1 && c.pane().isLast()) {
-        log.info("Found only one event for sharedEventID {}: {}", key, events.get(0).toJSON());
+        log.info("Found only one event for sharedEventID {}", key);
         return;
       }
       if (events.size() != 2) {
@@ -108,7 +135,6 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
               .orElse(null);
 
       if (trustedAccountEvent == null || trustingAccountEvent == null) {
-        events.forEach(e -> log.info("event: {}", e.toJSON()));
         log.error("Cannot determine trusted and trusting accounts for sharedEventID {}", key);
         return;
       }
