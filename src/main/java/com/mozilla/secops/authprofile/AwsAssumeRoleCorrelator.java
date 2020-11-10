@@ -103,7 +103,7 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
       // but we may want to output it so we can determine
       // if we are missing the source event for any critical objects
       if (events.size() == 1 && c.pane().isLast()) {
-        log.info("Found only one event for sharedEventID {}: {}", key, events.get(0).toJSON());
+        log.info("Found only one event for sharedEventID {}", key);
         return;
       }
       if (events.size() != 2) {
@@ -135,7 +135,6 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
               .orElse(null);
 
       if (trustedAccountEvent == null || trustingAccountEvent == null) {
-        events.forEach(e -> log.info("event: {}", e.toJSON()));
         log.error("Cannot determine trusted and trusting accounts for sharedEventID {}", key);
         return;
       }
