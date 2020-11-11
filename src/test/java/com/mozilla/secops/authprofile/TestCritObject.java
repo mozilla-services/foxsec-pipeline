@@ -230,12 +230,12 @@ public class TestCritObject {
         .satisfies(
             results -> {
               int cnt = 0;
-              int ncnt = 0;
-              int scnt = 0;
+              int notifyEmailDirectCnt = 0;
+              int supplementaryOnlyCnt = 0;
               for (Alert a : results) {
                 long m = a.getTimestamp().getMillis();
                 if (m == 1546349400000L) {
-                  // Will be our alternate escalation
+                  // Will be only our alternate escalation
                   assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
                   assertEquals(
                       "<!channel> critical authentication event observed laforge@mozilla.com to "
@@ -243,22 +243,26 @@ public class TestCritObject {
                       a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE));
                   assertEquals(
                       "test", a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY));
-                  scnt++;
+                  supplementaryOnlyCnt++;
                 } else if (m == 1546383600000L || m == 1546695000000L) {
-                  // Will be a standard escalation
+                  // Will be a standard escalation /w supplementary slack
                   assertEquals(
                       "section31@mozilla.com",
                       a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
-                  assertNull(a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE));
-                  assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY));
-                  ncnt++;
+                  assertEquals(
+                      "<!channel> critical authentication event observed laforge@mozilla.com to "
+                          + "projects/test, 216.160.83.56 [Milton/US]",
+                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE));
+                  assertEquals(
+                      "test", a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY));
+                  notifyEmailDirectCnt++;
                 } else {
                   fail("unexpected alert timestamp");
                 }
                 cnt++;
               }
-              assertEquals(2, ncnt);
-              assertEquals(1, scnt);
+              assertEquals(2, notifyEmailDirectCnt);
+              assertEquals(1, supplementaryOnlyCnt);
               assertEquals(3, cnt);
               return null;
             });

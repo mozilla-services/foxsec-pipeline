@@ -93,6 +93,18 @@ public class CritObjectAnalyze
 
   private void addEscalationMetadata(Alert a) {
     if (alternateCritSlackEscalation != null) {
+      // always add the slack escalation metadata if we have slack escalation enabled
+      // even if it's not within the policy
+      a.addMetadata(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY, altEscalateChannel);
+      a.addMetadata(
+          AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE,
+          String.format(
+              "<!channel> critical authentication event observed %s to %s, %s [%s/%s]",
+              a.getMetadataValue(AlertMeta.Key.USERNAME),
+              a.getMetadataValue(AlertMeta.Key.OBJECT),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
+              a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY)));
       // We have an alternate escalation policy specified. Convert the alert timestamp
       // to match our policy timestamp, and see if it falls within the specified boundary.
       //
@@ -104,19 +116,9 @@ public class CritObjectAnalyze
       if ((conv.getHourOfDay() >= altEscalateHourStart
               && conv.getHourOfDay() <= altEscalateHourStop)
           && (conv.getDayOfWeek() != 6 && conv.getDayOfWeek() != 7)) {
-        log.info("{}: using alternate escalation policy", a.getAlertId());
-        // The alert matches the alternate policy; add the supplementary slack notification
-        // details and just return.
-        a.addMetadata(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY, altEscalateChannel);
-        a.addMetadata(
-            AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE,
-            String.format(
-                "<!channel> critical authentication event observed %s to %s, %s [%s/%s]",
-                a.getMetadataValue(AlertMeta.Key.USERNAME),
-                a.getMetadataValue(AlertMeta.Key.OBJECT),
-                a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
-                a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
-                a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY)));
+        log.info("{}: using alternate escalation policy only", a.getAlertId());
+        // The alert matches the alternate policy; we've already added the metadata
+        // so just return so we don't add the email notification metadata
         return;
       }
     }
