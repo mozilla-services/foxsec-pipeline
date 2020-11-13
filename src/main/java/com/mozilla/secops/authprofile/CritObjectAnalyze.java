@@ -1,5 +1,7 @@
 package com.mozilla.secops.authprofile;
 
+import static java.util.Optional.ofNullable;
+
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
@@ -118,6 +120,21 @@ public class CritObjectAnalyze
                 a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
                 a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY)));
         return;
+      } else {
+        // The alert doesn't match the alternate policy; add the supplementary slack notification
+        // details and continue, so we can log to channel in additional to email notification
+        a.addMetadata(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY, altEscalateChannel);
+        a.addMetadata(
+            AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE,
+            String.format(
+                "critical authentication event observed %s to %s, %s [%s/%s]%n"
+                    + "Notification has been sent to %s",
+                a.getMetadataValue(AlertMeta.Key.USERNAME),
+                a.getMetadataValue(AlertMeta.Key.OBJECT),
+                a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
+                a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
+                a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY),
+                ofNullable(critNotifyEmail).orElse("no one! <!channel>")));
       }
     }
     if (critNotifyEmail != null) {
