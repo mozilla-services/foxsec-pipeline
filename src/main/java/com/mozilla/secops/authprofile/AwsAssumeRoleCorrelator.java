@@ -91,7 +91,9 @@ public class AwsAssumeRoleCorrelator extends PTransform<PCollection<Event>, PCol
           .forEach(
               e -> {
                 String id = extractCloudTrailEventID(e);
-                if (!processedEvents.containsKey(id)) {
+                if (processedEvents.containsKey(id)) {
+                  log.warn("Found duplicate cloudtrail event: {}", id);
+                } else {
                   events.add(e);
                   processedEvents.put(id, true);
                 }
