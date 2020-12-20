@@ -124,6 +124,9 @@ public class ParserMultiDoFn extends DoFn<KV<String, String>, KV<String, Event>>
       }
     }
 
+    // increment payload counter after filtering
+    metric.eventOfPayload(e.getPayloadType());
+
     if (cfg.getUseEventTimestamp()) {
       c.outputWithTimestamp(KV.of(raw.getKey(), e), e.getTimestamp().toInstant());
     } else {

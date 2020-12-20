@@ -98,6 +98,10 @@ public class ParserDoFn extends DoFn<String, Event> {
           return;
         }
       }
+
+      // increment payload counter before filtering
+      metrics.eventOfPayload(e.getPayloadType());
+
       if ((cfg != null) && cfg.getUseEventTimestamp()) {
         c.outputWithTimestamp(e, e.getTimestamp().toInstant());
       } else {
