@@ -1,6 +1,7 @@
 package com.mozilla.secops.parser;
 
 import java.io.Serializable;
+import java.util.EnumMap;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 
@@ -14,12 +15,26 @@ public class ParserMetrics implements Serializable {
   /** Custom metric name for event too old errors */
   public static final String METRIC_EVENT_TOO_OLD = "event_too_old";
 
+  public static final String METRIC_UNKNOWN_PAYLOAD_TYPE = "unknown_payload_type";
+
   private final Counter metricEventTooOld;
   private final String namespace;
+
+  private final EnumMap<Payload.PayloadType, Counter> metricMapPayloadType;
+  private final Counter metricUnknownPayloadType;
 
   /** Event was too old */
   public void eventTooOld() {
     metricEventTooOld.inc();
+  }
+
+  /**
+   * Event of a PayloadType was parsed
+   *
+   * @param type {@link Payload.PayloadType}
+   */
+  public void eventOfPayload(Payload.PayloadType type) {
+    metricMapPayloadType.getOrDefault(type, metricUnknownPayloadType).inc();
   }
 
   /**
@@ -35,5 +50,13 @@ public class ParserMetrics implements Serializable {
       namespace = NAMESPACE_PREFIX + namespacePostfix;
     }
     metricEventTooOld = Metrics.counter(namespace, METRIC_EVENT_TOO_OLD);
+
+    metricMapPayloadType = new EnumMap<>(Payload.PayloadType.class);
+
+    for (Payload.PayloadType type : Payload.PayloadType.values()) {
+      metricMapPayloadType.put(type, Metrics.counter(namespace, type.toString()));
+    }
+
+    metricUnknownPayloadType = Metrics.counter(namespace, METRIC_UNKNOWN_PAYLOAD_TYPE);
   }
 }
