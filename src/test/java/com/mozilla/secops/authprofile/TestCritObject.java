@@ -237,10 +237,12 @@ public class TestCritObject {
                 if (m == 1546349400000L) {
                   // Will be our alternate escalation
                   assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
-                  assertEquals(
-                      "<!channel> critical authentication event observed laforge@mozilla.com to "
-                          + "projects/test, 216.160.83.56 [Milton/US]",
-                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE));
+                  assertThat(
+                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE),
+                      containsString(
+                          "<!channel> critical authentication event observed laforge@mozilla.com to "
+                              + "projects/test, 216.160.83.56 [Milton/US]\n"
+                              + "alert id:"));
                   assertEquals(
                       "test", a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY));
                   scnt++;
@@ -249,11 +251,13 @@ public class TestCritObject {
                   assertEquals(
                       "section31@mozilla.com",
                       a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
-                  assertEquals(
-                      "critical authentication event observed laforge@mozilla.com to "
-                          + "projects/test, 216.160.83.56 [Milton/US]\n"
-                          + "Notification has been sent to section31@mozilla.com",
-                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE));
+                  assertThat(
+                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE),
+                      containsString(
+                          "critical authentication event observed laforge@mozilla.com to "
+                              + "projects/test, 216.160.83.56 [Milton/US]\n"
+                              + "Notification has been sent to section31@mozilla.com\n"
+                              + "alert id: "));
                   assertEquals(
                       "test", a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY));
                   ncnt++;
@@ -300,20 +304,24 @@ public class TestCritObject {
                 if (m == 1546349400000L) {
                   // Will be our alternate escalation
                   assertNull(a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
-                  assertEquals(
-                      "<!channel> critical authentication event observed laforge@mozilla.com to "
-                          + "projects/test, 216.160.83.56 [Milton/US]",
-                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE));
+                  assertThat(
+                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE),
+                      containsString(
+                          "<!channel> critical authentication event observed laforge@mozilla.com to "
+                              + "projects/test, 216.160.83.56 [Milton/US]\n"
+                              + "alert id:"));
                   assertEquals(
                       "test", a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY));
                   scnt++;
                 } else if (m == 1546383600000L || m == 1546695000000L) {
                   // No standard escalation cos email not set
-                  assertEquals(
-                      "critical authentication event observed laforge@mozilla.com to "
-                          + "projects/test, 216.160.83.56 [Milton/US]\n"
-                          + "Notification has been sent to no one! <!channel>",
-                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE));
+                  assertThat(
+                      a.getMetadataValue(AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE),
+                      containsString(
+                          "critical authentication event observed laforge@mozilla.com to "
+                              + "projects/test, 216.160.83.56 [Milton/US]\n"
+                              + "Notification has been sent to no one! <!channel>\n"
+                              + "alert id: "));
                   assertEquals(
                       "test", a.getMetadataValue(AlertMeta.Key.NOTIFY_SLACK_SUPPLEMENTARY));
                   ncnt++;
