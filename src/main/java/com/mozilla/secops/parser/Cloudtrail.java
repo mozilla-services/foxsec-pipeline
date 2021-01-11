@@ -72,12 +72,15 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
           e.setTimestamp(t);
         }
       }
+      Normalized n = e.getNormalized();
       // If we have a source address field in the model, pull that into the inherited field
       if (event.getSourceIPAddress() != null) {
-        setSourceAddress(event.getSourceIPAddress(), state, e.getNormalized());
+        setSourceAddress(event.getSourceIPAddress(), state, n);
       }
+
+      n.setReferenceID(event.getEventID());
+
       if (isAuthEvent()) {
-        Normalized n = e.getNormalized();
         n.addType(Normalized.Type.AUTH);
         n.setSubjectUser(getUser());
         n.setObject(event.getRecipientAccountId());

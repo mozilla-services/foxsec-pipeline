@@ -50,6 +50,7 @@ public class Normalized implements Serializable {
   private String urlRequestHost; // Extracted request host component
   private Integer requestStatus;
   private String userAgent;
+  private String referenceID; // ID from the original event if available
 
   /* Following can typically only be set if the parser has been configured
    * to use an identity manager for lookups */
@@ -547,6 +548,19 @@ public class Normalized implements Serializable {
    */
   public void setUserAgent(String userAgent) {
     this.userAgent = userAgent;
+  }
+
+  /**
+   * Get the reference ID (identifier from the event source)
+   *
+   * @return ID from the original event
+   */
+  public String getReferenceID() {
+    return referenceID;
+  }
+
+  public void setReferenceID(String referenceID) {
+    this.referenceID = referenceID;
   }
 
   /**
