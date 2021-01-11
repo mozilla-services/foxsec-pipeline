@@ -176,6 +176,9 @@ public class TestAwsAssumeRoleCorrelator {
                   assertEquals("127.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
                   assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+                  assertEquals(
+                      "5b147f6e-6da4-491f-92da-20fff616dcff",
+                      a.getMetadataValue(AlertMeta.Key.REFERENCE_ID));
                   assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                   assertEquals("auth", a.getMetadataValue(AlertMeta.Key.AUTH_ALERT_TYPE));
@@ -320,6 +323,9 @@ public class TestAwsAssumeRoleCorrelator {
                   assertEquals("127.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
                   assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+                  assertEquals(
+                      "fa1b3d9a-7070-4f5a-bd44-01572f488268",
+                      a.getMetadataValue(AlertMeta.Key.REFERENCE_ID));
                   assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                   assertEquals("auth", a.getMetadataValue(AlertMeta.Key.AUTH_ALERT_TYPE));
@@ -401,6 +407,9 @@ public class TestAwsAssumeRoleCorrelator {
                   assertEquals("127.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                   assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
                   assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+                  assertEquals(
+                      "fa1b3d9a-7070-4f5a-bd44-01572f488268",
+                      a.getMetadataValue(AlertMeta.Key.REFERENCE_ID));
                   assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
                   assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
                   assertEquals("auth", a.getMetadataValue(AlertMeta.Key.AUTH_ALERT_TYPE));
