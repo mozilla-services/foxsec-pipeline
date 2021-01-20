@@ -170,6 +170,7 @@ public class AlertMeta implements Serializable {
     PROVIDER("provider"),
     REAL_ADDRESS_HASH_ACTUAL("real_address_hash_actual"),
     REAL_ADDRESS_HASH_EXPECTED("real_address_hash_expected"),
+    REFERENCE_ID("reference_id"),
     REQUEST_THRESHOLD("request_threshold"),
     RESOURCE("resource"),
     RESTRICTED_VALUE("restricted_value"),

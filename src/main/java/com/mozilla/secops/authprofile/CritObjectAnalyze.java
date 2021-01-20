@@ -113,12 +113,14 @@ public class CritObjectAnalyze
         a.addMetadata(
             AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE,
             String.format(
-                "<!channel> critical authentication event observed %s to %s, %s [%s/%s]",
+                "<!channel> critical authentication event observed %s to %s, %s [%s/%s]%n"
+                    + "alert id: %s",
                 a.getMetadataValue(AlertMeta.Key.USERNAME),
                 a.getMetadataValue(AlertMeta.Key.OBJECT),
                 a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
                 a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
-                a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY)));
+                a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY),
+                a.getAlertId().toString()));
         return;
       } else {
         // The alert doesn't match the alternate policy; add the supplementary slack notification
@@ -128,13 +130,15 @@ public class CritObjectAnalyze
             AlertMeta.Key.SLACK_SUPPLEMENTARY_MESSAGE,
             String.format(
                 "critical authentication event observed %s to %s, %s [%s/%s]%n"
-                    + "Notification has been sent to %s",
+                    + "Notification has been sent to %s%n"
+                    + "alert id: %s",
                 a.getMetadataValue(AlertMeta.Key.USERNAME),
                 a.getMetadataValue(AlertMeta.Key.OBJECT),
                 a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS),
                 a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY),
                 a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY),
-                ofNullable(critNotifyEmail).orElse("no one! <!channel>")));
+                ofNullable(critNotifyEmail).orElse("no one! <!channel>"),
+                a.getAlertId().toString()));
       }
     }
     if (critNotifyEmail != null) {

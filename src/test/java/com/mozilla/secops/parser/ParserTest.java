@@ -1174,6 +1174,9 @@ public class ParserTest {
     assertNotNull(ct);
     assertEquals("uhura", ct.getUser());
     assertEquals("127.0.0.1", ct.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertEquals("55555343-132e-43bb-8d5d-23d0ef81178e", n.getReferenceID());
   }
 
   @Test
@@ -1207,6 +1210,7 @@ public class ParserTest {
     assertEquals("riker", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("999999999999", n.getObject());
+    assertEquals("00000000-0000-0000-0000-000000000000", n.getReferenceID());
   }
 
   @Test
@@ -1238,6 +1242,7 @@ public class ParserTest {
     assertEquals("riker", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("XXXXXXXX", n.getObject());
+    assertEquals("000000000-000000", n.getReferenceID());
   }
 
   @Test
@@ -1268,6 +1273,7 @@ public class ParserTest {
     assertEquals("riker", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("XXXXXXXX", n.getObject());
+    assertEquals("000000000-000000", n.getReferenceID());
   }
 
   @Test
@@ -1305,6 +1311,7 @@ public class ParserTest {
     assertTrue(n.isOfType(Normalized.Type.AUTH));
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("123456789", n.getObject());
+    assertEquals("55555555-3998-4e79-abdc-4c67df8bd013", n.getReferenceID());
   }
 
   @Test
@@ -1353,6 +1360,7 @@ public class ParserTest {
     assertEquals("10.0.0.1", n.getSourceAddress());
     assertEquals("1234567890", n.getObject());
     assertFalse(n.hasStatusTag(Normalized.StatusTag.REQUIRES_SUBJECT_USER_FIXUP));
+    assertEquals("5555555-3f0d-4cc3-b979", n.getReferenceID());
 
     // AssumeRole account from another aws account
     buf =
@@ -1366,7 +1374,7 @@ public class ParserTest {
             + "\"userIdentity\":{\"accountId\": \"000000000000\", \"principalId\": \"PRINCIPALID\", \"type\": \"AWSAccount\"},"
             + "\"sourceIPAddress\": \"127.0.0.1\", \"sharedEventID\": \"1bfc7fd0-0c12-441d-b155-fe2442532683\", \"eventVersion\":\"1.05 \","
             + "\"awsRegion\": \"us-east-1\", \"eventName\": \"AssumeRole\", \"eventType\": \"AwsApiCall\", "
-            + "\"eventID\": \"fa1b3d9a-7070-4f5a-bd44-01572f488268 \", \"recipientAccountId\": \"999999999999\", "
+            + "\"eventID\": \"fa1b3d9a-7070-4f5a-bd44-01572f488268\", \"recipientAccountId\": \"999999999999\", "
             + "\"resources\": [{\"type\": \"AWS::IAM::Role\", \"ARN \": \"arn:aws:iam::999999999999:role/role-name\", "
             + "\"accountId\": \"999999999999\"}]}, \"resource\":{\"type\": \"project \", \"labels\":{\"project_id\": \"project-name\"}},"
             + "\"timestamp\": \"2020-10-20T15:36:11.328745600Z \", \"logName\": \"projects/project-name/logs/cloudtrail-streamer\", "
@@ -1386,6 +1394,7 @@ public class ParserTest {
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("999999999999", n.getObject());
     assertTrue(n.hasStatusTag(Normalized.StatusTag.REQUIRES_SUBJECT_USER_FIXUP));
+    assertEquals("fa1b3d9a-7070-4f5a-bd44-01572f488268", n.getReferenceID());
   }
 
   @Test
@@ -1421,6 +1430,7 @@ public class ParserTest {
     assertEquals("riker", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("XXXXXXXX", n.getObject());
+    assertEquals("000000000-000000", n.getReferenceID());
   }
 
   @Test
@@ -1454,6 +1464,9 @@ public class ParserTest {
     assertNotNull(ct);
     assertEquals("uhura", ct.getUser());
     assertEquals("127.0.0.1", ct.getSourceAddress());
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertEquals("55555343-132e-43bb-8d5d-23d0ef81178e", n.getReferenceID());
   }
 
   @Test
@@ -1490,6 +1503,7 @@ public class ParserTest {
     assertEquals("uhura", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("999999999999", n.getObject());
+    assertEquals("fdbb2209-3fc9-4304-bcde-00634c0b7889", n.getReferenceID());
 
     // This is the SwitchRole event from the trusted account.
     buf =
@@ -1519,6 +1533,7 @@ public class ParserTest {
     assertEquals("uhura", n.getSubjectUser());
     assertEquals("127.0.0.1", n.getSourceAddress());
     assertEquals("000000000000", n.getObject());
+    assertEquals("60fdb466-fbf7-4da0-b521-0e9979e73c5d", n.getReferenceID());
   }
 
   @Test

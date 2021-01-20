@@ -930,6 +930,10 @@ public class AuthProfile implements Serializable {
       }
     }
 
+    if (e.getNormalized().getReferenceID() != null) {
+      a.addMetadata(AlertMeta.Key.REFERENCE_ID, e.getNormalized().getReferenceID());
+    }
+
     return a;
   }
 
