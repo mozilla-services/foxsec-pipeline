@@ -86,7 +86,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                         }
                         if ((d.getEventType().equals(AmoDocker.EventType.NEWVERSION))
                             || (d.getEventType().equals(AmoDocker.EventType.FILEUPLOAD))
-                            || (d.getEventType().equals(AmoDocker.EventType.GOTPROFILE))) {
+                            || (d.getEventType().equals(AmoDocker.EventType.FXALOGIN))) {
                           c.output(e);
                           return;
                         }
@@ -124,7 +124,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                         }
 
                         AmoDocker d = e.getPayload();
-                        if (!d.getEventType().equals(AmoDocker.EventType.GOTPROFILE)) {
+                        if (!d.getEventType().equals(AmoDocker.EventType.FXALOGIN)) {
                           return;
                         }
 
@@ -181,7 +181,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                         }
 
                         AmoDocker d = e.getPayload();
-                        if (d.getEventType().equals(AmoDocker.EventType.GOTPROFILE)) {
+                        if (d.getEventType().equals(AmoDocker.EventType.FXALOGIN)) {
                           // This was a profile fetch, compare the email account against stored
                           // account reputation information.
                           Integer rep = iprepdReader.getReputation("email", d.getFxaEmail());

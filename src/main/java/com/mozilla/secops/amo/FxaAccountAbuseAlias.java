@@ -78,7 +78,7 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
                     if ((d == null) || (d.getEventType() == null)) {
                       return;
                     }
-                    if (!d.getEventType().equals(AmoDocker.EventType.GOTPROFILE)) {
+                    if (!d.getEventType().equals(AmoDocker.EventType.FXALOGIN)) {
                       return;
                     }
                     String ncomp = MiscUtil.normalizeEmailPlus(d.getFxaEmail());

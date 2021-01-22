@@ -14,7 +14,7 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
   private final String reLogin = "^User \\(\\d+: ([^)]+)\\) logged in successfully";
   private final String reNewVersion =
       "^New version: <Version: ([^>]+)> \\((\\d+)\\) from <FileUpload: [^>]+>";
-  private final String reGotProfile = "^Got profile.*'email': ?'([^']+)'.*";
+  private final String reFxaLogin = "^Logging in FxA user ((.+)@(.+))$";
   private final String reFileUpload = "^FileUpload created: \\S+$";
   private final String reRestricted =
       "^Restricting request from (email|ip) (\\S+) \\(reputation=.*";
@@ -25,8 +25,8 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
     LOGIN,
     /** New addon upload */
     NEWVERSION,
-    /** FxA profile fetch */
-    GOTPROFILE,
+    /** FxA user login */
+    FXALOGIN,
     /** File upload */
     FILEUPLOAD,
     /** Restricted request */
@@ -245,9 +245,9 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
       return;
     }
 
-    mat = Pattern.compile(reGotProfile).matcher(amoData.getMsg());
+    mat = Pattern.compile(reFxaLogin).matcher(amoData.getMsg());
     if (mat.matches()) {
-      type = EventType.GOTPROFILE;
+      type = EventType.FXALOGIN;
       // Prefer the email field over the parsed value, but if it is unset then just grab
       // it here
       if (amoData.getEmail() == null) {

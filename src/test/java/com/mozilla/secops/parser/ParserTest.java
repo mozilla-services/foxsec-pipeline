@@ -836,16 +836,12 @@ public class ParserTest {
   }
 
   @Test
-  public void testParseAmoGotProfile() throws Exception {
+  public void testParseAmoFxAProfile() throws Exception {
     String buf =
         "{\"Timestamp\": 1559088104777733120, \"Type\": \"accounts.verify\", \"Logger\":"
             + " \"http_app_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVers"
             + "ion\": \"2.0\", \"Severity\": 7, \"Pid\": 3415, \"Fields\": {\"uid\": \"<anon>\""
-            + ", \"remoteAddressChain\": \"216.160.83.56\", \"msg\": \"Got profile {'email': 'riker@m"
-            + "ozilla.com', 'locale': 'en,en-US', 'amrValues': ['pwd', 'email'], 'twoFactorAuth"
-            + "entication': False, 'uid': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'avatar': 'https:"
-            + "//firefoxusercontent.com/00000000000000000000000000000000', 'avatarDefault': Tru"
-            + "e} [0000000000000000000000000000000000000000000000000000000000000000]\"}}";
+            + ", \"remoteAddressChain\": \"216.160.83.56\", \"msg\": \"Logging in FxA user riker@mozilla.com\"}}";
 
     Parser p = getTestParser();
     assertNotNull(p);
@@ -854,7 +850,7 @@ public class ParserTest {
     assertEquals(Payload.PayloadType.AMODOCKER, e.getPayloadType());
     AmoDocker d = e.getPayload();
     assertNotNull(d);
-    assertEquals(AmoDocker.EventType.GOTPROFILE, d.getEventType());
+    assertEquals(AmoDocker.EventType.FXALOGIN, d.getEventType());
     assertEquals("riker@mozilla.com", d.getFxaEmail());
     assertEquals("216.160.83.56", d.getRemoteIp());
   }
