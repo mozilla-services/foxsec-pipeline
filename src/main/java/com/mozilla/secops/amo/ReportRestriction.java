@@ -3,6 +3,7 @@ package com.mozilla.secops.amo;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.amo.AmoMetrics.HeuristicMetrics;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -18,6 +19,7 @@ public class ReportRestriction extends PTransform<PCollection<Event>, PCollectio
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
+  private final HeuristicMetrics metrics;
 
   /**
    * Create new ReportRestriction
@@ -26,6 +28,7 @@ public class ReportRestriction extends PTransform<PCollection<Event>, PCollectio
    */
   public ReportRestriction(String monitoredResource) {
     this.monitoredResource = monitoredResource;
+    metrics = new HeuristicMetrics(this.getClass().getName());
   }
 
   /** {@inheritDoc} */
@@ -56,6 +59,7 @@ public class ReportRestriction extends PTransform<PCollection<Event>, PCollectio
                     if (!d.getEventType().equals(AmoDocker.EventType.RESTRICTED)) {
                       return;
                     }
+                    metrics.eventTypeMatched();
 
                     Alert alert = new Alert();
                     alert.setCategory("amo");

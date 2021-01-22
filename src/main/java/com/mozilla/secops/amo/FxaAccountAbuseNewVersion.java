@@ -4,6 +4,7 @@ import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.amo.AmoMetrics.HeuristicMetrics;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -32,6 +33,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
   private final String project;
   private final String[] banAccounts;
   private final Integer banAccountsSuppress;
+  private final HeuristicMetrics metrics;
 
   /**
    * Create new FxaAccountAbuseNewVersion
@@ -55,6 +57,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
 
     this.iprepdSpec = iprepdSpec;
     this.project = project;
+    metrics = new HeuristicMetrics(this.getClass().getName());
   }
 
   /** {@inheritDoc} */
@@ -90,6 +93,7 @@ public class FxaAccountAbuseNewVersion extends PTransform<PCollection<Event>, PC
                           c.output(e);
                           return;
                         }
+                        metrics.eventTypeMatched();
                       }
                     }));
 

@@ -5,6 +5,7 @@ import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.amo.AmoMetrics.HeuristicMetrics;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -44,6 +45,7 @@ public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollectio
   private final Integer alertOnIp;
   private final String[] acctExceptions;
   private final String[] aggMatchers;
+  private final HeuristicMetrics metrics;
 
   /**
    * Construct new AddonMultiIpLogin
@@ -68,6 +70,7 @@ public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollectio
     this.alertOnIp = alertOnIp;
     this.acctExceptions = acctExceptions;
     this.aggMatchers = aggMatchers;
+    metrics = new HeuristicMetrics(this.getClass().getName());
   }
 
   /** {@inheritDoc} */
@@ -111,6 +114,7 @@ public class AddonMultiIpLogin extends PTransform<PCollection<Event>, PCollectio
                         && (!d.getEventType().equals(AmoDocker.EventType.FILEUPLOADMNT))) {
                       return;
                     }
+                    metrics.eventTypeMatched();
 
                     // We want an email address, remote address, and a source country code
                     if ((d.getFxaEmail() == null)
