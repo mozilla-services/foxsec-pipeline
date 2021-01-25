@@ -5,6 +5,7 @@ import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.amo.AmoMetrics.HeuristicMetrics;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -38,6 +39,7 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
   private final String monitoredResource;
   private final Integer suppressRecovery;
   private final int maxAliases;
+  private final HeuristicMetrics metrics;
 
   /**
    * Create new FxaAccountAbuseAlias
@@ -51,6 +53,7 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
     this.monitoredResource = monitoredResource;
     this.suppressRecovery = suppressRecovery;
     this.maxAliases = maxAliases;
+    metrics = new HeuristicMetrics(this.getClass().getName());
   }
 
   /** {@inheritDoc} */
@@ -78,9 +81,11 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
                     if ((d == null) || (d.getEventType() == null)) {
                       return;
                     }
-                    if (!d.getEventType().equals(AmoDocker.EventType.GOTPROFILE)) {
+                    if (!d.getEventType().equals(AmoDocker.EventType.FXALOGIN)) {
                       return;
                     }
+                    metrics.eventTypeMatched();
+
                     String ncomp = MiscUtil.normalizeEmailPlus(d.getFxaEmail());
                     if (ncomp == null) {
                       return;

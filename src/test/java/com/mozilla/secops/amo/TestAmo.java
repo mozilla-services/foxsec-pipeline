@@ -323,5 +323,149 @@ public class TestAmo {
       cnt++;
     }
     assertEquals(1, cnt);
+
+    Iterable<MetricResult<Long>> cloudSubMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            AddonCloudSubmission.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : cloudSubMWrites) {
+      assertEquals(3L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
+
+    Iterable<MetricResult<Long>> addonMatcherMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            AddonMatcher.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : addonMatcherMWrites) {
+      assertEquals(19L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
+
+    Iterable<MetricResult<Long>> addonMultiIpLoginMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            AddonMultiIpLogin.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : addonMultiIpLoginMWrites) {
+      assertEquals(22L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
+
+    Iterable<MetricResult<Long>> addonMultiMatchMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            AddonMultiMatch.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : addonMultiMatchMWrites) {
+      assertEquals(19L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
+
+    Iterable<MetricResult<Long>> addonMultiSubmitMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            AddonMultiSubmit.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : addonMultiSubmitMWrites) {
+      assertEquals(19L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
+
+    Iterable<MetricResult<Long>> fxaAccountAbuseAliasMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            FxaAccountAbuseAlias.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : fxaAccountAbuseAliasMWrites) {
+      assertEquals(9L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
+
+    Iterable<MetricResult<Long>> fxaAccountAbuseNewVersionMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            FxaAccountAbuseNewVersion.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : fxaAccountAbuseNewVersionMWrites) {
+      assertEquals(23L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
+
+    Iterable<MetricResult<Long>> reportRestrictionMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            ReportRestriction.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : reportRestrictionMWrites) {
+      assertEquals(1L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
   }
 }

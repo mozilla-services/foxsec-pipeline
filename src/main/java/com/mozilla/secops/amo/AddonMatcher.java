@@ -5,6 +5,7 @@ import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.amo.AmoMetrics.HeuristicMetrics;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -33,6 +34,8 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
   private final Integer suppressRecovery;
   private final String[] matchCriteria;
 
+  private final HeuristicMetrics metrics;
+
   /**
    * Construct new AddonMatcher
    *
@@ -44,6 +47,7 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
     this.monitoredResource = monitoredResource;
     this.suppressRecovery = suppressRecovery;
     this.matchCriteria = matchCriteria;
+    metrics = new HeuristicMetrics(this.getClass().getName());
   }
 
   /** {@inheritDoc} */
@@ -102,6 +106,7 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
                     if (!d.getEventType().equals(AmoDocker.EventType.FILEUPLOADMNT)) {
                       return;
                     }
+                    metrics.eventTypeMatched();
 
                     for (MatchCriteria crit : criteria) {
                       Matcher m = crit.pattern.matcher(d.getFileName());

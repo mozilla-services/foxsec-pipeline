@@ -4,6 +4,7 @@ import com.mozilla.secops.CidrUtil;
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.amo.AmoMetrics.HeuristicMetrics;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -20,6 +21,7 @@ public class AddonCloudSubmission extends PTransform<PCollection<Event>, PCollec
   private static final long serialVersionUID = 1L;
 
   private final String monitoredResource;
+  private final HeuristicMetrics metrics;
 
   /**
    * Construct new AddonCloudSubmission
@@ -28,6 +30,7 @@ public class AddonCloudSubmission extends PTransform<PCollection<Event>, PCollec
    */
   public AddonCloudSubmission(String monitoredResource) {
     this.monitoredResource = monitoredResource;
+    metrics = new HeuristicMetrics(this.getClass().getName());
   }
 
   public String getTransformDoc() {
@@ -68,6 +71,7 @@ public class AddonCloudSubmission extends PTransform<PCollection<Event>, PCollec
                     if (!d.getEventType().equals(AmoDocker.EventType.NEWVERSION)) {
                       return;
                     }
+                    metrics.eventTypeMatched();
 
                     String f = null;
                     if (awsCidr.contains(d.getRemoteIp())) {

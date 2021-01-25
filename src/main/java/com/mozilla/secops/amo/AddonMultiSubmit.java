@@ -5,6 +5,7 @@ import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.MiscUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.amo.AmoMetrics.HeuristicMetrics;
 import com.mozilla.secops.parser.AmoDocker;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
@@ -35,6 +36,7 @@ public class AddonMultiSubmit extends PTransform<PCollection<Event>, PCollection
   private final String monitoredResource;
   private final Integer suppressRecovery;
   private final int matchAlertOn;
+  private final HeuristicMetrics metrics;
 
   /**
    * Construct new AddonMultiSubmit
@@ -48,6 +50,7 @@ public class AddonMultiSubmit extends PTransform<PCollection<Event>, PCollection
     this.monitoredResource = monitoredResource;
     this.suppressRecovery = suppressRecovery;
     this.matchAlertOn = matchAlertOn;
+    metrics = new HeuristicMetrics(this.getClass().getName());
   }
 
   /** {@inheritDoc} */
@@ -88,6 +91,7 @@ public class AddonMultiSubmit extends PTransform<PCollection<Event>, PCollection
                     if (!d.getEventType().equals(AmoDocker.EventType.FILEUPLOADMNT)) {
                       return;
                     }
+                    metrics.eventTypeMatched();
 
                     // We want at least an email address and a file size
                     if ((d.getFxaEmail() == null) || (d.getBytes() == null)) {
