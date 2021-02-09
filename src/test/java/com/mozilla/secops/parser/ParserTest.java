@@ -799,7 +799,8 @@ public class ParserTest {
             + "p_addons\", \"Hostname\": \"ip.us-west-2.compute.internal\", \"EnvVersion\": \"2."
             + "0\", \"Severity\": 6, \"Pid\": 3326, \"Fields\": {\"uid\": \"anonymous\", \"remot"
             + "eAddressChain\": \"216.160.83.56\", \"msg\": \"UPLOAD: 'filename.zip' (10000 byte"
-            + "s) to '/mnt/efs/addons.mozilla.org/files/temp/00000000000000000000000000000000.xpi'\"}}";
+            + "s) to '/mnt/efs/addons.mozilla.org/files/temp/00000000000000000000000000000000.xpi'\","
+            + "\"upload_hash\": \"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}}";
 
     Parser p = getTestParser();
     assertNotNull(p);
@@ -811,6 +812,9 @@ public class ParserTest {
     assertEquals(AmoDocker.EventType.FILEUPLOADMNT, d.getEventType());
     assertEquals("filename.zip", d.getFileName());
     assertEquals(10000, (int) d.getBytes());
+    assertEquals(
+        "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        d.getUploadHash());
   }
 
   @Test

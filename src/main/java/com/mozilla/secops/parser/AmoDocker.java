@@ -172,6 +172,15 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
     return amoData.getUpload();
   }
 
+  /**
+   * Get upload hash
+   *
+   * @return String
+   */
+  public String getUploadHash() {
+    return amoData.getUploadHash();
+  }
+
   @Override
   public Boolean matcher(String input, ParserState state) {
     // There should always have an associated Mozlog hint

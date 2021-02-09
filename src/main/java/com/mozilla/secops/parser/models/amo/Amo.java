@@ -17,6 +17,7 @@ public class Amo implements Serializable {
   private Boolean fromApi;
   private Integer numericUserId;
   private String upload;
+  private String uploadHash;
 
   /**
    * Get msg
@@ -132,6 +133,20 @@ public class Amo implements Serializable {
   @JsonProperty("upload")
   public String getUpload() {
     return upload;
+  }
+
+  /**
+   * Get upload hash
+   *
+   * @return String
+   */
+  public String getUploadHash() {
+    return uploadHash;
+  }
+
+  @JsonProperty("upload_hash")
+  void setUploadHash(String uploadHash) {
+    this.uploadHash = uploadHash;
   }
 
   public Amo() {}

@@ -182,7 +182,7 @@ public class Amo implements Serializable {
     void setAddonMatchSuppressRecovery(Integer value);
 
     @Description(
-        "Generate multi match alert if uploads exceed this number in a given window with same file name")
+        "Generate multi match alert if uploads exceed this number in a given window with same file hash")
     @Default.Integer(5)
     Integer getAddonMultiMatchAlertOn();
 

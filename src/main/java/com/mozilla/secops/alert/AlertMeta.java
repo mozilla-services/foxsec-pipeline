@@ -116,6 +116,7 @@ public class AlertMeta implements Serializable {
     ADDON_GUID("addon_guid"),
     ADDON_ID("addon_id"),
     ADDON_SIZE("addon_size"),
+    ADDON_UPLOAD_HASH("addon_upload_hash"),
     ADDON_USER_ID("addon_user_id"),
     ADDON_VERSION("addon_version"),
     ALERT_HANDLING_SEVERITY("alert_handling_severity"),
