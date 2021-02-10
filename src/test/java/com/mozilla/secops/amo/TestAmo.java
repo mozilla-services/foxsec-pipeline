@@ -104,7 +104,7 @@ public class TestAmo {
         .apply(OutputOptions.compositeOutput(getTestOptions()));
 
     PCollection<Long> count = alerts.apply(Count.globally());
-    PAssert.that(count).containsInAnyOrder(17L);
+    PAssert.that(count).containsInAnyOrder(16L);
 
     PAssert.that(alerts)
         .satisfies(
@@ -185,10 +185,6 @@ public class TestAmo {
                     cntMatchedAddon++;
                   } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                       .equals("amo_abuse_multi_match")) {
-                    assertEquals("amo_abuse_multi_match", a.getNotifyMergeKey());
-                    assertEquals("test addon abuse multi match, 10", a.getSummary());
-                    assertEquals("10", a.getMetadataValue(AlertMeta.Key.COUNT));
-                    assertEquals("x.xpi", a.getMetadataValue(AlertMeta.Key.ADDON_FILENAME));
                     cntMultiMatch++;
                   } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
                       .equals("amo_abuse_multi_submit")) {
@@ -279,7 +275,7 @@ public class TestAmo {
                       "Match abusive addon uploads using these patterns [.*test_submission.*:7500:7500] and generate alerts",
                       a.getCustomMetadataValue("heuristic_AddonMatcher"));
                   assertEquals(
-                      "Detect distributed AMO submissions with the same file name. Alert on 5 submissions of the same file name.",
+                      "Detect distributed AMO submissions with the same file hash. Alert on 5 submissions of the same file name.",
                       a.getCustomMetadataValue("heuristic_AddonMultiMatch"));
                   assertEquals(
                       "Detect distributed submissions based on file size intervals. Alert on 10 submissions of the same rounded interval.",
@@ -296,7 +292,7 @@ public class TestAmo {
               assertEquals("cntNewVersionBanPattern", 1, cntNewVersionBanPattern);
               assertEquals("cntAbuseAlias", 1, cntAbuseAlias);
               assertEquals("cntMatchedAddon", 1, cntMatchedAddon);
-              assertEquals("cntMultiMatch", 1, cntMultiMatch);
+              assertEquals("cntMultiMatch", 0, cntMultiMatch);
               assertEquals("cntMultiSubmit", 1, cntMultiSubmit);
               assertEquals("cntIpLogin", 1, cntIpLogin);
               assertEquals("cntNewVersionSubmission", 2, cntNewVersionSubmission);
@@ -319,7 +315,7 @@ public class TestAmo {
             .getCounters();
     int cnt = 0;
     for (MetricResult<Long> x : vWrites) {
-      assertEquals(36L, (long) x.getCommitted());
+      assertEquals(26L, (long) x.getCommitted());
       cnt++;
     }
     assertEquals(1, cnt);
@@ -467,5 +463,49 @@ public class TestAmo {
       cnt++;
     }
     assertEquals(1, cnt);
+  }
+
+  @Test
+  public void testMultiMatch() throws Exception {
+    Amo.AmoOptions options = getTestOptions();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/amo_multimatch/block1.txt");
+
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    InputElement e = new InputElement(options.getMonitoredResourceIndicator()).addWiredStream(s);
+
+    PCollection<String> input =
+        p.apply(
+            "input",
+            new Input(options.getProject()).simplex().withInputElement(e).simplexReadRaw());
+
+    PCollection<Alert> alerts =
+        Amo.executePipeline(p, input, options)
+            .apply(ParDo.of(new AlertFormatter(getTestOptions())));
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+    PAssert.that(count).containsInAnyOrder(1L);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                assertEquals("amo_abuse_multi_match", a.getNotifyMergeKey());
+                assertEquals("test addon abuse multi match, 10", a.getSummary());
+                assertEquals("10", a.getMetadataValue(AlertMeta.Key.COUNT));
+                assertEquals(
+                    "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    a.getMetadataValue(AlertMeta.Key.ADDON_UPLOAD_HASH));
+              }
+              return null;
+            });
+
+    PipelineResult pResult = p.run();
+    pResult.waitUntilFinish();
   }
 }

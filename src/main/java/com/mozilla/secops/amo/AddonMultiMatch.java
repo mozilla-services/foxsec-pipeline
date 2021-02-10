@@ -11,7 +11,6 @@ import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Payload;
 import com.mozilla.secops.window.GlobalTriggers;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -25,10 +24,10 @@ import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Duration;
 
 /**
- * Detect distributed AMO submissions with the same file name
+ * Detect distributed AMO submissions with the same file hash
  *
  * <p>Detection operates on fixed windows of 10 minutes long. If the number of clients seen
- * uploading a file with the exact same file name exceeds the configured value within the fixed
+ * uploading a file with the exact same file hash exceeds the configured value within the fixed
  * window, an alert is generated.
  */
 public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<Alert>>
@@ -45,7 +44,7 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
    *
    * @param monitoredResource Monitored resource indicator
    * @param suppressRecovery Optional recovery suppression to include with alerts in seconds
-   * @param matchAlertOn Number of submissions of the same file name to trigger alert
+   * @param matchAlertOn Number of submissions of the same file hash to trigger alert
    */
   public AddonMultiMatch(String monitoredResource, Integer suppressRecovery, Integer matchAlertOn) {
     this.monitoredResource = monitoredResource;
@@ -57,7 +56,7 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
   /** {@inheritDoc} */
   public String getTransformDoc() {
     return String.format(
-        "Detect distributed AMO submissions with the same file name. Alert on %s submissions of the same file name.",
+        "Detect distributed AMO submissions with the same file hash. Alert on %s submissions of the same file name.",
         matchAlertOn);
   }
 
@@ -96,20 +95,11 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
                     metrics.eventTypeMatched();
 
                     // We want at least an email address and a file name
-                    if ((d.getFxaEmail() == null) || (d.getFileName() == null)) {
+                    if ((d.getFxaEmail() == null) || (d.getUploadHash() == null)) {
                       return;
                     }
 
-                    // Remove the prefix hash so we are left with the upload file name
-                    Matcher mat = fnRegex.matcher(d.getFileName());
-                    if (!mat.matches()) {
-                      return;
-                    }
-                    String fncomp = mat.group(1);
-                    if ((fncomp == null) || (fncomp.isEmpty())) {
-                      return;
-                    }
-                    c.output(KV.of(fncomp, d.getFxaEmail()));
+                    c.output(KV.of(d.getUploadHash(), d.getFxaEmail()));
                   }
                 }))
         .apply("addon multi match distinct", Distinct.<KV<String, String>>create())
@@ -148,7 +138,7 @@ public class AddonMultiMatch extends PTransform<PCollection<Event>, PCollection<
                     alert.setNotifyMergeKey("amo_abuse_multi_match");
                     alert.addMetadata(AlertMeta.Key.EMAIL, buf);
                     alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(cnt));
-                    alert.addMetadata(AlertMeta.Key.ADDON_FILENAME, c.element().getKey());
+                    alert.addMetadata(AlertMeta.Key.ADDON_UPLOAD_HASH, c.element().getKey());
                     alert.setSummary(
                         String.format("%s addon abuse multi match, %d", monitoredResource, cnt));
                     if (suppressRecovery != null) {
