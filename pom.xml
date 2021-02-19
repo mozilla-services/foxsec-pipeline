@@ -17,7 +17,7 @@
         <google-cloud.version>1.62.0</google-cloud.version>
         <aws-java-sdk.version>1.11.571</aws-java-sdk.version>
 
-        <jackson.version>2.10.4</jackson.version>
+        <jackson.version>2.12.1</jackson.version>
         
         <jslack.version>1.8.1</jslack.version>
 
