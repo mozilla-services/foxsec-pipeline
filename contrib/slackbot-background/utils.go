@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"regexp"
@@ -152,6 +153,38 @@ func deleteObjFromIprepd(obj, typestr string) error {
 		}
 	}
 	return nil
+}
+
+func checkObjFromIprepd(client *http.Client, obj string, typestr string) map[string]string {
+	results := make(map[string]string)
+	for _, iprepdInstance := range config.IprepdInstances {
+		log.Infof("Sending CHECK request to %s for %s/%s", iprepdInstance.URL, typestr, obj)
+
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/type/%s/%s", iprepdInstance.URL, typestr, obj), nil)
+		if err != nil {
+			results[iprepdInstance.URL] = "Error retrieving results!"
+		}
+		req.Header.Add("Authorization", "APIKey "+iprepdInstance.APIKey)
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Errorf("Error send request to %s: %s", iprepdInstance.URL, err)
+		}
+		if resp.StatusCode == http.StatusNotFound {
+			results[iprepdInstance.URL] = "Not found! (Assumed reputation: 100)"
+		} else if resp.StatusCode == http.StatusOK {
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				results[iprepdInstance.URL] = "Error retrieving results!"
+			} else {
+				results[iprepdInstance.URL] = string(body)
+			}
+		} else {
+			results[iprepdInstance.URL] = "Error retrieving results!"
+			log.Errorf("Got response with status code %d from %s", resp.StatusCode, iprepdInstance.URL)
+		}
+	}
+	return results
 }
 
 func getCallerDetails(userid string) string {

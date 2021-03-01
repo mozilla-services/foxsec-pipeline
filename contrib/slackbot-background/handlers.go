@@ -1,8 +1,10 @@
 package slackbotbackground
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -92,6 +94,64 @@ func handleExemptCmd(ctx context.Context, cmd common.SlashCommandData, db *commo
 	}
 
 	msg.Text = fmt.Sprintf("Successfully saved %s to the exemptions list. Will expire at %s", exemptedObject.Object, exemptedObject.ExpiresAt.Format(time.UnixDate))
+	return msg, nil
+}
+
+func handleCheckCmd(ctx context.Context, cmd common.SlashCommandData, client *http.Client) (*slack.Msg, error) {
+	var (
+		err         error
+		errMsg      string
+		objectType  string
+		objectValue string
+	)
+	msg := &slack.Msg{}
+
+	if cmd.Cmd == CHECK_IP_SLASH_COMMAND || cmd.Cmd == STAGING_CHECK_IP_SLASH_COMMAND {
+		objectType = common.IP_TYPE
+	} else if cmd.Cmd == CHECK_EMAIL_SLASH_COMMAND || cmd.Cmd == STAGING_CHECK_EMAIL_SLASH_COMMAND {
+		objectType = common.EMAIL_TYPE
+	} else {
+		err = fmt.Errorf("Error processing command")
+		msg.Text = err.Error()
+		return msg, err
+	}
+
+	if err != nil {
+		msg.Text = errMsg
+		return msg, err
+	}
+
+	userProfile, err := globals.slackClient.GetUserProfile(cmd.UserID, false)
+	if err != nil {
+		log.Errorf("Error getting user profile: %s", err)
+		msg.Text = "Was unable to get your email from Slack."
+		return msg, err
+	}
+
+	allowed, err := checkUsersGroups(userProfile.Email)
+	if err != nil {
+		log.Errorf("Error with checking user's (%s) ldap groups: %s", userProfile.Email, err)
+		msg.Text = "Error checking your ldap groups."
+		return msg, err
+	}
+	if !allowed {
+		err = fmt.Errorf("User (%s) is not allowed to use this slack command.", userProfile.Email)
+		log.Error(err)
+		msg.Text = "You are not authorized to perform that command."
+		return msg, err
+	}
+
+	objectValue = cmd.Text
+	log.Infof("Checking reputation for %s by %s", objectValue, userProfile.Email)
+
+	results := checkObjFromIprepd(client, objectValue, objectType)
+
+	b := new(bytes.Buffer)
+	for k, v := range results {
+		fmt.Fprintf(b, "%s - %s\n", k, v)
+	}
+
+	msg.Text = b.String()
 	return msg, nil
 }
 

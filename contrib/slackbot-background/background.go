@@ -22,6 +22,11 @@ const (
 	EXEMPT_EMAIL_SLASH_COMMAND         = "/exempt_email"
 	STAGING_EXEMPT_EMAIL_SLASH_COMMAND = "/staging_exempt_email"
 
+	CHECK_IP_SLASH_COMMAND            = "/check_ip"
+	STAGING_CHECK_IP_SLASH_COMMAND    = "/staging_check_ip"
+	CHECK_EMAIL_SLASH_COMMAND         = "/check_email"
+	STAGING_CHECK_EMAIL_SLASH_COMMAND = "/staging_check_email"
+
 	SECOPS_911_COMMAND         = "/secops911"
 	STAGING_SECOPS_911_COMMAND = "/staging_secops911"
 
@@ -51,6 +56,10 @@ var (
 		STAGING_EXEMPT_EMAIL_SLASH_COMMAND,
 		SECOPS_911_COMMAND,
 		STAGING_SECOPS_911_COMMAND,
+		CHECK_IP_SLASH_COMMAND,
+		CHECK_EMAIL_SLASH_COMMAND,
+		STAGING_CHECK_IP_SLASH_COMMAND,
+		STAGING_CHECK_EMAIL_SLASH_COMMAND,
 	}
 
 	// dirty hack to disable init in unit tests
@@ -78,7 +87,7 @@ func init() {
 
 type Globals struct {
 	slackClient   *slack.Client
-	personsClient *persons_api.Client
+	personsClient persons_api.PersonsClient
 	sesClient     common.EscalationMailer
 }
 
@@ -182,6 +191,8 @@ func SlackbotBackground(ctx context.Context, psmsg pubsub.Message) error {
 			resp, err = handle911Cmd(ctx, td.SlashCommand, DB)
 		case EXEMPT_EMAIL_SLASH_COMMAND, EXEMPT_IP_SLASH_COMMAND, STAGING_EXEMPT_EMAIL_SLASH_COMMAND, STAGING_EXEMPT_IP_SLASH_COMMAND:
 			resp, err = handleExemptCmd(ctx, td.SlashCommand, DB)
+		case CHECK_EMAIL_SLASH_COMMAND, CHECK_IP_SLASH_COMMAND, STAGING_CHECK_EMAIL_SLASH_COMMAND, STAGING_CHECK_IP_SLASH_COMMAND:
+			resp, err = handleCheckCmd(ctx, td.SlashCommand, client)
 		default:
 			resp, err = nil, errors.New("Unsupported slash command")
 		}
