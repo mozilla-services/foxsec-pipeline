@@ -17,10 +17,10 @@ import (
 )
 
 const (
-	EXEMPT_IP_SLASH_COMMAND            = "/exempt_ip"
-	STAGING_EXEMPT_IP_SLASH_COMMAND    = "/staging_exempt_ip"
-	EXEMPT_EMAIL_SLASH_COMMAND         = "/exempt_email"
-	STAGING_EXEMPT_EMAIL_SLASH_COMMAND = "/staging_exempt_email"
+	UNBLOCK_IP_SLASH_COMMAND            = "/unblock_ip"
+	STAGING_UNBLOCK_IP_SLASH_COMMAND    = "/staging_unblock_ip"
+	UNBLOCK_EMAIL_SLASH_COMMAND         = "/unblock_email"
+	STAGING_UNBLOCK_EMAIL_SLASH_COMMAND = "/staging_unblock_email"
 
 	CHECK_IP_SLASH_COMMAND            = "/check_ip"
 	STAGING_CHECK_IP_SLASH_COMMAND    = "/staging_check_ip"
@@ -50,10 +50,10 @@ var (
 	config = &common.Configuration{}
 
 	ALLOWED_COMMANDS = []string{
-		EXEMPT_IP_SLASH_COMMAND,
-		STAGING_EXEMPT_IP_SLASH_COMMAND,
-		EXEMPT_EMAIL_SLASH_COMMAND,
-		STAGING_EXEMPT_EMAIL_SLASH_COMMAND,
+		UNBLOCK_IP_SLASH_COMMAND,
+		STAGING_UNBLOCK_IP_SLASH_COMMAND,
+		UNBLOCK_EMAIL_SLASH_COMMAND,
+		STAGING_UNBLOCK_EMAIL_SLASH_COMMAND,
 		SECOPS_911_COMMAND,
 		STAGING_SECOPS_911_COMMAND,
 		CHECK_IP_SLASH_COMMAND,
@@ -189,10 +189,10 @@ func SlackbotBackground(ctx context.Context, psmsg pubsub.Message) error {
 		switch td.SlashCommand.Cmd {
 		case SECOPS_911_COMMAND, STAGING_SECOPS_911_COMMAND:
 			resp, err = handle911Cmd(ctx, td.SlashCommand, DB)
-		case EXEMPT_EMAIL_SLASH_COMMAND, EXEMPT_IP_SLASH_COMMAND, STAGING_EXEMPT_EMAIL_SLASH_COMMAND, STAGING_EXEMPT_IP_SLASH_COMMAND:
-			resp, err = handleExemptCmd(ctx, td.SlashCommand, DB)
 		case CHECK_EMAIL_SLASH_COMMAND, CHECK_IP_SLASH_COMMAND, STAGING_CHECK_EMAIL_SLASH_COMMAND, STAGING_CHECK_IP_SLASH_COMMAND:
 			resp, err = handleCheckCmd(ctx, td.SlashCommand, client)
+		case UNBLOCK_EMAIL_SLASH_COMMAND, UNBLOCK_IP_SLASH_COMMAND, STAGING_UNBLOCK_EMAIL_SLASH_COMMAND, STAGING_UNBLOCK_IP_SLASH_COMMAND:
+			resp, err = handleUnblockCmd(ctx, td.SlashCommand, DB)
 		default:
 			resp, err = nil, errors.New("Unsupported slash command")
 		}
