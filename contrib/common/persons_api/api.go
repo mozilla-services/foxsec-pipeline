@@ -9,6 +9,11 @@ import (
 	"sync"
 )
 
+type PersonsClient interface {
+	GetPersonByEmail(primaryEmail string) (*Person, error)
+	RefreshAccessToken() error
+}
+
 type Client struct {
 	clientId     string
 	clientSecret string

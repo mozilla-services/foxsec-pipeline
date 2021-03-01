@@ -6,22 +6,27 @@ import (
 	"net/http"
 
 	"github.com/mozilla-services/foxsec-pipeline/contrib/common"
+	"github.com/mozilla-services/foxsec-pipeline/contrib/common/persons_api"
 )
 
 // FakeTransport is a roundtripper that can used with httpclient to write unit tests
 type FakeTransport struct {
-	RequestURLs    []string
-	urlMap         map[string]func(req *http.Request) (*http.Response, error)
-	defaultHandler func(req *http.Request) (*http.Response, error)
+	RequestURLs         []string
+	Requests            []*http.Request
+	urlMap              map[string]func(req *http.Request) (*http.Response, error)
+	defaultHandler      func(req *http.Request) (*http.Response, error)
+	DefaultHandlerCount int
 }
 
 // RoundTrip .
 func (f *FakeTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	f.RequestURLs = append(f.RequestURLs, req.URL.String())
+	f.Requests = append(f.Requests, req)
 	urlHandler := f.urlMap[req.URL.String()]
 	if urlHandler != nil {
 		return urlHandler(req)
 	}
+	f.DefaultHandlerCount++
 	return f.defaultHandler(req)
 }
 
@@ -33,8 +38,9 @@ func (f *FakeTransport) AddHandler(url string, handler interface{}) {
 // NewFakeTransport creates a faketransport that default returns 200s
 func NewFakeTransport() *FakeTransport {
 	return &FakeTransport{
-		urlMap:         make(map[string]func(req *http.Request) (*http.Response, error)),
-		defaultHandler: Return200,
+		urlMap:              make(map[string]func(req *http.Request) (*http.Response, error)),
+		defaultHandler:      Return200,
+		DefaultHandlerCount: 0,
 	}
 }
 
@@ -81,4 +87,23 @@ func (f *FakeMailer) Send911Email(caller string, ccAddress string, message strin
 // DefaultEscalationEmail returns the email address of the fake emailer
 func (f *FakeMailer) DefaultEscalationEmail() string {
 	return "default"
+}
+
+type FakePersonsClient struct {
+}
+
+func (fp *FakePersonsClient) GetPersonByEmail(primaryEmail string) (*persons_api.Person, error) {
+	p := &persons_api.Person{
+		AccessInformation: persons_api.AccessInformationValuesArray{
+			LDAP: persons_api.LDAPAttribute{
+				Values: make(map[string]interface{}),
+			},
+		},
+	}
+	p.AccessInformation.LDAP.Values["test"] = "test"
+	return p, nil
+}
+
+func (fp *FakePersonsClient) RefreshAccessToken() error {
+	return nil
 }
