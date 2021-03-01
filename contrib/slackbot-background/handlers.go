@@ -26,7 +26,7 @@ func handle911Cmd(ctx context.Context, cmd common.SlashCommandData, db *common.D
 	return msg, nil
 }
 
-func handleExemptCmd(ctx context.Context, cmd common.SlashCommandData, db *common.DBClient) (*slack.Msg, error) {
+func handleUnblockCmd(ctx context.Context, cmd common.SlashCommandData, db *common.DBClient) (*slack.Msg, error) {
 	var (
 		err    error
 		errMsg string
@@ -34,9 +34,9 @@ func handleExemptCmd(ctx context.Context, cmd common.SlashCommandData, db *commo
 	msg := &slack.Msg{}
 	exemptedObject := &common.ExemptedObject{}
 
-	if cmd.Cmd == EXEMPT_IP_SLASH_COMMAND || cmd.Cmd == STAGING_EXEMPT_IP_SLASH_COMMAND {
+	if cmd.Cmd == UNBLOCK_IP_SLASH_COMMAND || cmd.Cmd == STAGING_UNBLOCK_IP_SLASH_COMMAND {
 		exemptedObject.Type = common.IP_TYPE
-	} else if cmd.Cmd == EXEMPT_EMAIL_SLASH_COMMAND || cmd.Cmd == STAGING_EXEMPT_EMAIL_SLASH_COMMAND {
+	} else if cmd.Cmd == UNBLOCK_EMAIL_SLASH_COMMAND || cmd.Cmd == STAGING_UNBLOCK_EMAIL_SLASH_COMMAND {
 		exemptedObject.Type = common.EMAIL_TYPE
 	} else {
 		err = fmt.Errorf("Error processing command")
