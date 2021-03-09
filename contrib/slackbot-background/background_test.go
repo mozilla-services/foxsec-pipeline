@@ -219,7 +219,7 @@ func TestCheckIprepdCommandWithReputation(t *testing.T) {
 	assert.Len(t, fakeTransport.Requests, 4)
 
 	msg, err := ioutil.ReadAll(fakeTransport.Requests[3].Body)
-	expectedMsg := "{\"text\":\"http://www.iprepd1.com - {\\\"object\\\":\\\"test@example.com\\\",\\\"type\\\":\\\"email\\\",\\\"reputation\\\":0,\\\"reviewed\\\":false,\\\"lastupdated\\\":\\\"2021-02-27T00:31:18.187326761Z\\\",\\\"decayafter\\\":\\\"2021-03-06T00:31:18.187324497Z\\\"}\\nhttp://www.iprepd2.com - {\\\"object\\\":\\\"test@example.com\\\",\\\"type\\\":\\\"email\\\",\\\"reputation\\\":0,\\\"reviewed\\\":false,\\\"lastupdated\\\":\\\"2021-02-27T00:31:18.187326761Z\\\",\\\"decayafter\\\":\\\"2021-03-06T00:31:18.187324497Z\\\"}\\n\",\"replace_original\":false,\"delete_original\":false,\"blocks\":null}"
+	expectedMsg := "{\"text\":\"object=test@example.com\\nhttp://www.iprepd1.com - {\\\"object\\\":\\\"test@example.com\\\",\\\"type\\\":\\\"email\\\",\\\"reputation\\\":0,\\\"reviewed\\\":false,\\\"lastupdated\\\":\\\"2021-02-27T00:31:18.187326761Z\\\",\\\"decayafter\\\":\\\"2021-03-06T00:31:18.187324497Z\\\"}\\nhttp://www.iprepd2.com - {\\\"object\\\":\\\"test@example.com\\\",\\\"type\\\":\\\"email\\\",\\\"reputation\\\":0,\\\"reviewed\\\":false,\\\"lastupdated\\\":\\\"2021-02-27T00:31:18.187326761Z\\\",\\\"decayafter\\\":\\\"2021-03-06T00:31:18.187324497Z\\\"}\\n\",\"replace_original\":false,\"delete_original\":false,\"blocks\":null}"
 	assert.Equal(t, expectedMsg, string(msg))
 }
 
@@ -261,7 +261,7 @@ func TestCheckIprepdCommandMissingReputation(t *testing.T) {
 	assert.Len(t, fakeTransport.RequestURLs, 4)
 
 	msg, err := ioutil.ReadAll(fakeTransport.Requests[3].Body)
-	expectedMsg := "{\"text\":\"http://www.iprepd1.com - Not found! (Assumed reputation: 100)\\nhttp://www.iprepd2.com - Not found! (Assumed reputation: 100)\\n\",\"replace_original\":false,\"delete_original\":false,\"blocks\":null}"
+	expectedMsg := "{\"text\":\"object=test@example.com\\nhttp://www.iprepd1.com - Not found! (Assumed reputation: 100)\\nhttp://www.iprepd2.com - Not found! (Assumed reputation: 100)\\n\",\"replace_original\":false,\"delete_original\":false,\"blocks\":null}"
 	assert.Equal(t, expectedMsg, string(msg))
 }
 
@@ -303,6 +303,6 @@ func TestCheckIprepdCommandError(t *testing.T) {
 	assert.Len(t, fakeTransport.RequestURLs, 4)
 
 	msg, err := ioutil.ReadAll(fakeTransport.Requests[3].Body)
-	expectedMsg := "{\"text\":\"http://www.iprepd1.com - Error retrieving results!\\nhttp://www.iprepd2.com - Error retrieving results!\\n\",\"replace_original\":false,\"delete_original\":false,\"blocks\":null}"
+	expectedMsg := "{\"text\":\"object=test@example.com\\nhttp://www.iprepd1.com - Error retrieving results!\\nhttp://www.iprepd2.com - Error retrieving results!\\n\",\"replace_original\":false,\"delete_original\":false,\"blocks\":null}"
 	assert.Equal(t, expectedMsg, string(msg))
 }

@@ -1,7 +1,6 @@
 package slackbotbackground
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -145,13 +144,7 @@ func handleCheckCmd(ctx context.Context, cmd common.SlashCommandData, client *ht
 	log.Infof("Checking reputation for %s by %s", objectValue, userProfile.Email)
 
 	results := checkObjFromIprepd(client, objectValue, objectType)
-
-	b := new(bytes.Buffer)
-	for k, v := range results {
-		fmt.Fprintf(b, "%s - %s\n", k, v)
-	}
-
-	msg.Text = b.String()
+	msg.Text = results
 	return msg, nil
 }
 
