@@ -68,7 +68,7 @@ func handleUnblockCmd(ctx context.Context, cmd common.SlashCommandData, db *comm
 		err = fmt.Errorf("User (%s) is not allowed to use this slack command.", userProfile.Email)
 		log.Error(err)
 		msg.Text = "You are not authorized to perform that command."
-		return msg, err
+		return msg, nil
 	}
 
 	exemptedObject.CreatedBy = userProfile.Email
@@ -137,7 +137,7 @@ func handleCheckCmd(ctx context.Context, cmd common.SlashCommandData, client *ht
 		err = fmt.Errorf("User (%s) is not allowed to use this slack command.", userProfile.Email)
 		log.Error(err)
 		msg.Text = "You are not authorized to perform that command."
-		return msg, err
+		return msg, nil
 	}
 
 	objectValue = cmd.Text
