@@ -1743,6 +1743,7 @@ public class ParserTest {
     assertEquals("America/Los_Angeles", d.getSourceAddressTimeZone());
     assertEquals(47.25, d.getSourceAddressLatitude(), 0.1);
     assertEquals(-122.31, d.getSourceAddressLongitude(), 0.1);
+    assertEquals("Mozilla", d.getUserAgent());
 
     Normalized n = e.getNormalized();
     assertNotNull(n);
@@ -1759,6 +1760,7 @@ public class ParserTest {
     assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
     assertEquals("Century Link", n.getSourceAddressIsp());
     assertEquals(209, (int) n.getSourceAddressAsn());
+    assertEquals("Mozilla", n.getUserAgent());
   }
 
   @Test
@@ -1793,6 +1795,7 @@ public class ParserTest {
     assertEquals("America/Los_Angeles", d.getSourceAddressTimeZone());
     assertEquals(47.25, d.getSourceAddressLatitude(), 0.1);
     assertEquals(-122.31, d.getSourceAddressLongitude(), 0.1);
+    assertEquals("Mozilla/5.0", d.getUserAgent());
 
     Normalized n = e.getNormalized();
     assertNotNull(n);
@@ -1809,6 +1812,7 @@ public class ParserTest {
     assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
     assertEquals("Century Link", n.getSourceAddressIsp());
     assertEquals(209, (int) n.getSourceAddressAsn());
+    assertEquals("Mozilla/5.0", n.getUserAgent());
   }
 
   @Test
@@ -1854,6 +1858,7 @@ public class ParserTest {
     assertEquals("America/Los_Angeles", n.getSourceAddressTimeZone());
     assertEquals(47.25, n.getSourceAddressLatitude(), 0.1);
     assertEquals(-122.31, n.getSourceAddressLongitude(), 0.1);
+    assertEquals("Mozilla/5.0", n.getUserAgent());
   }
 
   @Test
