@@ -487,6 +487,11 @@ public class HTTPRequest implements Serializable {
                     public void processElement(ProcessContext c) {
                       Normalized n = c.element().getNormalized();
 
+                      String sourceAddress = n.getSourceAddress();
+                      if (sourceAddress == null) {
+                        return;
+                      }
+
                       String ua = n.getUserAgent();
                       if (ua == null) {
                         return;
@@ -496,7 +501,7 @@ public class HTTPRequest implements Serializable {
                       if (ua.contains("Firefox/")) {
                         return;
                       }
-                      c.output(KV.of(n.getSourceAddress(), ua));
+                      c.output(KV.of(sourceAddress, ua));
                     }
                   }))
           .apply("distinct agent and source", Distinct.<KV<String, String>>create())
