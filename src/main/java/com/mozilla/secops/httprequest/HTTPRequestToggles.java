@@ -24,6 +24,7 @@ public class HTTPRequestToggles {
   private Boolean enablePerEndpointErrorRateAnalysis;
   private Boolean enableNatDetection;
   private Boolean enableSourceCorrelator;
+  private Boolean enableStatusCodeRateAnalysis;
 
   // Nat detection settings
   private String knownGatewaysPath;
@@ -69,6 +70,10 @@ public class HTTPRequestToggles {
   private String[] perEndpointErrorRatePaths;
   private Integer perEndpointErrorRateSuppressRecovery;
   private Long perEndpointErrorRateAlertSuppressionDurationSeconds;
+
+  // Generic Response Code Analysis settings
+  private Long maxClientStatusCodeRate;
+  private Integer statusCodeRateCode;
 
   // Filtering settings
   private String[] filterRequestPath;
@@ -634,6 +639,63 @@ public class HTTPRequestToggles {
   }
 
   /**
+   * Set enable status code rate analysis setting
+   *
+   * @param enableStatusCodeRateAnalysis Boolean
+   */
+  @JsonProperty("enable_status_code_rate_analysis")
+  public void setEnableStatusCodeRateAnalysis(Boolean enableStatusCodeRateAnalysis) {
+    this.enableStatusCodeRateAnalysis = enableStatusCodeRateAnalysis;
+  }
+
+  /**
+   * Get status code rate analysis setting
+   *
+   * @return Boolean
+   */
+  public Boolean getEnableStatusCodeRateAnalysis() {
+    return enableStatusCodeRateAnalysis;
+  }
+
+  /**
+   * Set max client status code rate
+   *
+   * @param value Long
+   */
+  @JsonProperty("max_client_status_code_rate")
+  public void setMaxClientStatusCodeRate(Long value) {
+    maxClientStatusCodeRate = value;
+  }
+
+  /**
+   * Get max client status code rate
+   *
+   * @return Long
+   */
+  public Long getMaxClientStatusCodeRate() {
+    return maxClientStatusCodeRate;
+  }
+
+  /**
+   * Set code for client status code rate analysis
+   *
+   * @param value Integer
+   */
+  @JsonProperty("status_code_rate_analysis_code")
+  public void setStatusCodeAnalysisCode(Integer value) {
+    statusCodeRateCode = value;
+  }
+
+  /**
+   * Get code for client status code rate analysis
+   *
+   * @return Integer
+   */
+  public Integer getStatusCodeRateAnalysisCode() {
+    return statusCodeRateCode;
+  }
+
+  /**
    * Set filter request path
    *
    * @param value String[]
@@ -932,6 +994,10 @@ public class HTTPRequestToggles {
     ret.setSourceCorrelatorMinimumAddresses(o.getSourceCorrelatorMinimumAddresses());
     ret.setSourceCorrelatorAlertPercentage(o.getSourceCorrelatorAlertPercentage());
 
+    ret.setEnableStatusCodeRateAnalysis(o.getEnableStatusCodeRateAnalysis());
+    ret.setMaxClientStatusCodeRate(o.getMaxClientStatusCodeRate());
+    ret.setStatusCodeAnalysisCode(o.getStatusCodeRateAnalysisCode());
+
     return ret;
   }
 
@@ -944,6 +1010,7 @@ public class HTTPRequestToggles {
     enableHardLimitAnalysis = false;
     enableUserAgentBlocklistAnalysis = false;
     enablePerEndpointErrorRateAnalysis = false;
+    enableStatusCodeRateAnalysis = false;
     enableNatDetection = false;
 
     hardLimitRequestCount = 100L;
@@ -958,6 +1025,9 @@ public class HTTPRequestToggles {
     endpointAbuseExtendedVariance = false;
     sessionGapDurationMinutes = 45L;
     alertSuppressionDurationSeconds = 600L;
+
+    maxClientStatusCodeRate = 30L;
+    statusCodeRateCode = 0;
 
     ignoreCloudProviderRequests = true;
     ignoreInternalRequests = true;
