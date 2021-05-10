@@ -70,7 +70,7 @@ public class TestStatusCodeRateAnalysis {
               for (Alert a : i) {
                 assertEquals("192.168.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
                 assertEquals(
-                    "test httprequest status_code_rate_analysis 192.168.0.1 3", a.getSummary());
+                    "test httprequest status_code_rate_analysis 192.168.0.1 302 3", a.getSummary());
                 assertEquals(3L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.COUNT)));
                 assertEquals(2L, Long.parseLong(a.getMetadataValue(AlertMeta.Key.THRESHOLD)));
                 assertEquals(

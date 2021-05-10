@@ -101,8 +101,11 @@ public class StatusCodeRateAnalysis extends PTransform<PCollection<Event>, PColl
                     Alert a = new Alert();
                     a.setSummary(
                         String.format(
-                            "%s httprequest status_code_rate_analysis %s %d",
-                            monitoredResource, c.element().getKey(), c.element().getValue()));
+                            "%s httprequest status_code_rate_analysis %s %d %d",
+                            monitoredResource,
+                            c.element().getKey(),
+                            statusCode,
+                            c.element().getValue()));
                     a.setCategory("httprequest");
                     a.setSubcategory("status_code_rate_analysis");
                     a.addMetadata(AlertMeta.Key.SOURCEADDRESS, c.element().getKey());
