@@ -1661,7 +1661,8 @@ public class HTTPRequest implements Serializable {
           || toggles.getEnableErrorRateAnalysis()
           || toggles.getEnableHardLimitAnalysis()
           || toggles.getEnableUserAgentBlocklistAnalysis()
-          || toggles.getEnableEndpointSequenceAbuseAnalysis()) {
+          || toggles.getEnableEndpointSequenceAbuseAnalysis()
+          || toggles.getEnableStatusCodeRateAnalysis()) {
         PCollection<Event> fwEvents = events.apply("window for fixed", new WindowForFixed());
 
         PCollectionView<Map<String, Boolean>> natView = null;
@@ -1737,6 +1738,20 @@ public class HTTPRequest implements Serializable {
                               natView))
                       .apply(
                           "endpoint sequence abuse global triggers", new GlobalTriggers<Alert>(5)));
+        }
+        if (toggles.getEnableStatusCodeRateAnalysis()) {
+          resultsList =
+              resultsList.and(
+                  fwEvents
+                      .apply(
+                          "status code rate analysis",
+                          new StatusCodeRateAnalysis(
+                              toggles,
+                              enableIprepdDatastoreExemptions,
+                              iprepdDatastoreExemptionsProject))
+                      .apply(
+                          "status code rate analysis global triggers",
+                          new GlobalTriggers<Alert>(5)));
         }
       }
       if (toggles.getEnableEndpointAbuseAnalysis()) {
@@ -2023,6 +2038,23 @@ public class HTTPRequest implements Serializable {
     Double getSourceCorrelatorAlertPercentage();
 
     void setSourceCorrelatorAlertPercentage(Double value);
+
+    @Description("Enable status code rate analysis")
+    @Default.Boolean(false)
+    Boolean getEnableStatusCodeRateAnalysis();
+
+    void setEnableStatusCodeRateAnalysis(Boolean value);
+
+    @Description("Maximum permitted responses with a given status code per client in a window")
+    @Default.Long(60L)
+    Long getMaxClientStatusCodeRate();
+
+    void setMaxClientStatusCodeRate(Long value);
+
+    @Description("HTTP status code to limit the number of responses of")
+    Integer getStatusCodeRateAnalysisCode();
+
+    void setStatusCodeRateAnalysisCode(Integer value);
   }
 
   /**
@@ -2089,6 +2121,13 @@ public class HTTPRequest implements Serializable {
     if (toggles.getEnablePerEndpointErrorRateAnalysis()) {
       b.withTransformDoc(
           new PerEndpointErrorRateAnalysis(
+              toggles,
+              options.getOutputIprepdEnableDatastoreExemptions(),
+              options.getOutputIprepdDatastoreExemptionsProject()));
+    }
+    if (toggles.getEnableStatusCodeRateAnalysis()) {
+      b.withTransformDoc(
+          new StatusCodeRateAnalysis(
               toggles,
               options.getOutputIprepdEnableDatastoreExemptions(),
               options.getOutputIprepdDatastoreExemptionsProject()));
