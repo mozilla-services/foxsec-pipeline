@@ -202,25 +202,27 @@ public class CritObjectAnalyze
                         Event e = c.element();
                         Normalized n = e.getNormalized();
 
-                        String o = n.getObject();
-                        if (o == null) {
+                        String object = n.getObject();
+                        if (object == null) {
                           return;
                         }
 
                         String matchobj = null;
                         for (Pattern p : critObjectPat) {
-                          if (p.matcher(o).matches()) {
-                            matchobj = o;
+                          if (p.matcher(object).matches()) {
+                            matchobj = object;
                           }
                         }
                         if (matchobj == null) {
                           return;
                         }
 
-                        log.info(
-                            "escalating critical object alert for {} {}",
-                            e.getNormalized().getSubjectUser(),
-                            e.getNormalized().getObject());
+                        String user = e.getNormalized().getSubjectUser();
+                        String sourceAddress = e.getNormalized().getSourceAddress();
+                        String alertSuppressionKey =
+                            String.format("%s_%s_%s", user, object, sourceAddress);
+
+                        log.info("escalating critical object alert for {} {}", user, object);
                         Alert a = AuthProfile.createBaseAlert(e, contactEmail, docLink);
                         a.setSubcategory("critical_object_analyze");
                         a.setSeverity(Alert.AlertSeverity.CRITICAL);
@@ -230,7 +232,7 @@ public class CritObjectAnalyze
                           a.setTimestamp(e.getTimestamp());
                         }
                         addEscalationMetadata(a);
-                        c.output(KV.of(e.getNormalized().getSubjectUser(), a));
+                        c.output(KV.of(alertSuppressionKey, a));
                       }
                     })));
 

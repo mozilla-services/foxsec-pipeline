@@ -8,7 +8,7 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertMeta;
-import com.mozilla.secops.alert.AlertSuppressor;
+import com.mozilla.secops.alert.AlertSuppressorSession;
 import com.mozilla.secops.authstate.AuthStateModel;
 import com.mozilla.secops.authstate.PruningStrategyEntryAge;
 import com.mozilla.secops.identity.Identity;
@@ -1031,6 +1031,8 @@ public class AuthProfile implements Serializable {
       throw new IllegalArgumentException(exc.getMessage());
     }
 
+    AlertSuppressorSession alertSuppressor = new AlertSuppressorSession(1800L);
+
     if (options.getEnableStateAnalysis()) {
       alertList =
           alertList.and(
@@ -1047,7 +1049,7 @@ public class AuthProfile implements Serializable {
           alertList.and(
               filteredEvents
                   .apply("critical object analyze", new CritObjectAnalyze(options))
-                  .apply("critical object suppression", ParDo.of(new AlertSuppressor(1800L)))
+                  .apply("critical object suppression", ParDo.of(alertSuppressor))
                   .apply(
                       "critical object analyze rewindow for output", new GlobalTriggers<Alert>(5)));
       if (options.getEnableAwsAssumeRoleCorrelator()) {
@@ -1062,7 +1064,7 @@ public class AuthProfile implements Serializable {
                     .apply("rewindow for state", new GlobalTriggers<KV<String, Alert>>(5))
                     .apply(
                         "critical object suppression for cross account events",
-                        ParDo.of(new AlertSuppressor(1800L)))
+                        ParDo.of(alertSuppressor))
                     .apply(
                         "critical object analyze rewindow for output for cross account events",
                         new GlobalTriggers<Alert>(5)));

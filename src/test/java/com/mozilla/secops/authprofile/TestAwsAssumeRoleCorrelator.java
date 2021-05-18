@@ -440,4 +440,92 @@ public class TestAwsAssumeRoleCorrelator {
 
     p.run().waitUntilFinish();
   }
+
+  @Test
+  public void critObjectAwsAssumeRoleCrossAccountWithSuppression() throws Exception {
+    // This testcase tests when a user assumes a role in a critical resource
+    // We should be able to correlate the events between accounts and
+    // generate an alert with the correct user information
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+
+    String[] eb1 = TestUtil.getTestInputArray("/testdata/authprof_awscorr1a.txt");
+    String[] eb2 = TestUtil.getTestInputArray("/testdata/authprof_awscorr1c.txt");
+    // normal assume role within critical account
+    String[] eb3 = TestUtil.getTestInputArray("/testdata/authprof_awscorr4.txt");
+
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(Instant.parse("2020-10-20T15:21:00Z"))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkTo(Instant.parse("2020-10-20T15:22:00Z"))
+            .advanceProcessingTime(Duration.standardSeconds(70))
+            .addElements(eb2[0], Arrays.copyOfRange(eb2, 1, eb2.length))
+            .advanceWatermarkTo(Instant.parse("2020-10-20T15:35:00Z"))
+            .advanceProcessingTime(Duration.standardMinutes(13))
+            .advanceWatermarkToInfinity();
+
+    Input input = TestAuthProfileUtil.wiredInputStream(options, s);
+    PCollection<Alert> res = AuthProfile.processInput(p.apply(input.simplexReadRaw()), options);
+
+    PAssert.that(res)
+        .satisfies(
+            results -> {
+              long cnt = 0;
+              long cfgTickCnt = 0;
+              for (Alert a : results) {
+                if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("critical_object_analyze")) {
+                  assertEquals(Alert.AlertSeverity.CRITICAL, a.getSeverity());
+                  assertEquals(
+                      "critical authentication event observed "
+                          + "uhura to super-important-account, 127.0.0.1 [unknown/unknown]",
+                      a.getSummary());
+                  assertThat(
+                      a.getPayload(),
+                      containsString(
+                          "This destination object is configured as a critical resource"));
+                  assertEquals(
+                      "critical_object_analyze",
+                      a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD));
+                  assertEquals(
+                      "section31@mozilla.com",
+                      a.getMetadataValue(AlertMeta.Key.NOTIFY_EMAIL_DIRECT));
+                  assertEquals("uhura", a.getMetadataValue(AlertMeta.Key.USERNAME));
+                  assertEquals("super-important-account", a.getMetadataValue(AlertMeta.Key.OBJECT));
+                  assertEquals("127.0.0.1", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS));
+                  assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_CITY));
+                  assertEquals("unknown", a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_COUNTRY));
+                  assertEquals(
+                      "fa1b3d9a-7070-4f5a-bd44-01572f488268",
+                      a.getMetadataValue(AlertMeta.Key.REFERENCE_ID));
+                  assertEquals("email/authprofile.ftlh", a.getEmailTemplate());
+                  assertEquals("slack/authprofile.ftlh", a.getSlackTemplate());
+                  assertEquals("auth", a.getMetadataValue(AlertMeta.Key.AUTH_ALERT_TYPE));
+                  cnt++;
+                } else if (a.getMetadataValue(AlertMeta.Key.ALERT_SUBCATEGORY_FIELD)
+                    .equals("cfgtick")) {
+                  cfgTickCnt++;
+                  assertEquals("authprofile-cfgtick", a.getCategory());
+                  assertEquals(
+                      "^projects/test$, super-important-account",
+                      a.getCustomMetadataValue("critObjects"));
+                  assertEquals(
+                      "section31@mozilla.com",
+                      a.getCustomMetadataValue("criticalNotificationEmail"));
+                  assertEquals("^riker@mozilla.com$", a.getCustomMetadataValue("ignoreUserRegex"));
+                  assertEquals("5", a.getCustomMetadataValue("generateConfigurationTicksMaximum"));
+                  assertEquals(
+                      "Alert via section31@mozilla.com immediately on auth events to specified objects: [^projects/test$, super-important-account]",
+                      a.getCustomMetadataValue("heuristic_CritObjectAnalyze"));
+                } else {
+                  fail("unexpected category");
+                }
+              }
+              assertEquals(5L, cfgTickCnt);
+              assertEquals(1L, cnt);
+              return null;
+            });
+
+    p.run().waitUntilFinish();
+  }
 }
