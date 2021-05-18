@@ -18,11 +18,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Alert suppression using session gap based expiry
  *
- * <p>Based on AlertSuppressor: creates a suppressor where we extend the expiry each time we stashed
- * changes suppress an alert for a key - essentially creating a session. The same expiry logic is
- * applied, however in this case if a new alert comes in for a key we have state for and the
- * metadata count value is different then what was seen prior, the alert will be emitted and state
- * will be updated.
+ * <p>Based on AlertSuppressor: creates a suppressor where each time we see an alert for a key with
+ * a non-expired state we extend the expiry creating a session.
  */
 public class AlertSuppressorSession extends DoFn<KV<String, Alert>, Alert> {
   private static final long serialVersionUID = 1L;
@@ -78,15 +75,15 @@ public class AlertSuppressorSession extends DoFn<KV<String, Alert>, Alert> {
     Alert a = c.element().getValue();
 
     // Prepare a new state value to use if we need to set it later
-    AlertSuppressionState newss = new AlertSuppressionState();
-    newss.key = key;
-    newss.timestamp = a.getTimestamp().toInstant();
+    AlertSuppressionState newState = new AlertSuppressionState();
+    newState.key = key;
+    newState.timestamp = a.getTimestamp().toInstant();
 
-    AlertSuppressionState ss = counter.read();
+    AlertSuppressionState state = counter.read();
 
-    if (ss == null) {
+    if (state == null) {
       // This is a new alert, set values in state and emit
-      counter.write(newss);
+      counter.write(newState);
       updateTimer(counterExpiry);
       c.output(a);
       return;
@@ -94,10 +91,10 @@ public class AlertSuppressorSession extends DoFn<KV<String, Alert>, Alert> {
 
     updateTimer(counterExpiry);
 
-    if (isExpired(ss, newss)) {
+    if (isExpired(state, newState)) {
       // If the state data is too old for consideration, update state with new information
       // and emit the alert
-      counter.write(newss);
+      counter.write(newState);
       c.output(a);
       return;
     }
@@ -105,12 +102,12 @@ public class AlertSuppressorSession extends DoFn<KV<String, Alert>, Alert> {
     // log a message if timestamp is different as this is likely
     // a different alert - if timestamp is the same it's likely from same
     // event but different window firing
-    if (!newss.timestamp.equals(ss.timestamp)) {
+    if (!newState.timestamp.equals(state.timestamp)) {
       log.info("suppressing additional alert for {}", key);
     }
 
     // always update the counter if an alert is suppressed
     // but do not output the alert
-    counter.write(newss);
+    counter.write(newState);
   }
 }
