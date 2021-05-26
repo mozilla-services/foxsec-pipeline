@@ -772,6 +772,22 @@ public class TestAuthProfile {
   }
 
   @Test
+  public void testFilterGcpInternal() throws Exception {
+    testEnv();
+    AuthProfile.AuthProfileOptions options = getTestOptions();
+    options.setEnableCritObjectAnalysis(false);
+    options.setDeferGeoIpResolution(true);
+
+    PCollection<String> input = TestUtil.getTestInput("/testdata/authprof_buffer8.txt", p);
+
+    PCollection<Alert> res = AuthProfile.processInput(input, options);
+
+    PAssert.that(res).empty();
+
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void templateRender() throws Exception {
     String buf =
         "{\"severity\":\"info\",\"id\":\"eca99844-96ac-4a44-adba-48ce3c593157\","
