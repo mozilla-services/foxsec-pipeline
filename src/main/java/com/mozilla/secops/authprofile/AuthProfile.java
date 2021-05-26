@@ -215,6 +215,7 @@ public class AuthProfile implements Serializable {
                         //
                         // Identify these here and filter them out.
                         if (n.getSourceAddress().equals("0:0:0:0:0:0:0:1")
+                            || n.getSourceAddress().equals("::1")
                             || n.getSourceAddress().equals("0.1.0.1")) {
                           log.info(
                               "{}: ignoring gcp audit event from internal source {}",
