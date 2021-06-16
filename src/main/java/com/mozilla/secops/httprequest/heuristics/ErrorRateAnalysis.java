@@ -1,9 +1,10 @@
-package com.mozilla.secops.httprequest;
+package com.mozilla.secops.httprequest.heuristics;
 
 import com.mozilla.secops.DocumentingTransform;
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.httprequest.HTTPRequestToggles;
 import com.mozilla.secops.parser.Event;
 import com.mozilla.secops.parser.Normalized;
 import java.io.IOException;
@@ -18,17 +19,12 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Transform for analysis of rates of specific response codes per client in a fixed window
- *
- * <p>This can be used for specific error codes or applications that use redirects instead of errors
- */
-public class StatusCodeRateAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>>
+/** Transform for analysis of error rates per client within a given window. */
+public class ErrorRateAnalysis extends PTransform<PCollection<Event>, PCollection<Alert>>
     implements DocumentingTransform {
   private static final long serialVersionUID = 1L;
 
-  private final Long maxStatusCodeRate;
-  private final Integer statusCode;
+  private final Long maxErrorRate;
   private final String monitoredResource;
   private final Boolean enableIprepdDatastoreExemptions;
   private final String iprepdDatastoreExemptionsProject;
@@ -36,37 +32,36 @@ public class StatusCodeRateAnalysis extends PTransform<PCollection<Event>, PColl
   private Logger log;
 
   /**
-   * Initializer for {@link StatusCodeRateAnalysis}
+   * Static initializer for {@link ErrorRateAnalysis}
    *
    * @param toggles {@link HTTPRequestToggles}
    * @param enableIprepdDatastoreExemptions True to enable datastore exemptions
    * @param iprepdDatastoreExemptionsProject Project to look for datastore entities in
    */
-  public StatusCodeRateAnalysis(
+  public ErrorRateAnalysis(
       HTTPRequestToggles toggles,
       Boolean enableIprepdDatastoreExemptions,
       String iprepdDatastoreExemptionsProject) {
-    maxStatusCodeRate = toggles.getMaxClientStatusCodeRate();
-    statusCode = toggles.getStatusCodeRateAnalysisCode();
+    maxErrorRate = toggles.getMaxClientErrorRate();
     monitoredResource = toggles.getMonitoredResource();
     this.enableIprepdDatastoreExemptions = enableIprepdDatastoreExemptions;
     this.iprepdDatastoreExemptionsProject = iprepdDatastoreExemptionsProject;
-    log = LoggerFactory.getLogger(StatusCodeRateAnalysis.class);
+    log = LoggerFactory.getLogger(ErrorRateAnalysis.class);
   }
 
   /** {@inheritDoc} */
   public String getTransformDoc() {
     return String.format(
-        "Alert if a single source address generates more than %d %d status responses in a "
+        "Alert if a single source address generates more than %d 4xx errors in a "
             + "1 minute window.",
-        maxStatusCodeRate, statusCode);
+        maxErrorRate);
   }
 
   @Override
   public PCollection<Alert> expand(PCollection<Event> input) {
     return input
         .apply(
-            "filter by status code",
+            "isolate client errors",
             ParDo.of(
                 new DoFn<Event, String>() {
                   private static final long serialVersionUID = 1L;
@@ -81,33 +76,30 @@ public class StatusCodeRateAnalysis extends PTransform<PCollection<Event>, PColl
                     if (n.getSourceAddress() == null) {
                       return;
                     }
-                    if (status.equals(statusCode)) {
+                    if (status >= 400 && status < 500) {
                       c.output(n.getSourceAddress());
                     }
                   }
                 }))
         .apply(Count.<String>perElement())
         .apply(
-            "per-client status code rate analysis",
+            "per-client error rate analysis",
             ParDo.of(
                 new DoFn<KV<String, Long>, Alert>() {
                   private static final long serialVersionUID = 1L;
 
                   @ProcessElement
                   public void processElement(ProcessContext c, BoundedWindow w) {
-                    if (c.element().getValue() <= maxStatusCodeRate) {
+                    if (c.element().getValue() <= maxErrorRate) {
                       return;
                     }
                     Alert a = new Alert();
                     a.setSummary(
                         String.format(
-                            "%s httprequest status_code_rate_analysis %s %d %d",
-                            monitoredResource,
-                            c.element().getKey(),
-                            statusCode,
-                            c.element().getValue()));
+                            "%s httprequest error_rate %s %d",
+                            monitoredResource, c.element().getKey(), c.element().getValue()));
                     a.setCategory("httprequest");
-                    a.setSubcategory("status_code_rate_analysis");
+                    a.setSubcategory("error_rate");
                     a.addMetadata(AlertMeta.Key.SOURCEADDRESS, c.element().getKey());
 
                     if (enableIprepdDatastoreExemptions) {
@@ -120,9 +112,9 @@ public class StatusCodeRateAnalysis extends PTransform<PCollection<Event>, PColl
                       }
                     }
 
-                    a.addMetadata(AlertMeta.Key.COUNT, c.element().getValue().toString());
-                    a.addMetadata(AlertMeta.Key.THRESHOLD, maxStatusCodeRate.toString());
-                    a.setNotifyMergeKey(String.format("%s count", monitoredResource));
+                    a.addMetadata(AlertMeta.Key.ERROR_COUNT, c.element().getValue().toString());
+                    a.addMetadata(AlertMeta.Key.ERROR_THRESHOLD, maxErrorRate.toString());
+                    a.setNotifyMergeKey(String.format("%s error_count", monitoredResource));
                     a.addMetadata(
                         AlertMeta.Key.WINDOW_TIMESTAMP,
                         (new DateTime(w.maxTimestamp())).toString());

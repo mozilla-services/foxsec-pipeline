@@ -11,7 +11,7 @@ import com.mozilla.secops.TestIprepdIO;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertMeta;
-import com.mozilla.secops.httprequest.HTTPRequest.HardLimitAnalysis;
+import com.mozilla.secops.httprequest.heuristics.HardLimitAnalysis;
 import com.mozilla.secops.state.DatastoreStateInterface;
 import com.mozilla.secops.state.State;
 import com.mozilla.secops.state.StateCursor;

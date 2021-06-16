@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertMeta;
-import com.mozilla.secops.httprequest.HTTPRequest.EndpointSequenceAbuse;
+import com.mozilla.secops.httprequest.heuristics.EndpointSequenceAbuse;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.metrics.MetricNameFilter;
 import org.apache.beam.sdk.metrics.MetricResult;
