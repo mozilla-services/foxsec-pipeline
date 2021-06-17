@@ -19,7 +19,7 @@ import org.apache.beam.sdk.values.TypeDescriptors;
 /**
  * Provides transforms to detect if an ip is making a variety of requests to the content server or
  * is just abusing auth server APIs. This is similar to the variance substrings for {@link
- * com.com.mozilla.secops.httprequest.heuristics.EndpointAbuseAnalysis} in the HTTPRequest pipeline.
+ * com.mozilla.secops.httprequest.heuristics.EndpointAbuseAnalysis} in the HTTPRequest pipeline.
  *
  * <p>Currently, this has only one transform, whether an ip exists in the content server logs.
  * Eventually this could be extended to only consider certain events (such as metrics) or meet more
