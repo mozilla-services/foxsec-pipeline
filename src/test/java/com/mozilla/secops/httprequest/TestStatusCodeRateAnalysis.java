@@ -2,12 +2,17 @@ package com.mozilla.secops.httprequest;
 
 import static org.junit.Assert.assertEquals;
 
+import com.mozilla.secops.IprepdIO;
+import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
+import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertMeta;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +54,7 @@ public class TestStatusCodeRateAnalysis {
 
   @Test
   public void statusCodeRateTestAboveThreshold() throws Exception {
+    IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
 
     options.setInputFile(
@@ -56,10 +62,18 @@ public class TestStatusCodeRateAnalysis {
     options.setEnableStatusCodeRateAnalysis(true);
     options.setStatusCodeRateAnalysisCode(302);
     options.setMaxClientStatusCodeRate(2L);
+    options.setOutputIprepd(new String[] {"http://127.0.0.1:8080|test"});
 
     PCollection<Alert> results =
         HTTPRequest.expandInputMap(
             p, HTTPRequest.readInput(p, HTTPRequest.getInput(p, options), options), options);
+
+    // Hook the output up to the composite output transform so we get local iprepd submission
+    // in the tests
+    results
+        .apply(ParDo.of(new AlertFormatter(options)))
+        .apply(MapElements.via(new AlertFormatter.AlertToString()))
+        .apply(OutputOptions.compositeOutput(options));
 
     PCollection<Long> count = results.apply(Count.globally());
     PAssert.thatSingleton(count).isEqualTo(1L);
@@ -79,6 +93,10 @@ public class TestStatusCodeRateAnalysis {
               return null;
             });
 
+    assertEquals(100, (int) r.getReputation("ip", "192.168.0.1"));
+
     p.run().waitUntilFinish();
+
+    assertEquals(80, (int) r.getReputation("ip", "192.168.0.1"));
   }
 }

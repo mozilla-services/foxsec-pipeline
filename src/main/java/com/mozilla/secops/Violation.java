@@ -69,6 +69,12 @@ public class Violation {
       public String toString() {
         return "violation75";
       }
+    },
+    STATUS_CODE_RATE_VIOLATION {
+      @Override
+      public String toString() {
+        return "violation20";
+      }
     }
   }
 
@@ -184,6 +190,9 @@ public class Violation {
     vMap.put(
         "per_endpoint_error_rate",
         new GenericSourceViolationGenerator(ViolationType.PER_ENDPOINT_ERROR_RATE_VIOLATION));
+    vMap.put(
+        "status_code_rate_analysis",
+        new GenericSourceViolationGenerator(ViolationType.STATUS_CODE_RATE_VIOLATION));
 
     // Customs
     vMap.put(
