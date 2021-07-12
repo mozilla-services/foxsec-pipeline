@@ -3,7 +3,7 @@ package com.mozilla.secops.parser;
 import com.amazonaws.arn.Arn;
 import com.amazonaws.arn.ArnResource;
 import com.google.api.client.json.JsonParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.Normalized.StatusTag;
@@ -115,7 +115,7 @@ public class Cloudtrail extends SourcePayloadBase implements Serializable {
   }
 
   private CloudtrailEvent parseInput(String input, ParserState state) throws IOException {
-    JacksonFactory jfmatcher = state.getGoogleJacksonFactory();
+    GsonFactory jfmatcher = state.getGoogleJacksonFactory();
     try (JsonParser jp = jfmatcher.createJsonParser(input); ) {
       LogEntry entry = jp.parse(LogEntry.class);
       Map<String, Object> m = entry.getJsonPayload();

@@ -1,7 +1,7 @@
 package com.mozilla.secops.parser;
 
 import com.google.api.client.json.JsonParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.logging.v2.model.HttpRequest;
 import com.google.api.services.logging.v2.model.LogEntry;
 import java.io.IOException;
@@ -13,8 +13,6 @@ import org.joda.time.DateTime;
 /** Payload parser for Google Load Balancer log data. */
 public class GLB extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
-
-  private static final JacksonFactory jfmatcher = new JacksonFactory();
 
   private String requestMethod;
   private String userAgent;
@@ -51,13 +49,10 @@ public class GLB extends SourcePayloadBase implements Serializable {
     LogEntry entry = state.getLogEntryHint();
     if (entry == null) {
       // Reuse JacksonFactory from parser state
-      JacksonFactory jf = state.getGoogleJacksonFactory();
+      GsonFactory jf = state.getGoogleJacksonFactory();
       JsonParser jp = null;
-      try {
-        jp = jf.createJsonParser(input);
-      } catch (IOException exc) {
-        return;
-      }
+      jp = jf.createJsonParser(input);
+
       try {
         entry = jp.parse(LogEntry.class);
       } catch (IOException exc) {
