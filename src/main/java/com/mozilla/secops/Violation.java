@@ -79,7 +79,7 @@ public class Violation {
     SESSION_LIMIT_VIOLATION {
       @Override
       public String toString() {
-        return "violation20";
+        return "violation10_limited";
       }
     }
   }

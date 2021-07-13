@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.OutputOptions;
+import com.mozilla.secops.TestIprepdIO;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertMeta;
@@ -54,6 +55,7 @@ public class TestStatusCodeRateAnalysis {
 
   @Test
   public void statusCodeRateTestAboveThreshold() throws Exception {
+    TestIprepdIO.deleteReputation("ip", "192.168.0.1");
     IprepdIO.Reader r = IprepdIO.getReader("http://127.0.0.1:8080|test", null);
     HTTPRequest.HTTPRequestOptions options = getTestOptions();
 

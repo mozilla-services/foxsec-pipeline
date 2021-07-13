@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.mozilla.secops.IprepdIO;
 import com.mozilla.secops.OutputOptions;
+import com.mozilla.secops.TestIprepdIO;
 import com.mozilla.secops.TestUtil;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
@@ -43,6 +44,7 @@ public class TestSessionLimitAnalysis {
 
   @Test
   public void sessionLimitAnalysisMonitorOnly() throws Exception {
+    TestIprepdIO.deleteReputation("ip", "192.168.0.1");
     String[] eb1 =
         TestUtil.getTestInputArray(
             "/testdata/httpreq_sessionlimitanalysis1/httpreq_sessionlimitanalysis1_1.txt");
@@ -127,6 +129,7 @@ public class TestSessionLimitAnalysis {
 
   @Test
   public void sessionLimitAnalysisAlert() throws Exception {
+    TestIprepdIO.deleteReputation("ip", "192.168.0.1");
     String[] eb1 =
         TestUtil.getTestInputArray(
             "/testdata/httpreq_sessionlimitanalysis1/httpreq_sessionlimitanalysis1_1.txt");
@@ -206,6 +209,6 @@ public class TestSessionLimitAnalysis {
     p.run().waitUntilFinish();
 
     // escalate to iprepd
-    assertEquals(80, (int) r.getReputation("ip", "192.168.0.1"));
+    assertEquals(90, (int) r.getReputation("ip", "192.168.0.1"));
   }
 }

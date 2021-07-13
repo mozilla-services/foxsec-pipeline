@@ -83,6 +83,12 @@ public class SessionLimitAnalysis
     alertSuppressionDurationSeconds = toggles.getAlertSuppressionDurationSeconds();
 
     String[] cfgLimits = toggles.getSessionLimitAnalysisPaths();
+
+    if (cfgLimits.length > 1) {
+      throw new IllegalArgumentException(
+          "SessionLimitAnalysis currently only supports one monitored endpoint");
+    }
+
     limits = new LimitInfo[cfgLimits.length];
     for (int i = 0; i < cfgLimits.length; i++) {
       String[] parts = cfgLimits[i].split(":");
@@ -166,8 +172,7 @@ public class SessionLimitAnalysis
                         }
                         // XXX Just pick up the user agent here; with agent variance this could
                         // result in a different agent being included in the alert than the one
-                        // that was actually associated with the threshold violation, and should
-                        // be fixed.
+                        // that was actually associated with the threshold violation.
                         userAgent = i.get(2);
                         limitCounter[abIdx]++;
                       }
