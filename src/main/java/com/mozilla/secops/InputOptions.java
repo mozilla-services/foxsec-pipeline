@@ -126,4 +126,16 @@ public interface InputOptions extends PipelineOptions, PubsubOptions, GcpOptions
   String getMaxmindLicenseKey();
 
   void setMaxmindLicenseKey(String value);
+
+  @Description("Use XFF header as source ip instead of remote addr field")
+  @Default.Boolean(false)
+  Boolean getUseXffAsRemote();
+
+  void setUseXffAsRemote(Boolean xffAsRemote);
+
+  @Description("Use proxy pipeline xff selector")
+  @Default.Boolean(false)
+  Boolean getUseProxyXff();
+
+  void setUseProxyXff(Boolean proxyXff);
 }

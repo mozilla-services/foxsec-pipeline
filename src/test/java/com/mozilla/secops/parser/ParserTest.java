@@ -7,6 +7,7 @@ import com.maxmind.geoip2.model.CityResponse;
 import com.mozilla.secops.alert.AlertMeta;
 import com.mozilla.secops.parser.models.etd.EventThreatDetectionFinding;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -25,6 +26,13 @@ public class ParserTest {
     cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
     cfg.setMaxmindIspDbPath(TEST_ISP_DBPATH);
     return new Parser(cfg);
+  }
+
+  private ParserCfg getDefaultParserCfg() {
+    ParserCfg cfg = new ParserCfg();
+    cfg.setMaxmindCityDbPath(TEST_GEOIP_DBPATH);
+    cfg.setMaxmindIspDbPath(TEST_ISP_DBPATH);
+    return cfg;
   }
 
   @Test
@@ -1761,6 +1769,211 @@ public class ParserTest {
     assertEquals("Century Link", n.getSourceAddressIsp());
     assertEquals(209, (int) n.getSourceAddressAsn());
     assertEquals("Mozilla", n.getUserAgent());
+  }
+
+  @Test
+  public void testParseNginxStackdriverVariant1XFFDefaultSelector() throws Exception {
+    String buf =
+        "{\"insertId\":\"XXXXXXXXXXXXX\",\"jsonPayload\":{\"x_forwarded_proto\":\"https\",\"remote_"
+            + "addr\":\"216.160.83.56\",\"user_agent\":\"Mozilla\",\"referrer\":\"https://mozilla.org/\",\""
+            + "request\":\"POST /test/endpoint?t=t HTTP/1.1\",\"remote_user\":\"\",\"request_time\":0.005,\"by"
+            + "tes_sent\":175,\"trace\":\"0000000000000000000000000000000000000000000000000000\",\"status"
+            + "\":\"200\",\"x_forwarded_for\":\"216.160.83.56, 127.0.0.1\"},\"resource\":{\"type\":\"k8s_"
+            + "container\",\"labels\":{\"project_id\":\"test\",\"pod_name\":\"test\",\"cluster_name\":\"t"
+            + "est\",\"container_name\":\"nginx\",\"namespace_name\":\"prod-test\",\"location\":\"us-west"
+            + "1\"}},\"timestamp\":\"2019-01-27T04:09:37Z\",\"severity\":\"INFO\",\"logName\":\"projects/"
+            + "test/logs/stdout\",\"receiveTimestamp\":\"2019-01-27T04:09:43.557934256Z\",\"metadata\":{\""
+            + "systemLabels\":{\"provider_zone\":\"us-west1-c\",\"top_level_controller_name\":\"test\",\"n"
+            + "ode_name\":\"gke-test\",\"container_image\":\"gcr.io/test\",\"provider_resource_type\":\"gc"
+            + "e_instance\",\"top_level_controller_type\":\"Deployment\",\"name\":\"nginx\",\"container_im"
+            + "age_id\":\"docker-pullable://test\",\"service_name\":[\"test\"],\"provider_instance_id\":\""
+            + "0000000000000000000\"},\"userLabels\":{\"app.kubernetes.io/managed-by\":\"test\",\"app.kube"
+            + "rnetes.io/version\":\"1.0.0\",\"app.kubernetes.io/component\":\"app\",\"app.kubernetes.io/i"
+            + "nstance\":\"prod\",\"pod-template-hash\":\"000000000\",\"app.kubernetes.io/part-of\":\"test"
+            + "\",\"fullname\":\"test\",\"jenkins-build-id\":\"0\",\"app.kubernetes.io/name\":\"test\"}}}";
+    ParserCfg cfg = getDefaultParserCfg();
+    cfg.setUseXffAsRemote(true);
+    Parser p = new Parser(cfg);
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.NGINX, e.getPayloadType());
+    Nginx d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(200, (int) d.getStatus());
+    assertEquals("https://mozilla.org/", d.getReferrer());
+    assertEquals("POST /test/endpoint?t=t HTTP/1.1", d.getRequest());
+    assertEquals("POST", d.getRequestMethod());
+    assertEquals("/test/endpoint?t=t", d.getRequestUrl());
+    assertEquals("/test/endpoint", d.getRequestPath());
+    assertEquals("127.0.0.1", d.getSourceAddress());
+    assertEquals("Mozilla", d.getUserAgent());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.HTTP_REQUEST));
+    assertEquals("POST", n.getRequestMethod());
+    assertEquals(200, (int) n.getRequestStatus());
+    assertEquals("/test/endpoint?t=t", n.getRequestUrl());
+    assertEquals("/test/endpoint", n.getUrlRequestPath());
+    assertEquals("127.0.0.1", n.getSourceAddress());
+    assertEquals("Mozilla", n.getUserAgent());
+  }
+
+  @Test
+  public void testParseNginxStackdriverVariant1XFFSubnetSelector() throws Exception {
+    String buf =
+        "{\"insertId\":\"XXXXXXXXXXXXX\",\"jsonPayload\":{\"x_forwarded_proto\":\"https\",\"remote_"
+            + "addr\":\"216.160.83.56\",\"user_agent\":\"Mozilla\",\"referrer\":\"https://mozilla.org/\",\""
+            + "request\":\"POST /test/endpoint?t=t HTTP/1.1\",\"remote_user\":\"\",\"request_time\":0.005,\"by"
+            + "tes_sent\":175,\"trace\":\"0000000000000000000000000000000000000000000000000000\",\"status"
+            + "\":\"200\",\"x_forwarded_for\":\"216.160.83.57, 127.0.0.1\"},\"resource\":{\"type\":\"k8s_"
+            + "container\",\"labels\":{\"project_id\":\"test\",\"pod_name\":\"test\",\"cluster_name\":\"t"
+            + "est\",\"container_name\":\"nginx\",\"namespace_name\":\"prod-test\",\"location\":\"us-west"
+            + "1\"}},\"timestamp\":\"2019-01-27T04:09:37Z\",\"severity\":\"INFO\",\"logName\":\"projects/"
+            + "test/logs/stdout\",\"receiveTimestamp\":\"2019-01-27T04:09:43.557934256Z\",\"metadata\":{\""
+            + "systemLabels\":{\"provider_zone\":\"us-west1-c\",\"top_level_controller_name\":\"test\",\"n"
+            + "ode_name\":\"gke-test\",\"container_image\":\"gcr.io/test\",\"provider_resource_type\":\"gc"
+            + "e_instance\",\"top_level_controller_type\":\"Deployment\",\"name\":\"nginx\",\"container_im"
+            + "age_id\":\"docker-pullable://test\",\"service_name\":[\"test\"],\"provider_instance_id\":\""
+            + "0000000000000000000\"},\"userLabels\":{\"app.kubernetes.io/managed-by\":\"test\",\"app.kube"
+            + "rnetes.io/version\":\"1.0.0\",\"app.kubernetes.io/component\":\"app\",\"app.kubernetes.io/i"
+            + "nstance\":\"prod\",\"pod-template-hash\":\"000000000\",\"app.kubernetes.io/part-of\":\"test"
+            + "\",\"fullname\":\"test\",\"jenkins-build-id\":\"0\",\"app.kubernetes.io/name\":\"test\"}}}";
+    ParserCfg cfg = getDefaultParserCfg();
+    cfg.setUseXffAsRemote(true);
+    cfg.setXffAddressSelector(new ArrayList<>(Arrays.asList("127.0.0.1/24")));
+    Parser p = new Parser(cfg);
+    assertNotNull(p);
+    Event e = p.parse(buf);
+    assertNotNull(e);
+    assertEquals(Payload.PayloadType.NGINX, e.getPayloadType());
+    Nginx d = e.getPayload();
+    assertNotNull(d);
+    assertEquals(200, (int) d.getStatus());
+    assertEquals("https://mozilla.org/", d.getReferrer());
+    assertEquals("POST /test/endpoint?t=t HTTP/1.1", d.getRequest());
+    assertEquals("POST", d.getRequestMethod());
+    assertEquals("/test/endpoint?t=t", d.getRequestUrl());
+    assertEquals("/test/endpoint", d.getRequestPath());
+    assertEquals("216.160.83.57", d.getSourceAddress());
+    assertEquals("Mozilla", d.getUserAgent());
+
+    Normalized n = e.getNormalized();
+    assertNotNull(n);
+    assertTrue(n.isOfType(Normalized.Type.HTTP_REQUEST));
+    assertEquals("POST", n.getRequestMethod());
+    assertEquals(200, (int) n.getRequestStatus());
+    assertEquals("/test/endpoint?t=t", n.getRequestUrl());
+    assertEquals("/test/endpoint", n.getUrlRequestPath());
+    assertEquals("216.160.83.57", n.getSourceAddress());
+    assertEquals("Mozilla", n.getUserAgent());
+  }
+
+  @Test
+  public void testParseNginxStackdriverVariant1XFFProxySelector() throws Exception {
+    String[] bufs = {
+      "{\"insertId\":\"XXXXXXXXXXXXX\",\"jsonPayload\":{\"x_forwarded_proto\":\"https\",\"remote_"
+          + "addr\":\"216.160.83.56\",\"user_agent\":\"Mozilla\",\"referrer\":\"https://mozilla.org/\",\""
+          + "request\":\"POST /test/endpoint?t=t HTTP/1.1\",\"remote_user\":\"\",\"request_time\":0.005,\"by"
+          + "tes_sent\":175,\"trace\":\"0000000000000000000000000000000000000000000000000000\",\"status"
+          + "\":\"200\",\"x_forwarded_for\":\"216.160.83.57, 127.0.0.1\"},\"resource\":{\"type\":\"k8s_"
+          + "container\",\"labels\":{\"project_id\":\"test\",\"pod_name\":\"test\",\"cluster_name\":\"t"
+          + "est\",\"container_name\":\"nginx\",\"namespace_name\":\"prod-test\",\"location\":\"us-west"
+          + "1\"}},\"timestamp\":\"2019-01-27T04:09:37Z\",\"severity\":\"INFO\",\"logName\":\"projects/"
+          + "test/logs/stdout\",\"receiveTimestamp\":\"2019-01-27T04:09:43.557934256Z\",\"metadata\":{\""
+          + "systemLabels\":{\"provider_zone\":\"us-west1-c\",\"top_level_controller_name\":\"test\",\"n"
+          + "ode_name\":\"gke-test\",\"container_image\":\"gcr.io/test\",\"provider_resource_type\":\"gc"
+          + "e_instance\",\"top_level_controller_type\":\"Deployment\",\"name\":\"nginx\",\"container_im"
+          + "age_id\":\"docker-pullable://test\",\"service_name\":[\"test\"],\"provider_instance_id\":\""
+          + "0000000000000000000\"},\"userLabels\":{\"app.kubernetes.io/managed-by\":\"test\",\"app.kube"
+          + "rnetes.io/version\":\"1.0.0\",\"app.kubernetes.io/component\":\"app\",\"app.kubernetes.io/i"
+          + "nstance\":\"prod\",\"pod-template-hash\":\"000000000\",\"app.kubernetes.io/part-of\":\"test"
+          + "\",\"fullname\":\"test\",\"jenkins-build-id\":\"0\",\"app.kubernetes.io/name\":\"test\"}}}",
+      "{\"insertId\":\"XXXXXXXXXXXXX\",\"jsonPayload\":{\"x_forwarded_proto\":\"https\",\"remote_"
+          + "addr\":\"216.160.83.56\",\"user_agent\":\"Mozilla\",\"referrer\":\"https://mozilla.org/\",\""
+          + "request\":\"POST /test/endpoint?t=t HTTP/1.1\",\"remote_user\":\"\",\"request_time\":0.005,\"by"
+          + "tes_sent\":175,\"trace\":\"0000000000000000000000000000000000000000000000000000\",\"status"
+          + "\":\"200\",\"x_forwarded_for\":\"216.160.83.57, 127.0.0.1\", \"x_pipeline_proxy\": \"yes\"}"
+          + ",\"resource\":{\"type\":\"k8s_container\",\"labels\":{\"project_id\":\"test\",\"pod_name\":\"test\",\"cluster_name\":\"t"
+          + "est\",\"container_name\":\"nginx\",\"namespace_name\":\"prod-test\",\"location\":\"us-west"
+          + "1\"}},\"timestamp\":\"2019-01-27T04:09:37Z\",\"severity\":\"INFO\",\"logName\":\"projects/"
+          + "test/logs/stdout\",\"receiveTimestamp\":\"2019-01-27T04:09:43.557934256Z\",\"metadata\":{\""
+          + "systemLabels\":{\"provider_zone\":\"us-west1-c\",\"top_level_controller_name\":\"test\",\"n"
+          + "ode_name\":\"gke-test\",\"container_image\":\"gcr.io/test\",\"provider_resource_type\":\"gc"
+          + "e_instance\",\"top_level_controller_type\":\"Deployment\",\"name\":\"nginx\",\"container_im"
+          + "age_id\":\"docker-pullable://test\",\"service_name\":[\"test\"],\"provider_instance_id\":\""
+          + "0000000000000000000\"},\"userLabels\":{\"app.kubernetes.io/managed-by\":\"test\",\"app.kube"
+          + "rnetes.io/version\":\"1.0.0\",\"app.kubernetes.io/component\":\"app\",\"app.kubernetes.io/i"
+          + "nstance\":\"prod\",\"pod-template-hash\":\"000000000\",\"app.kubernetes.io/part-of\":\"test"
+          + "\",\"fullname\":\"test\",\"jenkins-build-id\":\"0\",\"app.kubernetes.io/name\":\"test\"}}}",
+      "{\"insertId\":\"XXXXXXXXXXXXX\",\"jsonPayload\":{\"x_forwarded_proto\":\"https\",\"remote_"
+          + "addr\":\"216.160.83.56\",\"user_agent\":\"Mozilla\",\"referrer\":\"https://mozilla.org/\",\""
+          + "request\":\"POST /test/endpoint?t=t HTTP/1.1\",\"remote_user\":\"\",\"request_time\":0.005,\"by"
+          + "tes_sent\":175,\"trace\":\"0000000000000000000000000000000000000000000000000000\",\"status"
+          + "\":\"200\",\"x_forwarded_for\":\"216.160.83.57, 127.0.0.1, 127.0.0.1\", \"x_pipeline_proxy\": \"yes\"}"
+          + ",\"resource\":{\"type\":\"k8s_container\",\"labels\":{\"project_id\":\"test\",\"pod_name\":\"test\",\"cluster_name\":\"t"
+          + "est\",\"container_name\":\"nginx\",\"namespace_name\":\"prod-test\",\"location\":\"us-west"
+          + "1\"}},\"timestamp\":\"2019-01-27T04:09:37Z\",\"severity\":\"INFO\",\"logName\":\"projects/"
+          + "test/logs/stdout\",\"receiveTimestamp\":\"2019-01-27T04:09:43.557934256Z\",\"metadata\":{\""
+          + "systemLabels\":{\"provider_zone\":\"us-west1-c\",\"top_level_controller_name\":\"test\",\"n"
+          + "ode_name\":\"gke-test\",\"container_image\":\"gcr.io/test\",\"provider_resource_type\":\"gc"
+          + "e_instance\",\"top_level_controller_type\":\"Deployment\",\"name\":\"nginx\",\"container_im"
+          + "age_id\":\"docker-pullable://test\",\"service_name\":[\"test\"],\"provider_instance_id\":\""
+          + "0000000000000000000\"},\"userLabels\":{\"app.kubernetes.io/managed-by\":\"test\",\"app.kube"
+          + "rnetes.io/version\":\"1.0.0\",\"app.kubernetes.io/component\":\"app\",\"app.kubernetes.io/i"
+          + "nstance\":\"prod\",\"pod-template-hash\":\"000000000\",\"app.kubernetes.io/part-of\":\"test"
+          + "\",\"fullname\":\"test\",\"jenkins-build-id\":\"0\",\"app.kubernetes.io/name\":\"test\"}}}",
+      "{\"insertId\":\"XXXXXXXXXXXXX\",\"jsonPayload\":{\"x_forwarded_proto\":\"https\",\"remote_"
+          + "addr\":\"216.160.83.56\",\"user_agent\":\"Mozilla\",\"referrer\":\"https://mozilla.org/\",\""
+          + "request\":\"POST /test/endpoint?t=t HTTP/1.1\",\"remote_user\":\"\",\"request_time\":0.005,\"by"
+          + "tes_sent\":175,\"trace\":\"0000000000000000000000000000000000000000000000000000\",\"status"
+          + "\":\"200\",\"x_forwarded_for\":\"127.0.0.1, 216.160.83.57, 127.0.0.1, 127.0.0.1\", \"x_pipeline_proxy\": \"yes\"}"
+          + ",\"resource\":{\"type\":\"k8s_container\",\"labels\":{\"project_id\":\"test\",\"pod_name\":\"test\",\"cluster_name\":\"t"
+          + "est\",\"container_name\":\"nginx\",\"namespace_name\":\"prod-test\",\"location\":\"us-west"
+          + "1\"}},\"timestamp\":\"2019-01-27T04:09:37Z\",\"severity\":\"INFO\",\"logName\":\"projects/"
+          + "test/logs/stdout\",\"receiveTimestamp\":\"2019-01-27T04:09:43.557934256Z\",\"metadata\":{\""
+          + "systemLabels\":{\"provider_zone\":\"us-west1-c\",\"top_level_controller_name\":\"test\",\"n"
+          + "ode_name\":\"gke-test\",\"container_image\":\"gcr.io/test\",\"provider_resource_type\":\"gc"
+          + "e_instance\",\"top_level_controller_type\":\"Deployment\",\"name\":\"nginx\",\"container_im"
+          + "age_id\":\"docker-pullable://test\",\"service_name\":[\"test\"],\"provider_instance_id\":\""
+          + "0000000000000000000\"},\"userLabels\":{\"app.kubernetes.io/managed-by\":\"test\",\"app.kube"
+          + "rnetes.io/version\":\"1.0.0\",\"app.kubernetes.io/component\":\"app\",\"app.kubernetes.io/i"
+          + "nstance\":\"prod\",\"pod-template-hash\":\"000000000\",\"app.kubernetes.io/part-of\":\"test"
+          + "\",\"fullname\":\"test\",\"jenkins-build-id\":\"0\",\"app.kubernetes.io/name\":\"test\"}}}"
+    };
+
+    ParserCfg cfg = getDefaultParserCfg();
+    cfg.setUseXffAsRemote(true);
+    cfg.setUseProxyXff(true);
+    Parser p = new Parser(cfg);
+    assertNotNull(p);
+
+    for (String buf : bufs) {
+      Event e = p.parse(buf);
+      assertNotNull(e);
+      assertEquals(Payload.PayloadType.NGINX, e.getPayloadType());
+      Nginx d = e.getPayload();
+      assertNotNull(d);
+      assertEquals(200, (int) d.getStatus());
+      assertEquals("https://mozilla.org/", d.getReferrer());
+      assertEquals("POST /test/endpoint?t=t HTTP/1.1", d.getRequest());
+      assertEquals("POST", d.getRequestMethod());
+      assertEquals("/test/endpoint?t=t", d.getRequestUrl());
+      assertEquals("/test/endpoint", d.getRequestPath());
+      assertEquals("216.160.83.57", d.getSourceAddress());
+      assertEquals("Mozilla", d.getUserAgent());
+
+      Normalized n = e.getNormalized();
+      assertNotNull(n);
+      assertTrue(n.isOfType(Normalized.Type.HTTP_REQUEST));
+      assertEquals("POST", n.getRequestMethod());
+      assertEquals(200, (int) n.getRequestStatus());
+      assertEquals("/test/endpoint?t=t", n.getRequestUrl());
+      assertEquals("/test/endpoint", n.getUrlRequestPath());
+      assertEquals("216.160.83.57", n.getSourceAddress());
+      assertEquals("Mozilla", n.getUserAgent());
+    }
   }
 
   @Test

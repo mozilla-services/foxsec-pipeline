@@ -75,6 +75,12 @@ public class Violation {
       public String toString() {
         return "violation20";
       }
+    },
+    SESSION_LIMIT_VIOLATION {
+      @Override
+      public String toString() {
+        return "violation20";
+      }
     }
   }
 
@@ -193,6 +199,9 @@ public class Violation {
     vMap.put(
         "status_code_rate_analysis",
         new GenericSourceViolationGenerator(ViolationType.STATUS_CODE_RATE_VIOLATION));
+    vMap.put(
+        "session_limit_analysis",
+        new GenericSourceViolationGenerator(ViolationType.SESSION_LIMIT_VIOLATION));
 
     // Customs
     vMap.put(
