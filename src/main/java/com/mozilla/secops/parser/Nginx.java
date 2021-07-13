@@ -31,6 +31,7 @@ public class Nginx extends SourcePayloadBase implements Serializable {
   private String trace;
   private Integer status;
   private String xForwardedFor;
+  private String xPipelineProxy;
 
   private String requestMethod;
   private String requestUrl;
@@ -175,10 +176,11 @@ public class Nginx extends SourcePayloadBase implements Serializable {
       request = nginxs.getRequest();
       remoteUser = nginxs.getRemoteUser();
       requestTime = nginxs.getRequestTime();
-      bytesSent = nginxs.getBytesSent();
+      bytesSent = nginxs.getBytesSent().intValue();
       trace = nginxs.getTrace();
       status = new Integer(nginxs.getStatus());
       xForwardedFor = nginxs.getXForwardedFor();
+      xPipelineProxy = nginxs.getXPipelineProxy();
     } else if (matchesStackdriverVariant2(m)) {
       com.mozilla.secops.parser.models.nginxstackdriver.NginxStackdriverVariant2 nginxs;
       try {
@@ -209,9 +211,21 @@ public class Nginx extends SourcePayloadBase implements Serializable {
       referrer = null;
     }
 
-    // If an XFF address selector was configured in the parser, apply it to obtain the
-    // correct client address
+    // if we should use the XFF header as remote addr override
+    if (state.getParser().shouldUseXff()) {
+      if (xForwardedFor != null && !xForwardedFor.equals("-") && !xForwardedFor.equals("")) {
+        // If an XFF address selector was configured in the parser, apply it to obtain the
+        // correct client address
+        Boolean isProxyPipelinePresent =
+            (xPipelineProxy != null && !xPipelineProxy.equals("-") && !xPipelineProxy.isEmpty());
+        remoteAddr =
+            state.getParser().applyProxyXFFAddressSelector(xForwardedFor, isProxyPipelinePresent);
+      }
+    }
+
+    // apply XFF selector on remoteAddr
     remoteAddr = state.getParser().applyXffAddressSelector(remoteAddr);
+
     if (remoteAddr != null) {
       setSourceAddress(remoteAddr, state, e.getNormalized());
     }

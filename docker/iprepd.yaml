@@ -45,6 +45,9 @@ violations:
   - name: violation100
     penalty: 100
     decreaselimit: 0
+  - name: violation10_limited
+    penalty: 10
+    decreaselimit: 70
 decay:
   points: 0
   interval: 1s

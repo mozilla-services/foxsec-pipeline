@@ -9,17 +9,18 @@ import java.io.Serializable;
 public class NginxStackdriverVariant1 implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private String xForwardedProto;
+  private String xforwardedProto;
   private String remoteAddr;
   private String userAgent;
   private String referrer;
   private String request;
   private String remoteUser;
   private Double requestTime;
-  private Integer bytesSent;
+  private Double bytesSent;
   private String trace;
   private String status;
-  private String xForwardedFor;
+  private String xforwardedFor;
+  private String xpipelineProxy;
 
   /**
    * Get x_forwarded_proto
@@ -28,7 +29,7 @@ public class NginxStackdriverVariant1 implements Serializable {
    */
   @JsonProperty("x_forwarded_proto")
   public String getXForwardedProto() {
-    return xForwardedProto;
+    return xforwardedProto;
   }
 
   /**
@@ -94,10 +95,10 @@ public class NginxStackdriverVariant1 implements Serializable {
   /**
    * Get bytes_sent
    *
-   * @return Integer
+   * @return Double
    */
   @JsonProperty("bytes_sent")
-  public Integer getBytesSent() {
+  public Double getBytesSent() {
     return bytesSent;
   }
 
@@ -128,7 +129,17 @@ public class NginxStackdriverVariant1 implements Serializable {
    */
   @JsonProperty("x_forwarded_for")
   public String getXForwardedFor() {
-    return xForwardedFor;
+    return xforwardedFor;
+  }
+
+  /**
+   * Get x_pipeline_proxy
+   *
+   * @return String
+   */
+  @JsonProperty("x_pipeline_proxy")
+  public String getXPipelineProxy() {
+    return xpipelineProxy;
   }
 
   public NginxStackdriverVariant1() {}

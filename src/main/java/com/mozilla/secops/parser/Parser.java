@@ -193,6 +193,51 @@ public class Parser {
   }
 
   /**
+   * Returns true if using an XFF header is enabled in the parser
+   *
+   * @return Whether the parser is configured to use an XFF header
+   */
+  public Boolean shouldUseXff() {
+    return cfg.getUseXffAsRemote();
+  }
+
+  /**
+   * Applies proxy xff selector
+   *
+   * @param input input to apply selector to
+   * @param proxyPipeline whether this is marked as through the proxy
+   * @return the result of the proxy selector
+   */
+  public String applyProxyXFFAddressSelector(String input, Boolean proxyPipeline) {
+    // if we're not using the proxy header, return input immediately
+    if (!cfg.getUseProxyXff()) {
+      return input;
+    }
+
+    if (input == null) {
+      return null;
+    }
+
+    String[] parts = parseXForwardedFor(input);
+    if (parts == null) {
+      // Input was not formatted correctly or was not an IP address
+      return null;
+    }
+
+    if (parts.length <= 1) {
+      // Just a single element, return the input as is
+      return input;
+    }
+
+    if (!proxyPipeline || parts.length == 2) {
+      // if proxyPipeline not present or length == 2, use second last item
+      return parts[parts.length - 2];
+    }
+    // if it is present, then use third last item
+    return parts[parts.length - 3];
+  }
+
+  /**
    * Utility function to convert a JSON string into the desired map type
    *
    * @param input Input JSON
@@ -515,7 +560,6 @@ public class Parser {
             String.format("event timestamp was too old, %s", e.getTimestamp().toString()));
       }
     }
-
     return e;
   }
 

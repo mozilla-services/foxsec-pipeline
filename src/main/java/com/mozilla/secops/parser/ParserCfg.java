@@ -31,6 +31,8 @@ public class ParserCfg implements Serializable {
   private String[] stackdriverLabelFilters;
 
   private Boolean deferGeoIpResolution;
+  private Boolean useProxyXff;
+  private Boolean xffAsRemote;
 
   /**
    * Create a parser configuration from pipeline {@link InputOptions}
@@ -57,6 +59,8 @@ public class ParserCfg implements Serializable {
     cfg.setMaxTimestampDifference(options.getMaxAllowableTimestampDifference());
     cfg.setDisableMozlogStrip(options.getDisableMozlogStrip());
     cfg.setDisableCloudwatchStrip(options.getDisableCloudwatchStrip());
+    cfg.setUseProxyXff(options.getUseProxyXff());
+    cfg.setUseXffAsRemote(options.getUseXffAsRemote());
     return cfg;
   }
 
@@ -269,6 +273,8 @@ public class ParserCfg implements Serializable {
     disableCloudwatchStrip = false;
     disableMozlogStrip = false;
     deferGeoIpResolution = false;
+    useProxyXff = false;
+    xffAsRemote = false;
   }
 
   /**
@@ -362,5 +368,49 @@ public class ParserCfg implements Serializable {
    */
   public Boolean getDeferGeoIpResolution() {
     return deferGeoIpResolution;
+  }
+
+  /**
+   * Set enable proxy xff
+   *
+   * <p>If set, preprocesses the remote addr chain based on proxy header presence.
+   *
+   * @param useProxyXff Boolean
+   */
+  @JsonProperty("use_proxy_xff")
+  public void setUseProxyXff(Boolean useProxyXff) {
+    this.useProxyXff = useProxyXff;
+  }
+
+  /**
+   * Get whether to use the proxy header to select ip from XFF
+   *
+   * @return whether the proxy xff setting is enabled
+   */
+  public Boolean getUseProxyXff() {
+    return useProxyXff;
+  }
+
+  /**
+   * Parse the X-Forwarded-For header instead of the remote addr
+   *
+   * <p>If set, parse XFF header, if present, in supported message types and enable usage of the XFF
+   * header. This is explicitly enabled to support inconsistent log formats where multiple IPs may
+   * also be used in remote addr fields.
+   *
+   * @param xffAsRemote Boolean
+   */
+  @JsonProperty("xff_as_remote")
+  public void setUseXffAsRemote(Boolean xffAsRemote) {
+    this.xffAsRemote = xffAsRemote;
+  }
+
+  /**
+   * Get Use Xff Header as Remote
+   *
+   * @return whether an XFF header value overrides remote ip value for supported event types
+   */
+  public Boolean getUseXffAsRemote() {
+    return xffAsRemote;
   }
 }

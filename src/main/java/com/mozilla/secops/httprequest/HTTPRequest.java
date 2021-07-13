@@ -11,6 +11,7 @@ import com.mozilla.secops.httprequest.heuristics.EndpointSequenceAbuse;
 import com.mozilla.secops.httprequest.heuristics.ErrorRateAnalysis;
 import com.mozilla.secops.httprequest.heuristics.HardLimitAnalysis;
 import com.mozilla.secops.httprequest.heuristics.PerEndpointErrorRateAnalysis;
+import com.mozilla.secops.httprequest.heuristics.SessionLimitAnalysis;
 import com.mozilla.secops.httprequest.heuristics.StatusCodeRateAnalysis;
 import com.mozilla.secops.httprequest.heuristics.ThresholdAnalysis;
 import com.mozilla.secops.httprequest.heuristics.UserAgentBlocklistAnalysis;
@@ -323,6 +324,21 @@ public class HTTPRequest implements Serializable {
                             enableIprepdDatastoreExemptions,
                             iprepdDatastoreExemptionsProject)));
       }
+      if (toggles.getEnableSessionLimitAnalysis()) {
+        resultsList =
+            resultsList.and(
+                events
+                    .apply(
+                        "key and window for sessions fire early (session limit)",
+                        new KeyAndWindowForSessionsFireEarly(
+                            toggles.getSessionGapDurationMinutes()))
+                    .apply(
+                        "session limit analysis",
+                        new SessionLimitAnalysis(
+                            toggles,
+                            enableIprepdDatastoreExemptions,
+                            iprepdDatastoreExemptionsProject)));
+      }
       if (toggles.getEnablePerEndpointErrorRateAnalysis()) {
         resultsList =
             resultsList.and(
@@ -609,6 +625,24 @@ public class HTTPRequest implements Serializable {
     Integer getStatusCodeRateAnalysisCode();
 
     void setStatusCodeRateAnalysisCode(Integer value);
+
+    @Description("Enable session limit analysis")
+    @Default.Boolean(false)
+    Boolean getEnableSessionLimitAnalysis();
+
+    void setEnableSessionLimitAnalysis(Boolean value);
+
+    @Description(
+        "Session limit analysis paths for monitoring (multiple allowed); e.g., monitor_only_threshold:alerting_threshold:method:/path")
+    String[] getSessionLimitAnalysisPaths();
+
+    void setSessionLimitAnalysisPaths(String[] value);
+
+    @Description(
+        "In session limit analysis, optionally use supplied suppress_recovery for violations; seconds")
+    Integer getSessionLimitAnalysisSuppressRecovery();
+
+    void setSessionLimitAnalysisSuppressRecovery(Integer value);
   }
 
   /**
@@ -682,6 +716,13 @@ public class HTTPRequest implements Serializable {
     if (toggles.getEnableStatusCodeRateAnalysis()) {
       b.withTransformDoc(
           new StatusCodeRateAnalysis(
+              toggles,
+              options.getOutputIprepdEnableDatastoreExemptions(),
+              options.getOutputIprepdDatastoreExemptionsProject()));
+    }
+    if (toggles.getEnableSessionLimitAnalysis()) {
+      b.withTransformDoc(
+          new SessionLimitAnalysis(
               toggles,
               options.getOutputIprepdEnableDatastoreExemptions(),
               options.getOutputIprepdDatastoreExemptionsProject()));

@@ -25,6 +25,7 @@ public class HTTPRequestToggles {
   private Boolean enableNatDetection;
   private Boolean enableSourceCorrelator;
   private Boolean enableStatusCodeRateAnalysis;
+  private Boolean enableSessionLimitAnalysis;
 
   // Nat detection settings
   private String knownGatewaysPath;
@@ -74,6 +75,10 @@ public class HTTPRequestToggles {
   // Generic Response Code Analysis settings
   private Long maxClientStatusCodeRate;
   private Integer statusCodeRateCode;
+
+  // Session Limit Analysis settings
+  private String[] sessionLimitAnalysisPaths;
+  private Integer sessionLimitAnalysisSuppressRecovery;
 
   // Filtering settings
   private String[] filterRequestPath;
@@ -696,6 +701,63 @@ public class HTTPRequestToggles {
   }
 
   /**
+   * Set enable session limit analysis setting
+   *
+   * @param enableSessionLimitAnalysis Boolean
+   */
+  @JsonProperty("enable_session_limit_analysis")
+  public void setEnableSessionLimitAnalysis(Boolean enableSessionLimitAnalysis) {
+    this.enableSessionLimitAnalysis = enableSessionLimitAnalysis;
+  }
+
+  /**
+   * Get enable session limit analysis setting
+   *
+   * @return whether session limit analysis is enabled
+   */
+  public Boolean getEnableSessionLimitAnalysis() {
+    return enableSessionLimitAnalysis;
+  }
+
+  /**
+   * Set session analysis pathes
+   *
+   * @param value String[]
+   */
+  @JsonProperty("session_limit_analysis_paths")
+  public void setSessionLimitAnalysisPaths(String[] value) {
+    sessionLimitAnalysisPaths = value;
+  }
+
+  /**
+   * Get session analysis pathes
+   *
+   * @return String[]
+   */
+  public String[] getSessionLimitAnalysisPaths() {
+    return sessionLimitAnalysisPaths;
+  }
+
+  /**
+   * Set session limit analysis suppress recovery
+   *
+   * @param value Integer
+   */
+  @JsonProperty("session_limit_analysis_suppress_recovery")
+  public void setSessionLimitAnalysisSuppressRecovery(Integer value) {
+    sessionLimitAnalysisSuppressRecovery = value;
+  }
+
+  /**
+   * Get session limit analysis suppress recovery
+   *
+   * @return Integer
+   */
+  public Integer getSessionLimitAnalysisSuppressRecovery() {
+    return sessionLimitAnalysisSuppressRecovery;
+  }
+
+  /**
    * Set filter request path
    *
    * @param value String[]
@@ -998,6 +1060,10 @@ public class HTTPRequestToggles {
     ret.setMaxClientStatusCodeRate(o.getMaxClientStatusCodeRate());
     ret.setStatusCodeAnalysisCode(o.getStatusCodeRateAnalysisCode());
 
+    ret.setEnableSessionLimitAnalysis(o.getEnableSessionLimitAnalysis());
+    ret.setSessionLimitAnalysisPaths(o.getSessionLimitAnalysisPaths());
+    ret.setSessionLimitAnalysisSuppressRecovery(o.getSessionLimitAnalysisSuppressRecovery());
+
     return ret;
   }
 
@@ -1011,6 +1077,7 @@ public class HTTPRequestToggles {
     enableUserAgentBlocklistAnalysis = false;
     enablePerEndpointErrorRateAnalysis = false;
     enableStatusCodeRateAnalysis = false;
+    enableSessionLimitAnalysis = false;
     enableNatDetection = false;
 
     hardLimitRequestCount = 100L;
