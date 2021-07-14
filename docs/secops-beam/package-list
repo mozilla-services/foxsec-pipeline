@@ -9,6 +9,7 @@ com.mozilla.secops.customs
 com.mozilla.secops.customs.CustomsAtRiskAccountState
 com.mozilla.secops.gatekeeper
 com.mozilla.secops.httprequest
+com.mozilla.secops.httprequest.heuristics
 com.mozilla.secops.identity
 com.mozilla.secops.input
 com.mozilla.secops.metrics
