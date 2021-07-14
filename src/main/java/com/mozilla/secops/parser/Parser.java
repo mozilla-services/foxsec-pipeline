@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.api.client.json.JsonParser;
-import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.google.common.base.Splitter;
@@ -39,9 +39,9 @@ public class Parser {
   private static final long serialVersionUID = 1L;
 
   private final List<PayloadBase> payloads;
-  private final GsonFactory jf;
+  private final JacksonFactory jf;
   private final ObjectMapper mapper;
-  private final GsonFactory googleJacksonFactory;
+  private final JacksonFactory googleJacksonFactory;
   private final Logger log;
   private final ParserCfg cfg;
   private final CidrUtil parserXffCidrUtil;
@@ -570,7 +570,7 @@ public class Parser {
    */
   public Parser(ParserCfg cfg) {
     log = LoggerFactory.getLogger(Parser.class);
-    jf = new GsonFactory();
+    jf = new JacksonFactory();
 
     mapper = new ObjectMapper();
     mapper.registerModule(new JodaModule());
@@ -582,7 +582,7 @@ public class Parser {
     // Allows for null values in the JsonPayload in a LogEntry
     mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
-    googleJacksonFactory = new GsonFactory();
+    googleJacksonFactory = new JacksonFactory();
 
     // Cache a CidrUtil instance used for XFF address extraction if needed
     parserXffCidrUtil = cfg.getXffAddressSelectorAsCidrUtil();

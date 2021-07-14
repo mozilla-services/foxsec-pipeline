@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.json.JsonParser;
-import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.mozilla.secops.identity.IdentityManager;
 import com.mozilla.secops.parser.models.auth0.LogEvent;
@@ -25,7 +25,7 @@ public class Auth0 extends SourcePayloadBase implements Serializable {
   private LogEvent event;
 
   private static ArrayList<String> AuthTypes;
-  private static GsonFactory jfmatcher = new GsonFactory();
+  private static JacksonFactory jfmatcher = new JacksonFactory();
 
   // List of auth0 type codes that are auth events
   // https://auth0.com/docs/logs#log-data-event-listing
