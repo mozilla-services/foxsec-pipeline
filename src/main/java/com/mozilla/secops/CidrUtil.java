@@ -10,13 +10,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.regex.Pattern;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.InitialDirContext;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -28,6 +22,7 @@ import org.springframework.security.web.util.matcher.IpAddressMatcher;
 /** CIDR matching utilities */
 public class CidrUtil {
   private final String AWS_IP_RANGES_URL = "https://ip-ranges.amazonaws.com/ip-ranges.json";
+  private final String GCP_IP_RANGES_URL = "https://www.gstatic.com/ipranges/cloud.json";
 
   private ArrayList<IpAddressMatcher> subnets;
   private InetRadix inetTree;
@@ -38,6 +33,26 @@ public class CidrUtil {
   public static final int CIDRUTIL_CLOUDPROVIDERS = 1 << 1;
   /** Load exclusion list for internal/RFC1918 subnets */
   public static final int CIDRUTIL_INTERNAL = 1 << 2;
+
+  /** Constructor for {@link CidrUtil}, initialize empty */
+  public CidrUtil() {
+    subnets = new ArrayList<IpAddressMatcher>();
+    inetTree = new InetRadix();
+  }
+
+  /**
+   * Constructor for {@link CidrUtil} to load subnet list from resource
+   *
+   * @param path Resource path or GCS URL to load CIDR subnet list from
+   * @throws IOException IOException
+   */
+  public CidrUtil(String path) throws IOException {
+    this();
+    ArrayList<String> flist = FileUtil.fileReadLines(path);
+    for (String i : flist) {
+      add(i);
+    }
+  }
 
   /**
    * Reverse DNS query of provided IP and comparison of result against pattern
@@ -227,56 +242,73 @@ public class CidrUtil {
     return false;
   }
 
-  private static ArrayList<String> spfResolver(String record, String prefix) {
-    ArrayList<String> ret = new ArrayList<>();
-    try {
-      Attributes attrs =
-          new InitialDirContext().getAttributes("dns:" + record, new String[] {"TXT"});
-      NamingEnumeration<? extends Attribute> spfdom = attrs.getAll();
-      while (spfdom.hasMore()) {
-        Attribute a = spfdom.next();
-        Enumeration<?> v = a.getAll();
-        while (v.hasMoreElements()) {
-          String x = v.nextElement().toString();
-          String[] parts = x.split(" ");
-          for (String p : parts) {
-            if (p.matches("^" + prefix + ".*")) {
-              ret.add(p.replaceFirst(prefix, ""));
-            }
-          }
-        }
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  private static class GcpCidrPrefixEntry {
+    String ip4Prefix;
+    String ip6Prefix;
+    String scope;
+    String service;
+
+    public String getIpPrefix() {
+      if (getIp4Prefix() != null) {
+        return getIp4Prefix();
       }
-    } catch (NamingException exc) {
-      // pass
+      return getIp6Prefix();
     }
-    return ret;
+
+    @JsonProperty("ipv4Prefix")
+    public String getIp4Prefix() {
+      return ip4Prefix;
+    }
+
+    @JsonProperty("ipv6Prefix")
+    public String getIp6Prefix() {
+      return ip6Prefix;
+    }
+
+    @JsonProperty("scope")
+    public String getScope() {
+      return scope;
+    }
+
+    @JsonProperty("service")
+    public String getService() {
+      return service;
+    }
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  private static class GcpCidrResponse {
+    GcpCidrPrefixEntry[] ipPrefixes;
+
+    @JsonProperty("prefixes")
+    public GcpCidrPrefixEntry[] getIpPrefixes() {
+      return ipPrefixes;
+    }
   }
 
   /**
    * Load known GCP subnets into instance of {@link CidrUtil}
    *
-   * <p>This is done via SPF record queries.
+   * <p>This is done using https://www.gstatic.com/ipranges/cloud.json as recommended by
+   * https://cloud.google.com/compute/docs/faq#find_ip_range
    *
    * @throws IOException IOException
    */
   public void loadGcpSubnets() throws IOException {
-    int pcnt = 0;
-    for (int i = 1; i <= 16; i++) {
-      String rdom = String.format("_cloud-netblocks%d.googleusercontent.com", i);
-      ArrayList<String> ipents = spfResolver(rdom, "ip4:");
-      for (String j : ipents) {
-        pcnt++;
-        add(j);
-      }
-      ipents = spfResolver(rdom, "ip6:");
-      for (String j : ipents) {
-        pcnt++;
-        add(j);
-      }
+    HttpClient httpClient = HttpClientBuilder.create().build();
+    HttpGet get = new HttpGet(GCP_IP_RANGES_URL);
+    HttpResponse resp = httpClient.execute(get);
+    if (resp.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+      throw new IOException(
+          String.format(
+              "request failed with status code %d", resp.getStatusLine().getStatusCode()));
     }
-    // If we were not able to successfully add any subnet, throw an exception.
-    if (pcnt == 0) {
-      throw new IOException("unable to process GCP subnet list from SPF records");
+    ObjectMapper mapper = new ObjectMapper();
+    GcpCidrResponse gcpcidrs =
+        mapper.readValue(resp.getEntity().getContent(), GcpCidrResponse.class);
+    for (GcpCidrPrefixEntry e : gcpcidrs.getIpPrefixes()) {
+      add(e.getIpPrefix());
     }
   }
 
@@ -374,26 +406,6 @@ public class CidrUtil {
       inetTree.add(cidr);
     } else {
       subnets.add(new IpAddressMatcher(cidr));
-    }
-  }
-
-  /** Constructor for {@link CidrUtil}, initialize empty */
-  public CidrUtil() {
-    subnets = new ArrayList<IpAddressMatcher>();
-    inetTree = new InetRadix();
-  }
-
-  /**
-   * Constructor for {@link CidrUtil} to load subnet list from resource
-   *
-   * @param path Resource path or GCS URL to load CIDR subnet list from
-   * @throws IOException IOException
-   */
-  public CidrUtil(String path) throws IOException {
-    this();
-    ArrayList<String> flist = FileUtil.fileReadLines(path);
-    for (String i : flist) {
-      add(i);
     }
   }
 }
