@@ -282,7 +282,7 @@ public class CidrUtil {
     GcpCidrPrefixEntry[] ipPrefixes;
 
     @JsonProperty("prefixes")
-    public GcpCidrPrefixEntry[] getPrefixes() {
+    public GcpCidrPrefixEntry[] getIpPrefixes() {
       return ipPrefixes;
     }
   }
@@ -307,7 +307,7 @@ public class CidrUtil {
     ObjectMapper mapper = new ObjectMapper();
     GcpCidrResponse gcpcidrs =
         mapper.readValue(resp.getEntity().getContent(), GcpCidrResponse.class);
-    for (GcpCidrPrefixEntry e : gcpcidrs.getPrefixes()) {
+    for (GcpCidrPrefixEntry e : gcpcidrs.getIpPrefixes()) {
       add(e.getIpPrefix());
     }
   }
