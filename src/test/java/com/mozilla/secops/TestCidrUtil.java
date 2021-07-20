@@ -32,11 +32,13 @@ public class TestCidrUtil {
   public void cidrLoadGcpSubnetsTest() throws Exception {
     CidrUtil c = new CidrUtil();
     c.add("192.168.1.0/24");
-    assertFalse(c.contains("35.232.216.1"));
     assertTrue(c.contains("192.168.1.25"));
+    assertFalse(c.contains("35.232.216.1"));
+    assertFalse(c.contains("34.127.180.2"));
     c.loadGcpSubnets();
     assertTrue(c.contains("192.168.1.25"));
     assertTrue(c.contains("35.232.216.1"));
+    assertTrue(c.contains("34.127.180.2"));
   }
 
   @Test
