@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 import org.apache.beam.sdk.io.UnboundedSource;
 import org.apache.beam.sdk.io.UnboundedSource.CheckpointMark;
 import org.apache.beam.sdk.io.UnboundedSource.CheckpointMark.NoopCheckpointMark;
+import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +16,9 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
   private static final long serialVersionUID = 1L;
 
   private CfgTickUnboundedSource source;
-  private Instant lastPoll;
   private Instant lastTick;
   private String current;
+  private int interval;
   private Logger log;
 
   /**
@@ -32,7 +33,7 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
     this.source = source;
     current = null;
     lastTick = null;
-    lastPoll = null;
+    interval = source.getInterval() * 1000;
     log = LoggerFactory.getLogger(CfgTickUnboundedReader.class);
   }
 
@@ -60,7 +61,6 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
 
   @Override
   public boolean start() {
-    lastPoll = new Instant();
     generateCurrent();
     return true;
   }
@@ -69,14 +69,21 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
   public void close() {}
 
   @Override
-  public boolean advance() {
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException exc) {
-      return false;
+  public long getSplitBacklogBytes() {
+    if (shouldEmit()) {
+      return source.getMessage().getBytes().length;
     }
-    lastPoll = new Instant();
-    if ((lastPoll.getMillis() - lastTick.getMillis()) >= (source.getInterval() * 1000)) {
+    return 0L;
+  }
+
+  private boolean shouldEmit() {
+    // Determine if we should emit a new configuration tick or not
+    return (Instant.now().getMillis() - lastTick.getMillis()) >= interval;
+  }
+
+  @Override
+  public boolean advance() {
+    if (shouldEmit()) {
       generateCurrent();
       return true;
     }
@@ -85,7 +92,12 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
 
   @Override
   public Instant getWatermark() {
-    return lastPoll;
+    Instant r = Instant.now().minus(Duration.standardSeconds(5));
+    if (lastTick.isAfter(r)) {
+      return lastTick;
+    } else {
+      return r;
+    }
   }
 
   @Override

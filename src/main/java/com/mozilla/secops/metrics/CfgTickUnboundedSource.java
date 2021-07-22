@@ -2,23 +2,25 @@ package com.mozilla.secops.metrics;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.UUID;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.UnboundedSource;
 import org.apache.beam.sdk.io.UnboundedSource.CheckpointMark;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.joda.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Unbounded source for use with {@link CfgTickGenerator} */
 class CfgTickUnboundedSource extends UnboundedSource<String, CheckpointMark> {
   private static final long serialVersionUID = 1L;
 
+  private final UUID instanceId;
   private final String message;
   private final Integer interval;
   private Instant lastRecordTimestamp;
-
-  private final int magic = 0xfe0013ae;
+  private Logger log;
 
   /**
    * Initialize new {@link CfgTickUnboundedSource}
@@ -27,8 +29,19 @@ class CfgTickUnboundedSource extends UnboundedSource<String, CheckpointMark> {
    * @param interval Emission interval in seconds
    */
   public CfgTickUnboundedSource(String message, Integer interval) {
+    instanceId = UUID.randomUUID();
     this.message = message;
     this.interval = interval;
+    log = LoggerFactory.getLogger(CfgTickUnboundedSource.class);
+  }
+
+  /**
+   * Get message that will be sent by this source
+   *
+   * @return Record string
+   */
+  public String getMessage() {
+    return message;
   }
 
   /**
@@ -38,7 +51,7 @@ class CfgTickUnboundedSource extends UnboundedSource<String, CheckpointMark> {
    */
   public String generateNewRecord() {
     lastRecordTimestamp = new Instant();
-    return message;
+    return getMessage();
   }
 
   /**
@@ -86,17 +99,26 @@ class CfgTickUnboundedSource extends UnboundedSource<String, CheckpointMark> {
     return new CfgTickUnboundedReader(this);
   }
 
+  /**
+   * Get source instance ID
+   *
+   * @return UUID
+   */
+  public UUID getInstanceId() {
+    return instanceId;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof CfgTickUnboundedSource)) {
       return false;
     }
     CfgTickUnboundedSource t = (CfgTickUnboundedSource) o;
-    return this.magic == t.magic;
+    return getInstanceId().equals(t.getInstanceId());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(magic);
+    return instanceId.hashCode();
   }
 }
