@@ -10,6 +10,7 @@ import com.mozilla.secops.window.GlobalTriggers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
@@ -47,6 +48,7 @@ public class SessionLimitAnalysis
   private final Integer suppressRecovery;
   private final Long sessionGapDurationMinutes;
   private final Long alertSuppressionDurationSeconds;
+  private final Boolean enableNatDetection;
 
   /** Internal class for configured endpoints */
   public static class LimitInfo implements Serializable {
@@ -81,6 +83,7 @@ public class SessionLimitAnalysis
     suppressRecovery = toggles.getSessionLimitAnalysisSuppressRecovery();
     sessionGapDurationMinutes = toggles.getSessionGapDurationMinutes();
     alertSuppressionDurationSeconds = toggles.getAlertSuppressionDurationSeconds();
+    enableNatDetection = toggles.getEnableNatDetection();
 
     String[] cfgLimits = toggles.getSessionLimitAnalysisPaths();
 
@@ -146,6 +149,7 @@ public class SessionLimitAnalysis
                     Iterable<ArrayList<String>> paths = c.element().getValue();
                     int[] limitCounter = new int[limits.length];
                     String userAgent = null;
+                    HashMap<String, Boolean> uaMap = new HashMap<>();
 
                     // Used to track the latest applicable request, so we can use it as the
                     // alert timestamp if we need to generate an alert.
@@ -165,6 +169,8 @@ public class SessionLimitAnalysis
                         sessionStart = t;
                       }
 
+                      uaMap.put(i.get(2), true);
+
                       Integer abIdx = indexEndpoint(i.get(1), i.get(0));
                       if (abIdx != null) {
                         if (latestRequest == null || t.getMillis() > latestRequest.getMillis()) {
@@ -176,6 +182,14 @@ public class SessionLimitAnalysis
                         userAgent = i.get(2);
                         limitCounter[abIdx]++;
                       }
+                    }
+
+                    if (enableNatDetection && uaMap.size() >= 2) {
+                      log.info(
+                          "detected NAT for {}, {} user agents present",
+                          remoteAddress,
+                          uaMap.size());
+                      return;
                     }
 
                     // Identify if any
