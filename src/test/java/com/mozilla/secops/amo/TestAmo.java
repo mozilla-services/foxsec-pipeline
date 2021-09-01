@@ -508,4 +508,121 @@ public class TestAmo {
     PipelineResult pResult = p.run();
     pResult.waitUntilFinish();
   }
+
+  @Test
+  public void testFxaAliasAbuseDotNormalization() throws Exception {
+    Amo.AmoOptions options = getTestOptions();
+
+    String[] eb1 =
+        TestUtil.getTestInputArray("/testdata/amo_fxaaliasabuse/dotnormalizationabuse.txt");
+
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    InputElement e = new InputElement(options.getMonitoredResourceIndicator()).addWiredStream(s);
+
+    PCollection<String> input =
+        p.apply(
+            "input",
+            new Input(options.getProject()).simplex().withInputElement(e).simplexReadRaw());
+
+    PCollection<Alert> alerts =
+        Amo.executePipeline(p, input, options)
+            .apply(ParDo.of(new AlertFormatter(getTestOptions())));
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+
+    PAssert.that(count).containsInAnyOrder(1L);
+
+    PAssert.that(alerts)
+        .satisfies(
+            x -> {
+              for (Alert a : x) {
+                assertEquals("fxa_account_abuse_alias", a.getNotifyMergeKey());
+                assertEquals("6", a.getMetadataValue(AlertMeta.Key.COUNT));
+                assertEquals(
+                    "test possible alias abuse in amo, test12345@example-email.com has 6 aliases",
+                    a.getSummary());
+              }
+              return null;
+            });
+
+    PipelineResult pResult = p.run();
+    pResult.waitUntilFinish();
+
+    int cnt;
+
+    Iterable<MetricResult<Long>> fxaAccountAbuseAliasMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            FxaAccountAbuseAlias.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : fxaAccountAbuseAliasMWrites) {
+      assertEquals(7L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
+  }
+
+  @Test
+  public void testFxaAliasAbuseDotNormalizationNonDistinct() throws Exception {
+    Amo.AmoOptions options = getTestOptions();
+
+    String[] eb1 =
+        TestUtil.getTestInputArray("/testdata/amo_fxaaliasabuse/dotnormalizationabuse2.txt");
+
+    TestStream<String> s =
+        TestStream.create(StringUtf8Coder.of())
+            .advanceWatermarkTo(new Instant(0L))
+            .addElements(eb1[0], Arrays.copyOfRange(eb1, 1, eb1.length))
+            .advanceWatermarkToInfinity();
+
+    InputElement e = new InputElement(options.getMonitoredResourceIndicator()).addWiredStream(s);
+
+    PCollection<String> input =
+        p.apply(
+            "input",
+            new Input(options.getProject()).simplex().withInputElement(e).simplexReadRaw());
+
+    PCollection<Alert> alerts =
+        Amo.executePipeline(p, input, options)
+            .apply(ParDo.of(new AlertFormatter(getTestOptions())));
+
+    PCollection<Long> count = alerts.apply(Count.globally());
+
+    PAssert.that(count).containsInAnyOrder(0L);
+
+    PipelineResult pResult = p.run();
+    pResult.waitUntilFinish();
+
+    int cnt;
+
+    Iterable<MetricResult<Long>> fxaAccountAbuseAliasMWrites =
+        pResult
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            FxaAccountAbuseAlias.class.getName(),
+                            AmoMetrics.HeuristicMetrics.EVENT_TYPE_MATCH))
+                    .build())
+            .getCounters();
+    cnt = 0;
+    for (MetricResult<Long> x : fxaAccountAbuseAliasMWrites) {
+      assertEquals(7L, (long) x.getCommitted());
+      cnt++;
+    }
+    assertEquals(1, cnt);
+  }
 }
