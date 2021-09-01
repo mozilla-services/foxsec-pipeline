@@ -86,7 +86,7 @@ public class FxaAccountAbuseAlias extends PTransform<PCollection<Event>, PCollec
                     }
                     metrics.eventTypeMatched();
 
-                    String ncomp = MiscUtil.normalizeEmailPlus(d.getFxaEmail());
+                    String ncomp = MiscUtil.normalizeEmailPlusDotStrip(d.getFxaEmail());
                     if (ncomp == null) {
                       return;
                     }
