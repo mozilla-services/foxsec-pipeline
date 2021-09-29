@@ -21,7 +21,8 @@ import (
 // either a local file or from GCS. If it is encrypted with sops, it will
 // decrypt it.
 type Configuration struct {
-	Environment string `yaml:"env,omitempty"`
+	Environment  string `yaml:"env,omitempty"`
+	GCPProjectId string `yaml:"gcp_project_id"`
 
 	AwsAccessKeyId     string `yaml:"aws_access_key_id"`
 	AwsSecretAccessKey string `yaml:"aws_secret_access_key"`
@@ -58,6 +59,8 @@ type Configuration struct {
 	DuoAPIHost        string `yaml:"duo_api_host"`
 	DuoIntegrationKey string `yaml:"duo_integration_key"`
 	DuoSecretKey      string `yaml:"duo_secret_key"`
+
+	PapertrailApiToken string `yaml:"papertrail_api_token"`
 }
 
 type IprepdInstance struct {
