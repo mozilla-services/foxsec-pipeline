@@ -66,6 +66,7 @@ func InitConfig() {
 	PAPERTRAIL_TOKEN = config.PapertrailApiToken
 }
 
+// Struct for response from Papertrail. MaxIdParsed and MinIdParsed are populated through the `.Parse()` method
 type PapertrailSearchResp struct {
 	Events      []PapertrailEvent `json:"events"`
 	MaxId       string            `json:"max_id"`
@@ -74,6 +75,7 @@ type PapertrailSearchResp struct {
 	MinIdParsed int               `json:"-"`
 }
 
+// Parse MaxId and MinId from strings to ints
 func (resp *PapertrailSearchResp) Parse() error {
 	var err error
 
@@ -90,6 +92,7 @@ func (resp *PapertrailSearchResp) Parse() error {
 	return nil
 }
 
+// The format of Papertrail log events
 type PapertrailEvent struct {
 	DisplayReceivedAt string `json:"display_received_at"`
 	Facility          string `json:"facility"`
@@ -105,11 +108,13 @@ type PapertrailEvent struct {
 	SourceName        string `json:"source_name"`
 }
 
+// Structure for last log id that is persisted to Datastore
 type lastLogId struct {
 	LastLogId int       `json:"last_log_id"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// Function for retrieving `lastLogId` from Datastore.
 func loadLastLogId(ctx context.Context) (*lastLogId, error) {
 	var (
 		sf   common.StateField
@@ -131,6 +136,32 @@ func loadLastLogId(ctx context.Context) (*lastLogId, error) {
 	return &llid, nil
 }
 
+// Method for persisting `lastLogId` to Datastore
+func (llid *lastLogId) save(ctx context.Context) error {
+	llid.UpdatedAt = time.Now()
+	buf, err := json.Marshal(llid)
+	if err != nil {
+		return err
+	}
+
+	nk := datastore.NameKey(LASTLOGID_KIND, LASTLOGID_KEY, nil)
+	nk.Namespace = LASTLOGID_NAMESPACE
+
+	tx, err := datastoreClient.NewTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	if _, err := tx.Put(nk, &common.StateField{State: string(buf)}); err != nil {
+		return err
+	}
+	if _, err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Get the last log id from Papertrail
 func getLatestLogEventId() (int, error) {
 	logs, err := getLatestPapertrailEvents()
 	if err != nil {
@@ -188,30 +219,6 @@ func getPapertrailEventsFromMinId(minId int) (*PapertrailSearchResp, error) {
 	return queryPapertrailSearchApi(fmt.Sprintf("%s?min_id=%d", PAPERTRAIL_URL, minId))
 }
 
-func (llid *lastLogId) save(ctx context.Context) error {
-	llid.UpdatedAt = time.Now()
-	buf, err := json.Marshal(llid)
-	if err != nil {
-		return err
-	}
-
-	nk := datastore.NameKey(LASTLOGID_KIND, LASTLOGID_KEY, nil)
-	nk.Namespace = LASTLOGID_NAMESPACE
-
-	tx, err := datastoreClient.NewTransaction(ctx)
-	if err != nil {
-		return err
-	}
-	if _, err := tx.Put(nk, &common.StateField{State: string(buf)}); err != nil {
-		return err
-	}
-	if _, err := tx.Commit(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // PubSubMessage is used for the function signature of the main function (Papertrailpull())
 // represent the data sent from PubSub. The data is not actually read, this is only
 // used as a mechanism for triggering the function (using Cloud Scheduler or similiar)
@@ -219,6 +226,7 @@ type PubSubMessage struct {
 	Data []byte `json:"data"`
 }
 
+// Main function ran within the cloudfunction.
 func PapertrailPull(ctx context.Context, psmsg PubSubMessage) error {
 	llid, err := loadLastLogId(ctx)
 	if err != nil {
