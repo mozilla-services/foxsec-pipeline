@@ -80,27 +80,29 @@ public class CfgTick extends PayloadBase implements Serializable {
   public static HashMap<String, String> flattenObjectMapToStringMap(Map<String, Object> in)
       throws IOException {
     HashMap<String, String> ret = new HashMap<>();
-
     for (Map.Entry<String, Object> entry : in.entrySet()) {
       Object o = entry.getValue();
-      if (o instanceof Boolean) {
-        ret.put(entry.getKey(), ((Boolean) o).toString());
-      } else if (o instanceof Integer) {
-        ret.put(entry.getKey(), ((Integer) o).toString());
-      } else if (o instanceof String) {
-        ret.put(entry.getKey(), (String) o);
-      } else if (o instanceof Double) {
-        ret.put(entry.getKey(), ((Double) o).toString());
-      } else if (o instanceof ArrayList) {
-        String abuf = convertArray(o);
-        if (abuf == null) {
-          throw new IOException("map had array which could not be converted");
+
+      if (o != null) {
+        if (o instanceof Boolean) {
+          ret.put(entry.getKey(), ((Boolean) o).toString());
+        } else if (o instanceof Integer) {
+          ret.put(entry.getKey(), ((Integer) o).toString());
+        } else if (o instanceof String) {
+          ret.put(entry.getKey(), (String) o);
+        } else if (o instanceof Double) {
+          ret.put(entry.getKey(), ((Double) o).toString());
+        } else if (o instanceof ArrayList) {
+          String abuf = convertArray(o);
+          if (abuf == null) {
+            throw new IOException("map had array which could not be converted");
+          }
+          ret.put(entry.getKey(), abuf);
+        } else {
+          throw new IOException(
+              String.format(
+                  "map had value type that could not be converted, %s", o.getClass().toString()));
         }
-        ret.put(entry.getKey(), abuf);
-      } else {
-        throw new IOException(
-            String.format(
-                "map had value type that could not be converted, %s", o.getClass().toString()));
       }
     }
 

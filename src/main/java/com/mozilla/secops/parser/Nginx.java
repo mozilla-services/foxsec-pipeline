@@ -3,7 +3,7 @@ package com.mozilla.secops.parser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.json.JsonParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import java.io.IOException;
 import java.io.Serializable;
@@ -19,7 +19,7 @@ import org.joda.time.DateTime;
 public class Nginx extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private static final JacksonFactory jfmatcher = new JacksonFactory();
+  private static final GsonFactory jfmatcher = new GsonFactory();
 
   private String xForwardedProto;
   private String userAgent;
@@ -114,7 +114,7 @@ public class Nginx extends SourcePayloadBase implements Serializable {
     if (entry == null) {
       // Use method local JacksonFactory as the object is not serializable, and this event
       // may be passed around
-      JacksonFactory jf = state.getGoogleJacksonFactory();
+      GsonFactory jf = state.getGoogleJacksonFactory();
       JsonParser jp = null;
       try {
         jp = jf.createJsonParser(input);

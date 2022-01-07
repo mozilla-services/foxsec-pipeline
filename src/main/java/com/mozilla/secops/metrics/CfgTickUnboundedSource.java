@@ -4,14 +4,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.apache.beam.sdk.coders.Coder;
+import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.UnboundedSource;
-import org.apache.beam.sdk.io.UnboundedSource.CheckpointMark;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.joda.time.Instant;
 
 /** Unbounded source for use with {@link CfgTickGenerator} */
-class CfgTickUnboundedSource extends UnboundedSource<String, CheckpointMark> {
+class CfgTickUnboundedSource extends UnboundedSource<String, CfgTickCheckpointMark> {
   private static final long serialVersionUID = 1L;
 
   private final String message;
@@ -60,8 +60,8 @@ class CfgTickUnboundedSource extends UnboundedSource<String, CheckpointMark> {
   }
 
   @Override
-  public Coder<CheckpointMark> getCheckpointMarkCoder() {
-    return null;
+  public Coder<CfgTickCheckpointMark> getCheckpointMarkCoder() {
+    return SerializableCoder.of(CfgTickCheckpointMark.class);
   }
 
   @Override
@@ -70,9 +70,9 @@ class CfgTickUnboundedSource extends UnboundedSource<String, CheckpointMark> {
   }
 
   @Override
-  public List<? extends UnboundedSource<String, CheckpointMark>> split(
+  public List<? extends UnboundedSource<String, CfgTickCheckpointMark>> split(
       int desired, PipelineOptions options) {
-    return Collections.<UnboundedSource<String, CheckpointMark>>singletonList(this);
+    return Collections.<UnboundedSource<String, CfgTickCheckpointMark>>singletonList(this);
   }
 
   @Override
@@ -82,7 +82,7 @@ class CfgTickUnboundedSource extends UnboundedSource<String, CheckpointMark> {
 
   @Override
   public UnboundedSource.UnboundedReader<String> createReader(
-      PipelineOptions options, CheckpointMark checkpointMark) {
+      PipelineOptions options, CfgTickCheckpointMark checkpointMark) {
     return new CfgTickUnboundedReader(this);
   }
 

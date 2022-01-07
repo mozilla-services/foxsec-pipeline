@@ -75,6 +75,7 @@ public class Minfraud implements Serializable {
    * @param resourcePath Path to resource JSON file to use as response
    * @throws IOException IOException
    */
+  @SuppressWarnings({"deprecation"})
   public static void cacheInsightsResource(String ipAddress, String resourcePath)
       throws IOException {
     InputStream in = Minfraud.class.getResourceAsStream(resourcePath);
