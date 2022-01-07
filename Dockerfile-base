@@ -17,7 +17,7 @@ RUN apt-get update -y && \
 	apt-get upgrade -y && \
 	apt-get install netcat redis-server build-essential \
 	memcached --no-install-recommends -y && \
-	curl -L https://dl.google.com/go/go1.14.linux-amd64.tar.gz | \
+	curl -L https://dl.google.com/go/go1.16.linux-amd64.tar.gz | \
 	(cd /usr/local && tar -zxf -) && \
 	curl -sSL https://sdk.cloud.google.com | \
 	CLOUDSDK_CORE_DISABLE_PROMPTS=1 bash && \
