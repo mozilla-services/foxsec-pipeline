@@ -6,6 +6,7 @@ import com.mozilla.secops.OutputOptions;
 import com.mozilla.secops.alert.Alert;
 import com.mozilla.secops.alert.AlertFormatter;
 import com.mozilla.secops.alert.AlertMeta;
+import com.mozilla.secops.alert.AlertSuppressorCount;
 import com.mozilla.secops.input.Input;
 import com.mozilla.secops.metrics.CfgTickBuilder;
 import com.mozilla.secops.metrics.CfgTickProcessor;
@@ -143,7 +144,7 @@ public class Pioneer implements Serializable {
           .apply(
               "analyze",
               ParDo.of(
-                  new DoFn<KV<String, Iterable<Event>>, Alert>() {
+                  new DoFn<KV<String, Iterable<Event>>, KV<String, Alert>>() {
                     private static final long serialVersionUID = 1L;
 
                     @ProcessElement
@@ -191,6 +192,7 @@ public class Pioneer implements Serializable {
                           alert.setNotifyMergeKey("exfiltration");
                           alert.addMetadata(AlertMeta.Key.SOURCEADDRESS, sample.getSrcIp());
                           alert.addMetadata(AlertMeta.Key.BYTES, Integer.toString(bytes));
+                          alert.addMetadata(AlertMeta.Key.COUNT, Integer.toString(bytes));
                           alert.addMetadata(
                               AlertMeta.Key.START, events.get(i).getTimestamp().toString());
                           alert.addMetadata(
@@ -208,12 +210,14 @@ public class Pioneer implements Serializable {
                                   sample.getDestPort(),
                                   bytes,
                                   sample.getSrcInstanceName()));
-                          c.output(alert);
+                          c.output(KV.of(key, alert));
                           break;
                         }
                       }
                     }
                   }))
+          .apply("pioneer exfiltration analysis global", new GlobalTriggers<KV<String, Alert>>(5))
+          .apply(ParDo.of(new AlertSuppressorCount(Long.valueOf(thresholdMillis) / 1000)))
           .apply(new GlobalTriggers<Alert>(5));
     }
   }
