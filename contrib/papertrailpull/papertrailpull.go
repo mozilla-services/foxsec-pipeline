@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -35,6 +36,7 @@ var (
 	datastoreClient   *datastore.Client
 
 	PAPERTRAIL_TOKEN string
+	PAPERTRAIL_QUERY string
 )
 
 func init() {
@@ -64,6 +66,7 @@ func InitConfig() {
 	}
 
 	PAPERTRAIL_TOKEN = config.PapertrailApiToken
+	PAPERTRAIL_QUERY = config.PapertrailQuery
 }
 
 // Struct for response from Papertrail. MaxIdParsed and MinIdParsed are populated through the `.Parse()` method
@@ -212,11 +215,11 @@ func queryPapertrailSearchApi(url string) (*PapertrailSearchResp, error) {
 }
 
 func getLatestPapertrailEvents() (*PapertrailSearchResp, error) {
-	return queryPapertrailSearchApi(fmt.Sprintf("%s?limit=5", PAPERTRAIL_URL))
+	return queryPapertrailSearchApi(fmt.Sprintf("%s?limit=5&q=%s", PAPERTRAIL_URL, url.QueryEscape(PAPERTRAIL_QUERY)))
 }
 
 func getPapertrailEventsFromMinId(minId int) (*PapertrailSearchResp, error) {
-	return queryPapertrailSearchApi(fmt.Sprintf("%s?min_id=%d", PAPERTRAIL_URL, minId))
+	return queryPapertrailSearchApi(fmt.Sprintf("%s?min_id=%d&q=%s", PAPERTRAIL_URL, minId, url.QueryEscape(PAPERTRAIL_QUERY)))
 }
 
 // PubSubMessage is used for the function signature of the main function (Papertrailpull())
