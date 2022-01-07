@@ -61,6 +61,7 @@ type Configuration struct {
 	DuoSecretKey      string `yaml:"duo_secret_key"`
 
 	PapertrailApiToken string `yaml:"papertrail_api_token"`
+	PapertrailQuery    string `yaml:"papertrail_query"`
 }
 
 type IprepdInstance struct {
