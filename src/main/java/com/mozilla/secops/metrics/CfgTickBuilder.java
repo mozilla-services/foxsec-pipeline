@@ -45,6 +45,7 @@ public class CfgTickBuilder {
   public CfgTickBuilder() {
     mapper = new ObjectMapper();
     mapper.setSerializationInclusion(Include.NON_NULL);
+    mapper.setSerializationInclusion(Include.NON_EMPTY);
     cfgData = new HashMap<String, String>();
   }
 

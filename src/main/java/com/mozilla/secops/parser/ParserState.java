@@ -10,7 +10,7 @@ class ParserState {
   private LogEntry logEntryHint;
   private CloudWatchEvent cloudwatchEvent;
   private Mozlog mozLogHint;
-  private com.google.api.client.json.jackson2.JacksonFactory googleJacksonFactory;
+  private com.google.api.client.json.gson.GsonFactory googleJacksonFactory;
   private ObjectMapper mapper;
   private String stackdriverTypeValue;
   private GeoIP geoIp;
@@ -168,7 +168,7 @@ class ParserState {
    * @param googleJacksonFactory JacksonFactory
    */
   public void setGoogleJacksonFactory(
-      com.google.api.client.json.jackson2.JacksonFactory googleJacksonFactory) {
+      com.google.api.client.json.gson.GsonFactory googleJacksonFactory) {
     this.googleJacksonFactory = googleJacksonFactory;
   }
 
@@ -177,7 +177,7 @@ class ParserState {
    *
    * @return JacksonFactory, or null if unset
    */
-  public com.google.api.client.json.jackson2.JacksonFactory getGoogleJacksonFactory() {
+  public com.google.api.client.json.gson.GsonFactory getGoogleJacksonFactory() {
     return googleJacksonFactory;
   }
 

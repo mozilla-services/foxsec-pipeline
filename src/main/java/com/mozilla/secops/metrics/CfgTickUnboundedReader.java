@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.NoSuchElementException;
 import org.apache.beam.sdk.io.UnboundedSource;
 import org.apache.beam.sdk.io.UnboundedSource.CheckpointMark;
-import org.apache.beam.sdk.io.UnboundedSource.CheckpointMark.NoopCheckpointMark;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +89,7 @@ class CfgTickUnboundedReader extends UnboundedSource.UnboundedReader<String>
 
   @Override
   public CheckpointMark getCheckpointMark() {
-    return new NoopCheckpointMark();
+    return new CfgTickCheckpointMark();
   }
 
   @Override

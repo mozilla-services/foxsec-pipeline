@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.json.JsonParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.servicecontrol.v1.model.AuditLog;
 import com.google.api.services.servicecontrol.v1.model.AuthenticationInfo;
@@ -20,7 +20,7 @@ import java.util.Map;
 public class GcpAudit extends SourcePayloadBase implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private final JacksonFactory jfmatcher;
+  private final GsonFactory jfmatcher;
 
   private String principalEmail;
   private String resource;
@@ -118,7 +118,7 @@ public class GcpAudit extends SourcePayloadBase implements Serializable {
 
   /** Construct matcher object. */
   public GcpAudit() {
-    jfmatcher = new JacksonFactory();
+    jfmatcher = new GsonFactory();
   }
 
   /**
@@ -134,7 +134,7 @@ public class GcpAudit extends SourcePayloadBase implements Serializable {
     if (entry == null) {
       // Use method local JacksonFactory as the object is not serializable, and this event
       // may be passed around
-      JacksonFactory jf = new JacksonFactory();
+      GsonFactory jf = new GsonFactory();
       JsonParser jp = null;
       try {
         jp = jf.createJsonParser(input);
@@ -165,7 +165,7 @@ public class GcpAudit extends SourcePayloadBase implements Serializable {
     AuditLog auditLog;
     JsonParser jp = null;
     try {
-      jp = new JacksonFactory().createJsonParser(pbuf);
+      jp = new GsonFactory().createJsonParser(pbuf);
       auditLog = jp.parse(AuditLog.class);
     } catch (IOException exc) {
       return;
