@@ -1,6 +1,8 @@
 package com.mozilla.secops.parser;
 
 import org.apache.beam.sdk.transforms.DoFn;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** {@link DoFn} applying simple event parsing operations */
 public class ParserDoFn extends DoFn<String, Event> {
@@ -11,6 +13,8 @@ public class ParserDoFn extends DoFn<String, Event> {
   private EventFilter inlineFilter;
   private EventFilter commonInputFilter;
   private ParserCfg cfg;
+
+  private Logger log = LoggerFactory.getLogger(ParserDoFn.class);
 
   private final ParserMetrics metrics = new ParserMetrics(null);
 
@@ -83,6 +87,13 @@ public class ParserDoFn extends DoFn<String, Event> {
       e = ep.parse(c.element());
     } catch (Parser.EventTooOldException exc) {
       metrics.eventTooOld();
+      return;
+    } catch (Throwable t) {
+      // rather than blindly catch errors and log we should likely have
+      // output errors as a separate tag, we're unlikely to replay messages
+      // though so this is a low effort "solution"
+      log.info("Unhandled exception: {} parsing element: {}", t.toString(), c.element());
+      metrics.eventUnhandledException();
       return;
     }
     if (e != null) {

@@ -17,7 +17,10 @@ public class ParserMetrics implements Serializable {
 
   public static final String METRIC_UNKNOWN_PAYLOAD_TYPE = "unknown_payload_type";
 
+  public static final String METRIC_PARSER_UNHANDLED_EXCEPTION = "unhandled_exception";
+
   private final Counter metricEventTooOld;
+  private final Counter metricEventUnhandledException;
   private final String namespace;
 
   private final EnumMap<Payload.PayloadType, Counter> metricMapPayloadType;
@@ -26,6 +29,11 @@ public class ParserMetrics implements Serializable {
   /** Event was too old */
   public void eventTooOld() {
     metricEventTooOld.inc();
+  }
+
+  /** Event was caused an unhandled exception in parser */
+  public void eventUnhandledException() {
+    metricEventUnhandledException.inc();
   }
 
   /**
@@ -50,6 +58,7 @@ public class ParserMetrics implements Serializable {
       namespace = NAMESPACE_PREFIX + namespacePostfix;
     }
     metricEventTooOld = Metrics.counter(namespace, METRIC_EVENT_TOO_OLD);
+    metricEventUnhandledException = Metrics.counter(namespace, METRIC_PARSER_UNHANDLED_EXCEPTION);
 
     metricMapPayloadType = new EnumMap<>(Payload.PayloadType.class);
 
