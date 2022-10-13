@@ -80,8 +80,7 @@ func init() {
 	var err error
 	DB, err = common.NewDBClient(context.Background(), PROJECT_ID)
 	if err != nil {
-		log.Errorf("Error creating db client: %s", err)
-		return
+		log.Fatalf("Error creating db client: %s", err)
 	}
 }
 
