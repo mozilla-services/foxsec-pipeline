@@ -8,8 +8,6 @@
     <version>0.19.2</version>
     <name>secops-beam</name>
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
         <beam.version>2.34.0</beam.version>
@@ -59,6 +57,7 @@
                             <version>1.9</version>
                         </path>
                     </annotationProcessorPaths>
+                    <release>11</release>
                 </configuration>
             </plugin>
             <plugin>

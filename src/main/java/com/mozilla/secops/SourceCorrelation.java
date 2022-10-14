@@ -341,7 +341,7 @@ public class SourceCorrelation {
       o.setIsp(a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_ISP));
       String asns = a.getMetadataValue(AlertMeta.Key.SOURCEADDRESS_ASN);
       if (asns != null) {
-        o.setAsn(new Integer(asns));
+        o.setAsn(Integer.valueOf(asns));
       }
       o.setSourceDataType(SourceData.SourceDataType.SOURCE_DATA_TYPE_ALERT);
       c.output(o);

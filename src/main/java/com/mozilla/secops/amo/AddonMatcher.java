@@ -86,8 +86,8 @@ public class AddonMatcher extends PTransform<PCollection<Event>, PCollection<Ale
                         }
                         MatchCriteria c = new MatchCriteria();
                         c.pattern = Pattern.compile(parts[0]);
-                        c.minBytes = new Integer(parts[1]);
-                        c.maxBytes = new Integer(parts[2]);
+                        c.minBytes = Integer.valueOf(parts[1]);
+                        c.maxBytes = Integer.valueOf(parts[2]);
                         criteria.add(c);
                       }
                     }

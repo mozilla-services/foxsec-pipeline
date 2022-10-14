@@ -178,7 +178,7 @@ public class Nginx extends SourcePayloadBase implements Serializable {
       requestTime = nginxs.getRequestTime();
       bytesSent = nginxs.getBytesSent().intValue();
       trace = nginxs.getTrace();
-      status = new Integer(nginxs.getStatus());
+      status = Integer.valueOf(nginxs.getStatus());
       xForwardedFor = nginxs.getXForwardedFor();
       xPipelineProxy = nginxs.getXPipelineProxy();
     } else if (matchesStackdriverVariant2(m)) {
@@ -197,9 +197,9 @@ public class Nginx extends SourcePayloadBase implements Serializable {
       userAgent = nginxs.getUserAgent();
       referrer = nginxs.getReferrer();
       request = nginxs.getRequest();
-      requestTime = new Double(nginxs.getRequestTime());
-      bytesSent = new Integer(nginxs.getBytesSent());
-      status = new Integer(nginxs.getCode());
+      requestTime = Double.valueOf(nginxs.getRequestTime());
+      bytesSent = Integer.valueOf(nginxs.getBytesSent());
+      status = Integer.valueOf(nginxs.getCode());
     } else {
       return;
     }

@@ -104,7 +104,7 @@ public class AlertSuppressor extends DoFn<KV<String, Alert>, Alert> {
     newss.key = key;
     newss.timestamp = a.getTimestamp().toInstant();
     if (a.getMetadataValue(AlertMeta.Key.COUNT) != null) {
-      newss.count = new Integer(a.getMetadataValue(AlertMeta.Key.COUNT));
+      newss.count = Integer.valueOf(a.getMetadataValue(AlertMeta.Key.COUNT));
     }
 
     AlertSuppressionState ss = counter.read();

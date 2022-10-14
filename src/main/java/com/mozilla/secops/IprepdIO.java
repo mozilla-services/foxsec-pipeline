@@ -184,7 +184,7 @@ public class IprepdIO {
         get = new HttpGet(reqPath);
       } catch (IllegalArgumentException exc) {
         log.error(exc.getMessage());
-        return new Integer(100);
+        return Integer.valueOf(100);
       }
       if (apiKey != null) {
         get.addHeader("Authorization", "APIKey " + apiKey);
@@ -193,21 +193,21 @@ public class IprepdIO {
         resp = httpClient.execute(get);
       } catch (IOException exc) {
         log.error(exc.getMessage());
-        return new Integer(100);
+        return Integer.valueOf(100);
       }
       int sc = resp.getStatusLine().getStatusCode();
       if (sc == 404) {
         // Reputation not found, report 100
-        return new Integer(100);
+        return Integer.valueOf(100);
       }
       if (sc != 200) {
         log.error("GET from iprepd returned with status code {}", sc);
-        return new Integer(100);
+        return Integer.valueOf(100);
       }
       HttpEntity entity = resp.getEntity();
       if (entity == null) {
         log.error("200 response from iprepd contained no response entity");
-        return new Integer(100);
+        return Integer.valueOf(100);
       }
 
       ReputationValue rval = null;
@@ -217,19 +217,19 @@ public class IprepdIO {
         is = entity.getContent();
       } catch (IOException exc) {
         log.error(exc.getMessage());
-        return new Integer(100);
+        return Integer.valueOf(100);
       }
 
       if (is == null) {
         log.error("200 response from iprepd contained no response content");
-        return new Integer(100);
+        return Integer.valueOf(100);
       }
 
       try {
         rval = new ObjectMapper().readValue(is, ReputationValue.class);
       } catch (IOException exc) {
         log.error(exc.getMessage());
-        return new Integer(100);
+        return Integer.valueOf(100);
       } finally {
         try {
           is.close();
@@ -240,7 +240,7 @@ public class IprepdIO {
 
       if (rval.getReputation() == null) {
         log.error("response from iprepd contained no reputation value");
-        return new Integer(100);
+        return Integer.valueOf(100);
       }
 
       return rval.getReputation();

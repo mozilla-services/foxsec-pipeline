@@ -92,7 +92,7 @@ public class Violation {
       if (suppressValue == null) {
         return new Violation(object, type, vStr);
       } else {
-        return new Violation(object, type, vStr, new Integer(suppressValue));
+        return new Violation(object, type, vStr, Integer.valueOf(suppressValue));
       }
     }
   }

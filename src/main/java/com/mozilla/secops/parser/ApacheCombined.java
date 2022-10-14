@@ -76,11 +76,11 @@ public class ApacheCombined extends SourcePayloadBase implements Serializable {
 
     request = mat.group(4);
 
-    status = new Integer(mat.group(5));
+    status = Integer.valueOf(mat.group(5));
 
     String bsv = mat.group(6);
     if ((bsv != null) && (!bsv.equals("-"))) {
-      bytesSent = new Integer(bsv);
+      bytesSent = Integer.valueOf(bsv);
     }
 
     referrer = mat.group(7);

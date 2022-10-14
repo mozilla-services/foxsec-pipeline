@@ -77,7 +77,7 @@ public class Phabricator extends SourcePayloadBase implements Serializable {
     DateTime et = dtf.parseDateTime(mat.group(1));
     e.setTimestamp(et);
 
-    pid = new Integer(mat.group(2));
+    pid = Integer.valueOf(mat.group(2));
     hostname = mat.group(3);
 
     user = extractValue(mat.group(5));
@@ -86,8 +86,8 @@ public class Phabricator extends SourcePayloadBase implements Serializable {
     path = extractValue(mat.group(8));
     referer = extractValue(mat.group(9));
 
-    status = extractValue(mat.group(10)) != null ? new Integer(mat.group(10)) : null;
-    rtime = extractValue(mat.group(11)) != null ? new Integer(mat.group(11)) : null;
+    status = extractValue(mat.group(10)) != null ? Integer.valueOf(mat.group(10)) : null;
+    rtime = extractValue(mat.group(11)) != null ? Integer.valueOf(mat.group(11)) : null;
 
     Normalized n = e.getNormalized();
     setSourceAddress(mat.group(4), state, n);

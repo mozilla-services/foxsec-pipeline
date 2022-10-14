@@ -18,7 +18,7 @@ if [[ -z "$WITHOUT_DAEMONS" ]]; then
 	export DEBUGDUO="1"
 
 	setsid nohup gcloud beta emulators datastore start --consistency=1.0 >/var/log/datastore.out 2>&1 &
-	setsid nohup gcloud beta emulators pubsub start >/var/log/pubsub.out 2>&1 &
+	setsid nohup gcloud beta emulators pubsub start --host-port=127.0.0.1:8085 >/var/log/pubsub.out 2>&1 &
 	while ! nc -z localhost 8081; do sleep 0.1; done
 	while ! nc -z localhost 8085; do sleep 0.1; done
 

@@ -289,7 +289,7 @@ public class AmoDocker extends SourcePayloadBase implements Serializable {
     if (mat.matches()) {
       type = EventType.FILEUPLOADMNT;
       fileName = mat.group(1);
-      bytes = new Integer(mat.group(2));
+      bytes = Integer.valueOf(mat.group(2));
       return;
     }
   }
