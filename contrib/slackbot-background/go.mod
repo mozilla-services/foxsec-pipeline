@@ -2,7 +2,7 @@ module github.com/mozilla-services/foxsec-pipeline/contrib/slackbot-background
 
 require (
 	cloud.google.com/go v0.36.0
-	github.com/gorilla/websocket v1.4.0 // indirect
+	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/mozilla-services/foxsec-pipeline/contrib v0.0.0
 	github.com/nlopes/slack v0.6.0
 	github.com/sirupsen/logrus v1.4.2
